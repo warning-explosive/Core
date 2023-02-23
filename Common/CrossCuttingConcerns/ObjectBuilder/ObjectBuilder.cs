@@ -26,7 +26,6 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
 
         public object? Build(Type type, IDictionary<string, object?>? values = null)
         {
-            // TODO: #209 - IsPrimitive()
             if (values?.Count == 1 && type.IsPrimitive())
             {
                 return ConvertTo(values.Single().Value, type);

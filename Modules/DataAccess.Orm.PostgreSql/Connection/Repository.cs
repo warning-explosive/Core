@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using Api.Persisting;
     using Api.Reading;
     using Basics;
+    using Extensions;
     using Linq;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
@@ -181,7 +182,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                         .Select((column, index) => new SqlCommandParameter(
                             TranslationContext.CommandParameterFormat.Format(index.ToString(CultureInfo.InvariantCulture)),
                             column.GetValue((IUniqueIdentified)entity),
-                            column.Type))
+                            column.Type,
+                            column.Property.Declared.IsJsonColumn()))
                         .ToArray();
                 }
 

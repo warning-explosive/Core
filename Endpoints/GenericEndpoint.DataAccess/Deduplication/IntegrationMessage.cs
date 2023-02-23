@@ -8,7 +8,6 @@
     using Core.DataAccess.Api.Model;
     using Core.DataAccess.Api.Sql;
     using Core.DataAccess.Api.Sql.Attributes;
-    using CrossCuttingConcerns.Json;
     using Messaging.MessageHeaders;
 
     /// <summary>
@@ -21,50 +20,47 @@
         /// <summary> .cctor </summary>
         /// <param name="primaryKey">Primary key</param>
         /// <param name="payload">Payload</param>
+        /// <param name="reflectedType">Reflected type</param>
         /// <param name="headers">Headers</param>
         public IntegrationMessage(
             Guid primaryKey,
-            JsonObject payload,
+            IIntegrationMessage payload,
+            SystemType reflectedType,
             IReadOnlyCollection<IntegrationMessageHeader> headers)
             : base(primaryKey)
         {
             Payload = payload;
+            ReflectedType = reflectedType;
             Headers = headers;
+        }
+
+        internal IntegrationMessage(Messaging.IntegrationMessage message)
+            : this(
+                message.ReadRequiredHeader<Id>().Value,
+                message.Payload,
+                message.ReflectedType,
+                message
+                    .Headers
+                    .Values
+                    .Select(header => new IntegrationMessageHeader(Guid.NewGuid(), header))
+                    .ToList())
+        {
         }
 
         /// <summary>
         /// Payload
         /// </summary>
-        public JsonObject Payload { get; set; }
+        [JsonColumn]
+        public IIntegrationMessage Payload { get; set; }
+
+        /// <summary>
+        /// Reflected type
+        /// </summary>
+        public SystemType ReflectedType { get; set; }
 
         /// <summary>
         /// Headers
         /// </summary>
         public IReadOnlyCollection<IntegrationMessageHeader> Headers { get; set; }
-
-        internal Messaging.IntegrationMessage BuildIntegrationMessage(IJsonSerializer serializer)
-        {
-            var payload = (IIntegrationMessage)serializer.DeserializeObject(Payload.Value, Payload.SystemType);
-
-            var headers = Headers
-                .Select(header => header.BuildIntegrationMessageHeader(serializer))
-                .ToDictionary(header => header.GetType());
-
-            return new Messaging.IntegrationMessage(payload, Payload.SystemType, headers);
-        }
-
-        internal static IntegrationMessage Build(Messaging.IntegrationMessage message, IJsonSerializer serializer)
-        {
-            // TODO: #143 - slow SerializeObject
-            var payload = new JsonObject(serializer.SerializeObject(message.Payload), message.Payload.GetType());
-
-            var headers = message
-               .Headers
-               .Values
-               .Select(header => IntegrationMessageHeader.Build(header, serializer))
-               .ToList();
-
-            return new IntegrationMessage(message.ReadRequiredHeader<Id>().Value, payload, headers);
-        }
     }
 }

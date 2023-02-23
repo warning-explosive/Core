@@ -12,7 +12,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
     using Core.DataAccess.Orm.Extensions;
-    using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.Settings;
     using Deduplication;
     using GenericEndpoint.UnitOfWork;
@@ -25,20 +24,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         private readonly IDependencyContainer _dependencyContainer;
         private readonly Contract.EndpointIdentity _endpointIdentity;
         private readonly ISettingsProvider<OutboxSettings> _settingsProvider;
-        private readonly IJsonSerializer _jsonSerializer;
         private readonly IOutboxDelivery _outboxDelivery;
 
         public OutboxBackgroundDelivery(
             IDependencyContainer dependencyContainer,
             Contract.EndpointIdentity endpointIdentity,
             ISettingsProvider<OutboxSettings> settingsProvider,
-            IJsonSerializer jsonSerializer,
             IOutboxDelivery outboxDelivery)
         {
             _dependencyContainer = dependencyContainer;
             _endpointIdentity = endpointIdentity;
             _settingsProvider = settingsProvider;
-            _jsonSerializer = jsonSerializer;
             _outboxDelivery = outboxDelivery;
         }
 
@@ -49,7 +45,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .ConfigureAwait(false);
 
             var messages = await _dependencyContainer
-               .InvokeWithinTransaction(true, (_endpointIdentity, settings, _jsonSerializer), ReadMessages, token)
+               .InvokeWithinTransaction(true, (_endpointIdentity, settings), ReadMessages, token)
                .ConfigureAwait(false);
 
             await _outboxDelivery
@@ -58,10 +54,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
             static async Task<IReadOnlyCollection<Messaging.IntegrationMessage>> ReadMessages(
                 IDatabaseTransaction transaction,
-                (Contract.EndpointIdentity, OutboxSettings, IJsonSerializer) state,
+                (Contract.EndpointIdentity, OutboxSettings) state,
                 CancellationToken token)
             {
-                var (endpointIdentity, settings, serializer) = state;
+                var (endpointIdentity, settings) = state;
                 var cutOff = DateTime.UtcNow - settings.OutboxDeliveryInterval;
 
                 return (await transaction
@@ -72,8 +68,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                        .Select(outbox => outbox.Message)
                        .ToListAsync(token)
                        .ConfigureAwait(false))
-                   .Select(message => message.BuildIntegrationMessage(serializer))
+                   .Select(BuildIntegrationMessage)
                    .ToList();
+            }
+
+            static Messaging.IntegrationMessage BuildIntegrationMessage(IntegrationMessage message)
+            {
+                var headers = message
+                    .Headers
+                    .Select(header => header.Payload)
+                    .ToDictionary(header => header.GetType());
+
+                return new Messaging.IntegrationMessage(message.Payload, message.ReflectedType, headers);
             }
         }
     }

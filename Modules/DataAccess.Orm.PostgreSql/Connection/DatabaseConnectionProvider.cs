@@ -14,6 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Exceptions;
+    using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using Linq;
@@ -38,18 +39,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlSettingsProvider;
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
+        private readonly IJsonSerializer _jsonSerializer;
         private readonly NpgsqlDataSource _dataSource;
 
         public DatabaseConnectionProvider(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<SqlDatabaseSettings> sqlSettingsProvider,
             ISettingsProvider<OrmSettings> ormSettingsProvider,
+            IJsonSerializer jsonSerializer,
             IModelProvider modelProvider,
             ILoggerFactory loggerFactory)
         {
             _dependencyContainer = dependencyContainer;
             _sqlSettingsProvider = sqlSettingsProvider;
             _ormSettingsProvider = ormSettingsProvider;
+            _jsonSerializer = jsonSerializer;
 
             var settings = _sqlSettingsProvider.Get(CancellationToken.None).Result;
 
@@ -190,7 +194,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
             foreach (var command in commands)
             {
-                using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings))
+                using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings, _jsonSerializer))
                 {
                     result += await npgsqlCommand
                         .ExecuteNonQueryAsync(token)
@@ -217,7 +221,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings))
+            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings, _jsonSerializer))
             {
                 var affectedRowsCount = await npgsqlCommand
                     .ExecuteNonQueryAsync(token)
@@ -243,7 +247,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings))
+            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings, _jsonSerializer))
             {
                 var reader = await npgsqlCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess, token)
                     .Handled(command)
@@ -298,7 +302,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings))
+            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings, _jsonSerializer))
             {
                 var scalar = await npgsqlCommand
                     .ExecuteScalarAsync(token)
@@ -320,7 +324,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             IDbConnection connection,
             IDbTransaction? transaction,
             ICommand command,
-            OrmSettings settings)
+            OrmSettings settings,
+            IJsonSerializer jsonSerializer)
         {
             if (command is not SqlCommand sqlCommand)
             {
@@ -341,10 +346,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
             foreach (var parameter in sqlCommand.CommandParameters)
             {
-                var (name, value, type) = parameter;
+                var (name, value, type, isJsonValue) = parameter;
 
                 if (!TryCast(name, value, out var npgsqlParameter)
-                    && !TryInfer(name, value, type, out npgsqlParameter))
+                    && !TryInfer(name, value, type, out npgsqlParameter)
+                    && !TrySerialize(name, value, type, isJsonValue, jsonSerializer, out npgsqlParameter))
                 {
                     throw new NotSupportedException($"Not supported sql command parameter: {parameter}");
                 }
@@ -449,7 +455,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
                 if (nullType == typeof(DateTime))
                 {
-                    var dateTimeValue = value is DateTime dateTime ? dateTime.ToUniversalTime() : default(DateTime?);
+                    object dateTimeValue = value is DateTime dateTime ? dateTime.ToUniversalTime() : DBNull.Value;
 
                     npgsqlParameter = new NpgsqlParameter(name, NpgsqlDbType.TimestampTz) { Value = dateTimeValue };
                     return true;
@@ -486,6 +492,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                         ? new NpgsqlParameter(name, NpgsqlDbType.Array | itemNpgsqlParameter.NpgsqlDbType) { Value = value ?? DBNull.Value }
                         : new NpgsqlParameter(name, value ?? DBNull.Value) { DataTypeName = itemNpgsqlParameter.DataTypeName + "[]" };
 
+                    return true;
+                }
+
+                npgsqlParameter = null;
+                return false;
+            }
+
+            static bool TrySerialize(
+                string name,
+                object? value,
+                Type type,
+                bool isJsonValue,
+                IJsonSerializer jsonSerializer,
+                [NotNullWhen(true)] out NpgsqlParameter? npgsqlParameter)
+            {
+                if (isJsonValue)
+                {
+                    object jsonValue = value != null
+                        ? jsonSerializer.SerializeObject(value, type)
+                        : DBNull.Value;
+
+                    npgsqlParameter = new NpgsqlParameter(name, NpgsqlDbType.Jsonb) { Value = jsonValue };
                     return true;
                 }
 

@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
     using Api.Reading;
     using Basics;
     using Connection;
+    using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.ObjectBuilder;
     using Extensions;
     using Model;
@@ -29,15 +30,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
     {
         private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IModelProvider _modelProvider;
+        private readonly IJsonSerializer _jsonSerializer;
         private readonly IObjectBuilder _objectBuilder;
 
         public SqlCommandMaterializer(
             IDatabaseConnectionProvider connectionProvider,
             IModelProvider modelProvider,
+            IJsonSerializer jsonSerializer,
             IObjectBuilder objectBuilder)
         {
             _connectionProvider = connectionProvider;
             _modelProvider = modelProvider;
+            _jsonSerializer = jsonSerializer;
             _objectBuilder = objectBuilder;
         }
 
@@ -194,7 +198,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
             }
             else if (!type.IsPrimitive())
             {
-                // TODO: #209 - IsPrimitive
                 values = values
                    .GroupBy(pair =>
                         {
@@ -211,9 +214,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
                    .ToDictionary(grp => grp.Key,
                         grp =>
                         {
-                            var innerType = type.Column(grp.Key).PropertyType;
+                            var column = type.Column(grp.Key);
+
+                            if (column.Declared.IsJsonColumn())
+                            {
+                                return _jsonSerializer.DeserializeObject((string)grp.Single().Value!, column.PropertyType);
+                            }
+
                             var innerValues = grp.ToDictionary(innerKey => innerKey.Key, innerValue => innerValue.Value);
-                            return Build(innerType, innerValues);
+                            return Build(column.PropertyType, innerValues);
                         },
                         StringComparer.OrdinalIgnoreCase);
             }

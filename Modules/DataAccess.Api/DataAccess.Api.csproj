@@ -54,16 +54,10 @@
       <Compile Update="DatabaseEntity\IDatabaseEntity.cs">
         <DependentUpon>IUniqueIdentified.cs</DependentUpon>
       </Compile>
-      <Compile Update="DatabaseEntity\JsonObject.cs">
-        <DependentUpon>IInlinedObject.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\IDatabaseEntity.cs">
         <DependentUpon>IUniqueIdentified.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\SystemType.cs">
-        <DependentUpon>IInlinedObject.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Model\JsonObject.cs">
         <DependentUpon>IInlinedObject.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\IDatabaseTransaction.cs">

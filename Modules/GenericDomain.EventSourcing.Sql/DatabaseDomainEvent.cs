@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
 {
     using System;
-    using DataAccess.Api.Model;
+    using Api.Abstractions;
     using DataAccess.Api.Sql;
     using DataAccess.Api.Sql.Attributes;
 
@@ -17,22 +17,19 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
         /// <param name="aggregateId">AggregateId</param>
         /// <param name="index">Index</param>
         /// <param name="timestamp">Timestamp</param>
-        /// <param name="eventType">EventType</param>
-        /// <param name="serializedEvent">SerializedEvent</param>
+        /// <param name="domainEvent">IDomainEvent</param>
         public DatabaseDomainEvent(
             Guid primaryKey,
             Guid aggregateId,
             long index,
             DateTime timestamp,
-            SystemType eventType,
-            string serializedEvent)
+            IDomainEvent domainEvent)
             : base(primaryKey)
         {
             AggregateId = aggregateId;
             Index = index;
             Timestamp = timestamp;
-            EventType = eventType;
-            SerializedEvent = serializedEvent;
+            DomainEvent = domainEvent;
         }
 
         /// <summary>
@@ -51,13 +48,9 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
         public DateTime Timestamp { get; set; }
 
         /// <summary>
-        /// EventType
+        /// Domain event
         /// </summary>
-        public SystemType EventType { get; set; }
-
-        /// <summary>
-        /// SerializedEvent
-        /// </summary>
-        public string SerializedEvent { get; set; }
+        [JsonColumn]
+        public IDomainEvent DomainEvent { get; set; }
     }
 }

@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             this IntegrationMessage message,
             IJsonSerializer jsonSerializer)
         {
-            var serializedMessage = jsonSerializer.SerializeObject(message);
+            var serializedMessage = jsonSerializer.SerializeObject(message, typeof(IntegrationMessage));
             ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(serializedMessage);
             return bytes.Compress();
         }

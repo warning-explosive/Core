@@ -740,6 +740,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 Array.Empty<IDatabaseEntity>()
             };
+            /*TODO: #209 - test json column selection*/
             /*TODO: #209 - test sql view translation before migration*/
             /*yield return new object[]
             {
@@ -949,6 +950,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             {
                 Assert.Equal(expected?.Value, actual?.Value);
                 Assert.Equal(expected?.Type, actual?.Type);
+                Assert.Equal(expected?.IsJsonValue, actual?.IsJsonValue);
             }
         }
     }

@@ -14,11 +14,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <param name="name">Name</param>
         /// <param name="value">Value</param>
         /// <param name="type">Type</param>
-        public SqlCommandParameter(string name, object? value, Type type)
+        /// <param name="isJsonValue">Should value be converted to json object</param>
+        public SqlCommandParameter(string name, object? value, Type type, bool isJsonValue = false)
         {
             Name = name;
             Value = value;
             Type = type;
+            IsJsonValue = isJsonValue;
         }
 
         /// <summary>
@@ -37,19 +39,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         public Type Type { get; }
 
         /// <summary>
+        /// Should value be converted to json object
+        /// </summary>
+        public bool IsJsonValue { get; }
+
+        /// <summary>
         /// Deconstruct
         /// </summary>
         /// <param name="name">Name</param>
         /// <param name="value">Value</param>
         /// <param name="type">Type</param>
+        /// <param name="isJsonValue">Should value be converted to json object</param>
         public void Deconstruct(
             out string name,
             out object? value,
-            out Type type)
+            out Type type,
+            out bool isJsonValue)
         {
             name = Name;
             value = Value;
             type = Type;
+            isJsonValue = IsJsonValue;
         }
 
         /// <inheritdoc />
@@ -73,7 +83,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 ? Type.Name
                 : Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).Name + "?";
 
-            sb.Append($"({type})");
+            if (IsJsonValue)
+            {
+                sb.Append($"({type}, JSON)");
+            }
+            else
+            {
+                sb.Append($"({type})");
+            }
 
             return sb.ToString();
         }

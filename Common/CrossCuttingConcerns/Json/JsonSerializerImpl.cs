@@ -26,6 +26,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
             _settings = new JsonSerializerSettings
                         {
                             TypeNameHandling = TypeNameHandling.Auto,
+                            MetadataPropertyHandling = MetadataPropertyHandling.ReadAhead,
                             Formatting = Formatting.Indented,
                             ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
                             Converters = converters.ToList(),
@@ -33,9 +34,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
                         };
         }
 
-        public string SerializeObject(object value)
+        public string SerializeObject(object value, Type type)
         {
-            return JsonConvert.SerializeObject(value, value.GetType(), _settings);
+            return JsonConvert.SerializeObject(value, type, _settings);
         }
 
         public object DeserializeObject(string serialized, Type type)

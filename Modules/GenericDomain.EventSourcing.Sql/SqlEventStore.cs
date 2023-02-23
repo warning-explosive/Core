@@ -9,7 +9,6 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CrossCuttingConcerns.Json;
     using DataAccess.Api.Persisting;
     using DataAccess.Api.Reading;
     using DataAccess.Api.Transaction;
@@ -19,14 +18,10 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
                                    IResolvable<IEventStore>
     {
         private readonly IDatabaseContext _databaseContext;
-        private readonly IJsonSerializer _jsonSerializer;
 
-        public SqlEventStore(
-            IDatabaseContext databaseContext,
-            IJsonSerializer jsonSerializer)
+        public SqlEventStore(IDatabaseContext databaseContext)
         {
             _databaseContext = databaseContext;
-            _jsonSerializer = jsonSerializer;
         }
 
         public async Task<TAggregate?> GetAggregate<TAggregate>(
@@ -59,8 +54,8 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
                .ConfigureAwait(false);
 
             return databaseDomainEvents
-               .Select(domainEvent => _jsonSerializer.DeserializeObject(domainEvent.SerializedEvent, domainEvent.EventType))
-               .OfType<IDomainEvent<TAggregate>>()
+               .Select(domainEvent => domainEvent.DomainEvent)
+               .Cast<IDomainEvent<TAggregate>>()
                .ToArray();
         }
 
@@ -91,8 +86,7 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
                 args.AggregateId,
                 args.Index,
                 args.Timestamp,
-                args.DomainEvent.GetType(),
-                _jsonSerializer.SerializeObject(args.DomainEvent));
+                args.DomainEvent);
         }
     }
 }

@@ -15,7 +15,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
     using Core.DataAccess.Orm.Transaction;
-    using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.Logging;
     using Deduplication;
     using GenericEndpoint.UnitOfWork;
@@ -34,7 +33,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IAdvancedDatabaseTransaction _transaction;
         private readonly IOutboxDelivery _outboxDelivery;
-        private readonly IJsonSerializer _jsonSerializer;
         private readonly ILogger _logger;
 
         public IntegrationUnitOfWork(
@@ -42,13 +40,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             IAdvancedDatabaseTransaction transaction,
             IOutboxDelivery outboxDelivery,
             IOutboxStorage outboxStorage,
-            IJsonSerializer jsonSerializer,
             ILogger logger)
         {
             _endpointIdentity = endpointIdentity;
             _transaction = transaction;
             _outboxDelivery = outboxDelivery;
-            _jsonSerializer = jsonSerializer;
             _logger = logger;
 
             OutboxStorage = outboxStorage;
@@ -79,9 +75,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             {
                 if (IsTransactionValid(context, _transaction, out var exception))
                 {
-                    await PersistInbox(context, _transaction, _endpointIdentity, Inbox, _jsonSerializer, token).ConfigureAwait(false);
+                    await PersistInbox(context, _transaction, _endpointIdentity, Inbox, token).ConfigureAwait(false);
 
-                    await PersistOutgoingMessages(_transaction, _endpointIdentity, OutboxStorage.All(), _jsonSerializer, token).ConfigureAwait(false);
+                    await PersistOutgoingMessages(_transaction, _endpointIdentity, OutboxStorage.All(), token).ConfigureAwait(false);
 
                     await _transaction.Close(true, token).ConfigureAwait(false);
                 }
@@ -149,13 +145,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             IDatabaseContext databaseContext,
             EndpointIdentity endpointIdentity,
             InboxMessage? inbox,
-            IJsonSerializer jsonSerializer,
             CancellationToken token)
         {
             if (inbox == null)
             {
                 inbox = new InboxMessage(Guid.NewGuid(),
-                    Deduplication.IntegrationMessage.Build(context.Message, jsonSerializer),
+                    new Deduplication.IntegrationMessage(context.Message),
                     endpointIdentity,
                     false,
                     true);
@@ -177,14 +172,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             IDatabaseContext databaseContext,
             EndpointIdentity endpointIdentity,
             IReadOnlyCollection<IntegrationMessage> messages,
-            IJsonSerializer jsonSerializer,
             CancellationToken token)
         {
             var outboxId = Guid.NewGuid();
             var timestamp = DateTime.UtcNow;
 
             var outboxMessages = messages
-               .Select(message => Deduplication.IntegrationMessage.Build(message, jsonSerializer))
+               .Select(message => new Deduplication.IntegrationMessage(message))
                .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity, message, false))
                .ToArray();
 

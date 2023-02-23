@@ -11,8 +11,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
         /// Serialize object
         /// </summary>
         /// <param name="value">Object for serialization</param>
+        /// <param name="type">Object type</param>
         /// <returns>Serialized object</returns>
-        string SerializeObject(object value);
+        string SerializeObject(object value, Type type);
 
         /// <summary>
         /// Deserialize object

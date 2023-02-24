@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -15,7 +16,6 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using DataAccess.Orm.Extensions;
     using DataAccess.Orm.Host.Abstractions;
     using DataAccess.Orm.Linq;
-    using DataAccess.Orm.Sql.Translation;
     using DataAccess.Orm.Transaction;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.EventSourcing;
@@ -37,12 +37,12 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
         public bool ApplyEveryTime { get; } = false;
 
-        public Task<ICommand> InvokeCommand(CancellationToken token)
+        public Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(true, _dependencyContainer, ExecuteManualMigration, token);
         }
 
-        private static async Task<ICommand> ExecuteManualMigration(
+        private static async Task<IReadOnlyCollection<ICommand>> ExecuteManualMigration(
             IAdvancedDatabaseTransaction transaction,
             IDependencyContainer dependencyContainer,
             CancellationToken token)
@@ -78,10 +78,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
                .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default, token)
                .ConfigureAwait(false);
 
-            return transaction
-                .Commands
-                .Cast<SqlCommand>()
-                .Aggregate((prev, next) => prev.Merge(next, ";" + Environment.NewLine + Environment.NewLine));
+            return transaction.Commands.ToList();
         }
     }
 }

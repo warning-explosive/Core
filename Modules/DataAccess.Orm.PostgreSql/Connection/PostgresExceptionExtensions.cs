@@ -1,12 +1,14 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
     using System;
+    using System.Data.Common;
     using System.Linq;
     using System.Threading.Tasks;
     using Api.Exceptions;
     using Basics;
-    using Linq;
     using Npgsql;
+    using NpgsqlTypes;
+    using Sql.Translation;
 
     internal static class PostgresExceptionExtensions
     {
@@ -24,7 +26,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         public static async Task<T> Handled<T>(
             this Task<T> task,
-            ICommand command)
+            NpgsqlCommand command)
         {
             try
             {
@@ -36,11 +38,46 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             }
         }
 
-        private static TResult Handle<TResult>(Exception exception, ICommand command)
+        public static async Task<T> Handled<T>(
+            this Task<T> task,
+            NpgsqlBatch batch)
         {
+            try
+            {
+                return await task.ConfigureAwait(false);
+            }
+            catch (PostgresException exception)
+            {
+                return Handle<T>(exception, batch);
+            }
+        }
+
+        private static TResult Handle<TResult>(Exception exception, NpgsqlCommand command)
+        {
+            var sqlCommand = new SqlCommand(
+                command.CommandText,
+                command.Parameters.Select(param => new SqlCommandParameter(param.ParameterName, param.Value, typeof(object), param.NpgsqlDbType == NpgsqlDbType.Jsonb)).ToList());
+
             DatabaseException databaseException = exception.Flatten().Any(ex => ex.IsSerializationFailure())
-                ? new DatabaseConcurrentUpdateException(command.ToString(), exception)
-                : new DatabaseCommandExecutionException(command.ToString(), exception);
+                ? new DatabaseConcurrentUpdateException(sqlCommand.ToString(), exception)
+                : new DatabaseCommandExecutionException(sqlCommand.ToString(), exception);
+
+            throw databaseException;
+        }
+
+        private static TResult Handle<TResult>(Exception exception, NpgsqlBatch batch)
+        {
+            var sqlCommand = batch
+                .BatchCommands
+                .AsEnumerable<DbBatchCommand>()
+                .Select(command => new SqlCommand(
+                    command.CommandText,
+                    command.Parameters.AsEnumerable<NpgsqlParameter>().Select(param => new SqlCommandParameter(param.ParameterName, param.Value, typeof(object), param.NpgsqlDbType == NpgsqlDbType.Jsonb)).ToList()))
+                    .Aggregate((prev, next) => prev.Merge(next, ";" + Environment.NewLine));
+
+            DatabaseException databaseException = exception.Flatten().Any(ex => ex.IsSerializationFailure())
+                ? new DatabaseConcurrentUpdateException(sqlCommand.ToString(), exception)
+                : new DatabaseCommandExecutionException(sqlCommand.ToString(), exception);
 
             throw databaseException;
         }

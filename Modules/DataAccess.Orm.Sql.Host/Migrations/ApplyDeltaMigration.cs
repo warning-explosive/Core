@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 
         public virtual bool ApplyEveryTime { get; } = true;
 
-        public async Task<ICommand> InvokeCommand(CancellationToken token)
+        public async Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token)
         {
             var databaseEntities = _databaseTypeProvider
                .DatabaseEntities()
@@ -61,25 +61,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             return await Migrate(modelChanges, token).ConfigureAwait(false);
         }
 
-        private async Task<ICommand> Migrate(
+        private async Task<IReadOnlyCollection<ICommand>> Migrate(
             IReadOnlyCollection<IModelChange> modelChanges,
             CancellationToken token)
         {
             if (!modelChanges.Any())
             {
-                return new SqlCommand("--nothing was changed", Array.Empty<SqlCommandParameter>());
+                return new[] { new SqlCommand("--nothing was changed", Array.Empty<SqlCommandParameter>()) };
             }
 
-            var command = BuildCommands(modelChanges.ToArray());
+            var commands = BuildCommands(modelChanges.ToArray());
 
             await _dependencyContainer
-               .InvokeWithinTransaction(true, command, Migrate, token)
+               .InvokeWithinTransaction(true, commands, Migrate, token)
                .ConfigureAwait(false);
 
-            return command;
+            return commands;
         }
 
-        private ICommand BuildCommands(IModelChange[] modelChanges)
+        private IReadOnlyCollection<SqlCommand> BuildCommands(IModelChange[] modelChanges)
         {
             return modelChanges
                 .SelectMany(modelChange => _commandBuilder.BuildCommands(modelChange))
@@ -92,19 +92,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 
                     return sqlCommand;
                 })
-                .Aggregate((acc, next) => acc.Merge(next, ";" + Environment.NewLine + Environment.NewLine));
+                .ToList();
         }
 
         private async Task Migrate(
             IAdvancedDatabaseTransaction transaction,
-            ICommand command,
+            IReadOnlyCollection<ICommand> commands,
             CancellationToken token)
         {
             _ = await _connectionProvider
-                .Execute(transaction, command, token)
+                .Execute(transaction, commands, token)
                 .ConfigureAwait(false);
 
-            var change = new ModelChange(command, _connectionProvider.Execute);
+            var change = new ModelChange(commands, _connectionProvider.Execute);
 
             transaction.CollectChange(change);
         }

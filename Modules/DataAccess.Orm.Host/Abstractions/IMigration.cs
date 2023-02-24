@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Host.Abstractions
 {
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Linq;
@@ -20,10 +21,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Abstractions
         public bool ApplyEveryTime { get; }
 
         /// <summary>
-        /// Builds and invokes a migration command
+        /// Builds and invokes a migration commands
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<ICommand> InvokeCommand(CancellationToken token);
+        Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token);
     }
 }

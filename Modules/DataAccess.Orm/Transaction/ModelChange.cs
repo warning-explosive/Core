@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Linq;
@@ -10,17 +11,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
     /// </summary>
     public class ModelChange : ITransactionalChange
     {
-        private readonly ICommand _command;
-        private readonly Func<IAdvancedDatabaseTransaction, ICommand, CancellationToken, Task> _applyModelChange;
+        private readonly IReadOnlyCollection<ICommand> _commands;
+        private readonly Func<IAdvancedDatabaseTransaction, IReadOnlyCollection<ICommand>, CancellationToken, Task> _applyModelChange;
 
         /// <summary> .cctor </summary>
-        /// <param name="command">Command</param>
+        /// <param name="commands">Commands</param>
         /// <param name="applyModelChange">ApplyModelChange delegate</param>
         public ModelChange(
-            ICommand command,
-            Func<IAdvancedDatabaseTransaction, ICommand, CancellationToken, Task> applyModelChange)
+            IReadOnlyCollection<ICommand> commands,
+            Func<IAdvancedDatabaseTransaction, IReadOnlyCollection<ICommand>, CancellationToken, Task> applyModelChange)
         {
-            _command = command;
+            _commands = commands;
             _applyModelChange = applyModelChange;
         }
 
@@ -29,7 +30,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
             IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
-            return _applyModelChange(transaction, _command, token);
+            return _applyModelChange(transaction, _commands, token);
         }
 
         /// <inheritdoc />

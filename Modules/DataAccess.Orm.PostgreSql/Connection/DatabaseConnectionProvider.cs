@@ -192,20 +192,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
             long result = 0;
 
-            foreach (var command in commands)
+            using (var npgsqlBatch = CreateBatch(connection, transaction, commands, settings))
             {
-                using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings, _jsonSerializer))
-                {
-                    result += await npgsqlCommand
-                        .ExecuteNonQueryAsync(token)
-                        .Handled(command)
-                        .ConfigureAwait(false);
-                }
-
-                if (command is SqlCommand { Collect: true })
-                {
-                    transaction?.CollectCommand(command);
-                }
+                result += await npgsqlBatch
+                    .ExecuteNonQueryAsync(token)
+                    .Handled(npgsqlBatch)
+                    .ConfigureAwait(false);
             }
 
             return result;
@@ -221,19 +213,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings, _jsonSerializer))
+            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
             {
-                var affectedRowsCount = await npgsqlCommand
+                return await npgsqlCommand
                     .ExecuteNonQueryAsync(token)
-                    .Handled(command)
+                    .Handled(npgsqlCommand)
                     .ConfigureAwait(false);
-
-                if (command is SqlCommand { Collect: true })
-                {
-                    transaction?.CollectCommand(command);
-                }
-
-                return affectedRowsCount;
             }
         }
 
@@ -247,10 +232,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings, _jsonSerializer))
+            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
             {
                 var reader = await npgsqlCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess, token)
-                    .Handled(command)
+                    .Handled(npgsqlCommand)
                     .ConfigureAwait(false);
 
                 /*
@@ -262,7 +247,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
                 await using (reader)
                 {
-                    while (await reader.ReadAsync(token).Handled(command).ConfigureAwait(false))
+                    while (await reader.ReadAsync(token).Handled(npgsqlCommand).ConfigureAwait(false))
                     {
                         var row = new Dictionary<string, object?>(reader.FieldCount);
 
@@ -274,15 +259,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                         buffer.Add(row);
                     }
 
-                    while (await reader.NextResultAsync(token).Handled(command).ConfigureAwait(false))
+                    while (await reader.NextResultAsync(token).Handled(npgsqlCommand).ConfigureAwait(false))
                     {
                         /* ignore subsequent result sets */
                     }
-                }
-
-                if (command is SqlCommand { Collect: true })
-                {
-                    transaction?.CollectCommand(command);
                 }
 
                 foreach (var row in buffer)
@@ -302,63 +282,103 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction?.DbTransaction, command, settings, _jsonSerializer))
+            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
             {
                 var scalar = await npgsqlCommand
                     .ExecuteScalarAsync(token)
-                    .Handled(command)
+                    .Handled(npgsqlCommand)
                     .ConfigureAwait(false);
-
-                if (command is SqlCommand { Collect: true })
-                {
-                    transaction?.CollectCommand(command);
-                }
 
                 return (T)scalar !;
             }
         }
 
-        [SuppressMessage("Analysis", "CA2100", Justification = "NpgsqlParameter<T>")]
-        [SuppressMessage("Analysis", "CA1502", Justification = "NpgsqlParameter<T>")]
-        private static NpgsqlCommand CreateCommand(
+        private NpgsqlBatch CreateBatch(
             IDbConnection connection,
-            IDbTransaction? transaction,
+            IAdvancedDatabaseTransaction? transaction,
+            IEnumerable<ICommand> commands,
+            OrmSettings settings)
+        {
+            // TODO: #backlog - batch support doesn't work in netstandard assembly - https://github.com/dotnet/runtime/issues/28633
+            var npgsqlBatch = new NpgsqlBatch();
+
+            npgsqlBatch.Connection = (NpgsqlConnection)connection;
+            npgsqlBatch.Transaction = (NpgsqlTransaction?)transaction?.DbTransaction;
+            npgsqlBatch.Timeout = (int)settings.CommandSecondsTimeout;
+
+            foreach (var command in commands)
+            {
+                if (command is not SqlCommand sqlCommand)
+                {
+                    throw new NotSupportedException($"Unsupported command type {command.GetType()}");
+                }
+
+                var npgsqlCommand = new NpgsqlBatchCommand();
+                npgsqlBatch.BatchCommands.Add(npgsqlCommand);
+
+                npgsqlCommand.CommandText = sqlCommand.CommandText;
+                npgsqlCommand.CommandType = CommandType.Text;
+
+                foreach (var parameter in sqlCommand.CommandParameters)
+                {
+                    npgsqlCommand.Parameters.Add(GetNpgsqlParameter(parameter));
+                }
+
+                if (sqlCommand.Collect)
+                {
+                    transaction?.CollectCommand(command);
+                }
+            }
+
+            return npgsqlBatch;
+        }
+
+        [SuppressMessage("Analysis", "CA2100", Justification = "NpgsqlParameter<T>")]
+        private NpgsqlCommand CreateCommand(
+            IDbConnection connection,
+            IAdvancedDatabaseTransaction? transaction,
             ICommand command,
-            OrmSettings settings,
-            IJsonSerializer jsonSerializer)
+            OrmSettings settings)
         {
             if (command is not SqlCommand sqlCommand)
             {
                 throw new NotSupportedException($"Unsupported command type {command.GetType()}");
             }
 
-            /*
-             * TODO: #209 - Batch support
-             * https://github.com/dotnet/runtime/issues/28633
-             */
             var npgsqlCommand = new NpgsqlCommand();
 
             npgsqlCommand.Connection = (NpgsqlConnection)connection;
-            npgsqlCommand.Transaction = (NpgsqlTransaction?)transaction;
-            npgsqlCommand.CommandText = sqlCommand.CommandText;
+            npgsqlCommand.Transaction = (NpgsqlTransaction?)transaction?.DbTransaction;
             npgsqlCommand.CommandTimeout = (int)settings.CommandSecondsTimeout;
+            npgsqlCommand.CommandText = sqlCommand.CommandText;
             npgsqlCommand.CommandType = CommandType.Text;
 
             foreach (var parameter in sqlCommand.CommandParameters)
             {
-                var (name, value, type, isJsonValue) = parameter;
+                npgsqlCommand.Parameters.Add(GetNpgsqlParameter(parameter));
+            }
 
-                if (!TryCast(name, value, out var npgsqlParameter)
-                    && !TryInfer(name, value, type, out npgsqlParameter)
-                    && !TrySerialize(name, value, type, isJsonValue, jsonSerializer, out npgsqlParameter))
-                {
-                    throw new NotSupportedException($"Not supported sql command parameter: {parameter}");
-                }
-
-                npgsqlCommand.Parameters.Add(npgsqlParameter);
+            if (sqlCommand.Collect)
+            {
+                transaction?.CollectCommand(command);
             }
 
             return npgsqlCommand;
+        }
+
+        [SuppressMessage("Analysis", "CA1502", Justification = "NpgsqlParameter<T>")]
+        private NpgsqlParameter GetNpgsqlParameter(SqlCommandParameter parameter)
+        {
+            var (name, value, type, isJsonValue) = parameter;
+
+            if (!TryCast(name, value, out var npgsqlParameter)
+                && !TryInfer(name, value, type, out npgsqlParameter)
+                && !TrySerialize(name, value, type, isJsonValue, _jsonSerializer, out npgsqlParameter))
+            {
+                throw new NotSupportedException($"Not supported sql command parameter: {parameter}");
+            }
+
+            return npgsqlParameter;
 
             static bool TryCast(
                 string name,

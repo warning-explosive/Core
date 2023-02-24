@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Persisting;
@@ -52,12 +53,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        public Task<ICommand> InvokeCommand(CancellationToken token)
+        public Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(true, ExecuteManualMigration, token);
         }
 
-        private async Task<ICommand> ExecuteManualMigration(
+        private async Task<IReadOnlyCollection<ICommand>> ExecuteManualMigration(
             IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
@@ -67,7 +68,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 .Execute(transaction, command, token)
                 .ConfigureAwait(false);
 
-            var change = new ModelChange(command, _connectionProvider.Execute);
+            var commands = new[] { command };
+
+            var change = new ModelChange(commands, _connectionProvider.Execute);
 
             transaction.CollectChange(change);
 
@@ -81,7 +84,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token)
                 .ConfigureAwait(false);
 
-            return command;
+            return commands;
         }
     }
 }

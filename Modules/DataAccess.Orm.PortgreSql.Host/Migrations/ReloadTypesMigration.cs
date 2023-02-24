@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Migrations
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -31,12 +32,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Migrations
 
         public bool ApplyEveryTime { get; } = true;
 
-        public Task<ICommand> InvokeCommand(CancellationToken token)
+        public Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token)
         {
             return _dependencyContainer.InvokeWithinTransaction(false, ReloadTypes, token);
         }
 
-        private static Task<ICommand> ReloadTypes(
+        private static Task<IReadOnlyCollection<ICommand>> ReloadTypes(
             IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
@@ -46,7 +47,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Migrations
                 $"--{nameof(NpgsqlConnection)}.{nameof(NpgsqlConnection.ReloadTypes)}()",
                 Array.Empty<SqlCommandParameter>());
 
-            return Task.FromResult(command);
+            IReadOnlyCollection<ICommand> commands = new[] { command };
+
+            return Task.FromResult(commands);
         }
     }
 }

@@ -83,12 +83,12 @@
                     continue;
                 }
 
-                var command = await migration
-                   .InvokeCommand(token)
+                var commands = await migration
+                   .InvokeCommands(token)
                    .ConfigureAwait(false);
 
                 await _dependencyContainer
-                   .InvokeWithinTransaction(true, (migration, command), PersistAppliedMigration, token)
+                   .InvokeWithinTransaction(true, (migration, commands), PersistAppliedMigration, token)
                    .ConfigureAwait(false);
 
                 _logger.Information($"{migration.Name} was applied");
@@ -115,24 +115,24 @@
 
         private static async Task PersistAppliedMigration(
             IAdvancedDatabaseTransaction transaction,
-            (IMigration migration, ICommand command) state,
+            (IMigration migration, IReadOnlyCollection<ICommand> commands) state,
             CancellationToken token)
         {
-            var (migration, command) = state;
-
-            if (command is not SqlCommand sqlCommand)
-            {
-                throw new NotSupportedException($"Unsupported command type {command.GetType()}");
-            }
+            var (migration, commands) = state;
 
             var name = migration.ApplyEveryTime
                 ? $"{migration.Name} {(await GetMigrationIndex(transaction, migration.Name, token).ConfigureAwait(false)).ToString(CultureInfo.InvariantCulture)}"
                 : migration.Name;
 
+            var commandText = commands
+                .Cast<SqlCommand>()
+                .Aggregate((acc, next) => acc.Merge(next, ";" + Environment.NewLine))
+                .ToString();
+
             var appliedMigration = new AppliedMigration(
                 Guid.NewGuid(),
                 DateTime.Now,
-                sqlCommand.ToString(),
+                commandText,
                 name);
 
             await transaction

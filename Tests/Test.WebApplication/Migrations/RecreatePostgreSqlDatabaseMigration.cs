@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
@@ -59,7 +60,7 @@ grant all privileges on database ""{0}"" to ""{1}"";";
         public bool ApplyEveryTime { get; } = true;
 
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
-        public async Task<ICommand> InvokeCommand(CancellationToken token)
+        public async Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token)
         {
             var sqlDatabaseSettings = await _sqlDatabaseSettingsProvider
                .Get(token)
@@ -123,7 +124,7 @@ grant all privileges on database ""{0}"" to ""{1}"";";
                .Migrate(migrations, token)
                .ConfigureAwait(false);
 
-            return command;
+            return new[] { command };
         }
     }
 }

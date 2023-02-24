@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
     using System;
+    using System.Globalization;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -35,7 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             sb.AppendLine(_sqlExpressionTranslator.Translate(expression.Source, depth));
 
             sb.Append(new string('\t', depth));
-            sb.Append($"fetch first {expression.RowsFetchLimit} rows only");
+            sb.Append(CultureInfo.InvariantCulture, $"fetch first {expression.RowsFetchLimit} rows only");
 
             return sb.ToString();
         }

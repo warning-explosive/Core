@@ -12,19 +12,16 @@ on:
     paths-ignore:
       - '**.md'
 env:
-  DOT_NET_VERSION: 7.0.200
-  GIT_VERSION_VERSION: 5.12.0
+  DOT_NET_VERSION: 7.0.x
+  GIT_VERSION_VERSION: 5.*
   TEST_RESULTS_PATH: TEST_RESULTS
   TEST_COVERAGE_PATH: TEST_COVERAGE
-  POSTGRES_IMAGE_VERSION: 15.1
-  RABBITMQ_IMAGE_VERSION: 3.11.9-management
-  REPORT_GENERATOR_VERSION: 5.1.17
 jobs:
   build-test-publish:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:${{ env.POSTGRES_IMAGE_VERSION }}
+        image: postgres:15.1
         env:
           POSTGRES_PASSWORD: Password12!
         options: >-
@@ -35,7 +32,7 @@ jobs:
         ports:
           - 5432:5432
       rabbit_mq:
-        image: rabbitmq:${{ env.RABBITMQ_IMAGE_VERSION }}
+        image: rabbitmq:3.11.9-management
         ports:
           - 5672:5672
           - 15672:15672
@@ -68,7 +65,7 @@ jobs:
       run: dotnet test "${{ github.event.repository.name }}.sln" -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "${{ env.TEST_RESULTS_PATH }}" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[*.Benchmark]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../${{ env.TEST_COVERAGE_PATH }}/' /p:MergeWith='../../${{ env.TEST_COVERAGE_PATH }}/coverage.json'
     - name: Generate coverage report
       if: ${{ success() || failure() }}
-      uses: danielpalme/ReportGenerator-GitHub-Action@${{ env.REPORT_GENERATOR_VERSION }}
+      uses: danielpalme/ReportGenerator-GitHub-Action@$5.1.17
       with:
         reports: '${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml'
         targetdir: '${{ env.TEST_COVERAGE_PATH }}'

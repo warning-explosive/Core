@@ -2,23 +2,25 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using CrossCuttingConcerns.Settings;
     using Linq;
-    using Orm.Connection;
     using Sql.Host.Model;
+    using Sql.Settings;
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateDatabaseModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateDatabase>,
                                                              IResolvable<IModelChangeCommandBuilder<CreateDatabase>>,
                                                              ICollectionResolvable<IModelChangeCommandBuilder>
     {
-        private readonly IDatabaseConnectionProvider _connectionProvider;
+        private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 
-        public CreateDatabaseModelChangeCommandBuilder(IDatabaseConnectionProvider connectionProvider)
+        public CreateDatabaseModelChangeCommandBuilder(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
         {
-            _connectionProvider = connectionProvider;
+            _settingsProvider = settingsProvider;
         }
 
         public IEnumerable<ICommand> BuildCommands(IModelChange change)
@@ -30,7 +32,9 @@
 
         public IEnumerable<ICommand> BuildCommands(CreateDatabase change)
         {
-            throw new InvalidOperationException($"You should create and configure {_connectionProvider.Database} database manually");
+            var settings = _settingsProvider.Get(CancellationToken.None).Result;
+
+            throw new InvalidOperationException($"You should create and configure {settings.Database} database manually");
         }
     }
 }

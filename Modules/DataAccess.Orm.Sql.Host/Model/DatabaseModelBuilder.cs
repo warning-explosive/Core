@@ -12,42 +12,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot;
-    using Connection;
-    using Extensions;
+    using CrossCuttingConcerns.Settings;
+    using Settings;
+    using Transaction;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseModelBuilder : IDatabaseModelBuilder,
                                           IResolvable<IDatabaseModelBuilder>
     {
-        private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseConnectionProvider _connectionProvider;
+        private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
 
-        public DatabaseModelBuilder(
-            IDependencyContainer dependencyContainer,
-            IDatabaseConnectionProvider connectionProvider)
+        public DatabaseModelBuilder(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
         {
-            _dependencyContainer = dependencyContainer;
-            _connectionProvider = connectionProvider;
+            _settingsProvider = settingsProvider;
         }
 
-        public async Task<DatabaseNode?> BuildModel(CancellationToken token)
-        {
-            var databaseExists = await _connectionProvider
-                .DoesDatabaseExist(token)
-                .ConfigureAwait(false);
-
-            if (!databaseExists)
-            {
-                return default;
-            }
-
-            return await _dependencyContainer
-                .InvokeWithinTransaction(false, BuildModel, token)
-                .ConfigureAwait(false);
-        }
-
-        private async Task<DatabaseNode> BuildModel(IDatabaseTransaction transaction, CancellationToken token)
+        public async Task<DatabaseNode?> BuildModel(
+            IAdvancedDatabaseTransaction transaction,
+            CancellationToken token)
         {
             var constraints = (await transaction
                     .All<DatabaseColumnConstraint>()
@@ -73,28 +55,33 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 .WhenAll()
                 .ConfigureAwait(false);
 
-            return new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas);
+            var settings = await _settingsProvider
+                .Get(token)
+                .ConfigureAwait(false);
+
+            return new DatabaseNode(settings.Host, settings.Database, schemas);
         }
 
-        private static async Task<SchemaNode> BuildSchemaNode(IDatabaseContext transaction,
+        private static async Task<SchemaNode> BuildSchemaNode(
+            IDatabaseContext databaseContext,
             string schema,
             IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>> constraints,
             CancellationToken token)
         {
-            var types = await BuildEnumTypeNodes(transaction, schema, token).ConfigureAwait(false);
-            var tables = await BuildTableNodes(transaction, schema, constraints, token).ConfigureAwait(false);
-            var views = await BuildViewNodes(transaction, schema, token).ConfigureAwait(false);
-            var indexes = await BuildIndexNodes(transaction, schema, token).ConfigureAwait(false);
+            var types = await BuildEnumTypeNodes(databaseContext, schema, token).ConfigureAwait(false);
+            var tables = await BuildTableNodes(databaseContext, schema, constraints, token).ConfigureAwait(false);
+            var views = await BuildViewNodes(databaseContext, schema, token).ConfigureAwait(false);
+            var indexes = await BuildIndexNodes(databaseContext, schema, token).ConfigureAwait(false);
 
             return new SchemaNode(schema, types, tables, views, indexes);
         }
 
         private static async Task<IReadOnlyCollection<EnumTypeNode>> BuildEnumTypeNodes(
-            IDatabaseContext transaction,
+            IDatabaseContext databaseContext,
             string schema,
             CancellationToken token)
         {
-            return (await transaction
+            return (await databaseContext
                     .All<DatabaseEnumType>()
                     .Where(column => column.Schema == schema)
                     .ToListAsync(token)
@@ -113,12 +100,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         }
 
         private static async Task<IReadOnlyCollection<TableNode>> BuildTableNodes(
-            IDatabaseContext transaction,
+            IDatabaseContext databaseContext,
             string schema,
             IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>> constraints,
             CancellationToken token)
         {
-            return (await transaction
+            return (await databaseContext
                     .All<DatabaseColumn>()
                     .Where(column => column.Schema == schema)
                     .ToListAsync(token)
@@ -184,11 +171,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         }
 
         private static async Task<List<ViewNode>> BuildViewNodes(
-            IDatabaseContext transaction,
+            IDatabaseContext databaseContext,
             string schema,
             CancellationToken token)
         {
-            return (await transaction
+            return (await databaseContext
                     .All<DatabaseView>()
                     .Where(view => view.Schema == schema)
                     .ToListAsync(token)
@@ -203,11 +190,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         }
 
         private static async Task<IReadOnlyCollection<IndexNode>> BuildIndexNodes(
-            IDatabaseContext transaction,
+            IDatabaseContext databaseContext,
             string schema,
             CancellationToken token)
         {
-            return (await transaction
+            return (await databaseContext
                     .All<DatabaseIndex>()
                     .Where(index => index.Schema == schema)
                     .ToListAsync(token)

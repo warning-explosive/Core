@@ -73,10 +73,12 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                 .UseEndpoint(
                     new EndpointIdentity(nameof(MessageHandlerMiddlewareBenchmarkSource), Guid.NewGuid().ToString()),
                     (_, builder) => builder
-                    .WithPostgreSqlDataAccess(options => options.ExecuteMigrations())
+                    .WithPostgreSqlDataAccess(options => options
+                        .ExecuteMigrations())
                     .WithSqlEventSourcing()
                     .WithAuthorization()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseMigration)))
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostStartupAction)))
                     .BuildOptions())
                 .BuildHost(settingsDirectory);
 

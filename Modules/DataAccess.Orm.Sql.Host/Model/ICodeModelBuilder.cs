@@ -16,6 +16,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         /// <param name="databaseEntities">Database entities</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Built model nodes</returns>
-        Task<DatabaseNode?> BuildModel(IReadOnlyCollection<Type> databaseEntities, CancellationToken token);
+        Task<DatabaseNode?> BuildModel(
+            IReadOnlyCollection<Type> databaseEntities,
+            CancellationToken token);
     }
 }

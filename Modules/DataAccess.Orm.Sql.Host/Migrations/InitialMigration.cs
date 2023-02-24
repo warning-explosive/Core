@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot;
     using Connection;
     using Model;
 
@@ -14,11 +13,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     internal class InitialMigration : ApplyDeltaMigration
     {
         public InitialMigration(
-            IDependencyContainer dependencyContainer,
             IModelChangesExtractor modelChangesExtractor,
             IModelChangeCommandBuilderComposite commandBuilder,
             IDatabaseConnectionProvider connectionProvider)
-            : base(dependencyContainer,
+            : base(
                 new InitialMigrationDatabaseTypeProvider(new[] { typeof(AppliedMigration), typeof(SqlView) }),
                 modelChangesExtractor,
                 commandBuilder,

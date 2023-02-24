@@ -155,9 +155,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     false,
                     true);
 
-                // TODO: #209 - EnInsertBehavior.DoUpdate ???
                 await databaseContext
-                   .Insert(new[] { inbox }, EnInsertBehavior.DoUpdate, token)
+                   .Insert(new[] { inbox }, EnInsertBehavior.DoNothing, token)
                    .ConfigureAwait(false);
             }
             else
@@ -182,8 +181,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity, message, false))
                .ToArray();
 
-            // TODO: #209 - EnInsertBehavior.DoNothing ???
-            return databaseContext.Insert(outboxMessages, EnInsertBehavior.DoNothing, token);
+            return databaseContext.Insert(outboxMessages, EnInsertBehavior.Default, token);
         }
 
         private static Task DeliverOutgoingMessages(

@@ -8,28 +8,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Connection;
+    using CrossCuttingConcerns.Settings;
+    using Settings;
     using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class CodeModelBuilder : ICodeModelBuilder,
                                       IResolvable<ICodeModelBuilder>
     {
+        private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
         private readonly IModelProvider _modelProvider;
-        private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
         public CodeModelBuilder(
+            ISettingsProvider<SqlDatabaseSettings> settingsProvider,
             IModelProvider modelProvider,
-            IDatabaseConnectionProvider connectionProvider,
             IColumnDataTypeProvider columnDataTypeProvider)
         {
+            _settingsProvider = settingsProvider;
             _modelProvider = modelProvider;
-            _connectionProvider = connectionProvider;
             _columnDataTypeProvider = columnDataTypeProvider;
         }
 
-        public Task<DatabaseNode?> BuildModel(IReadOnlyCollection<Type> databaseEntities, CancellationToken token)
+        public async Task<DatabaseNode?> BuildModel(IReadOnlyCollection<Type> databaseEntities, CancellationToken token)
         {
             var tables = databaseEntities
                 .Where(type => _modelProvider.Tables.ContainsKey(type))
@@ -47,7 +48,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 .Select(schema => BuildSchemaNode(schema.Key, schema))
                 .ToArray();
 
-            return Task.FromResult((DatabaseNode?)new DatabaseNode(_connectionProvider.Host, _connectionProvider.Database, schemas));
+            var settings = await _settingsProvider
+                .Get(token)
+                .ConfigureAwait(false);
+
+            return new DatabaseNode(settings.Host, settings.Database, schemas);
         }
 
         private SchemaNode BuildSchemaNode(

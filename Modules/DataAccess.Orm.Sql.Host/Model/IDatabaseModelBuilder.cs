@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Transaction;
 
     /// <summary>
     /// Builds database model from the existing database
@@ -11,8 +12,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         /// <summary>
         /// Builds database model from the specified source
         /// </summary>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Built model nodes</returns>
-        Task<DatabaseNode?> BuildModel(CancellationToken token);
+        Task<DatabaseNode?> BuildModel(
+            IAdvancedDatabaseTransaction transaction,
+            CancellationToken token);
     }
 }

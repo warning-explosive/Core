@@ -44,11 +44,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Messages;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using Migrations;
     using Mocks;
     using Registrations;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
+    using StartupActions;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -161,14 +161,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 typeof(AlwaysReplyMessageHandler)
             };
 
-            var manualMigrations = new[]
+            var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseMigration)
+                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
             };
 
             var additionalOurTypes = messageTypes
                .Concat(messageHandlerTypes)
-               .Concat(manualMigrations)
+               .Concat(startupActions)
                .ToArray();
 
             var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), static builder => builder)
@@ -253,13 +253,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 typeof(DatabaseEntity)
             };
 
-            var manualMigrations = new[]
+            var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseMigration)
+                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
             };
 
             var additionalOurTypes = databaseEntities
-               .Concat(manualMigrations)
+               .Concat(startupActions)
                .ToArray();
 
             var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), static builder => builder)
@@ -516,13 +516,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 typeof(DatabaseEntity)
             };
 
-            var manualMigrations = new[]
+            var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseMigration)
+                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
             };
 
             var additionalOurTypes = databaseEntities
-               .Concat(manualMigrations)
+               .Concat(startupActions)
                .ToArray();
 
             var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), static builder => builder)
@@ -798,15 +798,15 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 typeof(DatabaseEntity)
             };
 
-            var manualMigrations = new[]
+            var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseMigration)
+                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
             };
 
             var additionalOurTypes = messageTypes
                .Concat(messageHandlerTypes)
                .Concat(databaseEntities)
-               .Concat(manualMigrations)
+               .Concat(startupActions)
                .ToArray();
 
             var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), static builder => builder)
@@ -971,15 +971,15 @@ namespace SpaceEngineers.Core.GenericHost.Test
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
-            var additionalOurTypes = new[]
+            var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseMigration)
+                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
             };
 
             var host = useTransport(settingsDirectory, isolationLevel, Fixture.CreateHostBuilder(), builder => builder.WithAuthorization())
                .UseAuthEndpoint(builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                    .ModifyContainerOptions(options => options
-                       .WithAdditionalOurTypes(additionalOurTypes)
+                       .WithAdditionalOurTypes(startupActions)
                        .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))
                    .BuildOptions())
                .BuildHost(settingsDirectory);

@@ -13,7 +13,6 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot;
-    using Connection;
     using CrossCuttingConcerns.Logging;
     using Execution;
     using Extensions;
@@ -30,18 +29,15 @@
                                         IResolvable<IMigrationsExecutor>
     {
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IModelProvider _modelProvider;
         private readonly ILogger _logger;
 
         public MigrationsExecutor(
             IDependencyContainer dependencyContainer,
-            IDatabaseConnectionProvider connectionProvider,
             IModelProvider modelProvider,
             ILogger logger)
         {
             _dependencyContainer = dependencyContainer;
-            _connectionProvider = connectionProvider;
             _modelProvider = modelProvider;
             _logger = logger;
         }
@@ -55,10 +51,16 @@
                 return;
             }
 
-            var databaseExists = await _connectionProvider
-               .DoesDatabaseExist(token)
-               .ConfigureAwait(false);
+            await _dependencyContainer
+                .InvokeWithinTransaction(true, migrations, ApplyMigrations, token)
+                .ConfigureAwait(false);
+        }
 
+        private async Task ApplyMigrations(
+            IAdvancedDatabaseTransaction transaction,
+            IReadOnlyCollection<IMigration> migrations,
+            CancellationToken token)
+        {
             foreach (var migration in migrations)
             {
                 bool apply;
@@ -69,11 +71,7 @@
                 }
                 else
                 {
-                    var appliedMigrations = databaseExists
-                        ? await _dependencyContainer
-                           .InvokeWithinTransaction(false, ReadAppliedMigrations, token)
-                           .ConfigureAwait(false)
-                        : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    var appliedMigrations = await ReadAppliedMigrations(transaction, token).ConfigureAwait(false);
 
                     apply = !appliedMigrations.Contains(migration.Name);
                 }
@@ -83,13 +81,9 @@
                     continue;
                 }
 
-                var commands = await migration
-                   .InvokeCommands(token)
-                   .ConfigureAwait(false);
+                var commands = await migration.InvokeCommands(transaction, token).ConfigureAwait(false);
 
-                await _dependencyContainer
-                   .InvokeWithinTransaction(true, (migration, commands), PersistAppliedMigration, token)
-                   .ConfigureAwait(false);
+                await PersistAppliedMigration(transaction, migration, commands, token).ConfigureAwait(false);
 
                 _logger.Information($"{migration.Name} was applied");
             }
@@ -100,26 +94,25 @@
             CancellationToken token)
         {
             var isSecondaryMigration = await transaction
-               .All<DatabaseColumnConstraint>()
-               .AnyAsync(constraint => constraint.Table == _modelProvider.TableName(typeof(AppliedMigration)), token)
-               .ConfigureAwait(false);
+                .All<DatabaseColumnConstraint>()
+                .AnyAsync(constraint => constraint.Table == _modelProvider.TableName(typeof(AppliedMigration)), token)
+                .ConfigureAwait(false);
 
             return isSecondaryMigration
                 ? await transaction
-                   .All<AppliedMigration>()
-                   .Select(migration => migration.Name)
-                   .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
-                   .ConfigureAwait(false)
+                    .All<AppliedMigration>()
+                    .Select(migration => migration.Name)
+                    .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
+                    .ConfigureAwait(false)
                 : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
         private static async Task PersistAppliedMigration(
             IAdvancedDatabaseTransaction transaction,
-            (IMigration migration, IReadOnlyCollection<ICommand> commands) state,
+            IMigration migration,
+            IReadOnlyCollection<ICommand> commands,
             CancellationToken token)
         {
-            var (migration, commands) = state;
-
             var name = migration.ApplyEveryTime
                 ? $"{migration.Name} {(await GetMigrationIndex(transaction, migration.Name, token).ConfigureAwait(false)).ToString(CultureInfo.InvariantCulture)}"
                 : migration.Name;
@@ -136,29 +129,29 @@
                 name);
 
             await transaction
-               .Insert(new[] { appliedMigration }, EnInsertBehavior.DoNothing, token)
-               .ConfigureAwait(false);
-        }
+                .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token)
+                .ConfigureAwait(false);
 
-        private static async Task<int> GetMigrationIndex(
-            IAdvancedDatabaseTransaction transaction,
-            string name,
-            CancellationToken token)
-        {
-            var pattern = name + "%";
+            static async Task<int> GetMigrationIndex(
+                IAdvancedDatabaseTransaction transaction,
+                string name,
+                CancellationToken token)
+            {
+                var pattern = name + "%";
 
-            var indexes = (await transaction
-                   .All<AppliedMigration>()
-                   .Where(migration => migration.Name.Like(pattern))
-                   .Select(migration => migration.Name)
-                   .ToArrayAsync(token)
-                   .ConfigureAwait(false))
-               .Select(migrationName => int.Parse(migrationName.Substring(name.Length).Trim(), CultureInfo.InvariantCulture))
-               .ToArray();
+                var indexes = (await transaction
+                        .All<AppliedMigration>()
+                        .Where(migration => migration.Name.Like(pattern))
+                        .Select(migration => migration.Name)
+                        .ToArrayAsync(token)
+                        .ConfigureAwait(false))
+                    .Select(migrationName => int.Parse(migrationName.Substring(name.Length).Trim(), CultureInfo.InvariantCulture))
+                    .ToArray();
 
-            return indexes.Any()
-                ? indexes.Max() + 1
-                : 0;
+                return indexes.Any()
+                    ? indexes.Max() + 1
+                    : 0;
+            }
         }
     }
 }

@@ -31,13 +31,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using IntegrationTransport.Host;
     using Messages;
     using Microsoft.Extensions.Hosting;
-    using Migrations;
     using Mocks;
     using Registrations;
     using SpaceEngineers.Core.DataAccess.Api.Model;
     using SpaceEngineers.Core.DataAccess.Api.Persisting;
     using SpaceEngineers.Core.DataAccess.Api.Reading;
     using SpaceEngineers.Core.Test.Api;
+    using StartupActions;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -96,7 +96,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 {
                     var hostBuilder = StaticFixture.CreateHostBuilder();
 
-                    var entities = new[]
+                    var databaseEntities = new[]
                     {
                         typeof(DatabaseDomainEvent),
                         typeof(DatabaseEntity),
@@ -107,14 +107,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         typeof(Participant)
                     };
 
-                    var manualMigrations = new[]
+                    var startupActions = new[]
                     {
-                        typeof(CreateOrGetExistedPostgreSqlDatabaseMigration)
+                        typeof(CreateOrGetExistedPostgreSqlDatabaseHostStartupAction)
                     };
 
-                    var additionalOurTypes = entities
-                       .Concat(manualMigrations)
-                       .ToArray();
+                    var additionalOurTypes = databaseEntities
+                        .Concat(startupActions)
+                        .ToArray();
 
                     var manualRegistrations = new IManualRegistration[]
                     {

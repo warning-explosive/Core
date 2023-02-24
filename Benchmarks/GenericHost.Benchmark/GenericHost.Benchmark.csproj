@@ -62,7 +62,7 @@
       <Compile Update="Sources\Request.cs">
         <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
       </Compile>
-      <Compile Update="Sources\RecreatePostgreSqlDatabaseMigration.cs">
+      <Compile Update="Sources\RecreatePostgreSqlDatabaseHostStartupAction.cs">
         <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
       </Compile>
       <Compile Update="Sources\Reply.cs">

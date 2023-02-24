@@ -1,30 +1,28 @@
-namespace SpaceEngineers.Core.GenericHost.Test.Migrations
+namespace SpaceEngineers.Core.GenericHost.Test.StartupActions
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
+    using Api.Abstractions;
     using Basics;
     using Basics.Attributes;
     using CompositionRoot;
     using CrossCuttingConcerns.Settings;
     using DataAccess.Orm.Connection;
-    using DataAccess.Orm.Host.Abstractions;
-    using DataAccess.Orm.Linq;
-    using DataAccess.Orm.Sql.Host.Migrations;
-    using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Sql.Translation;
     using Npgsql;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions;
 
     [Component(EnLifestyle.Singleton)]
-    [Before(typeof(InitialMigration))]
-    internal class CreateOrGetExistedPostgreSqlDatabaseMigration : IMigration,
-                                                                   ICollectionResolvable<IMigration>
+    [Before(typeof(UpgradeDatabaseHostStartupAction))]
+    internal class CreateOrGetExistedPostgreSqlDatabaseHostStartupAction : IHostStartupAction,
+                                                                           ICollectionResolvable<IHostStartupAction>,
+                                                                           IResolvable<CreateOrGetExistedPostgreSqlDatabaseHostStartupAction>
     {
         private const string CommandText = @"create extension if not exists dblink;
 
@@ -54,33 +52,20 @@ select CreateOrGetExistedDatabase();";
 
         private readonly IDependencyContainer _dependencyContainer;
         private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
-        private readonly IModelChangesExtractor _modelChangesExtractor;
-        private readonly IModelChangeCommandBuilderComposite _commandBuilder;
-        private readonly IMigrationsExecutor _migrationsExecutor;
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
-        public CreateOrGetExistedPostgreSqlDatabaseMigration(
+        public CreateOrGetExistedPostgreSqlDatabaseHostStartupAction(
             IDependencyContainer dependencyContainer,
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
-            IModelChangesExtractor modelChangesExtractor,
-            IModelChangeCommandBuilderComposite commandBuilder,
-            IMigrationsExecutor migrationsExecutor,
             IDatabaseConnectionProvider connectionProvider)
         {
             _dependencyContainer = dependencyContainer;
             _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
-            _modelChangesExtractor = modelChangesExtractor;
-            _commandBuilder = commandBuilder;
-            _migrationsExecutor = migrationsExecutor;
             _connectionProvider = connectionProvider;
         }
 
-        public string Name { get; } = nameof(CreateOrGetExistedPostgreSqlDatabaseMigration);
-
-        public bool ApplyEveryTime { get; } = true;
-
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
-        public async Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token)
+        public async Task Run(CancellationToken token)
         {
             var sqlDatabaseSettings = await _sqlDatabaseSettingsProvider
                .Get(token)
@@ -99,15 +84,13 @@ select CreateOrGetExistedDatabase();";
                 Password = sqlDatabaseSettings.Password
             };
 
-            bool databaseWasCreated;
-
             var npgSqlConnection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);
 
             try
             {
                 await npgSqlConnection.OpenAsync(token).ConfigureAwait(false);
 
-                databaseWasCreated = await _connectionProvider
+                _ = await _connectionProvider
                     .ExecuteScalar<bool>(npgSqlConnection, command, token)
                     .ConfigureAwait(false);
             }
@@ -136,20 +119,6 @@ select CreateOrGetExistedDatabase();";
                     break;
                 }
             }
-
-            if (databaseWasCreated)
-            {
-                var migrations = new[]
-                {
-                    new InitialMigration(_dependencyContainer, _modelChangesExtractor, _commandBuilder, _connectionProvider)
-                };
-
-                await _migrationsExecutor
-                   .Migrate(migrations, token)
-                   .ConfigureAwait(false);
-            }
-
-            return new[] { command };
         }
     }
 }

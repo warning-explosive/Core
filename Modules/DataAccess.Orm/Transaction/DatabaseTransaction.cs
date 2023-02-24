@@ -172,11 +172,16 @@
             return AsyncDisposable.Create((commit, token), state => Close(state.commit, state.token));
         }
 
-        public Task Open(CancellationToken token)
+        public async Task Open(CancellationToken token)
         {
-            _transaction = Open();
+            if (_transaction != null)
+            {
+                throw new InvalidOperationException("Database transaction have already been opened");
+            }
 
-            return Task.CompletedTask;
+            _transaction = await _connectionProvider
+                .BeginTransaction(DbConnection, token)
+                .ConfigureAwait(false);
         }
 
         public async Task Close(bool commit, CancellationToken token)
@@ -208,7 +213,7 @@
 
             try
             {
-                _transaction = Open();
+                await Open(token).ConfigureAwait(false);
 
                 foreach (var change in changes)
                 {
@@ -244,16 +249,6 @@
         public void CollectCommand(ICommand command)
         {
             _commands.Add(command);
-        }
-
-        private IDbTransaction Open()
-        {
-            if (_transaction != null)
-            {
-                throw new InvalidOperationException("Database transaction have already been opened");
-            }
-
-            return DbConnection.BeginTransaction(_connectionProvider.IsolationLevel);
         }
     }
 }

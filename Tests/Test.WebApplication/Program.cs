@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
 {
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
+    using System.Linq;
     using System.Threading.Tasks;
     using AuthEndpoint.Host;
     using Basics;
@@ -13,6 +14,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using Microsoft.Extensions.Logging;
     using Migrations;
     using Registrations;
+    using StartupActions;
     using Web.Api.Host;
 
     /// <summary>
@@ -43,11 +45,19 @@ namespace SpaceEngineers.Core.Test.WebApplication
         /// <returns>IHost</returns>
         public static IHost BuildHost(DirectoryInfo settingsDirectory, string[] args)
         {
+            var startupActions = new[]
+            {
+                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+            };
+
             var migrations = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseMigration),
                 typeof(AddSeedDataMigration)
             };
+
+            var additionalOurTypes = startupActions
+                .Concat(migrations)
+                .ToArray();
 
             return Host
                .CreateDefaultBuilder(args)
@@ -72,7 +82,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
                        .ExecuteMigrations())
                    .WithSqlEventSourcing()
                    .ModifyContainerOptions(options => options
-                       .WithAdditionalOurTypes(migrations))
+                       .WithAdditionalOurTypes(additionalOurTypes))
                    .BuildOptions())
                .BuildWebHost(settingsDirectory);
         }

@@ -37,25 +37,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         private const string DatabaseExistsCommandText = @"select exists(select * from pg_catalog.pg_database where datname = @param_0);";
 
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly ISettingsProvider<SqlDatabaseSettings> _sqlSettingsProvider;
+        private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
         private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
         private readonly IJsonSerializer _jsonSerializer;
         private readonly NpgsqlDataSource _dataSource;
 
         public DatabaseConnectionProvider(
             IDependencyContainer dependencyContainer,
-            ISettingsProvider<SqlDatabaseSettings> sqlSettingsProvider,
+            ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
             ISettingsProvider<OrmSettings> ormSettingsProvider,
             IJsonSerializer jsonSerializer,
             IModelProvider modelProvider,
             ILoggerFactory loggerFactory)
         {
             _dependencyContainer = dependencyContainer;
-            _sqlSettingsProvider = sqlSettingsProvider;
+            _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
             _ormSettingsProvider = ormSettingsProvider;
             _jsonSerializer = jsonSerializer;
 
-            var settings = _sqlSettingsProvider.Get(CancellationToken.None).Result;
+            var settings = sqlDatabaseSettingsProvider.Get(CancellationToken.None).Result;
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
@@ -88,12 +88,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             _dataSource = dataSourceBuilder.Build();
         }
 
-        public string Host => _sqlSettingsProvider.Get(CancellationToken.None).Result.Host;
-
-        public string Database => _sqlSettingsProvider.Get(CancellationToken.None).Result.Database;
-
-        public IsolationLevel IsolationLevel => _sqlSettingsProvider.Get(CancellationToken.None).Result.IsolationLevel;
-
         public void Dispose()
         {
             _dataSource.Dispose();
@@ -107,12 +101,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Invoke(static exception => exception.Flatten().All(ex => !ex.DatabaseDoesNotExist()), token);
         }
 
-        public async Task<IDbConnection> OpenConnection(CancellationToken token)
+        public async ValueTask<IDbConnection> OpenConnection(CancellationToken token)
         {
             ValidateNestedCall(_dependencyContainer);
 
             return await _dataSource
                 .OpenConnectionAsync(token)
+                .ConfigureAwait(false);
+        }
+
+        public async ValueTask<IDbTransaction> BeginTransaction(IDbConnection connection, CancellationToken token)
+        {
+            var settings = _sqlDatabaseSettingsProvider
+                .Get(token)
+                .Result;
+
+            return await ((NpgsqlConnection)connection)
+                .BeginTransactionAsync(settings.IsolationLevel, token)
                 .ConfigureAwait(false);
         }
 
@@ -555,13 +560,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             }
         }
 
-        private Task<bool> DoesDatabaseExistUnsafe(CancellationToken token)
+        private async Task<bool> DoesDatabaseExistUnsafe(CancellationToken token)
         {
+            var settings = await _sqlDatabaseSettingsProvider
+                .Get(token)
+                .ConfigureAwait(false);
+
             var command = new SqlCommand(
                 DatabaseExistsCommandText,
-                new List<SqlCommandParameter> { new SqlCommandParameter("param_0", Database, typeof(string)) });
+                new List<SqlCommandParameter> { new SqlCommandParameter("param_0", settings.Database, typeof(string)) });
 
-            return _dependencyContainer.InvokeWithinTransaction(false, command, ExecuteScalar<bool>, token);
+            return await _dependencyContainer
+                .InvokeWithinTransaction(false, command, ExecuteScalar<bool>, token)
+                .ConfigureAwait(false);
         }
     }
 }

@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Abstractions
     using System.Threading;
     using System.Threading.Tasks;
     using Linq;
+    using Transaction;
 
     /// <summary>
     /// IMigration
@@ -23,8 +24,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Host.Abstractions
         /// <summary>
         /// Builds and invokes a migration commands
         /// </summary>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token);
+        Task<IReadOnlyCollection<ICommand>> InvokeCommands(
+            IAdvancedDatabaseTransaction transaction,
+            CancellationToken token);
     }
 }

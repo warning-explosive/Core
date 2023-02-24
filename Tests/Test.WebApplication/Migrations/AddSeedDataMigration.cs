@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -13,9 +12,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using CompositionRoot;
     using DataAccess.Api.Model;
     using DataAccess.Api.Persisting;
-    using DataAccess.Orm.Extensions;
     using DataAccess.Orm.Host.Abstractions;
-    using DataAccess.Orm.Linq;
     using DataAccess.Orm.Transaction;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.EventSourcing;
@@ -23,7 +20,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
     [Component(EnLifestyle.Singleton)]
     [After(typeof(ApplyDeltaMigration))]
-    internal class AddSeedDataMigration : IMigration,
+    internal class AddSeedDataMigration : BaseAddSeedDataMigration,
                                           ICollectionResolvable<IMigration>
     {
         private readonly IDependencyContainer _dependencyContainer;
@@ -33,18 +30,10 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
             _dependencyContainer = dependencyContainer;
         }
 
-        public string Name { get; } = nameof(AddSeedDataMigration);
+        public sealed override string Name { get; } = nameof(AddSeedDataMigration);
 
-        public bool ApplyEveryTime { get; } = false;
-
-        public Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token)
-        {
-            return _dependencyContainer.InvokeWithinTransaction(true, _dependencyContainer, ExecuteManualMigration, token);
-        }
-
-        private static async Task<IReadOnlyCollection<ICommand>> ExecuteManualMigration(
+        protected sealed override async Task AddSeedData(
             IAdvancedDatabaseTransaction transaction,
-            IDependencyContainer dependencyContainer,
             CancellationToken token)
         {
             var username = "qwerty";
@@ -67,7 +56,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
                 .Select((domainEvent, index) => new DomainEventArgs(aggregateId, domainEvent, index, DateTime.UtcNow))
                 .ToArray();
 
-            await dependencyContainer
+            await _dependencyContainer
                 .Resolve<IEventStore>()
                 .Append(args, token)
                 .ConfigureAwait(false);
@@ -75,10 +64,8 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
             var userDatabaseEntity = new AuthEndpoint.DatabaseModel.User(aggregateId, username);
 
             await transaction
-               .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default, token)
-               .ConfigureAwait(false);
-
-            return transaction.Commands.ToList();
+                .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default, token)
+                .ConfigureAwait(false);
         }
     }
 }

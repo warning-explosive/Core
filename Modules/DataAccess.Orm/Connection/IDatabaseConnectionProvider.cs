@@ -13,21 +13,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
     public interface IDatabaseConnectionProvider
     {
         /// <summary>
-        /// Host
-        /// </summary>
-        string Host { get; }
-
-        /// <summary>
-        /// Database
-        /// </summary>
-        string Database { get; }
-
-        /// <summary>
-        /// Isolation level
-        /// </summary>
-        IsolationLevel IsolationLevel { get; }
-
-        /// <summary>
         /// Checks the database existence
         /// </summary>
         /// <param name="token">Cancellation token</param>
@@ -35,11 +20,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         Task<bool> DoesDatabaseExist(CancellationToken token);
 
         /// <summary>
-        /// Opens DB connection
+        /// Opens connection
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
-        Task<IDbConnection> OpenConnection(CancellationToken token);
+        ValueTask<IDbConnection> OpenConnection(CancellationToken token);
+
+        /// <summary>
+        /// Opens transaction
+        /// </summary>
+        /// <param name="connection">IDbConnection</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>IDbTransaction</returns>
+        ValueTask<IDbTransaction> BeginTransaction(IDbConnection connection, CancellationToken token);
 
         /// <summary>
         /// Executes database command

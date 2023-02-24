@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using Transaction;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelChangesExtractor : IModelChangesExtractor,
@@ -34,11 +35,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         }
 
         public async Task<IReadOnlyCollection<IModelChange>> ExtractChanges(
+            IAdvancedDatabaseTransaction transaction,
             IReadOnlyCollection<Type> databaseEntities,
             CancellationToken token)
         {
             var actualModel = await _databaseModelBuilder
-               .BuildModel(token)
+               .BuildModel(transaction, token)
                .ConfigureAwait(false);
 
             var expectedModel = await _codeModelBuilder

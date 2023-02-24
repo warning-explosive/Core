@@ -5,9 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Persisting;
-    using CompositionRoot;
     using Connection;
-    using Extensions;
     using Model;
     using Orm.Host.Abstractions;
     using Orm.Linq;
@@ -19,17 +17,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     /// </summary>
     public abstract class BaseSqlMigration : IMigration
     {
-        private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
         /// <summary> .cctor </summary>
-        /// <param name="dependencyContainer">IDependencyContainer</param>
         /// <param name="connectionProvider">IDatabaseConnectionProvider</param>
-        protected BaseSqlMigration(
-            IDependencyContainer dependencyContainer,
-            IDatabaseConnectionProvider connectionProvider)
+        protected BaseSqlMigration(IDatabaseConnectionProvider connectionProvider)
         {
-            _dependencyContainer = dependencyContainer;
             _connectionProvider = connectionProvider;
         }
 
@@ -38,27 +31,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
         /// </summary>
         public abstract string CommandText { get; }
 
-        /// <summary>
-        /// Migration's unique name
-        /// </summary>
+        /// <inheritdoc />
         public abstract string Name { get; }
 
-        /// <summary>
-        /// If returns true migration will be executed during startup process despite the fact that it could be applied earlier
-        /// </summary>
+        /// <inheritdoc />
         public abstract bool ApplyEveryTime { get; }
 
-        /// <summary>
-        /// Executes migration
-        /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        public Task<IReadOnlyCollection<ICommand>> InvokeCommands(CancellationToken token)
-        {
-            return _dependencyContainer.InvokeWithinTransaction(true, ExecuteManualMigration, token);
-        }
-
-        private async Task<IReadOnlyCollection<ICommand>> ExecuteManualMigration(
+        /// <inheritdoc />
+        public async Task<IReadOnlyCollection<ICommand>> InvokeCommands(
             IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {

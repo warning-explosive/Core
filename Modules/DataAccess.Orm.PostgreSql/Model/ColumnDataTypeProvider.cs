@@ -148,7 +148,7 @@
                 return true;
             }
 
-            if (column.Property.Declared.HasAttribute<JsonColumnAttribute>())
+            if (column.Property.Declared.IsJsonColumn())
             {
                 /*
                  * json stored in a decomposed binary format with indexing support

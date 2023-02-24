@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using AuthEndpoint.Domain;
     using Basics;
     using Basics.Primitives;
     using CompositionRoot;
@@ -23,6 +24,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DataAccess.Orm.Transaction;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
+    using GenericDomain.EventSourcing.Sql;
     using GenericEndpoint.DataAccess.Host;
     using GenericEndpoint.Host;
     using GenericHost;
@@ -46,7 +48,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     [SuppressMessage("Analysis", "SA1131", Justification = "test case")]
     public class TranslationTest : TestBase
     {
-        private static ITestOutputHelper? _staticOutput;
         private static TestFixture? _staticFixture;
 
         /// <summary> .ctor </summary>
@@ -55,7 +56,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
         public TranslationTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            _staticOutput = output;
             _staticFixture = fixture;
         }
 
@@ -98,10 +98,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     var entities = new[]
                     {
+                        typeof(DatabaseDomainEvent),
                         typeof(DatabaseEntity),
                         typeof(Blog),
                         typeof(Post),
-                        typeof(User),
+                        typeof(DatabaseEntities.Relations.User),
                         typeof(Community),
                         typeof(Participant)
                     };
@@ -153,8 +154,22 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var emptyQueryParameters = Array.Empty<SqlCommandParameter>();
 
             var schema = nameof(GenericHost) + nameof(Test);
+
             var testDatabaseEntity = DatabaseEntity.Generate();
-            var user = new User(Guid.NewGuid(), "SpaceEngineer");
+
+            var aggregateId = Guid.NewGuid();
+            var username = "SpaceEngineer";
+            var password = "12345678";
+            var salt = Password.GenerateSalt();
+            var passwordHash = new Password(password).GeneratePasswordHash(salt);
+            var domainEvent = new DatabaseDomainEvent(
+                Guid.NewGuid(),
+                aggregateId,
+                0,
+                DateTime.UtcNow,
+                new UserWasCreated(aggregateId, new Username(username), salt, passwordHash));
+
+            var user = new DatabaseEntities.Relations.User(Guid.NewGuid(), "SpaceEngineer");
             var posts = new List<Post>();
             var blog = new Blog(Guid.NewGuid(), "MilkyWay", posts);
             var post = new Post(Guid.NewGuid(), blog, user, DateTime.Now, "PostContent");
@@ -397,7 +412,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay").Select(it => it.User.Nickname).Distinct()),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(Post.User.Nickname)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.Nickname)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}CASE WHEN @param_0 IS NULL THEN b.""{nameof(Blog.Theme)}"" IS NULL ELSE b.""{nameof(Blog.Theme)}"" = @param_1 END) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(User.PrimaryKey)}"" = c.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""",
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(Post.User.Nickname)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.Nickname)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}CASE WHEN @param_0 IS NULL THEN b.""{nameof(Blog.Theme)}"" IS NULL ELSE b.""{nameof(Blog.Theme)}"" = @param_1 END) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = c.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""",
                         new[] { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
@@ -463,7 +478,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay" && it.User.Nickname == "SpaceEngineer")),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN c.""{nameof(Blog.Theme)}"" IS NULL ELSE c.""{nameof(Blog.Theme)}"" = @param_1 END AND CASE WHEN @param_2 IS NULL THEN b.""{nameof(User.Nickname)}"" IS NULL ELSE b.""{nameof(User.Nickname)}"" = @param_3 END",
+                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN c.""{nameof(Blog.Theme)}"" IS NULL ELSE c.""{nameof(Blog.Theme)}"" = @param_1 END AND CASE WHEN @param_2 IS NULL THEN b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" IS NULL ELSE b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" = @param_3 END",
                         new[] { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)), new SqlCommandParameter("param_2", "SpaceEngineer", typeof(string)), new SqlCommandParameter("param_3", "SpaceEngineer", typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
@@ -474,7 +489,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<Post>().Where(it => it.DateTime > DateTime.MinValue).Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}c.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"" > @param_0) b{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(User.PrimaryKey)}"" = b.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(Blog.PrimaryKey)}"" = b.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
+                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"" > @param_0) b{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = b.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(Blog.PrimaryKey)}"" = b.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
                         new[] { new SqlCommandParameter("param_0", DateTime.MinValue, typeof(DateTime)) },
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
@@ -485,7 +500,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<Post>().Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}b.""{nameof(User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
+                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
@@ -496,7 +511,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<Post>().OrderByDescending(it => it.Blog.Theme).ThenBy(it => it.User.Nickname)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(User.PrimaryKey)}"" = a.""{nameof(post.User)}_{nameof(post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(post.Blog)}_{nameof(post.Blog.PrimaryKey)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" DESC, b.""{nameof(User.Nickname)}"" ASC",
+                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(post.User)}_{nameof(post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(post.Blog)}_{nameof(post.Blog.PrimaryKey)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" DESC, b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" ASC",
                         emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
@@ -740,7 +755,28 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 Array.Empty<IDatabaseEntity>()
             };
-            /*TODO: #209 - test json column selection*/
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - select json column",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseDomainEvent>().Where(it => it.AggregateId == aggregateId).Select(it => it.DomainEvent)),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseDomainEvent.DomainEvent)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.DomainEvent)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Index)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Timestamp)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{nameof(GenericDomain.EventSourcing)}"".""{nameof(DatabaseDomainEvent)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"" = @param_0) b",
+                        new[] { new SqlCommandParameter("param_0", aggregateId, typeof(Guid)) },
+                        log)),
+                new IDatabaseEntity[] { domainEvent }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - select json column to anonymous type",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseDomainEvent>().Where(it => it.AggregateId == aggregateId).Select(it => new { it.DomainEvent })),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseDomainEvent.DomainEvent)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.DomainEvent)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Index)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Timestamp)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{nameof(GenericDomain.EventSourcing)}"".""{nameof(DatabaseDomainEvent)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"" = @param_0) b",
+                        new[] { new SqlCommandParameter("param_0", aggregateId, typeof(Guid)) },
+                        log)),
+                new IDatabaseEntity[] { domainEvent }
+            };
             /*TODO: #209 - test sql view translation before migration*/
             /*yield return new object[]
             {

@@ -170,6 +170,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
                 return values.Single().Value;
             }
 
+            if (values.Count == 1
+                && values.Single().Value is string json
+                && type != typeof(string)
+                && !type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
+                && !type.IsAnonymous()
+                && !type.IsDatabaseEntity()
+                && !type.IsInlinedObject())
+            {
+                return _jsonSerializer.DeserializeObject(json, type);
+            }
+
             return _objectBuilder.Build(type, values);
         }
 
@@ -184,6 +195,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
 
             if (type.IsMultipleRelation(out _)
                 && values.Count == 1)
+            {
+                return values;
+            }
+
+            if (values.Count == 1
+                && values.Single().Value is string
+                && type != typeof(string)
+                && !type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
+                && !type.IsAnonymous()
+                && !type.IsDatabaseEntity()
+                && !type.IsInlinedObject())
             {
                 return values;
             }

@@ -66,7 +66,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
         public static bool IsJsonColumn(this PropertyInfo property)
         {
             return TypeExtensions.TryFindType("SpaceEngineers.Core.DataAccess.Api.Sql SpaceEngineers.Core.DataAccess.Api.Sql.Attributes.JsonColumnAttribute", out var type)
-                   && property.GetCustomAttributes(type).Any();
+                   && property.GetCustomAttributes(type).Any()
+                   && property.PropertyType != typeof(string);
         }
 
         /// <summary>

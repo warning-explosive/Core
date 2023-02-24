@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.ObjectBuilder;
 
-    [Component(EnLifestyle.Scoped)]
+    [Component(EnLifestyle.Singleton)]
     internal class EntityToPrimaryKeyObjectTransformer<TEntity, TKey> : IObjectTransformer<TEntity, TKey>,
                                                                         IResolvable<IObjectTransformer<TEntity, TKey>>
         where TEntity : IUniqueIdentified<TKey>

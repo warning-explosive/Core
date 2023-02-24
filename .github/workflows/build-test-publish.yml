@@ -65,7 +65,7 @@ jobs:
       run: dotnet test "${{ github.event.repository.name }}.sln" -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "${{ env.TEST_RESULTS_PATH }}" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[*.Benchmark]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../${{ env.TEST_COVERAGE_PATH }}/' /p:MergeWith='../../${{ env.TEST_COVERAGE_PATH }}/coverage.json'
     - name: Generate coverage report
       if: ${{ success() || failure() }}
-      uses: danielpalme/ReportGenerator-GitHub-Action@$5.1.17
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.1.17
       with:
         reports: '${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml'
         targetdir: '${{ env.TEST_COVERAGE_PATH }}'

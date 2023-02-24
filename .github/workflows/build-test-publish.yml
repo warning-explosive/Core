@@ -12,8 +12,8 @@ on:
     paths-ignore:
       - '**.md'
 env:
-  DOT_NET_VERSION: 7.0.x
-  GIT_VERSION_VERSION: 5.*
+  DOT_NET_VERSION: 7.0.101
+  GIT_VERSION_VERSION: 5.12.0
   TEST_RESULTS_PATH: TEST_RESULTS
   TEST_COVERAGE_PATH: TEST_COVERAGE
 jobs:
@@ -48,7 +48,7 @@ jobs:
     - name: Determine configuration
       run: echo "${{ (github.ref_name == 'master' || github.ref_name == 'release-[0-9]+.[0-9]+.[0-9]+' || github.ref_name == 'hotfix-[0-9]+.[0-9]+.[0-9]+' || github.ref_name == 'support-[0-9]+.[0-9]+.[0-9]+') && 'CONFIGURATION=Release' || 'CONFIGURATION=Debug' }}" >> $GITHUB_ENV
     - name: Setup .NET toolchain
-      uses: actions/setup-dotnet@v2
+      uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ env.DOT_NET_VERSION }}
     - name: Install GitVersion

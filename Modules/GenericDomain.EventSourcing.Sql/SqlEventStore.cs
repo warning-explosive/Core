@@ -10,8 +10,8 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using DataAccess.Api.Persisting;
-    using DataAccess.Api.Reading;
     using DataAccess.Api.Transaction;
+    using DataAccess.Orm.Linq;
 
     [Component(EnLifestyle.Scoped)]
     internal class SqlEventStore : IEventStore,

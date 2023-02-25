@@ -6,6 +6,7 @@
     using Basics;
     using Basics.Attributes;
     using CompositionRoot;
+    using Core.DataAccess.Orm.Transaction;
     using CrossCuttingConcerns.Logging;
     using Deduplication;
     using GenericEndpoint.Host.StartupActions;
@@ -15,7 +16,6 @@
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.DataAccess.Api.Transaction;
-    using SpaceEngineers.Core.DataAccess.Orm.Extensions;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
     using EndpointIdentity = Contract.EndpointIdentity;
     using IntegrationMessage = Messaging.IntegrationMessage;

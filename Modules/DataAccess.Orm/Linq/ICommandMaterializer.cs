@@ -1,9 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
-    using System;
     using System.Collections.Generic;
     using System.Threading;
-    using System.Threading.Tasks;
     using Transaction;
 
     /// <summary>
@@ -23,27 +21,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// </summary>
         /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="command">Command</param>
-        /// <param name="type">Type</param>
         /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing materialization operation</returns>
-        Task<object?> MaterializeScalar(
+        IAsyncEnumerable<T> Materialize<T>(
             IAdvancedDatabaseTransaction transaction,
             ICommand command,
-            Type type,
-            CancellationToken token);
-
-        /// <summary>
-        /// Materializes command
-        /// </summary>
-        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
-        /// <param name="command">Command</param>
-        /// <param name="type">Type</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing materialization operation</returns>
-        IAsyncEnumerable<object?> Materialize(
-            IAdvancedDatabaseTransaction transaction,
-            ICommand command,
-            Type type,
             CancellationToken token);
     }
 
@@ -59,27 +42,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// </summary>
         /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="command">Command</param>
-        /// <param name="type">Type</param>
         /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing materialization operation</returns>
-        Task<object?> MaterializeScalar(
+        IAsyncEnumerable<T> Materialize<T>(
             IAdvancedDatabaseTransaction transaction,
             TCommand command,
-            Type type,
-            CancellationToken token);
-
-        /// <summary>
-        /// Materializes command
-        /// </summary>
-        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
-        /// <param name="command">Command</param>
-        /// <param name="type">Type</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing materialization operation</returns>
-        IAsyncEnumerable<object?> Materialize(
-            IAdvancedDatabaseTransaction transaction,
-            TCommand command,
-            Type type,
             CancellationToken token);
     }
 }

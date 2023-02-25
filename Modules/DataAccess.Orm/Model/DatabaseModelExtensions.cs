@@ -1,12 +1,12 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
+namespace SpaceEngineers.Core.DataAccess.Orm.Model
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
-    using Api.Model;
     using Basics;
+    using SpaceEngineers.Core.DataAccess.Api.Model;
 
     /// <summary>
     /// DatabaseModelExtensions

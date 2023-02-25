@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
-    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -81,21 +80,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 return (TResult)scalar!;
             }
 
-            var asyncEnumerable = this
-                .CallMethod(nameof(ExecuteAsync))
-                .WithTypeArgument(itemType)
-                .WithArgument(expression)
-                .WithArgument(CancellationToken.None)
-                .Invoke<object>();
+            {
+                var asyncEnumerable = this
+                    .CallMethod(nameof(ExecuteAsync))
+                    .WithTypeArgument(itemType)
+                    .WithArgument(expression)
+                    .WithArgument(CancellationToken.None)
+                    .Invoke<object>();
 
-            var enumerable = GetType()
-                .CallMethod(nameof(AsEnumerable))
-                .WithTypeArgument(itemType)
-                .WithArgument(asyncEnumerable)
-                .WithArgument(CancellationToken.None)
-                .Invoke();
+                var enumerable = GetType()
+                    .CallMethod(nameof(AsEnumerable))
+                    .WithTypeArgument(itemType)
+                    .WithArgument(asyncEnumerable)
+                    .WithArgument(CancellationToken.None)
+                    .Invoke();
 
-            return (TResult)enumerable!;
+                return (TResult)enumerable!;
+            }
         }
 
         public async Task<T> ExecuteScalarAsync<T>(Expression expression, CancellationToken token)
@@ -104,28 +105,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
             var command = _translator.Translate(expression);
 
-            var item = await _materializer
-                .MaterializeScalar(transaction, command, typeof(T), token)
+            var asyncSource = _materializer
+                .Materialize<T>(transaction, command, token)
+                .WithCancellation(token)
                 .ConfigureAwait(false);
 
-            return (T)item!;
+            var buffer = new List<T>();
+
+            await foreach (var item in asyncSource)
+            {
+                buffer.Add(item);
+            }
+
+            return buffer.SingleOrDefault();
         }
 
-        public async IAsyncEnumerable<T> ExecuteAsync<T>(Expression expression, [EnumeratorCancellation] CancellationToken token)
+        public IAsyncEnumerable<T> ExecuteAsync<T>(Expression expression, CancellationToken token)
         {
             var transaction = _dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
             var command = _translator.Translate(expression);
 
-            var source = _materializer
-                .Materialize(transaction, command, typeof(T), token)
-                .WithCancellation(token)
-                .ConfigureAwait(false);
-
-            await foreach (var item in source)
-            {
-                yield return (T)item!;
-            }
+            return _materializer.Materialize<T>(transaction, command, token);
         }
 
         private static T AsScalar<T>(Task<T> task)

@@ -1,10 +1,9 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Extensions
+namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
     using CompositionRoot;
-    using Transaction;
 
     /// <summary>
     /// Query invocation extensions

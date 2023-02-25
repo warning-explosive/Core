@@ -317,8 +317,8 @@ namespace SpaceEngineers.Core.CompositionRoot
                 Console.WriteLine($"WRN: Trying to resolve '{service.FullName}' but dependency container isn't verified. Make sure you have set up auto verification on container creation to true '.WithManualVerification(false)' or you verified it manually.");
             }
 
-            return ExecutionExtensions
-                .Try(producer)
+            return producer
+                .Try()
                 .Catch<Exception>()
                 .Invoke(ex => throw new ComponentResolutionException(service, ex));
         }

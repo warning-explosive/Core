@@ -15,7 +15,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using CompositionRoot.Registration;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.Extensions;
     using DataAccess.Orm.Linq;
     using DataAccess.Orm.Settings;
     using DataAccess.Orm.Sql.Host.Model;
@@ -573,7 +572,29 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - all async",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().AllAsync(it => it.BooleanField, CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(CASE WHEN a.""{nameof(DatabaseEntity.BooleanField)}"" THEN @param_0 ELSE NULL END) = Count(*)) AS ""All""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
+                        new[] { new SqlCommandParameter("param_0", 1, typeof(int)) },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).Any()),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > @param_0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        new[] { new SqlCommandParameter("param_0", 0, typeof(int)) },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Any(it => it.BooleanField)),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
@@ -584,8 +605,63 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any async",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).AnyAsync(CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > @param_0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        new[] { new SqlCommandParameter("param_0", 0, typeof(int)) },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any async 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().AnyAsync(it => it.BooleanField, CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*) > @param_0) AS ""Any""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        new[] { new SqlCommandParameter("param_0", 0, typeof(int)) },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).Count()),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*)) AS ""Count""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Count(it => it.BooleanField)),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*)) AS ""Count""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count async",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).CountAsync(CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(Count(*)) AS ""Count""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count async 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().CountAsync(it => it.BooleanField, CancellationToken.None).Result),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}(Count(*)) AS ""Count""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
@@ -606,23 +682,78 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single by primary key",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().Single<DatabaseEntity, Guid>(testDatabaseEntity.PrimaryKey, CancellationToken.None)),
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).First()),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
-                        new[] { new SqlCommandParameter("param_0", testDatabaseEntity.PrimaryKey, typeof(Guid)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default by primary key",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().SingleOrDefault<DatabaseEntity, Guid>(testDatabaseEntity.PrimaryKey, CancellationToken.None)),
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first async",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().FirstAsync(it => it.BooleanField, CancellationToken.None).Result),
                 new Action<ICommand, Action<string>>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
-                        new[] { new SqlCommandParameter("param_0", testDatabaseEntity.PrimaryKey, typeof(Guid)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first async 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).FirstAsync(CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first or default",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().FirstOrDefault(it => it.BooleanField)),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first or default 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).FirstOrDefault()),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first or default async",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().FirstOrDefaultAsync(it => it.BooleanField, CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first or default async 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).FirstOrDefaultAsync(CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -634,6 +765,105 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     (query, log) => CheckSqlCommand(query,
                         $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
                         emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).Single()),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single async",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().SingleAsync(it => it.BooleanField, CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single async 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).SingleAsync(CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().SingleOrDefault(it => it.BooleanField)),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).SingleOrDefault()),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default async",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().SingleOrDefaultAsync(it => it.BooleanField, CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default async 2",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseEntity>().Where(it => it.BooleanField).SingleOrDefaultAsync(CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}fetch first 2 rows only",
+                        emptyQueryParameters,
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single by primary key",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().Single<DatabaseEntity, Guid>(testDatabaseEntity.PrimaryKey, CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
+                        new[] { new SqlCommandParameter("param_0", testDatabaseEntity.PrimaryKey, typeof(Guid)) },
+                        log)),
+                new IDatabaseEntity[] { testDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default by primary key",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().SingleOrDefault<DatabaseEntity, Guid>(testDatabaseEntity.PrimaryKey, CancellationToken.None).Result),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"" = @param_0{Environment.NewLine}fetch first 2 rows only",
+                        new[] { new SqlCommandParameter("param_0", testDatabaseEntity.PrimaryKey, typeof(Guid)) },
                         log)),
                 new IDatabaseEntity[] { testDatabaseEntity }
             };
@@ -755,6 +985,18 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 Array.Empty<IDatabaseEntity>()
             };
+            /*TODO: #209 - test sql view translation before migration*/
+            /*yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - sql view translation before migration",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseColumn>().Select(it => new { it.Schema, it.Table, it.Column }).First()),
+                new Action<ICommand, Action<string>>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Schema)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Table)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Column)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}({Environment.NewLine}{'\t'}{'\t'}select{Environment.NewLine}{'\t'}{'\t'}gen_random_uuid() as ""{nameof(DatabaseColumn.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}c.table_schema as ""{nameof(DatabaseColumn.Schema)}"",{Environment.NewLine}{'\t'}{'\t'}c.table_name as ""{nameof(DatabaseColumn.Table)}"",{Environment.NewLine}{'\t'}{'\t'}column_name as ""{nameof(DatabaseColumn.Column)}"",{Environment.NewLine}{'\t'}{'\t'}ordinal_position as ""{nameof(DatabaseColumn.Position)}"",{Environment.NewLine}{'\t'}{'\t'}data_type as ""{nameof(DatabaseColumn.DataType)}"",{Environment.NewLine}{'\t'}{'\t'}case is_nullable when 'NO' then false when 'YES' then true end as ""{nameof(DatabaseColumn.Nullable)}"",{Environment.NewLine}{'\t'}{'\t'}column_default as ""{nameof(DatabaseColumn.DefaultValue)}"",{Environment.NewLine}{'\t'}{'\t'}numeric_scale as ""{nameof(DatabaseColumn.Scale)}"",{Environment.NewLine}{'\t'}{'\t'}numeric_precision as ""{nameof(DatabaseColumn.Precision)}"",{Environment.NewLine}{'\t'}{'\t'}character_maximum_length as ""{nameof(DatabaseColumn.Length)}""{Environment.NewLine}{'\t'}{'\t'}from information_schema.columns c{Environment.NewLine}{'\t'}{'\t'}join information_schema.tables t{Environment.NewLine}{'\t'}{'\t'}on t.table_schema = c.table_schema and t.table_name = c.table_name  {Environment.NewLine}{'\t'}{'\t'}where t.table_type != 'VIEW' and c.table_schema not in ('information_schema', 'public') and c.table_schema not like 'pg_%'{Environment.NewLine}{'\t'}{'\t'}order by c.table_name, ordinal_position{Environment.NewLine}{'\t'}) a{Environment.NewLine}fetch first 1 rows only",
+                        emptyQueryParameters,
+                        log)),
+                Array.Empty<IDatabaseEntity>()
+            };*/
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - select json column",
@@ -777,18 +1019,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { domainEvent }
             };
-            /*TODO: #209 - test sql view translation before migration*/
-            /*yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - sql view translation before migration",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IReadRepository>().All<DatabaseColumn>().Select(it => new { it.Schema, it.Table, it.Column }).First()),
-                new Action<ICommand, Action<string>>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Schema)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Table)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Column)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}({Environment.NewLine}{'\t'}{'\t'}select{Environment.NewLine}{'\t'}{'\t'}gen_random_uuid() as ""{nameof(DatabaseColumn.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}c.table_schema as ""{nameof(DatabaseColumn.Schema)}"",{Environment.NewLine}{'\t'}{'\t'}c.table_name as ""{nameof(DatabaseColumn.Table)}"",{Environment.NewLine}{'\t'}{'\t'}column_name as ""{nameof(DatabaseColumn.Column)}"",{Environment.NewLine}{'\t'}{'\t'}ordinal_position as ""{nameof(DatabaseColumn.Position)}"",{Environment.NewLine}{'\t'}{'\t'}data_type as ""{nameof(DatabaseColumn.DataType)}"",{Environment.NewLine}{'\t'}{'\t'}case is_nullable when 'NO' then false when 'YES' then true end as ""{nameof(DatabaseColumn.Nullable)}"",{Environment.NewLine}{'\t'}{'\t'}column_default as ""{nameof(DatabaseColumn.DefaultValue)}"",{Environment.NewLine}{'\t'}{'\t'}numeric_scale as ""{nameof(DatabaseColumn.Scale)}"",{Environment.NewLine}{'\t'}{'\t'}numeric_precision as ""{nameof(DatabaseColumn.Precision)}"",{Environment.NewLine}{'\t'}{'\t'}character_maximum_length as ""{nameof(DatabaseColumn.Length)}""{Environment.NewLine}{'\t'}{'\t'}from information_schema.columns c{Environment.NewLine}{'\t'}{'\t'}join information_schema.tables t{Environment.NewLine}{'\t'}{'\t'}on t.table_schema = c.table_schema and t.table_name = c.table_name  {Environment.NewLine}{'\t'}{'\t'}where t.table_type != 'VIEW' and c.table_schema not in ('information_schema', 'public') and c.table_schema not like 'pg_%'{Environment.NewLine}{'\t'}{'\t'}order by c.table_name, ordinal_position{Environment.NewLine}{'\t'}) a{Environment.NewLine}fetch first 1 rows only",
-                        emptyQueryParameters,
-                        log)),
-                Array.Empty<IDatabaseEntity>()
-            };*/
         }
 
         [Fact]
@@ -826,7 +1056,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             AsyncCountdownEvent asyncCountdownEvent,
             string section,
             Func<IDependencyContainer, object?> queryProducer,
-            Action<ICommand, Action<string>> checkQuery,
+            Action<ICommand, Action<string>> checkCommand,
             IDatabaseEntity[] entities)
         {
             try
@@ -853,7 +1083,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 var hostShutdown = host.Value.WaitForShutdownAsync(cts.Token);
 
-                var assert = Run(endpointDependencyContainer, queryProducer, checkQuery, entities, Output.WriteLine, cts.Token);
+                var assert = Run(endpointDependencyContainer, queryProducer, checkCommand, entities, Output.WriteLine, cts.Token);
 
                 var awaiter = Task.WhenAny(hostShutdown, assert);
 
@@ -893,7 +1123,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
         private static Task Run(
             IDependencyContainer dependencyContainer,
             Func<IDependencyContainer, object?> queryProducer,
-            Action<ICommand, Action<string>> checkQuery,
+            Action<ICommand, Action<string>> checkCommand,
             IDatabaseEntity[] entities,
             Action<string> log,
             CancellationToken token)
@@ -905,31 +1135,28 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 var collector = dependencyContainer.Resolve<QueryExpressionsCollector>();
                 collector.Expressions.Clear();
 
-                var expression = (queryProducer(dependencyContainer) as IQueryable)?.Expression
-                                 ?? collector.Expressions.Single();
+                var expression = queryProducer(dependencyContainer) is IQueryable queryable
+                    ? queryable.Expression
+                    : collector.Expressions.Single();
 
                 var query = dependencyContainer
-                    .Resolve<IQueryProvider>()
+                    .Resolve<IAsyncQueryProvider>()
                     .CreateQuery(expression);
 
                 var command = dependencyContainer
                     .Resolve<IExpressionTranslator>()
                     .Translate(expression);
 
-                checkQuery(command, log);
+                checkCommand(command, log);
 
                 await transaction
                     .Insert(entities, EnInsertBehavior.Default, token)
                     .ConfigureAwait(false);
 
-                var queryResult = query
+                var item = query
                     .GetEnumerator()
                     .AsEnumerable<object>()
-                    .ToList();
-
-                Assert.Single(queryResult);
-
-                var item = queryResult.Single();
+                    .Single();
 
                 var dump = item.GetType().IsPrimitive()
                     ? item.ToString() !

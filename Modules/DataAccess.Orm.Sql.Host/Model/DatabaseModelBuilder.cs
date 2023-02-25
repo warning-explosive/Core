@@ -6,13 +6,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
-    using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using CrossCuttingConcerns.Settings;
+    using Orm.Linq;
     using Settings;
     using Transaction;
 
@@ -46,20 +45,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                             StringComparer.OrdinalIgnoreCase) as IReadOnlyDictionary<string, IReadOnlyDictionary<string, DatabaseColumnConstraint>>,
                     StringComparer.OrdinalIgnoreCase);
 
-            var schemas = await (await transaction
-                    .All<DatabaseSchema>()
-                    .Select(schema => schema.Name)
-                    .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
-                    .ConfigureAwait(false))
-                .Select(schema => BuildSchemaNode(transaction, schema, constraints, token))
-                .WhenAll()
+            var schemas = await transaction
+                .All<DatabaseSchema>()
+                .Select(schema => schema.Name)
+                .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
                 .ConfigureAwait(false);
+
+            var schemaNodes = new List<SchemaNode>();
+
+            foreach (var schema in schemas)
+            {
+                schemaNodes.Add(await BuildSchemaNode(transaction, schema, constraints, token).ConfigureAwait(false));
+            }
 
             var settings = await _settingsProvider
                 .Get(token)
                 .ConfigureAwait(false);
 
-            return new DatabaseNode(settings.Host, settings.Database, schemas);
+            return new DatabaseNode(settings.Host, settings.Database, schemaNodes);
         }
 
         private static async Task<SchemaNode> BuildSchemaNode(

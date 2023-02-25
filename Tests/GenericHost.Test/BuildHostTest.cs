@@ -15,10 +15,10 @@
     using CompositionRoot.Extensions;
     using DataAccess.Api.Model;
     using DataAccess.Orm.Connection;
-    using DataAccess.Orm.Extensions;
     using DataAccess.Orm.PostgreSql.Host.StartupActions;
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Model;
+    using DataAccess.Orm.Transaction;
     using DatabaseEntities.Relations;
     using GenericDomain.EventSourcing.Sql;
     using GenericEndpoint.Authorization;

@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -22,25 +21,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             _map = materializers.ToDictionary(static translator => translator.GetType().ExtractGenericArgumentAt(typeof(ICommandMaterializer<>)));
         }
 
-        public Task<object?> MaterializeScalar(
+        public IAsyncEnumerable<T> Materialize<T>(
             IAdvancedDatabaseTransaction transaction,
             ICommand command,
-            Type type,
             CancellationToken token)
         {
             return _map.TryGetValue(command.GetType(), out var materializer)
-                ? materializer.MaterializeScalar(transaction, command, type, token)
-                : throw new NotSupportedException($"Unsupported command type {command.GetType()}");
-        }
-
-        public IAsyncEnumerable<object?> Materialize(
-            IAdvancedDatabaseTransaction transaction,
-            ICommand command,
-            Type type,
-            CancellationToken token)
-        {
-            return _map.TryGetValue(command.GetType(), out var materializer)
-                ? materializer.Materialize(transaction, command, type, token)
+                ? materializer.Materialize<T>(transaction, command, token)
                 : throw new NotSupportedException($"Unsupported command type {command.GetType()}");
         }
     }

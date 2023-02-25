@@ -8,7 +8,7 @@
     using CompositionRoot;
     using CompositionRoot.Registration;
     using CompositionRoot.Verifiers;
-    using Core.DataAccess.Orm.Extensions;
+    using Core.DataAccess.Orm.Model;
     using Core.DataAccess.Orm.Sql.Model;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;

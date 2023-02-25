@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using GenericEndpoint.DataAccess.Host.BackgroundWorkers;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.UnitOfWork;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
@@ -25,12 +24,9 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
             IReadOnlyCollection<IntegrationMessage> messages,
             CancellationToken token)
         {
-            if (!Environment.StackTrace.Contains(nameof(GenericEndpointDataAccessHostBackgroundWorker), StringComparison.OrdinalIgnoreCase))
-            {
-                return Task.CompletedTask;
-            }
-
-            return Decoratee.DeliverMessages(messages, token);
+            return Environment.StackTrace.Contains(nameof(GenericEndpoint.DataAccess.UnitOfWork.IntegrationUnitOfWork), StringComparison.OrdinalIgnoreCase)
+                ? Task.CompletedTask
+                : Decoratee.DeliverMessages(messages, token);
         }
     }
 }

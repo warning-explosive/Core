@@ -7,14 +7,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Reading;
     using Basics;
     using Connection;
     using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.ObjectBuilder;
-    using Extensions;
     using Model;
     using Orm.Linq;
+    using Orm.Model;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
@@ -45,10 +44,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
             _objectBuilder = objectBuilder;
         }
 
-        public Task<object?> MaterializeScalar(
+        public IAsyncEnumerable<T> Materialize<T>(
             IAdvancedDatabaseTransaction transaction,
             ICommand command,
-            Type type,
             CancellationToken token)
         {
             if (command is not SqlCommand sqlCommand)
@@ -56,48 +54,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
                 throw new NotSupportedException($"Unsupported command type {command.GetType()}");
             }
 
-            return MaterializeScalar(transaction, sqlCommand, type, token);
+            return Materialize<T>(transaction, sqlCommand, token);
         }
 
-        public IAsyncEnumerable<object?> Materialize(
-            IAdvancedDatabaseTransaction transaction,
-            ICommand command,
-            Type type,
-            CancellationToken token)
-        {
-            if (command is not SqlCommand sqlCommand)
-            {
-                throw new NotSupportedException($"Unsupported command type {command.GetType()}");
-            }
-
-            return Materialize(transaction, sqlCommand, type, token);
-        }
-
-        public async Task<object?> MaterializeScalar(
+        public IAsyncEnumerable<T> Materialize<T>(
             IAdvancedDatabaseTransaction transaction,
             SqlCommand command,
-            Type type,
             CancellationToken token)
         {
-            return (await Materialize(transaction, command, type, token)
-                    .AsEnumerable(token)
-                    .ConfigureAwait(false))
-                .SingleOrDefault();
+            return MaterializeInternal<T>(transaction, command, token);
         }
 
-        public IAsyncEnumerable<object?> Materialize(
+        private async IAsyncEnumerable<T> MaterializeInternal<T>(
             IAdvancedDatabaseTransaction transaction,
             SqlCommand command,
-            Type type,
-            CancellationToken token)
-        {
-            return MaterializeInternal(transaction, command, type, token);
-        }
-
-        private async IAsyncEnumerable<object?> MaterializeInternal(
-            IAdvancedDatabaseTransaction transaction,
-            SqlCommand command,
-            Type type,
             [EnumeratorCancellation] CancellationToken token)
         {
             var asyncSource = _connectionProvider
@@ -107,7 +77,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
 
             await foreach (var values in asyncSource)
             {
-                yield return await MaterializeInternal(transaction, type, values, token).ConfigureAwait(false);
+                var item = await MaterializeInternal(transaction, typeof(T), values, token).ConfigureAwait(false);
+
+                yield return (T)item !;
             }
         }
 

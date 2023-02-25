@@ -7,7 +7,6 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Persisting;
-    using Api.Reading;
     using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -15,7 +14,6 @@
     using CompositionRoot;
     using CrossCuttingConcerns.Logging;
     using Execution;
-    using Extensions;
     using Microsoft.Extensions.Logging;
     using Model;
     using Orm.Host.Abstractions;
@@ -143,7 +141,7 @@
                         .All<AppliedMigration>()
                         .Where(migration => migration.Name.Like(pattern))
                         .Select(migration => migration.Name)
-                        .ToArrayAsync(token)
+                        .ToListAsync(token)
                         .ConfigureAwait(false))
                     .Select(migrationName => int.Parse(migrationName.Substring(name.Length).Trim(), CultureInfo.InvariantCulture))
                     .ToArray();

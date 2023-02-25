@@ -16,7 +16,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using CompositionRoot.Exceptions;
     using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.Settings;
-    using Extensions;
     using Linq;
     using Microsoft.Extensions.Logging;
     using Model;
@@ -237,18 +236,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .Get(token)
                 .ConfigureAwait(false);
 
+            /*
+             * npgsql doesn't support MARS (Multiple Active Result Sets)
+             * https://github.com/npgsql/npgsql/issues/462#issuecomment-756787766
+             * https://github.com/npgsql/npgsql/issues/3990
+             */
+            var buffer = new List<IDictionary<string, object?>>();
+
             using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
             {
-                var reader = await npgsqlCommand.ExecuteReaderAsync(CommandBehavior.SequentialAccess, token)
+                var reader = await npgsqlCommand
+                    .ExecuteReaderAsync(CommandBehavior.SequentialAccess, token)
                     .Handled(npgsqlCommand)
                     .ConfigureAwait(false);
-
-                /*
-                 * npgsql doesn't support MARS (Multiple Active Result Sets)
-                 * https://github.com/npgsql/npgsql/issues/462#issuecomment-756787766
-                 * https://github.com/npgsql/npgsql/issues/3990
-                 */
-                var buffer = new List<IDictionary<string, object?>>();
 
                 await using (reader)
                 {
@@ -269,11 +269,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                         /* ignore subsequent result sets */
                     }
                 }
+            }
 
-                foreach (var row in buffer)
-                {
-                    yield return row;
-                }
+            foreach (var row in buffer)
+            {
+                yield return row;
             }
         }
 

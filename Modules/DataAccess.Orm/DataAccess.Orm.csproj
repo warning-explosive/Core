@@ -51,7 +51,7 @@
       <Compile Update="Linq\IAsyncQueryProvider.cs">
         <DependentUpon>Queryable.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\IExpressionMaterializer.cs">
+      <Compile Update="Linq\ICommandMaterializer.cs">
         <DependentUpon>IQuery.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\IExpressionTranslator.cs">
@@ -73,7 +73,7 @@
         <DependentUpon>ITransactionalChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\CommandMaterializerComposite.cs">
-        <DependentUpon>IExpressionMaterializer.cs</DependentUpon>
+        <DependentUpon>ICommandMaterializer.cs</DependentUpon>
       </Compile>
       <Compile Update="Transaction\TransactionalStore.cs">
         <DependentUpon>ITransactionalStore.cs</DependentUpon>

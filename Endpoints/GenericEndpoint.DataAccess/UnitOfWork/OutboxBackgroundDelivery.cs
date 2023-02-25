@@ -9,9 +9,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot;
-    using Core.DataAccess.Api.Reading;
     using Core.DataAccess.Api.Transaction;
-    using Core.DataAccess.Orm.Extensions;
+    using Core.DataAccess.Orm.Linq;
+    using Core.DataAccess.Orm.Transaction;
     using CrossCuttingConcerns.Settings;
     using Deduplication;
     using GenericEndpoint.UnitOfWork;

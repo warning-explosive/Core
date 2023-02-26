@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Sql
         }
 
         /// <inheritdoc />
-        public TKey PrimaryKey { get; internal init; } // TODO: #203 - support custom primary keys and composite primary keys
+        public TKey PrimaryKey { get; internal init; }
 
         object IUniqueIdentified.PrimaryKey => PrimaryKey;
 

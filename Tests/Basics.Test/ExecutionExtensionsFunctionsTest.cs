@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
-    using System.Globalization;
     using Basics;
     using Xunit;
     using Xunit.Abstractions;
@@ -51,15 +50,6 @@ namespace SpaceEngineers.Core.Basics.Test
                 .Invoke(_ => true);
 
             Assert.Throws<TrueException>(HandleNotCaught);
-        }
-
-        [Fact]
-        internal void WrongNullableInferenceTest()
-        {
-            // TODO: #38 - Compiler Issue
-            object? x = null;
-            void Action() => Output.WriteLine(x.GetHashCode().ToString(CultureInfo.InvariantCulture));
-            Assert.Throws<NullReferenceException>(Action);
         }
 
         [Fact]

@@ -93,6 +93,7 @@
         {
             var isSecondaryMigration = await transaction
                 .All<DatabaseColumnConstraint>()
+                .CachedExpression("7542F757-8806-41BE-B302-B350F752E4DD")
                 .AnyAsync(constraint => constraint.Table == _modelProvider.TableName(typeof(AppliedMigration)), token)
                 .ConfigureAwait(false);
 
@@ -100,6 +101,7 @@
                 ? await transaction
                     .All<AppliedMigration>()
                     .Select(migration => migration.Name)
+                    .CachedExpression("DBEC6D0F-5C3F-4C90-927A-CCE722202609")
                     .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
                     .ConfigureAwait(false)
                 : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -141,6 +143,7 @@
                         .All<AppliedMigration>()
                         .Where(migration => migration.Name.Like(pattern))
                         .Select(migration => migration.Name)
+                        .CachedExpression("77CBCB2E-046E-455F-A08E-ECB5EB0859EF")
                         .ToListAsync(token)
                         .ConfigureAwait(false))
                     .Select(migrationName => int.Parse(migrationName.Substring(name.Length).Trim(), CultureInfo.InvariantCulture))

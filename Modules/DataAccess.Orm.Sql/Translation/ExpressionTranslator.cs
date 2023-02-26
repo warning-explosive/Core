@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq.Expressions;
     using Api.Exceptions;
@@ -20,6 +21,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
         private readonly IEnumerable<IMemberInfoTranslator> _sqlFunctionProviders;
 
+        private readonly ConcurrentDictionary<string, TranslatedSqlExpression> _cache;
+        private readonly Func<string, Expression, TranslatedSqlExpression> _factory;
+
         public ExpressionTranslator(
             IModelProvider modelProvider,
             ILinqExpressionPreprocessorComposite preprocessor,
@@ -30,19 +34,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             _preprocessor = preprocessor;
             _sqlExpressionTranslator = sqlExpressionTranslator;
             _sqlFunctionProviders = sqlFunctionProviders;
+
+            _cache = new ConcurrentDictionary<string, TranslatedSqlExpression>(StringComparer.Ordinal);
+            _factory = TranslateSafe();
         }
 
         public ICommand Translate(Expression expression)
         {
-            // TODO: #209 - add cache
-            var translatedSqlExpression = ExecutionExtensions
-                .Try(TranslateUnsafe, expression)
-                .Catch<Exception>()
-                .Invoke(ex => throw new TranslationException(expression, ex));
+            // TODO: #backlog - handle repository update/delete cache misses
+            var translatedSqlExpression = new ExtractExpressionCacheKeyExpressionVisitor().TryGetCacheKey(expression, out var cacheKey)
+                ? _cache.GetOrAdd(cacheKey, _factory, expression)
+                : _factory(string.Empty, expression);
 
             return new SqlCommand(
                 translatedSqlExpression.CommandText,
                 translatedSqlExpression.CommandParametersExtractor(expression));
+        }
+
+        private Func<string, Expression, TranslatedSqlExpression> TranslateSafe()
+        {
+            return (_, expression) => ExecutionExtensions
+                .Try(TranslateUnsafe, expression)
+                .Catch<Exception>()
+                .Invoke(ex => throw new TranslationException(expression, ex));
         }
 
         private TranslatedSqlExpression TranslateUnsafe(Expression expression)

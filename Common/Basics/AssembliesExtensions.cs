@@ -17,14 +17,14 @@ namespace SpaceEngineers.Core.Basics
 
         private const string Duplicate = "xunit.runner.visualstudio.dotnetcore.testadapter";
 
-        private static readonly string[] ExcludedAssemblies =
+        private static readonly string[] ExcludedAssemblies = new[]
         {
             nameof(System),
             nameof(Microsoft),
             "Windows"
         };
 
-        private static readonly string[] RootAssemblies =
+        private static readonly string[] RootAssemblies = new[]
         {
             "SpaceEngineers.Core.Basics",
             "SpaceEngineers.Core.AutoRegistration.Api",

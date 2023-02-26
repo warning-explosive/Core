@@ -15,7 +15,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     {
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
 
-        private static MethodInfo? _all;
+        private static MethodInfo? _repositoryAll;
+        private static MethodInfo? _cachedExpression;
         private static MethodInfo? _queryableSingle;
         private static MethodInfo? _queryableSingle2;
         private static MethodInfo? _queryableSingleOrDefault;
@@ -56,11 +57,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// IReadRepository.All
         /// </summary>
         /// <returns>IReadRepository.All MethodInfo</returns>
-        public static MethodInfo All()
+        public static MethodInfo RepositoryAll()
         {
-            return _all ??= new MethodFinder(typeof(IReadRepository),
+            return _repositoryAll ??= new MethodFinder(typeof(IReadRepository),
                     nameof(IReadRepository.All),
                     BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Api.Abstractions.IReadRepository.All()"));
+        }
+
+        /// <summary>
+        /// AsyncQueryExtensions.CachedExpression
+        /// </summary>
+        /// <returns>AsyncQueryExtensions.CachedExpression MethodInfo</returns>
+        public static MethodInfo CachedExpression()
+        {
+            return _cachedExpression ??= new MethodFinder(typeof(AsyncQueryExtensions),
+                    nameof(AsyncQueryExtensions.CachedExpression),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(string) }
+                }
                 .FindMethod()
                 .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Api.Abstractions.IReadRepository.All()"));
         }

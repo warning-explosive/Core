@@ -66,6 +66,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                                      && !outbox.Sent
                                      && outbox.Timestamp <= cutOff)
                        .Select(outbox => outbox.Message)
+                       .CachedExpression("8270884D-CAB5-46DF-A541-7C0CEEFC9FA1")
                        .ToListAsync(token)
                        .ConfigureAwait(false))
                    .Select(BuildIntegrationMessage)

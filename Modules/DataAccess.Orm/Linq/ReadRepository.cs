@@ -32,21 +32,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             where TEntity : IUniqueIdentified
             where TKey : notnull
         {
-            return SingleByPrimaryKey<TEntity, TKey>(key).SingleAsync(token);
+            return SingleByPrimaryKey<TEntity, TKey>(key)
+                .CachedExpression("E9FF5F3C-13C0-4269-9BAE-7064E8681EBE")
+                .SingleAsync(token);
         }
 
         public Task<TEntity?> SingleOrDefault<TEntity, TKey>(TKey key, CancellationToken token)
             where TEntity : IUniqueIdentified
             where TKey : notnull
         {
-            return SingleByPrimaryKey<TEntity, TKey>(key).SingleOrDefaultAsync(token);
+            return SingleByPrimaryKey<TEntity, TKey>(key)
+                .CachedExpression("C73644BD-4C73-43CC-984D-462CB39DADA2")
+                .SingleOrDefaultAsync(token);
         }
 
         private static Expression QueryAll<TEntity>(IReadRepository readRepository)
         {
             return Expression.Call(
                 Expression.Constant(readRepository),
-                LinqMethods.All().MakeGenericMethod(typeof(TEntity)));
+                LinqMethods.RepositoryAll().MakeGenericMethod(typeof(TEntity)));
         }
 
         private IQueryable<TEntity> SingleByPrimaryKey<TEntity, TKey>(TKey key)

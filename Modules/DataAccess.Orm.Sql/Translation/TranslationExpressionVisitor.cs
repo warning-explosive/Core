@@ -65,6 +65,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             var itemType = node.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
 
+            if (method == LinqMethods.CachedExpression())
+            {
+                return Visit(node.Arguments[0]);
+            }
+
             if (method.IsQueryRoot())
             {
                 _context.WithinConditionalScope(
@@ -344,11 +349,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 projection.IsDistinct = true;
 
                 return node;
-            }
-
-            if (method == LinqMethods.QueryableSelectMany())
-            {
-                throw new NotSupportedException(nameof(Queryable.SelectMany));
             }
 
             if (TryGetMemberInfoExpression(node.Method, out var recognized))

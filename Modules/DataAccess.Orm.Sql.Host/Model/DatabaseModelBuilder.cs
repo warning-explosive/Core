@@ -32,6 +32,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
         {
             var constraints = (await transaction
                     .All<DatabaseColumnConstraint>()
+                    .CachedExpression("E7DEA7FF-3C13-4458-9E21-0DCC664E9CC5")
                     .ToListAsync(token)
                     .ConfigureAwait(false))
                 .GroupBy(constraint => constraint.Schema)
@@ -48,6 +49,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             var schemas = await transaction
                 .All<DatabaseSchema>()
                 .Select(schema => schema.Name)
+                .CachedExpression("3E6836B0-07BB-4EA4-9C1E-6F6D61928B84")
                 .ToHashSetAsync(StringComparer.OrdinalIgnoreCase, token)
                 .ConfigureAwait(false);
 
@@ -87,6 +89,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             return (await databaseContext
                     .All<DatabaseEnumType>()
                     .Where(column => column.Schema == schema)
+                    .CachedExpression("2AE6CD35-B85C-4EB2-A4AF-5AA60389BA0B")
                     .ToListAsync(token)
                     .ConfigureAwait(false))
                 .GroupBy(column => column.Type, column => column.Value)
@@ -111,6 +114,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             return (await databaseContext
                     .All<DatabaseColumn>()
                     .Where(column => column.Schema == schema)
+                    .CachedExpression("C3B9DD2E-7279-455D-A718-356FD8F86035")
                     .ToListAsync(token)
                     .ConfigureAwait(false))
                 .GroupBy(column => column.Table)
@@ -181,6 +185,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             return (await databaseContext
                     .All<DatabaseView>()
                     .Where(view => view.Schema == schema)
+                    .CachedExpression("BAD53220-4248-467F-A04A-DBBF3BE9C310")
                     .ToListAsync(token)
                     .ConfigureAwait(false))
                 .Select(BuildViewNode(schema))
@@ -200,6 +205,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             return (await databaseContext
                     .All<DatabaseIndex>()
                     .Where(index => index.Schema == schema)
+                    .CachedExpression("EB3A4174-DEE9-438E-993F-1CFABB671D9A")
                     .ToListAsync(token)
                     .ConfigureAwait(false))
                 .Select(index => IndexNode.FromDb(index.Schema, index.Table, index.Index, index.Definition))

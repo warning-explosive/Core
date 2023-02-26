@@ -26,7 +26,7 @@
         private readonly ISqlViewQueryProviderComposite _sqlViewQueryProvider;
 
         private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>> _columnsCache;
-        private readonly Dictionary<Type, (Type Left, Type Right)> _mtmTablesCache;
+        private readonly ConcurrentDictionary<Type, (Type Left, Type Right)> _mtmTablesCache;
 
         private IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>>? _tablesMap;
         private IReadOnlyCollection<EnumTypeInfo>? _enums;
@@ -42,7 +42,7 @@
             _sqlViewQueryProvider = sqlViewQueryProvider;
 
             _columnsCache = new ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>>();
-            _mtmTablesCache = new Dictionary<Type, (Type Left, Type Right)>();
+            _mtmTablesCache = new ConcurrentDictionary<Type, (Type Left, Type Right)>();
         }
 
         public IReadOnlyCollection<EnumTypeInfo> Enums

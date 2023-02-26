@@ -325,10 +325,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
                 return Task.FromResult<TEntity?>(entity);
             }
 
-            return transaction
-                .All<TEntity>()
-                .Where(databaseEntity => Equals(databaseEntity.PrimaryKey, primaryKey))
-                .SingleOrDefaultAsync(token);
+            return transaction.SingleOrDefault<TEntity, TKey>(primaryKey, token);
         }
 
         private static async Task<object?> AsEntity<TEntity, TKey>(Task<TEntity?> task)
@@ -447,6 +444,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
             var items = await transaction
                 .All<TRight>()
                 .Where(databaseEntity => subQuery.Contains(databaseEntity.PrimaryKey))
+                .CachedExpression("9B70C4F3-989A-4609-A2E8-F1E16E243B72")
                 .ToListAsync(token)
                 .ConfigureAwait(false);
 

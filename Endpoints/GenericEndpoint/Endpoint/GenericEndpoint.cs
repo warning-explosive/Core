@@ -89,21 +89,28 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
             var executionId = Guid.NewGuid();
 
-            try
+            var runningHandler = RunMessageHandler(
+                _dependencyContainer,
+                _messageHandlerMiddleware,
+                message,
+                Token);
+
+            using (Disposable.Create(_runningHandlers, Add(executionId, runningHandler), Remove(executionId)))
             {
-                var runningHandler = RunMessageHandler(
-                    _dependencyContainer,
-                    _messageHandlerMiddleware,
-                    message,
-                    Token);
-
-                _runningHandlers.Add(executionId, runningHandler);
-
                 await runningHandler.ConfigureAwait(false);
             }
-            finally
+
+            static Action<ConcurrentDictionary<Guid, Task>> Add(
+                Guid executionId,
+                Task runningHandler)
             {
-                _runningHandlers.Remove(executionId, out _);
+                return runningHandlers => runningHandlers.Add(executionId, runningHandler);
+            }
+
+            static Action<ConcurrentDictionary<Guid, Task>> Remove(
+                Guid executionId)
+            {
+                return runningHandlers => runningHandlers.Remove(executionId, out _);
             }
 
             static async Task RunMessageHandler(

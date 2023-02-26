@@ -59,7 +59,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Translation
         {
             var sb = new StringBuilder();
 
-            // TODO: #209 - add cache with MigrationsWasApplied()
             if (!MigrationsWasApplied() && expression.Type.IsSqlView())
             {
                 sb.AppendLine("(");

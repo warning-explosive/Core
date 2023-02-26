@@ -7,7 +7,6 @@
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
-    using System.Threading;
     using Api.Model;
     using Basics;
     using Orm.Model;
@@ -26,9 +25,9 @@
         private string? _name;
         private ColumnProperty? _property;
         private IReadOnlyCollection<string>? _constraints;
-        private Lazy<Relation?>? _relation;
-        private Lazy<bool>? _isMultipleRelation;
-        private Lazy<bool>? _isInlinedObject;
+        private Relation? _relation;
+        private bool? _isMultipleRelation;
+        private bool? _isInlinedObject;
         private MethodInfo? _mtmCctor;
         private Func<Expression, Expression>? _expressionExtractor;
         private Func<ISqlExpression, ISqlExpression>? _sqlExpressionExtractor;
@@ -116,8 +115,8 @@
         {
             get
             {
-                _relation ??= new Lazy<Relation?>(InitRelation, LazyThreadSafetyMode.ExecutionAndPublication);
-                return _relation.Value;
+                _relation ??= InitRelation();
+                return _relation;
 
                 Relation? InitRelation()
                 {
@@ -171,7 +170,7 @@
         {
             get
             {
-                _isMultipleRelation ??= new Lazy<bool>(InitIsMultipleRelation, LazyThreadSafetyMode.ExecutionAndPublication);
+                _isMultipleRelation ??= InitIsMultipleRelation();
                 return _isMultipleRelation.Value;
 
                 bool InitIsMultipleRelation()
@@ -195,7 +194,7 @@
         {
             get
             {
-                _isInlinedObject ??= new Lazy<bool>(InitIsInlinedObject, LazyThreadSafetyMode.ExecutionAndPublication);
+                _isInlinedObject ??= InitIsInlinedObject();
                 return _isInlinedObject.Value;
 
                 bool InitIsInlinedObject()
@@ -224,7 +223,7 @@
                     {
                         yield return "primary key";
                     }
-                    else if (Relation != null)
+                    else if (IsRelation)
                     {
                         yield return $@"references ""{_modelProvider.SchemaName(Relation.Target)}"".""{_modelProvider.TableName(Relation.Target)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")";
                     }

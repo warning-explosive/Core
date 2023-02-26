@@ -14,6 +14,26 @@
     public static class AsyncQueryExtensions
     {
         /// <summary>
+        /// Adds cache key attribute to query expression
+        /// </summary>
+        /// <param name="source">Source query</param>
+        /// <param name="cacheKey">Cache key</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>ICachedQueryable</returns>
+        public static ICachedQueryable<T> CachedExpression<T>(
+            this IQueryable<T> source,
+            string cacheKey)
+        {
+            var expression = Expression.Call(
+                null,
+                LinqMethods.CachedExpression().MakeGenericMethod(typeof(T)),
+                source.Expression,
+                Expression.Constant(cacheKey));
+
+            return (ICachedQueryable<T>)source.Provider.CreateQuery<T>(expression);
+        }
+
+        /// <summary>
         /// Asynchronously materializes query to array
         /// </summary>
         /// <param name="query">Query</param>
@@ -21,7 +41,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static async Task<T[]> ToArrayAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             CancellationToken token)
         {
             return (await ToListAsync(query, token).ConfigureAwait(false)).ToArray();
@@ -35,7 +55,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static async Task<List<T>> ToListAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             CancellationToken token)
         {
             var list = new List<T>();
@@ -61,7 +81,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static async Task<HashSet<T>> ToHashSetAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             CancellationToken token)
         {
             var hashSet = new HashSet<T>();
@@ -88,7 +108,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static async Task<HashSet<T>> ToHashSetAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             IEqualityComparer<T> comparer,
             CancellationToken token)
         {
@@ -117,7 +137,7 @@
         /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static async Task<Dictionary<TKey, TSource>> ToDictionaryAsync<TSource, TKey>(
-            this IQueryable<TSource> query,
+            this ICachedQueryable<TSource> query,
             Func<TSource, TKey> keySelector,
             CancellationToken token)
         {
@@ -147,7 +167,7 @@
         /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static async Task<Dictionary<TKey, TSource>> ToDictionaryAsync<TSource, TKey>(
-            this IQueryable<TSource> query,
+            this ICachedQueryable<TSource> query,
             Func<TSource, TKey> keySelector,
             IEqualityComparer<TKey> comparer,
             CancellationToken token)
@@ -179,7 +199,7 @@
         /// <typeparam name="TElement">TElement type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static async Task<Dictionary<TKey, TElement>> ToDictionaryAsync<TSource, TKey, TElement>(
-            this IQueryable<TSource> query,
+            this ICachedQueryable<TSource> query,
             Func<TSource, TKey> keySelector,
             Func<TSource, TElement> elementSelector,
             CancellationToken token)
@@ -212,7 +232,7 @@
         /// <typeparam name="TElement">TElement type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static async Task<Dictionary<TKey, TElement>> ToDictionaryAsync<TSource, TKey, TElement>(
-            this IQueryable<TSource> query,
+            this ICachedQueryable<TSource> query,
             Func<TSource, TKey> keySelector,
             Func<TSource, TElement> elementSelector,
             IEqualityComparer<TKey> comparer,
@@ -240,7 +260,9 @@
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
-        public static Task<T> FirstAsync<T>(this IQueryable<T> query, CancellationToken token)
+        public static Task<T> FirstAsync<T>(
+            this ICachedQueryable<T> query,
+            CancellationToken token)
         {
             var expression = Expression.Call(
                 null,
@@ -259,7 +281,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static Task<T> FirstAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             Expression<Func<T, bool>> predicate,
             CancellationToken token)
         {
@@ -279,7 +301,9 @@
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
-        public static Task<T?> FirstOrDefaultAsync<T>(this IQueryable<T> query, CancellationToken token)
+        public static Task<T?> FirstOrDefaultAsync<T>(
+            this ICachedQueryable<T> query,
+            CancellationToken token)
         {
             var expression = Expression.Call(
                 null,
@@ -298,7 +322,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static Task<T?> FirstOrDefaultAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             Expression<Func<T, bool>> predicate,
             CancellationToken token)
         {
@@ -319,7 +343,9 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         [SuppressMessage("Analysis", "CA1720", Justification = "desired name")]
-        public static Task<T> SingleAsync<T>(this IQueryable<T> query, CancellationToken token)
+        public static Task<T> SingleAsync<T>(
+            this ICachedQueryable<T> query,
+            CancellationToken token)
         {
             var expression = Expression.Call(
                 null,
@@ -339,7 +365,7 @@
         /// <returns>Ongoing operation</returns>
         [SuppressMessage("Analysis", "CA1720", Justification = "desired name")]
         public static Task<T> SingleAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             Expression<Func<T, bool>> predicate,
             CancellationToken token)
         {
@@ -359,7 +385,9 @@
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
-        public static Task<T?> SingleOrDefaultAsync<T>(this IQueryable<T> query, CancellationToken token)
+        public static Task<T?> SingleOrDefaultAsync<T>(
+            this ICachedQueryable<T> query,
+            CancellationToken token)
         {
             var expression = Expression.Call(
                 null,
@@ -378,7 +406,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static Task<T?> SingleOrDefaultAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             Expression<Func<T, bool>> predicate,
             CancellationToken token)
         {
@@ -398,7 +426,9 @@
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
-        public static Task<bool> AnyAsync<T>(this IQueryable<T> query, CancellationToken token)
+        public static Task<bool> AnyAsync<T>(
+            this ICachedQueryable<T> query,
+            CancellationToken token)
         {
             var expression = Expression.Call(
                 null,
@@ -417,7 +447,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static Task<bool> AnyAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             Expression<Func<T, bool>> predicate,
             CancellationToken token)
         {
@@ -439,7 +469,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static Task<bool> AllAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             Expression<Func<T, bool>> predicate,
             CancellationToken token)
         {
@@ -460,7 +490,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static Task<int> CountAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             CancellationToken token)
         {
             var expression = Expression.Call(
@@ -480,7 +510,7 @@
         /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         public static Task<int> CountAsync<T>(
-            this IQueryable<T> query,
+            this ICachedQueryable<T> query,
             Expression<Func<T, bool>> predicate,
             CancellationToken token)
         {

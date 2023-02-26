@@ -57,9 +57,6 @@
       <Compile Update="Linq\IExpressionTranslator.cs">
         <DependentUpon>IQuery.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\Queryable.cs">
-        <DependentUpon>IAsyncQueryable.cs</DependentUpon>
-      </Compile>
       <Compile Update="Transaction\UpdateEntityChange.cs">
         <DependentUpon>ITransactionalChange.cs</DependentUpon>
       </Compile>
@@ -80,6 +77,12 @@
       </Compile>
       <Compile Update="Transaction\DatabaseTransaction.cs">
         <DependentUpon>IAdvancedDatabaseTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IAsyncQueryable.cs">
+        <DependentUpon>Queryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ICachedQueryable.cs">
+        <DependentUpon>Queryable.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

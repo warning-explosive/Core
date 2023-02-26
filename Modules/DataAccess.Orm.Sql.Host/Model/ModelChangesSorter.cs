@@ -51,7 +51,7 @@
                                     .Select(createTable => _modelProvider.TablesMap[createTable.Schema][createTable.Table])
                                     .OfType<TableInfo>()
                                     .SelectMany(tableInfo => tableInfo.Columns.Values)
-                                    .Where(columnInfo => columnInfo.Relation != null)
+                                    .Where(columnInfo => columnInfo.IsRelation || columnInfo.IsMultipleRelation)
                                     .Select(columnInfo => _modelProvider.SchemaName(columnInfo.Relation!.Target))
                                     .Where(schema => !schema.Equals(createSchema.Schema, StringComparison.OrdinalIgnoreCase))
                                     .SelectMany(schema => changes
@@ -120,7 +120,7 @@
                     .TablesMap[createTable.Schema][createTable.Table]
                     .Columns
                     .Values
-                    .Where(column => column.Relation != null)
+                    .Where(column => column.IsRelation || column.IsMultipleRelation)
                     .Select(column => column.Relation!.Target);
             }
 

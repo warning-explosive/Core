@@ -122,6 +122,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .Where(message => message.Message.PrimaryKey == context.Message.ReadRequiredHeader<Id>().Value
                               && message.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
                               && message.EndpointIdentity.InstanceName == endpointIdentity.InstanceName)
+               .CachedExpression("71E74566-4D9F-4767-9CC4-56F04EB76245")
                .SingleOrDefaultAsync(token);
         }
 

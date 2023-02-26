@@ -34,6 +34,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
             var userDatabaseEntity = await _databaseContext
                .All<DatabaseModel.User>()
                .Where(user => user.Username == spec.Username)
+               .CachedExpression("24698B87-8B82-4EC4-B605-3C4711630979")
                .SingleOrDefaultAsync(token)
                .ConfigureAwait(false);
 

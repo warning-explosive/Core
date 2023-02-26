@@ -40,22 +40,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         private const string DeleteCommandFormat = @"delete from ""{0}"".""{1}"" a where {2}";
 
-        private readonly ConcurrentDictionary<int, TranslatedSqlExpression> _cache;
-
         private readonly IModelProvider _modelProvider;
         private readonly IExpressionTranslator _translator;
         private readonly IDatabaseConnectionProvider _connectionProvider;
+
+        private readonly ConcurrentDictionary<InsertSqlExpressionCacheKey, TranslatedSqlExpression> _cache;
 
         public Repository(
             IModelProvider modelProvider,
             IExpressionTranslator translator,
             IDatabaseConnectionProvider connectionProvider)
         {
-            _cache = new ConcurrentDictionary<int, TranslatedSqlExpression>();
-
             _modelProvider = modelProvider;
             _translator = translator;
             _connectionProvider = connectionProvider;
+
+            _cache = new ConcurrentDictionary<InsertSqlExpressionCacheKey, TranslatedSqlExpression>();
         }
 
         public async Task<long> Insert(
@@ -87,7 +87,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                .Values
                .OrderByDependencies(GetKey, GetDependencies(_modelProvider, map))
                .Stack(entity => entity.GetType())
-               .SelectMany(grp => InsertEntity(_modelProvider.Tables[grp.Key], grp.Value, _cache, insertBehavior));
+               .SelectMany(grp => InsertEntity(_cache, _modelProvider.Tables[grp.Key], grp.Value, insertBehavior));
 
             var affectedRowsCount = await _connectionProvider
                 .Execute(transaction, commands, token)
@@ -123,17 +123,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             }
 
             static IEnumerable<SqlCommand> InsertEntity(
+                ConcurrentDictionary<InsertSqlExpressionCacheKey, TranslatedSqlExpression> cache,
                 ITableInfo table,
                 IEnumerable<IUniqueIdentified> entities,
-                ConcurrentDictionary<int, TranslatedSqlExpression> cache,
                 EnInsertBehavior insertBehavior)
             {
-                var key = HashCode.Combine(table, insertBehavior);
-
-                var insertExpression = cache.GetOrAdd(
-                    key,
-                    static (_, state) => BuildInsertCommand(state.table, state.insertBehavior),
-                    (table, insertBehavior));
+                var insertExpression = cache.GetOrAdd(new InsertSqlExpressionCacheKey(table, insertBehavior), BuildInsertCommand);
 
                 foreach (var entity in entities)
                 {
@@ -144,14 +139,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             }
 
             static TranslatedSqlExpression BuildInsertCommand(
-                ITableInfo table,
-                EnInsertBehavior insertBehavior)
+                InsertSqlExpressionCacheKey cacheKey)
             {
+                var (table, insertBehavior) = cacheKey;
+
                 var columns = table
-                   .Columns
-                   .Values
-                   .Where(column => !column.IsMultipleRelation)
-                   .ToArray();
+                    .Columns
+                    .Values
+                    .Where(column => !column.IsMultipleRelation)
+                    .ToArray();
 
                 var columnsText = columns
                     .Select(column => ColumnFormat.Format(column.Name))
@@ -305,10 +301,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                     setAndPredicate.CommandParameters);
             }
 
-            var versions = (await transaction
+            var versions = (await ((ICachedQueryable<long>)transaction
                    .All<TEntity>()
                    .Where(predicate)
-                   .Select(entity => entity.Version)
+                   .Select(entity => entity.Version))
                    .ToListAsync(token)
                    .ConfigureAwait(false))
                .GroupBy(version => version)
@@ -360,10 +356,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 DeleteCommandFormat.Format(table.Schema, table.Name, sqlCommand.CommandText),
                 sqlCommand.CommandParameters);
 
-            var versions = (await transaction
+            var versions = (await ((ICachedQueryable<long>)transaction
                    .All<TEntity>()
                    .Where(predicate)
-                   .Select(entity => entity.Version)
+                   .Select(entity => entity.Version))
                    .ToListAsync(token)
                    .ConfigureAwait(false))
                .GroupBy(version => version)

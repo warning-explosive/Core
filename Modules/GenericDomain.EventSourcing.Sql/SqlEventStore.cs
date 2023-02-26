@@ -50,6 +50,7 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
                .Where(domainEvent => domainEvent.AggregateId == aggregateId
                                   && domainEvent.Timestamp <= timestamp)
                .OrderBy(domainEvent => domainEvent.Index)
+               .CachedExpression("29F74146-749E-454E-8F47-62A213DD44DA")
                .ToListAsync(token)
                .ConfigureAwait(false);
 

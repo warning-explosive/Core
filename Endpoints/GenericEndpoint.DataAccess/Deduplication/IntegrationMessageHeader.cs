@@ -15,12 +15,23 @@
     {
         /// <summary> .cctor </summary>
         /// <param name="primaryKey">Primary key</param>
+        /// <param name="message">Message</param>
         /// <param name="payload">Payload</param>
-        public IntegrationMessageHeader(Guid primaryKey, IIntegrationMessageHeader payload)
+        public IntegrationMessageHeader(
+            Guid primaryKey,
+            IntegrationMessage message,
+            IIntegrationMessageHeader payload)
             : base(primaryKey)
         {
+            Message = message;
             Payload = payload;
         }
+
+        /// <summary>
+        /// Message
+        /// </summary>
+        [ForeignKey(EnOnDeleteBehavior.Cascade)]
+        public IntegrationMessage Message { get; set; }
 
         /// <summary>
         /// Payload

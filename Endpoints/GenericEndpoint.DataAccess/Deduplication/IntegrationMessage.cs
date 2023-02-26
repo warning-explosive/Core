@@ -39,12 +39,13 @@
                 message.ReadRequiredHeader<Id>().Value,
                 message.Payload,
                 message.ReflectedType,
-                message
-                    .Headers
-                    .Values
-                    .Select(header => new IntegrationMessageHeader(Guid.NewGuid(), header))
-                    .ToList())
+                Array.Empty<IntegrationMessageHeader>())
         {
+            Headers = message
+                .Headers
+                .Values
+                .Select(header => new IntegrationMessageHeader(Guid.NewGuid(), this, header))
+                .ToList();
         }
 
         /// <summary>

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Sql.Attributes
     /// <summary>
     /// ColumnLenghtAttribute
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
     public sealed class ColumnLenghtAttribute : Attribute
     {
         /// <summary> .cctor </summary>

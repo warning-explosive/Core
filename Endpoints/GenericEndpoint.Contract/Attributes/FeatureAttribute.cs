@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract.Attributes
     /// Specifies code feature
     /// Applicable to integration messages and web-api methods
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
     public sealed class FeatureAttribute : Attribute
     {
         /// <summary> .cctor </summary>

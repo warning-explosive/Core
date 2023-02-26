@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
     using Microsoft.CodeAnalysis.Diagnostics;
 
     /// <summary>
-    /// Component should be marked with ComponentAttribute
+    /// Component should be marked by ComponentAttribute
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ComponentAttributeAnalyzer : SyntaxAnalyzerBase
@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
         public override string Identifier { get; } = "CR1";
 
         /// <inheritdoc />
-        public override string Title { get; } = $"Component should be marked with {nameof(ComponentAttribute)}";
+        public override string Title { get; } = $"Component should be marked by {nameof(ComponentAttribute)}";
 
         /// <inheritdoc />
         public override string Message { get; } = "{0}";

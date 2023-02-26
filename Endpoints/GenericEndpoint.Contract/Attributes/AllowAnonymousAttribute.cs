@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract.Attributes
     /// <summary>
     /// Allows anonymously execute message handler
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public sealed class AllowAnonymousAttribute : Attribute
     {
     }

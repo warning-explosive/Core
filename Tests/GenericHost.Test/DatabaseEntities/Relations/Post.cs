@@ -21,8 +21,10 @@
             Text = text;
         }
 
+        [ForeignKey(EnOnDeleteBehavior.Cascade)]
         public Blog Blog { get; set; }
 
+        [ForeignKey(EnOnDeleteBehavior.Restrict)]
         public User User { get; set; }
 
         public DateTime DateTime { get; set; }

@@ -5,7 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Sql.Attributes
     /// <summary>
     /// SchemaAttribute
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public sealed class SchemaAttribute : Attribute
     {
         /// <summary> .cctor </summary>

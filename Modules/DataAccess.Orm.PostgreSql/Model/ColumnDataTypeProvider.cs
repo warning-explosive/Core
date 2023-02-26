@@ -4,11 +4,9 @@
     using System.Diagnostics.CodeAnalysis;
     using Basics;
     using NpgsqlTypes;
-    using Orm.Model;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.DataAccess.Api.Sql.Attributes;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
@@ -17,7 +15,7 @@
     {
         public string GetColumnDataType(ColumnInfo column)
         {
-            if (!column.Property.Declared.IsSupportedColumn())
+            if (!column.IsSupportedColumn)
             {
                 throw new NotSupportedException($"Unsupported column type: {column.Type}");
             }
@@ -136,19 +134,17 @@
 
             if (type == typeof(string))
             {
-                var columnLenghtAttribute = column.Property.Declared.GetAttribute<ColumnLenghtAttribute>();
-
                 /*
                  * character type
                  * variable-length with limit or with no limit
                  */
-                dataType = columnLenghtAttribute == null
+                dataType = column.ColumnLength == null
                     ? NpgsqlDbType.Text.ToString()
-                    : $"{NpgsqlDbType.Varchar}({columnLenghtAttribute.Length})";
+                    : $"{NpgsqlDbType.Varchar}({column.ColumnLength})";
                 return true;
             }
 
-            if (column.Property.Declared.IsJsonColumn())
+            if (column.IsJsonColumn)
             {
                 /*
                  * json stored in a decomposed binary format with indexing support

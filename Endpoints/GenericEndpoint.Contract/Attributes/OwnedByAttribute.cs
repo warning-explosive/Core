@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract.Attributes
     /// Request owner - endpoint which can handle that request
     /// Reply has no owner
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public sealed class OwnedByAttribute : Attribute
     {
         /// <summary> .cctor </summary>

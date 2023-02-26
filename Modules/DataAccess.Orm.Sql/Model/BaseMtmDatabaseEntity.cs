@@ -37,11 +37,13 @@
         /// <summary>
         /// Left
         /// </summary>
+        [ForeignKey(EnOnDeleteBehavior.Cascade)]
         public TLeftKey Left { get; internal init; }
 
         /// <summary>
         /// Right
         /// </summary>
+        [ForeignKey(EnOnDeleteBehavior.Cascade)]
         public TRightKey Right { get; internal init; }
     }
 }

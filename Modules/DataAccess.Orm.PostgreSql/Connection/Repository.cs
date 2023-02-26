@@ -12,7 +12,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using Api.Persisting;
     using Basics;
     using Linq;
-    using Orm.Model;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
@@ -27,6 +26,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     internal class Repository : IRepository,
                                 IResolvable<IRepository>
     {
+        private const string TransactionIdCommandText = "select txid_current()";
+
         private const string ColumnFormat = @"""{0}""";
 
         private const string InsertCommandFormat = @"insert into ""{0}"".""{1}""({2}) values {3}{4}";
@@ -69,14 +70,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 return default;
             }
 
-            IReadOnlyDictionary<object, IUniqueIdentified> map = entities
-               .SelectMany(entity => entity.Flatten(_modelProvider))
-               .DistinctBy(GetKey)
-               .ToDictionary(GetKey);
+            IReadOnlyDictionary<EntityKey, IUniqueIdentified> map = entities
+                .SelectMany(entity => Flatten(entity, _modelProvider))
+                .DistinctBy(pair => pair.Key)
+                .ToDictionary(pair => pair.Key, pair => pair.Value);
 
-            var version = await _connectionProvider
-               .GetXid(transaction, token)
-               .ConfigureAwait(false);
+            var version = await GetXid(_connectionProvider, transaction, token).ConfigureAwait(false);
 
             foreach (var entity in map.Values.OfType<IDatabaseEntity>().Where(entity => entity.Version == default))
             {
@@ -85,7 +84,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
             var commands = map
                .Values
-               .OrderByDependencies(GetKey, GetDependencies(_modelProvider, map))
+               .OrderByDependencies(entity => new EntityKey(entity), GetDependencies(_modelProvider, map))
                .Stack(entity => entity.GetType())
                .SelectMany(grp => InsertEntity(_cache, _modelProvider.Tables[grp.Key], grp.Value, insertBehavior));
 
@@ -99,25 +98,83 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
             return affectedRowsCount;
 
+            static Dictionary<EntityKey, IUniqueIdentified> Flatten(
+                IUniqueIdentified source,
+                IModelProvider modelProvider)
+            {
+                var items = new Dictionary<EntityKey, IUniqueIdentified>();
+
+                _ = source
+                    .Flatten(entity => items.TryAdd(new EntityKey(entity), entity)
+                        ? UnfoldRelations(entity, modelProvider)
+                        : Enumerable.Empty<IUniqueIdentified>())
+                    .ToList();
+
+                return items;
+            }
+
+            static IEnumerable<IUniqueIdentified> UnfoldRelations(
+                IUniqueIdentified owner,
+                IModelProvider modelProvider)
+            {
+                var type = owner.GetType();
+                var table = modelProvider.Tables[type];
+
+                if (table.IsMtmTable)
+                {
+                    return Enumerable.Empty<IUniqueIdentified>();
+                }
+
+                var relations = table
+                    .Columns
+                    .Values
+                    .Where(column => column.IsRelation)
+                    .Select(column => column.GetRelationValue(owner))
+                    .Where(dependency => dependency != null)
+                    .Select(dependency => dependency!);
+
+                var multipleRelations = table
+                    .Columns
+                    .Values
+                    .Where(column => column.IsMultipleRelation)
+                    .SelectMany(column => column.GetMultipleRelationValue(owner));
+
+                var mtms = table
+                    .Columns
+                    .Values
+                    .Where(column => column.IsMultipleRelation)
+                    .SelectMany(column => column
+                        .GetMultipleRelationValue(owner)
+                        .Select(dependency => column.CreateMtm(owner, dependency)));
+
+                return relations.Concat(multipleRelations).Concat(mtms);
+            }
+
             static Func<IUniqueIdentified, IEnumerable<IUniqueIdentified>> GetDependencies(
                 IModelProvider modelProvider,
-                IReadOnlyDictionary<object, IUniqueIdentified> map)
+                IReadOnlyDictionary<EntityKey, IUniqueIdentified> map)
             {
-                return entity => modelProvider
-                   .Tables[entity.GetType()]
-                   .Columns
-                   .Values
-                   .Where(column => column.IsRelation)
-                   .Select(DependencySelector(entity, map))
-                   .Where(dependency => dependency != null)
-                   .Select(dependency => dependency!);
+                return entity =>
+                {
+                    var type = entity.GetType();
+                    var table = modelProvider.Tables[type];
+
+                    return table
+                        .Columns
+                        .Values
+                        .Where(column => column.IsRelation)
+                        .Select(DependencySelector(table, entity, map))
+                        .Where(dependency => dependency != null)
+                        .Select(dependency => dependency!);
+                };
 
                 static Func<ColumnInfo, IUniqueIdentified?> DependencySelector(
+                    ITableInfo table,
                     IUniqueIdentified entity,
-                    IReadOnlyDictionary<object, IUniqueIdentified> map)
+                    IReadOnlyDictionary<EntityKey, IUniqueIdentified> map)
                 {
-                    return column => entity.GetType().IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>))
-                        ? map[GetKey(column.Relation.Target, column.GetValue(entity) !)]
+                    return column => table.IsMtmTable
+                        ? map[new EntityKey(column.Relation.Target, column.GetValue(entity) !)]
                         : column.GetRelationValue(entity);
                 }
             }
@@ -178,7 +235,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                             TranslationContext.CommandParameterFormat.Format(index.ToString(CultureInfo.InvariantCulture)),
                             column.GetValue((IUniqueIdentified)entity),
                             column.Type,
-                            column.Property.Declared.IsJsonColumn()))
+                            column.IsJsonColumn))
                         .ToArray();
                 }
 
@@ -198,7 +255,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                     static string ApplyUpdateInsertBehavior(ITableInfo table, ColumnInfo[] columns)
                     {
                         return columns.All(column => column.Name.Equals(nameof(IUniqueIdentified.PrimaryKey), StringComparison.OrdinalIgnoreCase))
-                               || table.Type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>))
+                               || table.IsMtmTable
                             ? OnConflictDoNothing
                             : OnConflictDoUpdate.Format(KeyColumns(table), Update(columns));
 
@@ -312,9 +369,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                     grp => grp.Key,
                     grp => grp.Count());
 
-            var updateVersion = await _connectionProvider
-               .GetXid(transaction, token)
-               .ConfigureAwait(false);
+            var updateVersion = await GetXid(_connectionProvider, transaction, token).ConfigureAwait(false);
 
             var affectedRowsCount = await _connectionProvider
                 .Execute(transaction, updateCommand, token)
@@ -335,13 +390,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             return affectedRowsCount;
         }
 
+        // TODO: #178 - test onDeleteBehavior
         public async Task<long> Delete<TEntity>(
             IAdvancedDatabaseTransaction transaction,
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken token)
             where TEntity : IDatabaseEntity
         {
-            // TODO: #178 - add delete behaviors
             var type = typeof(TEntity);
             var table = _modelProvider.Tables[type];
 
@@ -384,22 +439,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             return affectedRowsCount;
         }
 
-        private static object GetKey(IUniqueIdentified entity)
+        private static Task<long> GetXid(
+            IDatabaseConnectionProvider connectionProvider,
+            IAdvancedDatabaseTransaction transaction,
+            CancellationToken token)
         {
-            return new
-            {
-                Type = entity.GetType(),
-                entity.PrimaryKey
-            };
-        }
-
-        private static object GetKey(Type type, object primaryKey)
-        {
-            return new
-            {
-                Type = type,
-                PrimaryKey = primaryKey
-            };
+            return connectionProvider.ExecuteScalar<long>(
+                transaction,
+                new SqlCommand(TransactionIdCommandText, Array.Empty<SqlCommandParameter>(), false),
+                token);
         }
     }
 }

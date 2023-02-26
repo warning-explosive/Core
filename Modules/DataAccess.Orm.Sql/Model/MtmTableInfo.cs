@@ -26,6 +26,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             Right = right;
         }
 
+        /// <inheritdoc />
+        public override bool IsMtmTable { get; } = true;
+
         /// <summary>
         /// Left (owner)
         /// </summary>

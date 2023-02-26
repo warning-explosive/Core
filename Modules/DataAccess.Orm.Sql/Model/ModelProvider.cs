@@ -113,7 +113,7 @@
         /// <returns>Schema name</returns>
         public string SchemaName(Type type)
         {
-            if (type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
+            if (type.IsMtmTable())
             {
                 if (_tables?.TryGetValue(type, out var tableInfo) == true
                     && tableInfo is MtmTableInfo mtmTableInfo)

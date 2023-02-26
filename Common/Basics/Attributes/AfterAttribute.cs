@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Basics.Attributes
     /// <summary>
     /// Attribute which defines priority of types
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public sealed class AfterAttribute : Attribute
     {
         /// <summary> .ctor </summary>

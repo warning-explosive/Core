@@ -35,6 +35,7 @@
         /// <summary>
         /// Message
         /// </summary>
+        [ForeignKey(EnOnDeleteBehavior.Cascade)]
         public IntegrationMessage Message { get; set; }
 
         /// <summary>

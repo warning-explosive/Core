@@ -109,7 +109,7 @@ namespace SpaceEngineers.Core.Web.Auth
             if ((actionFeatures == null || !actionFeatures.Any())
                 && (controllerFeatures == null || !controllerFeatures.Any()))
             {
-                exceptions.Add(new InvalidOperationException($"Web-api method {action.Name} or containing controller {controller.FullName} should be marked with {nameof(FeatureAttribute)}"));
+                exceptions.Add(new InvalidOperationException($"Web-api method {action.Name} or containing controller {controller.FullName} should be marked by {nameof(FeatureAttribute)}"));
             }
 
             return (actionFeatures ?? Enumerable.Empty<string>())

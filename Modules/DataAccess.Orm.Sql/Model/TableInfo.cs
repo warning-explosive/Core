@@ -41,6 +41,9 @@
         /// </summary>
         public Type Type { get; }
 
+        /// <inheritdoc />
+        public virtual bool IsMtmTable { get; } = false;
+
         /// <summary>
         /// Columns
         /// </summary>

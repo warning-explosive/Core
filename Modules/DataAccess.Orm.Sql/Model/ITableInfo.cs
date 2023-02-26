@@ -32,5 +32,10 @@
         /// Indexes
         /// </summary>
         IReadOnlyDictionary<string, IndexInfo> Indexes { get; }
+
+        /// <summary>
+        /// Does table represent mtm table
+        /// </summary>
+        bool IsMtmTable { get; }
     }
 }

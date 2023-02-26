@@ -21,13 +21,16 @@
                                                      ICollectionResolvable<IConfigurationVerifier>
     {
         private readonly ITypeProvider _typeProvider;
+        private readonly IModelProvider _modelProvider;
         private readonly IConstructorResolutionBehavior _constructorResolutionBehavior;
 
         public DataAccessConfigurationVerifier(
             ITypeProvider typeProvider,
+            IModelProvider modelProvider,
             IConstructorResolutionBehavior constructorResolutionBehavior)
         {
             _typeProvider = typeProvider;
+            _modelProvider = modelProvider;
             _constructorResolutionBehavior = constructorResolutionBehavior;
         }
 
@@ -71,6 +74,24 @@
                 VerifyInheritance(databaseEntity, baseType, exceptions);
                 VerifySchemaAttribute(databaseEntity, exceptions);
                 VerifyMissingPropertySetter(databaseEntity, exceptions);
+                VerifyForeignKeys(_modelProvider, databaseEntity, exceptions);
+            }
+
+            static void VerifyForeignKeys(
+                IModelProvider modelProvider,
+                Type type,
+                ICollection<Exception> exceptions)
+            {
+                var properties = modelProvider
+                    .Columns(type)
+                    .Where(column => column.IsRelation)
+                    .Select(column => column.Relation.Property.Declared)
+                    .Where(column => !column.HasAttribute<ForeignKeyAttribute>());
+
+                foreach (var property in properties)
+                {
+                    exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should be marked by {nameof(ForeignKeyAttribute)}"));
+                }
             }
 
             static void VerifyInheritance(
@@ -105,7 +126,7 @@
             {
                 if (!type.HasAttribute<SchemaAttribute>())
                 {
-                    exceptions.Add(new InvalidOperationException($"Type {type} should be declared with {typeof(SchemaAttribute).FullName}"));
+                    exceptions.Add(new InvalidOperationException($"Type {type} should be marked by {typeof(SchemaAttribute).FullName}"));
                 }
             }
         }

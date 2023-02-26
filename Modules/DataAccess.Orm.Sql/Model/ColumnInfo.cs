@@ -8,6 +8,7 @@
     using System.Linq.Expressions;
     using System.Reflection;
     using Api.Model;
+    using Api.Sql.Attributes;
     using Basics;
     using Orm.Model;
     using Translation.Expressions;
@@ -24,15 +25,18 @@
 
         private string? _name;
         private ColumnProperty? _property;
-        private IReadOnlyCollection<string>? _constraints;
+        private bool? _isSupportedColumn;
+        private bool? _isEnum;
+        private bool? _isJsonColumn;
         private Relation? _relation;
         private bool? _isMultipleRelation;
         private bool? _isInlinedObject;
-        private MethodInfo? _mtmCctor;
+        private IReadOnlyCollection<string>? _constraints;
         private Func<Expression, Expression>? _expressionExtractor;
         private Func<ISqlExpression, ISqlExpression>? _sqlExpressionExtractor;
         private Func<object?, object?>? _valueExtractor;
         private Func<object?, object?>? _relationValueExtractor;
+        private MethodInfo? _mtmCctor;
 
         /// <summary> .cctor </summary>
         /// <param name="table">Table</param>
@@ -53,8 +57,6 @@
             _chain = chain;
 
             _modelProvider = modelProvider;
-
-            IsEnum = Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum;
         }
 
         /// <summary>
@@ -82,31 +84,50 @@
         }
 
         /// <summary>
-        /// Property
-        /// </summary>
-        public ColumnProperty Property
-        {
-            get
-            {
-                _property ??= InitProperty();
-                return _property;
-
-                ColumnProperty InitProperty()
-                {
-                    return _chain.Last();
-                }
-            }
-        }
-
-        /// <summary>
         /// Type
         /// </summary>
         public Type Type => Property.PropertyType;
 
         /// <summary>
+        /// IsSupportedColumn
+        /// </summary>
+        public bool IsSupportedColumn
+        {
+            get
+            {
+                _isSupportedColumn ??= Property.Declared.IsSupportedColumn();
+                return _isSupportedColumn.Value;
+            }
+        }
+
+        /// <summary>
         /// IsEnum
         /// </summary>
-        public bool IsEnum { get; }
+        public bool IsEnum
+        {
+            get
+            {
+                _isEnum ??= Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum;
+                return _isEnum.Value;
+            }
+        }
+
+        /// <summary>
+        /// IsJsonColumn
+        /// </summary>
+        public bool IsJsonColumn
+        {
+            get
+            {
+                _isJsonColumn ??= Property.Declared.IsJsonColumn();
+                return _isJsonColumn.Value;
+            }
+        }
+
+        /// <summary>
+        /// Column lenght
+        /// </summary>
+        public uint? ColumnLength => Property.Declared.GetAttribute<ColumnLenghtAttribute>()?.Length;
 
         /// <summary>
         /// Relation
@@ -131,7 +152,7 @@
 
                     var oneToMany = _chain
                         .Reverse()
-                        .SkipWhile(property => property.ReflectedType.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
+                        .SkipWhile(property => property.ReflectedType.IsMtmTable())
                         .FirstOrDefault();
 
                     if (oneToMany != null
@@ -140,7 +161,7 @@
                         return new Relation(Table.Type, oneToMany.PropertyType.GetMultipleRelationItemType(), oneToMany, _modelProvider);
                     }
 
-                    if (Table.Type.IsSubclassOfOpenGeneric(typeof(BaseMtmDatabaseEntity<,>)))
+                    if (Table.IsMtmTable)
                     {
                         var mtmTable = (MtmTableInfo)_modelProvider.Tables[Table.Type];
 
@@ -223,15 +244,42 @@
                     {
                         yield return "primary key";
                     }
-                    else if (IsRelation)
+
+                    if (IsRelation)
                     {
-                        yield return $@"references ""{_modelProvider.SchemaName(Relation.Target)}"".""{_modelProvider.TableName(Relation.Target)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"")";
+                        var onDeleteBehavior = Relation.Property.Declared.GetRequiredAttribute<ForeignKeyAttribute>().OnDeleteBehavior;
+
+                        var onDelete = onDeleteBehavior switch
+                        {
+                            EnOnDeleteBehavior.NoAction => "no action",
+                            EnOnDeleteBehavior.Restrict => "restrict",
+                            EnOnDeleteBehavior.Cascade => "cascade",
+                            EnOnDeleteBehavior.SetNull => "set nul",
+                            EnOnDeleteBehavior.SetDefault => "set default",
+                            _ => throw new NotSupportedException(onDeleteBehavior.ToString())
+                        };
+
+                        yield return $@"references ""{_modelProvider.SchemaName(Relation.Target)}"".""{_modelProvider.TableName(Relation.Target)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete {onDelete}";
                     }
 
                     if (!Property.Declared.IsNullable())
                     {
                         yield return "not null";
                     }
+                }
+            }
+        }
+
+        private ColumnProperty Property
+        {
+            get
+            {
+                _property ??= InitProperty();
+                return _property;
+
+                ColumnProperty InitProperty()
+                {
+                    return _chain.Last();
                 }
             }
         }

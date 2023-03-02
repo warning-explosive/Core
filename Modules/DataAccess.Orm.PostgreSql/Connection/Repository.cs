@@ -390,7 +390,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             return affectedRowsCount;
         }
 
-        // TODO: #178 - test onDeleteBehavior
         public async Task<long> Delete<TEntity>(
             IAdvancedDatabaseTransaction transaction,
             Expression<Func<TEntity, bool>> predicate,

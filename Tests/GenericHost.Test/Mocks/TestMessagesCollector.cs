@@ -11,14 +11,21 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
 
     [ManuallyRegisteredComponent(nameof(RunHostTest))]
-    internal class TestMessagesCollector : IResolvable<TestMessagesCollector>
+    internal class TestMessagesCollector : IResolvable<TestMessagesCollector>,
+                                           IDisposable
     {
+        private readonly IExecutableIntegrationTransport _integrationTransport;
+        private readonly EventHandler<IntegrationTransportMessageReceivedEventArgs> _subscription;
+
         public TestMessagesCollector(IExecutableIntegrationTransport integrationTransport)
         {
+            _integrationTransport = integrationTransport;
+            _subscription = Collect;
+
+            integrationTransport.MessageReceived += _subscription;
+
             Messages = new ConcurrentQueue<IntegrationMessage>();
             ErrorMessages = new ConcurrentQueue<(IntegrationMessage, Exception?)>();
-
-            integrationTransport.MessageReceived += Collect;
         }
 
         private event EventHandler<MessageCollectedEventArgs>? OnCollected;
@@ -26,6 +33,14 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
         public ConcurrentQueue<IntegrationMessage> Messages { get; }
 
         public ConcurrentQueue<(IntegrationMessage message, Exception? exception)> ErrorMessages { get; }
+
+        public void Dispose()
+        {
+            _integrationTransport.MessageReceived -= _subscription;
+
+            Messages.Clear();
+            ErrorMessages.Clear();
+        }
 
         public void Collect(object? sender, IntegrationTransportMessageReceivedEventArgs args)
         {

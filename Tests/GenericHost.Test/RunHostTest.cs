@@ -134,7 +134,6 @@
                 return async (_, host, token) =>
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
-                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
                     var rabbitMqSettings = await transportDependencyContainer
                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
@@ -143,32 +142,33 @@
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
-                    var command = new MakeRequestCommand(42);
-
-                    var awaiter = Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<Reply>(message => message.Id == command.Id),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(ReplyEmptyMessageHandler)));
-
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+
+                        var command = new MakeRequestCommand(42);
+
+                        var awaiter = Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<Reply>(message => message.Id == command.Id),
+                            collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(ReplyEmptyMessageHandler)));
 
                         await integrationContext
                            .Send(command, token)
                            .ConfigureAwait(false);
+
+                        await awaiter.ConfigureAwait(false);
+
+                        var errorMessages = collector.ErrorMessages.ToArray();
+                        Assert.Single(errorMessages);
+                        Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(ReplyEmptyMessageHandler)));
+
+                        var messages = collector.Messages.ToArray();
+                        Assert.Equal(3, messages.Length);
+                        Assert.Single(messages.Where(message => message.ReflectedType == typeof(MakeRequestCommand)));
+                        Assert.Single(messages.Where(message => message.ReflectedType == typeof(Request)));
+                        Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
                     }
-
-                    await awaiter.ConfigureAwait(false);
-
-                    var errorMessages = collector.ErrorMessages.ToArray();
-                    Assert.Single(errorMessages);
-                    Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(ReplyEmptyMessageHandler)));
-
-                    var messages = collector.Messages.ToArray();
-                    Assert.Equal(3, messages.Length);
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(MakeRequestCommand)));
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Request)));
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply)));
                 };
             }
         }
@@ -226,23 +226,22 @@
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
                         reply = await integrationContext
                            .RpcRequest<Request, Reply>(request, token)
                            .ConfigureAwait(false);
+
+                        Assert.Equal(request.Id, reply.Id);
+                        Assert.Empty(collector.ErrorMessages);
+
+                        var messages = collector.Messages.ToArray();
+                        Assert.Equal(2, messages.Length);
+
+                        var integrationRequest = messages.Where(message => message.ReflectedType == typeof(Request) && message.ReadRequiredHeader<SentFrom>().Value.LogicalName.Equals(Identity.LogicalName, StringComparison.OrdinalIgnoreCase)).ToArray();
+                        Assert.Single(integrationRequest);
+                        Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply) && message.ReadRequiredHeader<InitiatorMessageId>().Value.Equals(integrationRequest.Single().ReadRequiredHeader<Id>().Value)));
                     }
-
-                    Assert.Equal(request.Id, reply.Id);
-
-                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
-                    Assert.Empty(collector.ErrorMessages);
-
-                    var messages = collector.Messages.ToArray();
-                    Assert.Equal(2, messages.Length);
-
-                    var integrationRequest = messages.Where(message => message.ReflectedType == typeof(Request) && message.ReadRequiredHeader<SentFrom>().Value.LogicalName.Equals(Identity.LogicalName, StringComparison.OrdinalIgnoreCase)).ToArray();
-                    Assert.Single(integrationRequest);
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(Reply) && message.ReadRequiredHeader<InitiatorMessageId>().Value.Equals(integrationRequest.Single().ReadRequiredHeader<Id>().Value)));
                 };
             }
         }
@@ -288,7 +287,6 @@
                 return async (_, host, token) =>
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
-                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
                     var rabbitMqSettings = await transportDependencyContainer
                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
@@ -297,31 +295,32 @@
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
-                    var awaiter = Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(BaseEventEmptyMessageHandler)),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(InheritedEventEmptyMessageHandler)));
-
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+
+                        var awaiter = Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(BaseEventEmptyMessageHandler)),
+                            collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.HandlerType == typeof(InheritedEventEmptyMessageHandler)));
 
                         await integrationContext
                            .Send(new PublishInheritedEventCommand(42), token)
                            .ConfigureAwait(false);
+
+                        await awaiter.ConfigureAwait(false);
+
+                        var errorMessages = collector.ErrorMessages.ToArray();
+                        Assert.Equal(2, errorMessages.Length);
+                        Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(BaseEventEmptyMessageHandler)));
+                        Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(InheritedEventEmptyMessageHandler)));
+
+                        var messages = collector.Messages.ToArray();
+                        Assert.Equal(3, messages.Length);
+                        Assert.Single(messages.Where(message => message.ReflectedType == typeof(PublishInheritedEventCommand)));
+                        Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(BaseEvent)));
+                        Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(InheritedEvent)));
                     }
-
-                    await awaiter.ConfigureAwait(false);
-
-                    var errorMessages = collector.ErrorMessages.ToArray();
-                    Assert.Equal(2, errorMessages.Length);
-                    Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(BaseEventEmptyMessageHandler)));
-                    Assert.Single(errorMessages.Where(info => info.message.ReflectedType == typeof(Endpoint1HandlerInvoked) && ((Endpoint1HandlerInvoked)info.message.Payload).HandlerType == typeof(InheritedEventEmptyMessageHandler)));
-
-                    var messages = collector.Messages.ToArray();
-                    Assert.Equal(3, messages.Length);
-                    Assert.Single(messages.Where(message => message.ReflectedType == typeof(PublishInheritedEventCommand)));
-                    Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(BaseEvent)));
-                    Assert.Single(messages.Where(message => message.Payload.GetType() == typeof(InheritedEvent) && message.ReflectedType == typeof(InheritedEvent)));
                 };
             }
         }
@@ -364,7 +363,6 @@
                 return async (output, host, token) =>
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
-                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
                     var rabbitMqSettings = await transportDependencyContainer
                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
@@ -373,60 +371,61 @@
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
-                    var awaiter = collector.WaitUntilErrorMessageIsNotReceived<Command>();
-
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived<Command>();
 
                         await integrationContext
                            .Send(new Command(42), token)
                            .ConfigureAwait(false);
-                    }
 
-                    await awaiter.ConfigureAwait(false);
+                        await awaiter.ConfigureAwait(false);
 
-                    Assert.Single(collector.ErrorMessages);
-                    var (errorMessage, exception) = collector.ErrorMessages.Single();
-                    Assert.Equal(42.ToString(CultureInfo.InvariantCulture), exception.Message);
-                    Assert.Equal(3, errorMessage.ReadHeader<RetryCounter>()?.Value);
+                        Assert.Single(collector.ErrorMessages);
+                        var (errorMessage, exception) = collector.ErrorMessages.Single();
+                        Assert.Equal(42.ToString(CultureInfo.InvariantCulture), exception.Message);
+                        Assert.Equal(3, errorMessage.ReadHeader<RetryCounter>()?.Value);
 
-                    var expectedRetryCounters = new[] { 0, 1, 2, 3 };
-                    var actualRetryCounters = collector
-                       .Messages
-                       .Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int))
-                       .ToList();
+                        var expectedRetryCounters = new[] { 0, 1, 2, 3 };
+                        var actualRetryCounters = collector
+                           .Messages
+                           .Select(message => message.ReadHeader<RetryCounter>()?.Value ?? default(int))
+                           .ToList();
 
-                    Assert.Equal(expectedRetryCounters, actualRetryCounters);
+                        Assert.Equal(expectedRetryCounters, actualRetryCounters);
 
-                    var actualDeliveries = collector
-                        .Messages
-                        .Select(message => message.ReadRequiredHeader<ActualDeliveryDate>().Value)
-                        .ToList();
+                        var actualDeliveries = collector
+                            .Messages
+                            .Select(message => message.ReadRequiredHeader<ActualDeliveryDate>().Value)
+                            .ToList();
 
-                    var expectedDeliveryDelays = new[]
-                    {
-                        0,
-                        1000,
-                        2000
-                    };
-
-                    var actualDeliveryDelays = actualDeliveries
-                        .Zip(actualDeliveries.Skip(1))
-                        .Select(period => period.Second - period.First)
-                        .Select(span => span.TotalMilliseconds)
-                        .ToList();
-
-                    Assert.Equal(actualDeliveryDelays.Count, expectedDeliveryDelays.Length);
-
-                    Assert.True(actualDeliveryDelays
-                        .Zip(expectedDeliveryDelays, (actual, expected) => ((int)actual, expected))
-                        .All(delays =>
+                        var expectedDeliveryDelays = new[]
                         {
-                            var (actual, expected) = delays;
-                            output.WriteLine($"{0.95 * expected} ({0.95} * {expected}) <= {actual}");
-                            return 0.95 * expected <= actual;
-                        }));
+                            0,
+                            1000,
+                            2000
+                        };
+
+                        var actualDeliveryDelays = actualDeliveries
+                            .Zip(actualDeliveries.Skip(1))
+                            .Select(period => period.Second - period.First)
+                            .Select(span => span.TotalMilliseconds)
+                            .ToList();
+
+                        Assert.Equal(actualDeliveryDelays.Count, expectedDeliveryDelays.Length);
+
+                        Assert.True(actualDeliveryDelays
+                            .Zip(expectedDeliveryDelays, (actual, expected) => ((int)actual, expected))
+                            .All(delays =>
+                            {
+                                var (actual, expected) = delays;
+                                output.WriteLine($"{0.95 * expected} ({0.95} * {expected}) <= {actual}");
+                                return 0.95 * expected <= actual;
+                            }));
+                    }
                 };
             }
         }
@@ -486,7 +485,6 @@
                 return async (_, host, token) =>
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
-                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
                     var rabbitMqSettings = await transportDependencyContainer
                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
@@ -495,21 +493,22 @@
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
-                    var awaiter = Task.WhenAll(
-                        collector.WaitUntilMessageIsNotReceived<Event>(),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint10)),
-                        collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint20)));
-
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+
+                        var awaiter = Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<Event>(),
+                            collector.WaitUntilMessageIsNotReceived<Endpoint1HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint10)),
+                            collector.WaitUntilMessageIsNotReceived<Endpoint2HandlerInvoked>(message => message.EndpointIdentity.Equals(TestIdentity.Endpoint20)));
 
                         await integrationContext
                            .Send(new PublishEventCommand(42), token)
                            .ConfigureAwait(false);
-                    }
 
-                    await awaiter.ConfigureAwait(false);
+                        await awaiter.ConfigureAwait(false);
+                    }
                 };
             }
         }
@@ -535,7 +534,6 @@
                 return async (_, host, token) =>
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
-                    var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
                     var rabbitMqSettings = await transportDependencyContainer
                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
@@ -544,8 +542,12 @@
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
-                    Assert.Empty(collector.ErrorMessages);
-                    Assert.Empty(collector.Messages);
+                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                    {
+                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+                        Assert.Empty(collector.ErrorMessages);
+                        Assert.Empty(collector.Messages);
+                    }
                 };
             }
         }

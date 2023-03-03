@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
-    using IConfigurationProvider = CrossCuttingConcerns.Settings.IConfigurationProvider;
 
     /// <summary>
     /// DependencyContainerAssemblyLimitationsTest
@@ -28,28 +27,19 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         [Fact]
         internal void BoundedAboveContainerTest()
         {
-            var assembly1 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)));
-            var assembly2 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(PathResolver)));
-            var assembly3 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Dynamic)));
+            var assembly1 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser)));
+            var assembly2 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Dynamic)));
 
             var below1 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly1);
             var below2 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly2);
-            var below3 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly3);
 
             Assert.DoesNotContain(assembly1, below2);
-            Assert.DoesNotContain(assembly1, below3);
-
             Assert.DoesNotContain(assembly2, below1);
-            Assert.DoesNotContain(assembly2, below3);
-
-            Assert.DoesNotContain(assembly3, below1);
-            Assert.DoesNotContain(assembly3, below2);
 
             var allowedAssemblies = new[]
             {
                 assembly1,
                 assembly2,
-                assembly3,
 
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
@@ -60,8 +50,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             var aboveAssemblies = new[]
             {
                 assembly1,
-                assembly2,
-                assembly3
+                assembly2
             };
 
             var options = new DependencyContainerOptions();
@@ -95,7 +84,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             {
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)))
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser)))
             };
 
             var options = new DependencyContainerOptions();
@@ -128,11 +117,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             {
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SimpleInjector))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(Newtonsoft), nameof(Newtonsoft.Json))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(YamlDotNet))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser))),
             };
 
             Assert.True(compositionInfo.All(Satisfies));

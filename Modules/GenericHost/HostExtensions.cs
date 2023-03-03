@@ -20,7 +20,25 @@ namespace SpaceEngineers.Core.GenericHost
     public static class HostExtensions
     {
         private const string RequireBuildHostCall = ".BuildHost() should be called after all endpoint declarations. {0}";
+        private const string RequireSettingsDirectoryProvider = "Unable to find SettingsDirectoryProvider.";
         private const string RequireFrameworkDependenciesProvider = "Unable to find IFrameworkDependenciesProvider.";
+
+        /// <summary>
+        /// Gets SettingsDirectoryProvider from IHostBuilder
+        /// </summary>
+        /// <param name="hostBuilder">IHostBuilder</param>
+        /// <returns>SettingsDirectoryProvider</returns>
+        public static SettingsDirectoryProvider GetSettingsDirectoryProvider(
+            this IHostBuilder hostBuilder)
+        {
+            if (hostBuilder.Properties.TryGetValue(nameof(SettingsDirectoryProvider), out var value)
+                && value is SettingsDirectoryProvider settingsDirectoryProvider)
+            {
+                return settingsDirectoryProvider;
+            }
+
+            throw new InvalidOperationException(RequireBuildHostCall.Format(RequireSettingsDirectoryProvider));
+        }
 
         /// <summary>
         /// Gets IFrameworkDependenciesProvider from IHostBuilder
@@ -88,14 +106,12 @@ namespace SpaceEngineers.Core.GenericHost
         {
             hostBuilder.CheckMultipleCalls(nameof(BuildHost));
 
-            settingsDirectory.SetupSettingsDirectory();
-
-            var commonSettingsFile = settingsDirectory.GetFile("appsettings", ".json");
+            InitializeSettingsDirectoryProvider(hostBuilder, settingsDirectory);
 
             var frameworkDependenciesProvider = InitializeFrameworkDependenciesProvider(hostBuilder);
 
             var host = hostBuilder
-               .ConfigureAppConfiguration(builder => builder.AddJsonFile(commonSettingsFile.FullName))
+               .ConfigureAppConfiguration(builder => builder.AddJsonFile(settingsDirectory.GetFile("appsettings", ".json").FullName))
                .ConfigureServices((_, serviceCollection) =>
                {
                    serviceCollection.AddSingleton<IHostStartupActionsRegistry>(new HostStartupActionsRegistry());
@@ -108,7 +124,15 @@ namespace SpaceEngineers.Core.GenericHost
 
             return host;
 
-            static FrameworkDependenciesProvider InitializeFrameworkDependenciesProvider(IHostBuilder hostBuilder)
+            static void InitializeSettingsDirectoryProvider(
+                IHostBuilder hostBuilder,
+                DirectoryInfo settingsDirectory)
+            {
+                hostBuilder.Properties[nameof(SettingsDirectoryProvider)] = new SettingsDirectoryProvider(settingsDirectory);
+            }
+
+            static FrameworkDependenciesProvider InitializeFrameworkDependenciesProvider(
+                IHostBuilder hostBuilder)
             {
                 var frameworkDependenciesProvider = new FrameworkDependenciesProvider();
                 hostBuilder.Properties[nameof(IFrameworkDependenciesProvider)] = frameworkDependenciesProvider;

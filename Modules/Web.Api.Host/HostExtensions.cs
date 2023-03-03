@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Web.Api.Host
     using GenericHost;
     using IntegrationTransport.Host.Builder;
     using JwtAuthentication;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Registrations;
 
@@ -17,10 +18,12 @@ namespace SpaceEngineers.Core.Web.Api.Host
         /// </summary>
         /// <param name="builder">Transport endpoint builder</param>
         /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="configuration">IConfiguration</param>
         /// <returns>ITransportEndpointBuilder</returns>
         public static ITransportEndpointBuilder WithWebApi(
             this ITransportEndpointBuilder builder,
-            IHostBuilder hostBuilder)
+            IHostBuilder hostBuilder,
+            IConfiguration configuration)
         {
             var assemblies = new[]
             {
@@ -35,7 +38,7 @@ namespace SpaceEngineers.Core.Web.Api.Host
                .ModifyContainerOptions(options => options.WithManualRegistrations(
                        new HttpContextAccessorManualRegistration(frameworkDependenciesProvider),
                        new JwtSecurityTokenHandlerManualRegistration(),
-                       new JwtAuthenticationConfigurationManualRegistration(JwtAuthentication.HostExtensions.GetAuthEndpointConfiguration().GetJwtAuthenticationConfiguration())));
+                       new JwtAuthenticationConfigurationManualRegistration(configuration.GetJwtAuthenticationConfiguration())));
         }
     }
 }

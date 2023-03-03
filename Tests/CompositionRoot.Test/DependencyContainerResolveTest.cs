@@ -34,7 +34,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             };
 
             var options = new DependencyContainerOptions()
-               .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration());
+               .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration())
+               .WithManualRegistrations(fixture.DelegateRegistration(container =>
+               {
+                   container.RegisterInstance(new ConcreteImplementationGenericService<string>());
+               }));
 
             DependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
         }
@@ -231,6 +235,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             Assert.NotNull(withDependency.Dependency);
 
             Assert.NotNull(DependencyContainer.Resolve<ConcreteImplementationGenericService<object>>());
+        }
+
+        [Fact]
+        internal void ResolvableInstanceTest()
+        {
+            Assert.NotNull(DependencyContainer.Resolve<ConcreteImplementationGenericService<string>>());
         }
 
         [Fact]

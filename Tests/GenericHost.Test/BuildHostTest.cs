@@ -84,13 +84,13 @@
 
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 hostBuilder => hostBuilder
-                   .UseIntegrationTransport(builder => builder
+                   .UseIntegrationTransport((_, builder) => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .BuildOptions()));
 
             var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 hostBuilder => hostBuilder
-                   .UseIntegrationTransport(builder => builder
+                   .UseIntegrationTransport((_, builder) => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .BuildOptions()));
 
@@ -125,13 +125,13 @@
 
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 static hostBuilder => hostBuilder
-                   .UseIntegrationTransport(builder => builder
+                   .UseIntegrationTransport((_, builder) => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .BuildOptions()));
 
             var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 static hostBuilder => hostBuilder
-                   .UseIntegrationTransport(builder => builder
+                   .UseIntegrationTransport((_, builder) => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .BuildOptions()));
 
@@ -244,11 +244,11 @@
 
             var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
+                    (context, builder) => builder
                        .WithPostgreSqlDataAccess(options => options
                            .ExecuteMigrations())
                        .WithSqlEventSourcing()
-                       .WithAuthorization()
+                       .WithAuthorization(context.Configuration)
                        .ModifyContainerOptions(options => options
                            .WithAdditionalOurTypes(additionalOurTypes))
                        .BuildOptions())
@@ -732,7 +732,7 @@
 
                 var actualModel = await endpointContainer.InvokeWithinTransaction(
                         false,
-                        (transaction, token) => endpointContainer.Resolve<IDatabaseModelBuilder>().BuildModel(transaction, token),
+                        endpointContainer.Resolve<IDatabaseModelBuilder>().BuildModel,
                         cts.Token)
                     .ConfigureAwait(false);
 
@@ -808,7 +808,7 @@
 
                 var actualModel = await endpointContainer.InvokeWithinTransaction(
                         false,
-                        (transaction, token) => endpointContainer.Resolve<IDatabaseModelBuilder>().BuildModel(transaction, token),
+                        endpointContainer.Resolve<IDatabaseModelBuilder>().BuildModel,
                         cts.Token)
                     .ConfigureAwait(false);
 

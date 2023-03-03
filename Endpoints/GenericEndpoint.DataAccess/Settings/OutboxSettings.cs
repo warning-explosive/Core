@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Settings
         /// <summary>
         /// Outbox delivery interval (seconds)
         /// </summary>
-        public uint OutboxDeliverySecondsInterval { get; set; }
+        public uint OutboxDeliverySecondsInterval { get; init; }
 
         /// <summary>
         /// Outbox delivery interval

@@ -16,21 +16,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     internal class CodeModelBuilder : ICodeModelBuilder,
                                       IResolvable<ICodeModelBuilder>
     {
-        private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
+        private readonly SqlDatabaseSettings _sqlDatabaseSettings;
         private readonly IModelProvider _modelProvider;
         private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
         public CodeModelBuilder(
-            ISettingsProvider<SqlDatabaseSettings> settingsProvider,
+            ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
             IModelProvider modelProvider,
             IColumnDataTypeProvider columnDataTypeProvider)
         {
-            _settingsProvider = settingsProvider;
+            _sqlDatabaseSettings = sqlDatabaseSettingsProvider.Get();
+
             _modelProvider = modelProvider;
             _columnDataTypeProvider = columnDataTypeProvider;
         }
 
-        public async Task<DatabaseNode?> BuildModel(IReadOnlyCollection<Type> databaseEntities, CancellationToken token)
+        public Task<DatabaseNode?> BuildModel(IReadOnlyCollection<Type> databaseEntities, CancellationToken token)
         {
             var tables = databaseEntities
                 .Where(type => _modelProvider.Tables.ContainsKey(type))
@@ -48,11 +49,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 .Select(schema => BuildSchemaNode(schema.Key, schema))
                 .ToArray();
 
-            var settings = await _settingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
+            var databaseNode = new DatabaseNode(_sqlDatabaseSettings.Host, _sqlDatabaseSettings.Database, schemas);
 
-            return new DatabaseNode(settings.Host, settings.Database, schemas);
+            return Task.FromResult<DatabaseNode?>(databaseNode);
         }
 
         private SchemaNode BuildSchemaNode(

@@ -28,27 +28,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
         /// <summary>
         /// Host
         /// </summary>
-        public string Host { get; set; }
+        public string Host { get; init; }
 
         /// <summary>
         /// Port
         /// </summary>
-        public int Port { get; set; }
+        public int Port { get; init; }
 
         /// <summary>
         /// Database
         /// </summary>
-        public string Database { get; set; }
+        public string Database { get; init; }
 
         /// <summary>
         /// Username
         /// </summary>
-        public string Username { get; set; }
+        public string Username { get; init; }
 
         /// <summary>
         /// Password
         /// </summary>
-        public string Password { get; set; }
+        public string Password { get; init; }
 
         /// <summary>
         /// Isolation level
@@ -68,12 +68,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
         /// - RepeatableRead -> [serialization anomaly]
         /// - Serializable -> none phenomenas
         /// </summary>
-        public IsolationLevel IsolationLevel { get; set; }
+        public IsolationLevel IsolationLevel { get; init; }
 
         /// <summary>
         /// Connection pool size
         /// </summary>
-        public uint ConnectionPoolSize { get; set; }
+        public uint ConnectionPoolSize { get; init; }
 
         /// <inheritdoc />
         public override string ToString()

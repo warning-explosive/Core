@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host
     using Basics;
     using GenericEndpoint.Host.Builder;
     using JwtAuthentication;
+    using Microsoft.Extensions.Configuration;
     using Registrations;
 
     /// <summary>
@@ -14,9 +15,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host
         /// With authorization
         /// </summary>
         /// <param name="builder">Endpoint builder</param>
+        /// <param name="configuration">IConfiguration</param>
         /// <returns>IEndpointBuilder</returns>
         public static IEndpointBuilder WithAuthorization(
-            this IEndpointBuilder builder)
+            this IEndpointBuilder builder,
+            IConfiguration configuration)
         {
             var authorization = new[]
             {
@@ -27,7 +30,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host
                 .WithEndpointPluginAssemblies(authorization)
                 .ModifyContainerOptions(options => options.WithManualRegistrations(
                     new JwtSecurityTokenHandlerManualRegistration(),
-                    new JwtAuthenticationConfigurationManualRegistration(HostExtensions.GetAuthEndpointConfiguration().GetJwtAuthenticationConfiguration())));
+                    new JwtAuthenticationConfigurationManualRegistration(configuration.GetJwtAuthenticationConfiguration())));
         }
     }
 }

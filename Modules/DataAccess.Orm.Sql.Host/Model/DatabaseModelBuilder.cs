@@ -19,11 +19,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     internal class DatabaseModelBuilder : IDatabaseModelBuilder,
                                           IResolvable<IDatabaseModelBuilder>
     {
-        private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
+        private readonly SqlDatabaseSettings _sqlDatabaseSettings;
 
-        public DatabaseModelBuilder(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
+        public DatabaseModelBuilder(ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider)
         {
-            _settingsProvider = settingsProvider;
+            _sqlDatabaseSettings = sqlDatabaseSettingsProvider.Get();
         }
 
         public async Task<DatabaseNode?> BuildModel(
@@ -60,11 +60,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 schemaNodes.Add(await BuildSchemaNode(transaction, schema, constraints, token).ConfigureAwait(false));
             }
 
-            var settings = await _settingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
-            return new DatabaseNode(settings.Host, settings.Database, schemaNodes);
+            return new DatabaseNode(_sqlDatabaseSettings.Host, _sqlDatabaseSettings.Database, schemaNodes);
         }
 
         private static async Task<SchemaNode> BuildSchemaNode(

@@ -21,31 +21,28 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     internal class OutboxBackgroundDelivery : IOutboxBackgroundDelivery,
                                               IResolvable<IOutboxBackgroundDelivery>
     {
+        private readonly OutboxSettings _outboxSettings;
         private readonly IDependencyContainer _dependencyContainer;
         private readonly Contract.EndpointIdentity _endpointIdentity;
-        private readonly ISettingsProvider<OutboxSettings> _settingsProvider;
         private readonly IOutboxDelivery _outboxDelivery;
 
         public OutboxBackgroundDelivery(
+            ISettingsProvider<OutboxSettings> outboxSettingsProvider,
             IDependencyContainer dependencyContainer,
             Contract.EndpointIdentity endpointIdentity,
-            ISettingsProvider<OutboxSettings> settingsProvider,
             IOutboxDelivery outboxDelivery)
         {
+            _outboxSettings = outboxSettingsProvider.Get();
+
             _dependencyContainer = dependencyContainer;
             _endpointIdentity = endpointIdentity;
-            _settingsProvider = settingsProvider;
             _outboxDelivery = outboxDelivery;
         }
 
         public async Task DeliverMessages(CancellationToken token)
         {
-            var settings = await _settingsProvider
-               .Get(token)
-               .ConfigureAwait(false);
-
             var messages = await _dependencyContainer
-               .InvokeWithinTransaction(true, (_endpointIdentity, settings), ReadMessages, token)
+               .InvokeWithinTransaction(true, (_endpointIdentity, _outboxSettings), ReadMessages, token)
                .ConfigureAwait(false);
 
             await _outboxDelivery

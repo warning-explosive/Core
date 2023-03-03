@@ -52,13 +52,6 @@
       <ProjectReference Include="..\Benchmark.Api\Benchmark.Api.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <Content Update="Settings\TransportEndpointGateway\appsettings.json">
-        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </Content>
-    </ItemGroup>
-    <ItemGroup>
       <Compile Update="Sources\Request.cs">
         <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
       </Compile>

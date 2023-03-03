@@ -14,7 +14,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
-    using GenericEndpoint.Host.Overrides;
     using GenericEndpoint.Host.Registrations;
     using GenericHost;
     using GenericHost.Api;
@@ -97,15 +96,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseIntegrationTransport(
             this IHostBuilder hostBuilder,
-            Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory,
+            Func<HostBuilderContext, ITransportEndpointBuilder, EndpointOptions> optionsFactory,
             string? logicalName = null)
         {
-            return hostBuilder.ConfigureServices((_, serviceCollection) => InitializeIntegrationTransport(hostBuilder, optionsFactory, logicalName)(serviceCollection));
+            return hostBuilder.ConfigureServices((context, serviceCollection) => InitializeIntegrationTransport(context, hostBuilder, optionsFactory, logicalName)(serviceCollection));
         }
 
         internal static Action<IServiceCollection> InitializeIntegrationTransport(
+            HostBuilderContext context,
             IHostBuilder hostBuilder,
-            Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory,
+            Func<HostBuilderContext, ITransportEndpointBuilder, EndpointOptions> optionsFactory,
             string? logicalName = null)
         {
             hostBuilder.CheckMultipleCalls(nameof(UseIntegrationTransport));
@@ -118,7 +118,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 
             var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
 
-            var options = optionsFactory(builder);
+            var options = optionsFactory(context, builder);
 
             var dependencyContainer = BuildDependencyContainer(options);
 
@@ -155,6 +155,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                     nameof(Core),
                     nameof(CrossCuttingConcerns)));
 
+            var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
             var integrationMessageTypes = AssembliesExtensions
@@ -188,11 +189,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                    .WithAdditionalOurTypes(domainEvents)
                    .WithManualRegistrations(
                        new GenericEndpointIdentityManualRegistration(endpointIdentity),
+                       new SettingsProviderManualRegistration(settingsDirectoryProvider),
                        new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
                        new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
                        new GenericEndpointHostStartupActionManualRegistration(),
                        new IntegrationTransportHostBackgroundWorkerManualRegistration())
-                   .WithOverrides(new SettingsProviderOverride())
                    .WithOverrides(new IntegrationTransportOverride())
                    .WithManualVerification(true));
         }

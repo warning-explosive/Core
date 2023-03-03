@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Settings
         /// <summary>
         /// Command timeout (seconds)
         /// </summary>
-        public uint CommandSecondsTimeout { get; set; }
+        public uint CommandSecondsTimeout { get; init; }
 
         /// <summary>
         /// Command timeout

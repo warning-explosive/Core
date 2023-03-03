@@ -15,13 +15,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
                                         IDisposable,
                                         IResolvable<IRpcRequestRegistry>
     {
+        private readonly GenericEndpointSettings _genericEndpointSettings;
+
         private readonly MemoryCache _memoryCache;
-        private readonly ISettingsProvider<GenericEndpointSettings> _genericEndpointSettingsProvider;
 
         public RpcRequestRegistry(ISettingsProvider<GenericEndpointSettings> genericEndpointSettingsProvider)
         {
+            _genericEndpointSettings = genericEndpointSettingsProvider.Get();
+
             _memoryCache = new MemoryCache(nameof(RpcRequestRegistry));
-            _genericEndpointSettingsProvider = genericEndpointSettingsProvider;
         }
 
         public void Dispose()
@@ -31,18 +33,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.RpcRequest
 
         public async Task<IntegrationMessage> Enroll(Guid requestId, CancellationToken token)
         {
-            var settings = await _genericEndpointSettingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
             var tcs = new TaskCompletionSource<IntegrationMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             var cacheItem = new CacheItem(requestId.ToString(), tcs);
 
             var cacheItemPolicy = new CacheItemPolicy
             {
-                AbsoluteExpiration = DateTimeOffset.Now.Add(settings.RpcRequestTimeout),
-                RemovedCallback = RemovedCallback(tcs, requestId, settings)
+                AbsoluteExpiration = DateTimeOffset.Now.Add(_genericEndpointSettings.RpcRequestTimeout),
+                RemovedCallback = RemovedCallback(tcs, requestId, _genericEndpointSettings)
             };
 
             if (!_memoryCache.Add(cacheItem, cacheItemPolicy))

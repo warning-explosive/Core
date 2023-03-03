@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Settings
         /// <summary>
         /// Rpc request timeout (seconds)
         /// </summary>
-        public uint RpcRequestSecondsTimeout { get; set; }
+        public uint RpcRequestSecondsTimeout { get; init; }
 
         /// <summary>
         /// Rpc request timeout

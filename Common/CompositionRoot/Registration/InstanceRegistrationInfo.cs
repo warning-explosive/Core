@@ -16,7 +16,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <param name="instance">Instance</param>
         public InstanceRegistrationInfo(Type service, object instance)
         {
-            Service = service.GenericTypeDefinitionOrSelf();
+            Service = service;
             Instance = instance;
         }
 

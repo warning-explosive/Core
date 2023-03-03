@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Diagnostics.CodeAnalysis;
     using System.IdentityModel.Tokens.Jwt;
     using System.Linq;
-    using AuthEndpoint.Contract;
     using Basics;
     using JwtAuthentication;
     using Microsoft.Extensions.Configuration;
@@ -34,19 +33,16 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var username = "qwerty";
             var permissions = new[] { "amazing_feature_42" };
 
-            var authEndpointConfigurationFilePath = SolutionExtensions
-               .SolutionFile()
-               .Directory
-               .EnsureNotNull("Solution directory wasn't found")
-               .StepInto("Tests")
-               .StepInto("Test.WebApplication")
-               .StepInto("Settings")
-               .StepInto(Identity.LogicalName)
-               .GetFile("appsettings", ".json")
-               .FullName;
+            var appSettings = SolutionExtensions
+                .ProjectFile()
+                .Directory
+                .EnsureNotNull("Project directory wasn't found")
+                .StepInto("Settings")
+                .StepInto(nameof(JwtTokenProviderTest))
+                .GetFile("appsettings", ".json");
 
             var authEndpointConfiguration = new ConfigurationBuilder()
-               .AddJsonFile(authEndpointConfigurationFilePath)
+               .AddJsonFile(appSettings.FullName)
                .Build();
 
             var tokenProvider = new JwtTokenProvider(new JwtSecurityTokenHandler(), authEndpointConfiguration.GetJwtAuthenticationConfiguration());

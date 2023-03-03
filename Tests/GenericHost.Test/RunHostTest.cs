@@ -59,23 +59,21 @@
                    .StepInto("Settings")
                    .StepInto(testDirectory);
 
-            var useInMemoryIntegrationTransport = new Func<DirectoryInfo, IHostBuilder, IHostBuilder>(
-                static (settingsDirectory, hostBuilder) => hostBuilder
-                   .UseIntegrationTransport(builder => builder
+            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
+                static hostBuilder => hostBuilder
+                   .UseIntegrationTransport((_, builder) => builder
                        .WithInMemoryIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name)))
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration()))
                        .BuildOptions()));
 
-            var useRabbitMqIntegrationTransport = new Func<DirectoryInfo, IHostBuilder, IHostBuilder>(
-                static (settingsDirectory, hostBuilder) => hostBuilder
-                   .UseIntegrationTransport(builder => builder
+            var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
+                static hostBuilder => hostBuilder
+                   .UseIntegrationTransport((_, builder) => builder
                        .WithRabbitMqIntegrationTransport(hostBuilder)
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration())
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())
-                           .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name)))
+                           .WithManualRegistrations(new MessagesCollectorManualRegistration()))
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -97,7 +95,7 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task RequestReplyTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
+            Func<IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
@@ -118,7 +116,7 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
+            var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -135,10 +133,9 @@
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
 
-                    var rabbitMqSettings = await transportDependencyContainer
-                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                       .Get(token)
-                       .ConfigureAwait(false);
+                    var rabbitMqSettings = transportDependencyContainer
+                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                        .Get();
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
@@ -177,7 +174,7 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task RpcRequestTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
+            Func<IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
@@ -195,7 +192,7 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
+            var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -212,25 +209,22 @@
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
 
-                    var rabbitMqSettings = await transportDependencyContainer
-                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                       .Get(token)
-                       .ConfigureAwait(false);
+                    var rabbitMqSettings = transportDependencyContainer
+                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                        .Get();
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
                     var request = new Request(42);
-
-                    Reply reply;
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
                         var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
                         var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                        reply = await integrationContext
-                           .RpcRequest<Request, Reply>(request, token)
-                           .ConfigureAwait(false);
+                        var reply = await integrationContext
+                            .RpcRequest<Request, Reply>(request, token)
+                            .ConfigureAwait(false);
 
                         Assert.Equal(request.Id, reply.Id);
                         Assert.Empty(collector.ErrorMessages);
@@ -250,7 +244,7 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task ContravariantMessageHandlerTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
+            Func<IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
@@ -271,7 +265,7 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
+            var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -288,10 +282,9 @@
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
 
-                    var rabbitMqSettings = await transportDependencyContainer
-                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                       .Get(token)
-                       .ConfigureAwait(false);
+                    var rabbitMqSettings = transportDependencyContainer
+                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                        .Get();
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
@@ -329,7 +322,7 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task ThrowingMessageHandlerTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
+            Func<IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
@@ -346,7 +339,7 @@
 
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
+            var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -364,10 +357,9 @@
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
 
-                    var rabbitMqSettings = await transportDependencyContainer
-                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                       .Get(token)
-                       .ConfigureAwait(false);
+                    var rabbitMqSettings = transportDependencyContainer
+                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                        .Get();
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
@@ -434,7 +426,7 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task EventSubscriptionBetweenEndpointsTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
+            Func<IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
@@ -464,7 +456,7 @@
             var endpoint1AdditionalOurTypes = endpoint1MessageTypes.Concat(endpoint1MessageHandlerTypes).ToArray();
             var endpoint2AdditionalOurTypes = endpoint2MessageTypes.Concat(endpoint2MessageHandlerTypes).ToArray();
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
+            var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder
                        .ModifyContainerOptions(options => options
@@ -486,10 +478,9 @@
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
 
-                    var rabbitMqSettings = await transportDependencyContainer
-                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                       .Get(token)
-                       .ConfigureAwait(false);
+                    var rabbitMqSettings = transportDependencyContainer
+                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                        .Get();
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 
@@ -517,12 +508,12 @@
         [MemberData(nameof(RunHostTestData))]
         internal async Task StartStopTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<DirectoryInfo, IHostBuilder, IHostBuilder> useTransport,
+            Func<IHostBuilder, IHostBuilder> useTransport,
             TimeSpan timeout)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
-            var host = useTransport(settingsDirectory, Fixture.CreateHostBuilder())
+            var host = useTransport(Fixture.CreateHostBuilder())
                .UseEndpoint(TestIdentity.Endpoint10, (_, builder) => builder.BuildOptions())
                .BuildHost(settingsDirectory);
 
@@ -535,10 +526,9 @@
                 {
                     var transportDependencyContainer = host.GetTransportDependencyContainer();
 
-                    var rabbitMqSettings = await transportDependencyContainer
-                       .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                       .Get(token)
-                       .ConfigureAwait(false);
+                    var rabbitMqSettings = transportDependencyContainer
+                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                        .Get();
 
                     Assert.Equal(settingsDirectory.Name, rabbitMqSettings.VirtualHost);
 

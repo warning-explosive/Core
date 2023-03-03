@@ -21,34 +21,31 @@
                                                                    ICollectionResolvable<IHostBackgroundWorker>,
                                                                    IResolvable<GenericEndpointDataAccessHostBackgroundWorker>
     {
+        private readonly OutboxSettings _outboxSetting;
         private readonly IExecutableIntegrationTransport _transport;
-        private readonly ISettingsProvider<OutboxSettings> _outboxSettingProvider;
         private readonly IOutboxBackgroundDelivery _outboxDelivery;
         private readonly ILogger _logger;
 
         public GenericEndpointDataAccessHostBackgroundWorker(
-            IExecutableIntegrationTransport transport,
             ISettingsProvider<OutboxSettings> outboxSettingProvider,
+            IExecutableIntegrationTransport transport,
             IOutboxBackgroundDelivery outboxDelivery,
             ILogger logger)
         {
+            _outboxSetting = outboxSettingProvider.Get();
+
             _transport = transport;
-            _outboxSettingProvider = outboxSettingProvider;
             _outboxDelivery = outboxDelivery;
             _logger = logger;
         }
 
         public async Task Run(CancellationToken token)
         {
-            var settings = await _outboxSettingProvider
-               .Get(token)
-               .ConfigureAwait(false);
-
             while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    await Task.Delay(settings.OutboxDeliveryInterval, token).ConfigureAwait(false);
+                    await Task.Delay(_outboxSetting.OutboxDeliveryInterval, token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {

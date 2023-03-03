@@ -35,37 +35,36 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     {
         private const string DatabaseExistsCommandText = @"select exists(select * from pg_catalog.pg_database where datname = @param_0);";
 
+        private readonly SqlDatabaseSettings _sqlDatabaseSettings;
+        private readonly OrmSettings _ormSettings;
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
-        private readonly ISettingsProvider<OrmSettings> _ormSettingsProvider;
         private readonly IJsonSerializer _jsonSerializer;
         private readonly NpgsqlDataSource _dataSource;
 
         public DatabaseConnectionProvider(
-            IDependencyContainer dependencyContainer,
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
             ISettingsProvider<OrmSettings> ormSettingsProvider,
+            IDependencyContainer dependencyContainer,
             IJsonSerializer jsonSerializer,
             IModelProvider modelProvider,
             ILoggerFactory loggerFactory)
         {
-            _dependencyContainer = dependencyContainer;
-            _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
-            _ormSettingsProvider = ormSettingsProvider;
-            _jsonSerializer = jsonSerializer;
+            _sqlDatabaseSettings = sqlDatabaseSettingsProvider.Get();
+            _ormSettings = ormSettingsProvider.Get();
 
-            var settings = sqlDatabaseSettingsProvider.Get(CancellationToken.None).Result;
+            _dependencyContainer = dependencyContainer;
+            _jsonSerializer = jsonSerializer;
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
-                Host = settings.Host,
-                Port = settings.Port,
-                Database = settings.Database,
-                Username = settings.Username,
-                Password = settings.Password,
+                Host = _sqlDatabaseSettings.Host,
+                Port = _sqlDatabaseSettings.Port,
+                Database = _sqlDatabaseSettings.Database,
+                Username = _sqlDatabaseSettings.Username,
+                Password = _sqlDatabaseSettings.Password,
                 Pooling = true,
                 MinPoolSize = 0,
-                MaxPoolSize = (int)settings.ConnectionPoolSize,
+                MaxPoolSize = (int)_sqlDatabaseSettings.ConnectionPoolSize,
                 ConnectionPruningInterval = 1,
                 ConnectionIdleLifetime = 1,
                 IncludeErrorDetail = true
@@ -111,12 +110,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         public async ValueTask<IDbTransaction> BeginTransaction(IDbConnection connection, CancellationToken token)
         {
-            var settings = _sqlDatabaseSettingsProvider
-                .Get(token)
-                .Result;
-
             return await ((NpgsqlConnection)connection)
-                .BeginTransactionAsync(settings.IsolationLevel, token)
+                .BeginTransactionAsync(_sqlDatabaseSettings.IsolationLevel, token)
                 .ConfigureAwait(false);
         }
 
@@ -190,13 +185,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             IEnumerable<ICommand> commands,
             CancellationToken token)
         {
-            var settings = await _ormSettingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
             long result = 0;
 
-            using (var npgsqlBatch = CreateBatch(connection, transaction, commands, settings))
+            using (var npgsqlBatch = CreateBatch(connection, transaction, commands, _ormSettings))
             {
                 result += await npgsqlBatch
                     .ExecuteNonQueryAsync(token)
@@ -213,11 +204,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             ICommand command,
             CancellationToken token)
         {
-            var settings = await _ormSettingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
-            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
+            using (var npgsqlCommand = CreateCommand(connection, transaction, command, _ormSettings))
             {
                 return await npgsqlCommand
                     .ExecuteNonQueryAsync(token)
@@ -232,10 +219,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             ICommand command,
             [EnumeratorCancellation] CancellationToken token)
         {
-            var settings = await _ormSettingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
             /*
              * npgsql doesn't support MARS (Multiple Active Result Sets)
              * https://github.com/npgsql/npgsql/issues/462#issuecomment-756787766
@@ -243,7 +226,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
              */
             var buffer = new List<IDictionary<string, object?>>();
 
-            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
+            using (var npgsqlCommand = CreateCommand(connection, transaction, command, _ormSettings))
             {
                 var reader = await npgsqlCommand
                     .ExecuteReaderAsync(CommandBehavior.SequentialAccess, token)
@@ -283,11 +266,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             ICommand command,
             CancellationToken token)
         {
-            var settings = await _ormSettingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
-            using (var npgsqlCommand = CreateCommand(connection, transaction, command, settings))
+            using (var npgsqlCommand = CreateCommand(connection, transaction, command, _ormSettings))
             {
                 var scalar = await npgsqlCommand
                     .ExecuteScalarAsync(token)
@@ -562,13 +541,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
         private async Task<bool> DoesDatabaseExistUnsafe(CancellationToken token)
         {
-            var settings = await _sqlDatabaseSettingsProvider
-                .Get(token)
-                .ConfigureAwait(false);
-
             var command = new SqlCommand(
                 DatabaseExistsCommandText,
-                new List<SqlCommandParameter> { new SqlCommandParameter("param_0", settings.Database, typeof(string)) });
+                new List<SqlCommandParameter> { new SqlCommandParameter("param_0", _sqlDatabaseSettings.Database, typeof(string)) });
 
             return await _dependencyContainer
                 .InvokeWithinTransaction(false, command, ExecuteScalar<bool>, token)

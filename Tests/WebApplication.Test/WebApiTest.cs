@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.WebApplication.Test
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
-    using AuthEndpoint.Contract;
     using Basics;
     using Basics.Primitives;
     using Core.Test.Api;
@@ -88,19 +87,17 @@ namespace SpaceEngineers.Core.WebApplication.Test
             var username = "qwerty";
             var password = "12345678";
 
-            var authEndpointConfigurationFilePath = SolutionExtensions
+            var appSettings = SolutionExtensions
                .SolutionFile()
                .Directory
                .EnsureNotNull("Solution directory wasn't found")
                .StepInto("Tests")
                .StepInto("Test.WebApplication")
                .StepInto("Settings")
-               .StepInto(Identity.LogicalName)
-               .GetFile("appsettings", ".json")
-               .FullName;
+               .GetFile("appsettings", ".json");
 
             var authEndpointConfiguration = new ConfigurationBuilder()
-               .AddJsonFile(authEndpointConfigurationFilePath)
+               .AddJsonFile(appSettings.FullName)
                .Build();
 
             var tokenProvider = new JwtTokenProvider(new JwtSecurityTokenHandler(), authEndpointConfiguration.GetJwtAuthenticationConfiguration());

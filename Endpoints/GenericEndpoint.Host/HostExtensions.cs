@@ -12,7 +12,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using IntegrationTransport.Api.Abstractions;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Overrides;
     using Registrations;
 
     /// <summary>
@@ -148,7 +147,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)));
 
             var integrationTransportInjection = hostBuilder.GetIntegrationTransportInjection();
-
+            var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
 
             return new EndpointBuilder(endpointIdentity)
@@ -157,10 +156,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                    .WithManualRegistrations(
                        integrationTransportInjection,
                        new GenericEndpointIdentityManualRegistration(endpointIdentity),
+                       new SettingsProviderManualRegistration(settingsDirectoryProvider),
                        new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
                        new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
                        new GenericEndpointHostStartupActionManualRegistration())
-                   .WithOverrides(new SettingsProviderOverride())
                    .WithManualVerification(true));
         }
 

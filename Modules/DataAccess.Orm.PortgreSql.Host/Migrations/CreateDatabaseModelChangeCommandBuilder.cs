@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Threading;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -16,11 +15,11 @@
                                                              IResolvable<IModelChangeCommandBuilder<CreateDatabase>>,
                                                              ICollectionResolvable<IModelChangeCommandBuilder>
     {
-        private readonly ISettingsProvider<SqlDatabaseSettings> _settingsProvider;
+        private readonly SqlDatabaseSettings _sqlDatabaseSettings;
 
-        public CreateDatabaseModelChangeCommandBuilder(ISettingsProvider<SqlDatabaseSettings> settingsProvider)
+        public CreateDatabaseModelChangeCommandBuilder(ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider)
         {
-            _settingsProvider = settingsProvider;
+            _sqlDatabaseSettings = sqlDatabaseSettingsProvider.Get();
         }
 
         public IEnumerable<ICommand> BuildCommands(IModelChange change)
@@ -32,9 +31,7 @@
 
         public IEnumerable<ICommand> BuildCommands(CreateDatabase change)
         {
-            var settings = _settingsProvider.Get(CancellationToken.None).Result;
-
-            throw new InvalidOperationException($"You should create and configure {settings.Database} database manually");
+            throw new InvalidOperationException($"You should create and configure {_sqlDatabaseSettings.Database} database manually");
         }
     }
 }

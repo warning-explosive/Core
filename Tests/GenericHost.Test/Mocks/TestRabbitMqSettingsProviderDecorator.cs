@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 {
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System.Reflection;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using CrossCuttingConcerns.Settings;
@@ -23,13 +22,13 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 
         public ISettingsProvider<RabbitMqSettings> Decoratee { get; }
 
-        public async Task<RabbitMqSettings> Get(CancellationToken token)
+        public RabbitMqSettings Get()
         {
-            var rabbitMqSettings = await Decoratee
-               .Get(token)
-               .ConfigureAwait(false);
+            var rabbitMqSettings = Decoratee.Get();
 
-            rabbitMqSettings.VirtualHost = _virtualHostProvider.VirtualHost;
+            typeof(RabbitMqSettings)
+                .GetProperty(nameof(RabbitMqSettings.VirtualHost), BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty)
+                .SetValue(rabbitMqSettings, _virtualHostProvider.VirtualHost);
 
             return rabbitMqSettings;
         }
@@ -37,14 +36,12 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
         [ManuallyRegisteredComponent(nameof(TranslationTest))]
         internal class VirtualHostProvider : IResolvable<VirtualHostProvider>
         {
-            private readonly string _virtualHost;
-
             public VirtualHostProvider(string virtualHost)
             {
-                _virtualHost = virtualHost;
+                VirtualHost = virtualHost;
             }
 
-            public string VirtualHost => _virtualHost;
+            public string VirtualHost { get; }
         }
     }
 }

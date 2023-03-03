@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Json;
+    using CrossCuttingConcerns.Settings;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -24,9 +25,16 @@ namespace SpaceEngineers.Core.Modules.Test
         public SerializationTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
+            var settingsDirectory = SolutionExtensions
+                .ProjectFile()
+                .Directory
+                .EnsureNotNull("Project directory not found")
+                .StepInto("Settings");
+
             var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)));
 
-            var options = new DependencyContainerOptions();
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(settingsDirectory)));
 
             DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
         }

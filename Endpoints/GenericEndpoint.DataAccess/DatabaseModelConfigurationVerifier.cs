@@ -112,7 +112,7 @@
                 var properties = type
                     .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
                     .Where(property => !property.IsEqualityContract())
-                    .Where(property => !property.SetIsAccessible() || property.HasInitializer());
+                    .Where(property => !(!property.HasInitializer() && property.SetIsAccessible()));
 
                 foreach (var property in properties)
                 {

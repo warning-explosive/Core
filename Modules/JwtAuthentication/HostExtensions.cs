@@ -1,10 +1,7 @@
 namespace SpaceEngineers.Core.JwtAuthentication
 {
-    using System;
-    using Basics;
     using CrossCuttingConcerns.Settings;
     using Microsoft.Extensions.Configuration;
-    using Newtonsoft.Json;
 
     /// <summary>
     /// HostExtensions
@@ -14,12 +11,12 @@ namespace SpaceEngineers.Core.JwtAuthentication
         /// <summary>
         /// Gets JwtAuthenticationConfiguration
         /// </summary>
-        /// <param name="authEndpointConfiguration">IConfiguration</param>
+        /// <param name="configuration">IConfiguration</param>
         /// <returns>JwtAuthenticationConfiguration</returns>
         public static JwtAuthenticationConfiguration GetJwtAuthenticationConfiguration(
-            this IConfiguration authEndpointConfiguration)
+            this IConfiguration configuration)
         {
-            var section = authEndpointConfiguration.GetRequiredSection("Authorization");
+            var section = configuration.GetRequiredSection($"Endpoints:{AuthEndpoint.Contract.Identity.LogicalName}:Authorization");
 
             // var privateKey = Convert.ToBase64String(new HMACSHA256().Key)
             var issuer = section.GetRequiredValue<string>("Issuer");
@@ -27,36 +24,6 @@ namespace SpaceEngineers.Core.JwtAuthentication
             var privateKey = section.GetRequiredValue<string>("PrivateKey");
 
             return new JwtAuthenticationConfiguration(issuer, audience, privateKey);
-        }
-
-        /// <summary>
-        /// Gets AuthEndpointConfiguration
-        /// </summary>
-        /// <returns>IConfiguration</returns>
-        public static IConfiguration GetAuthEndpointConfiguration()
-        {
-            var fileSystemSettings = Environment
-               .GetEnvironmentVariable(nameof(FileSystemSettings))
-               .EnsureNotNull("File system directory should be set up before any endpoint declarations");
-
-            var settings = new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.None,
-                Formatting = Formatting.Indented,
-                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
-            };
-
-            var authEndpointConfigurationFilePath = JsonConvert
-               .DeserializeObject<FileSystemSettings>(fileSystemSettings, settings)
-               .SettingsDirectory
-               .AsDirectoryInfo()
-               .StepInto("AuthEndpoint")
-               .GetFile("appsettings", ".json")
-               .FullName;
-
-            return new ConfigurationBuilder()
-               .AddJsonFile(authEndpointConfigurationFilePath)
-               .Build();
         }
     }
 }

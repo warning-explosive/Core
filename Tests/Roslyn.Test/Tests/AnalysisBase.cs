@@ -4,9 +4,11 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using Basics;
     using CompositionRoot;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
+    using CrossCuttingConcerns.Settings;
     using Microsoft.Build.Locator;
     using Registrations;
     using Xunit.Abstractions;
@@ -47,8 +49,15 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             output.WriteLine($"Used framework version: {Version}");
             output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
+            var settingsDirectory = SolutionExtensions
+                .ProjectFile()
+                .Directory
+                .EnsureNotNull("Project directory not found")
+                .StepInto("Settings");
+
             var options = new DependencyContainerOptions()
                 .WithManualRegistrations(new AnalyzersManualRegistration())
+                .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(settingsDirectory)))
                 .WithExcludedNamespaces(IgnoredNamespaces.ToArray());
 
             DependencyContainer = fixture.Container(output, options);

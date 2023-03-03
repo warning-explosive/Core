@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Modules.Benchmark.Sources
 {
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.Reflection;
     using Basics;
     using BenchmarkDotNet.Attributes;
@@ -14,6 +15,8 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     [SimpleJob(RunStrategy.ColdStart)]
     public class CompositionRootStartupBenchmarkSource
     {
+        private DirectoryInfo? _settingsDirectory;
+
         [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]
         private Assembly[]? _assemblies;
 
@@ -25,14 +28,13 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         [GlobalSetup]
         public void GlobalSetup()
         {
-            SolutionExtensions
+            _settingsDirectory = SolutionExtensions
                 .SolutionFile()
                 .Directory
                 .EnsureNotNull("Solution directory wasn't found")
                 .StepInto(nameof(Benchmarks))
                 .StepInto(AssembliesExtensions.BuildName(nameof(Modules), nameof(Benchmark)))
-                .StepInto("Settings")
-                .SetupSettingsDirectory();
+                .StepInto("Settings");
 
             _assemblies = new[]
             {
@@ -49,7 +51,6 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Dynamic))),
 
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(PathResolver))),
 
                 AssembliesExtensions.FindRequiredAssembly("System.Private.CoreLib")
             };
@@ -60,7 +61,10 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         [Benchmark(Description = nameof(CreateExactlyBounded))]
         public IDependencyContainer CreateExactlyBounded()
         {
-            return DependencyContainer.CreateExactlyBounded(new DependencyContainerOptions(), Assemblies);
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(_settingsDirectory!)));
+
+            return DependencyContainer.CreateExactlyBounded(options, Assemblies);
         }
 
         /// <summary> CreateBoundedAbove </summary>
@@ -68,7 +72,10 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         [Benchmark(Description = nameof(CreateBoundedAbove), Baseline = true)]
         public IDependencyContainer CreateBoundedAbove()
         {
-            return DependencyContainer.CreateBoundedAbove(new DependencyContainerOptions(), Assemblies);
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(_settingsDirectory!)));
+
+            return DependencyContainer.CreateBoundedAbove(options, Assemblies);
         }
     }
 }

@@ -64,12 +64,6 @@
       <Compile Update="ObjectBuilder\CharArrayToStringTransformer.cs">
         <DependentUpon>IObjectTransformer.cs</DependentUpon>
       </Compile>
-      <Compile Update="Settings\JsonSettingsProvider.cs">
-        <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\YamlSettingsProvider.cs">
-        <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
-      </Compile>
       <Compile Update="Json\ArrayNode.cs">
         <DependentUpon>NodeBase.cs</DependentUpon>
       </Compile>
@@ -100,29 +94,11 @@
       <Compile Update="ObjectBuilder\ObjectBuilder.cs">
         <DependentUpon>IObjectBuilder.cs</DependentUpon>
       </Compile>
-      <Compile Update="Settings\FileSystemSettingsProviderBase.cs">
+      <Compile Update="Settings\AppSettingsJsonSettingsProvider.cs">
         <DependentUpon>ISettingsProvider.cs</DependentUpon>
       </Compile>
-      <Compile Update="Settings\EnvironmentSettingsProvider.cs">
+      <Compile Update="Settings\SettingsDirectoryProvider.cs">
         <DependentUpon>ISettingsProvider.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\DefaultSettingsScopeProvider.cs">
-        <DependentUpon>ISettingsScopeProvider.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\ConfigurationSettingsProvider.cs">
-        <DependentUpon>FileSystemSettingsProviderBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\BaseSettingsProvider.cs">
-        <DependentUpon>ISettingsProvider.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\FileSystemSettings.cs">
-        <DependentUpon>ISettings.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\FileSystemSettingsProvider.cs">
-        <DependentUpon>ISettingsProvider.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Settings\ConfigurationProvider.cs">
-        <DependentUpon>IConfigurationProvider.cs</DependentUpon>
       </Compile>
     </ItemGroup>
     <ItemGroup>
@@ -138,6 +114,5 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="YamlDotNet" Version="13.0.1" />
     </ItemGroup>
 </Project>

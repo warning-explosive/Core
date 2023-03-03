@@ -24,10 +24,10 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
     internal class AuthenticateUserMessageHandler : IMessageHandler<AuthenticateUser>,
                                                     IResolvable<IMessageHandler<AuthenticateUser>>
     {
+        private readonly AuthorizationSettings _authorizationSettings;
         private readonly IIntegrationContext _context;
         private readonly IAggregateFactory<User, FindUserSpecification> _findUserAggregateFactory;
         private readonly ITokenProvider _tokenProvider;
-        private readonly ISettingsProvider<AuthorizationSettings> _authorizationSettingsProvider;
         private readonly ILogger _logger;
 
         public AuthenticateUserMessageHandler(
@@ -37,10 +37,11 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
             ISettingsProvider<AuthorizationSettings> authorizationSettingsProvider,
             ILogger logger)
         {
+            _authorizationSettings = authorizationSettingsProvider.Get();
+
             _context = context;
             _findUserAggregateFactory = findUserAggregateFactory;
             _tokenProvider = tokenProvider;
-            _authorizationSettingsProvider = authorizationSettingsProvider;
             _logger = logger;
         }
 
@@ -74,11 +75,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
 
             if (user.CheckPassword(new Password(message.Password)))
             {
-                var settings = await _authorizationSettingsProvider
-                    .Get(token)
-                    .ConfigureAwait(false);
-
-                authenticationToken = user.GenerateAuthorizationToken(AuthorizationTokenGenerator(_tokenProvider, settings));
+                authenticationToken = user.GenerateAuthorizationToken(AuthorizationTokenGenerator(_tokenProvider, _authorizationSettings));
             }
             else
             {

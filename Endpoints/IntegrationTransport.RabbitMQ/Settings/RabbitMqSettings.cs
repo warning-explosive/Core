@@ -27,37 +27,37 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings
         /// Hosts
         /// </summary>
         [SuppressMessage("Analysis", "CA1819", Justification = "Settings")]
-        public string[] Hosts { get; set; }
+        public string[] Hosts { get; init; }
 
         /// <summary>
         /// Port
         /// </summary>
-        public int Port { get; set; }
+        public int Port { get; init; }
 
         /// <summary>
         /// Http api port
         /// </summary>
-        public int HttpApiPort { get; set; }
+        public int HttpApiPort { get; init; }
 
         /// <summary>
         /// User
         /// </summary>
-        public string User { get; set; }
+        public string User { get; init; }
 
         /// <summary>
         /// Password
         /// </summary>
-        public string Password { get; set; }
+        public string Password { get; init; }
 
         /// <summary>
         /// Virtual host
         /// </summary>
-        public string VirtualHost { get; set; }
+        public string VirtualHost { get; init; }
 
         /// <summary>
         /// Application name
         /// </summary>
-        public string ApplicationName { get; set; }
+        public string ApplicationName { get; init; }
 
         /// <summary>
         /// Channel prefetch count
@@ -68,16 +68,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings
         /// 30 -> 70%
         /// 1000 -> 74%
         /// </summary>
-        public ushort ConsumerPrefetchCount { get; set; }
+        public ushort ConsumerPrefetchCount { get; init; }
 
         /// <summary>
         /// Queue max length bytes
         /// </summary>
-        public int QueueMaxLengthBytes { get; set; }
+        public int QueueMaxLengthBytes { get; init; }
 
         /// <summary>
         /// Consumer priority
         /// </summary>
-        public ushort ConsumerPriority { get; set; }
+        public ushort ConsumerPriority { get; init; }
     }
 }

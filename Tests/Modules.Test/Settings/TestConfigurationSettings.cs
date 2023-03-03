@@ -2,21 +2,22 @@ namespace SpaceEngineers.Core.Modules.Test.Settings
 {
     using System;
     using System.Collections.Generic;
+    using CrossCuttingConcerns.Settings;
 
-    internal class TestConfigurationSettings : ITestSettings
+    internal class TestConfigurationSettings : ISettings
     {
-        public int Int { get; set; }
+        public int Int { get; init; }
 
-        public decimal Decimal { get; set; }
+        public decimal Decimal { get; init; }
 
-        public string? String { get; set; }
+        public string? String { get; init; }
 
-        public DateTime Date { get; set; }
+        public DateTime Date { get; init; }
 
-        public TestConfigurationSettings? Reference { get; set; }
+        public TestConfigurationSettings? Reference { get; init; }
 
-        public ICollection<TestConfigurationSettings>? Collection { get; set; }
+        public ICollection<TestConfigurationSettings>? Collection { get; init; }
 
-        public IDictionary<string, TestConfigurationSettings>? Dictionary { get; set; }
+        public IDictionary<string, TestConfigurationSettings>? Dictionary { get; init; }
     }
 }

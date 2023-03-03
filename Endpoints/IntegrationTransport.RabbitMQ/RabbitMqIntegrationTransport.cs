@@ -50,7 +50,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         private readonly ILogger _logger;
         private readonly IJsonSerializer _jsonSerializer;
-        private readonly ISettingsProvider<RabbitMqSettings> _rabbitMqSettingsProvider;
+
+        private readonly RabbitMqSettings _rabbitMqSettings;
 
         private readonly ConcurrentDictionary<EndpointIdentity, object?> _endpoints;
         private readonly ConcurrentDictionary<EndpointIdentity, IIntegrationTypeProvider> _integrationMessageTypes;
@@ -80,8 +81,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         private EnIntegrationTransportStatus _status;
 
-        private RabbitMqSettings? _rabbitMqSettings;
-
         private IConnection? _connection;
 
         [SuppressMessage("Analysis", "CA2213", Justification = "singleton instance keeps reference forever")]
@@ -94,7 +93,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         {
             _logger = logger;
             _jsonSerializer = jsonSerializer;
-            _rabbitMqSettingsProvider = rabbitMqSettingsProvider;
+
+            _rabbitMqSettings = rabbitMqSettingsProvider.Get();
 
             _endpoints = new ConcurrentDictionary<EndpointIdentity, object?>();
             _integrationMessageTypes = new ConcurrentDictionary<EndpointIdentity, IIntegrationTypeProvider>();
@@ -218,7 +218,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             foreach (var type in messageTypes)
             {
                 var copy = message.ContravariantClone(type);
-                result = await Publish(copy, channel, _rabbitMqSettings!, _outstandingConfirms, _jsonSerializer).ConfigureAwait(false);
+                result = await Publish(copy, channel, _rabbitMqSettings, _outstandingConfirms, _jsonSerializer).ConfigureAwait(false);
             }
 
             return result;
@@ -375,10 +375,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             Dispose();
 
             Status = EnIntegrationTransportStatus.Starting;
-
-            _rabbitMqSettings = await _rabbitMqSettingsProvider
-               .Get(token)
-               .ConfigureAwait(false);
 
             await _rabbitMqSettings
                .DeclareVirtualHost(_jsonSerializer, _logger, token)

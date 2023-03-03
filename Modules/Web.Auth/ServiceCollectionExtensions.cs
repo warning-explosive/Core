@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.Web.Auth
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Authorization;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Primitives;
 
@@ -20,12 +21,11 @@ namespace SpaceEngineers.Core.Web.Auth
         /// Adds authentication and authorization services into core container
         /// </summary>
         /// <param name="serviceCollection">IServiceCollection</param>
-        public static void AddAuth(this IServiceCollection serviceCollection)
+        /// <param name="configuration">IConfiguration</param>
+        public static void AddAuth(
+            this IServiceCollection serviceCollection,
+            IConfiguration configuration)
         {
-            var authenticationConfiguration = HostExtensions
-               .GetAuthEndpointConfiguration()
-               .GetJwtAuthenticationConfiguration();
-
             serviceCollection
                 .AddAuthentication(CompositeAuthenticationScheme)
                 .AddPolicyScheme(CompositeAuthenticationScheme, CompositeAuthenticationScheme, options =>
@@ -45,6 +45,8 @@ namespace SpaceEngineers.Core.Web.Auth
                 .AddBasic()
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
                 {
+                    var authenticationConfiguration = configuration.GetJwtAuthenticationConfiguration();
+
                     options.ClaimsIssuer = authenticationConfiguration.Issuer;
                     options.RequireHttpsMetadata = false;
                     options.SaveToken = true;

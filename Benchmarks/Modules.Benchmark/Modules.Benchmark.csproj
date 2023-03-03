@@ -51,7 +51,6 @@
       <ProjectReference Include="..\..\Modules\DataExport\DataExport.csproj" />
       <ProjectReference Include="..\..\Modules\DataImport\DataImport.csproj" />
       <ProjectReference Include="..\..\Modules\Dynamic\Dynamic.csproj" />
-      <ProjectReference Include="..\..\Modules\PathResolver\PathResolver.csproj" />
       <ProjectReference Include="..\..\Tests\Basics.Test\Basics.Test.csproj" />
       <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
       <ProjectReference Include="..\Benchmark.Api\Benchmark.Api.csproj" />

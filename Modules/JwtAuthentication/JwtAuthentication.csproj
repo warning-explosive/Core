@@ -37,6 +37,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+        <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Contract\AuthEndpoint.Contract.csproj" />
     </ItemGroup>
     <ItemGroup>
       <Compile Update="JwtTokenProvider.cs">

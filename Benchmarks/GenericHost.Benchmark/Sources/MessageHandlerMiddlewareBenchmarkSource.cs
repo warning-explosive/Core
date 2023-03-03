@@ -66,17 +66,17 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                 .StepInto(nameof(MessageHandlerMiddlewareBenchmarkSource));
 
             _host = hostBuilder
-                .UseIntegrationTransport(builder => builder
+                .UseIntegrationTransport((context, builder) => builder
                     .WithInMemoryIntegrationTransport(hostBuilder)
-                    .WithAuthorization()
+                    .WithAuthorization(context.Configuration)
                     .BuildOptions())
                 .UseEndpoint(
                     new EndpointIdentity(nameof(MessageHandlerMiddlewareBenchmarkSource), Guid.NewGuid().ToString()),
-                    (_, builder) => builder
+                    (context, builder) => builder
                     .WithPostgreSqlDataAccess(options => options
                         .ExecuteMigrations())
                     .WithSqlEventSourcing()
-                    .WithAuthorization()
+                    .WithAuthorization(context.Configuration)
                     .ModifyContainerOptions(options => options
                         .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostStartupAction)))
                     .BuildOptions())

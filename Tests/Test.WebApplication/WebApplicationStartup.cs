@@ -24,11 +24,12 @@ namespace SpaceEngineers.Core.Test.WebApplication
     internal class WebApplicationStartup : BaseStartup
     {
         public WebApplicationStartup(
+            WebHostBuilderContext context,
             IHostBuilder hostBuilder,
             IConfiguration configuration,
             Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory,
             string? logicalName = null)
-            : base(hostBuilder, configuration, optionsFactory, logicalName)
+            : base(context, hostBuilder, configuration, optionsFactory, logicalName)
         {
         }
 
@@ -127,7 +128,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
             serviceCollection.AddResponseCompression(options => options.Providers.Add<GzipCompressionProvider>());
             serviceCollection.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.SmallestSize);
 
-            serviceCollection.AddAuth();
+            serviceCollection.AddAuth(configuration);
         }
 
         protected sealed override void ConfigureAspNetCoreRequestPipeline(

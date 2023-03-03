@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Settings
         /// <summary>
         /// Authorization token expiration timeout (minutes)
         /// </summary>
-        public uint TokenExpirationMinutesTimeout { get; set; }
+        public uint TokenExpirationMinutesTimeout { get; init; }
 
         /// <summary>
         /// Authorization token expiration timeout (minutes)

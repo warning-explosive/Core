@@ -44,9 +44,8 @@
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+        <ProjectReference Include="..\..\Modules\CliArgumentsParser\CliArgumentsParser.csproj" />
         <ProjectReference Include="..\..\Modules\Dynamic\Dynamic.csproj" />
-        <ProjectReference Include="..\..\Modules\PathResolver\PathResolver.csproj" />
         <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
     </ItemGroup>
     <ItemGroup>

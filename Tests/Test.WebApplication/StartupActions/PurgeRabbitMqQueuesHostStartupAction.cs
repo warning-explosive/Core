@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.StartupActions
                                                           ICollectionResolvable<IHostStartupAction>,
                                                           IResolvable<PurgeRabbitMqQueuesHostStartupAction>
     {
-        private readonly ISettingsProvider<RabbitMqSettings> _rabbitMqSettingsProvider;
+        private readonly RabbitMqSettings _rabbitMqSettings;
         private readonly IJsonSerializer _jsonSerializer;
         private readonly ILogger _logger;
 
@@ -27,18 +27,15 @@ namespace SpaceEngineers.Core.Test.WebApplication.StartupActions
             IJsonSerializer jsonSerializer,
             ILogger logger)
         {
-            _rabbitMqSettingsProvider = rabbitMqSettingsProvider;
+            _rabbitMqSettings = rabbitMqSettingsProvider.Get();
+
             _jsonSerializer = jsonSerializer;
             _logger = logger;
         }
 
         public async Task Run(CancellationToken token)
         {
-            var rabbitMqSettings = await _rabbitMqSettingsProvider
-               .Get(token)
-               .ConfigureAwait(false);
-
-            await rabbitMqSettings
+            await _rabbitMqSettings
                .PurgeMessages(_jsonSerializer, _logger, token)
                .ConfigureAwait(false);
         }

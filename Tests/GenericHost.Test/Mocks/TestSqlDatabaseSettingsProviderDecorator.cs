@@ -1,8 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 {
     using System.Data;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System.Reflection;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using CrossCuttingConcerns.Settings;
@@ -24,13 +23,13 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 
         public ISettingsProvider<SqlDatabaseSettings> Decoratee { get; }
 
-        public async Task<SqlDatabaseSettings> Get(CancellationToken token)
+        public SqlDatabaseSettings Get()
         {
-            var sqlDatabaseSettings = await Decoratee
-               .Get(token)
-               .ConfigureAwait(false);
+            var sqlDatabaseSettings = Decoratee.Get();
 
-            sqlDatabaseSettings.IsolationLevel = _isolationLevelProvider.IsolationLevel;
+            typeof(SqlDatabaseSettings)
+                .GetProperty(nameof(SqlDatabaseSettings.IsolationLevel), BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty)
+                .SetValue(sqlDatabaseSettings, _isolationLevelProvider.IsolationLevel);
 
             return sqlDatabaseSettings;
         }
@@ -38,14 +37,12 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
         [ManuallyRegisteredComponent(nameof(TranslationTest))]
         internal class IsolationLevelProvider : IResolvable<IsolationLevelProvider>
         {
-            private readonly IsolationLevel _isolationLevel;
-
             public IsolationLevelProvider(IsolationLevel isolationLevel)
             {
-                _isolationLevel = isolationLevel;
+                IsolationLevel = isolationLevel;
             }
 
-            public IsolationLevel IsolationLevel => _isolationLevel;
+            public IsolationLevel IsolationLevel { get; }
         }
     }
 }

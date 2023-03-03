@@ -61,18 +61,15 @@ namespace SpaceEngineers.Core.Test.WebApplication
 
             return Host
                .CreateDefaultBuilder(args)
-               .ConfigureLogging(context =>
-               {
-                   context
-                       .AddConsole()
-                       .SetMinimumLevel(LogLevel.Trace);
-               })
+               .ConfigureLogging(context => context.AddConsole().SetMinimumLevel(LogLevel.Trace))
                .UseIntegrationTransport(hostBuilder =>
-                    context => new WebApplicationStartup(hostBuilder,
+                    context => new WebApplicationStartup(
+                        context,
+                        hostBuilder,
                         context.Configuration,
                         builder => builder
                            .WithRabbitMqIntegrationTransport(hostBuilder)
-                           .WithWebApi(hostBuilder)
+                           .WithWebApi(hostBuilder, context.Configuration)
                            .ModifyContainerOptions(options => options
                                .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration()))
                            .BuildOptions(),

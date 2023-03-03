@@ -17,22 +17,26 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
     /// </summary>
     public abstract class BaseStartup : IStartup
     {
+        private readonly WebHostBuilderContext _context;
         private readonly IHostBuilder _hostBuilder;
         private readonly IConfiguration _configuration;
         private readonly Func<ITransportEndpointBuilder, EndpointOptions> _optionsFactory;
         private readonly string? _logicalName;
 
         /// <summary> .cctor </summary>
+        /// <param name="context">WebHostBuilderContext</param>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="configuration">IConfiguration</param>
         /// <param name="optionsFactory">Transport endpoint options factory</param>
         /// <param name="logicalName">Logical name</param>
         protected BaseStartup(
+            WebHostBuilderContext context,
             IHostBuilder hostBuilder,
             IConfiguration configuration,
             Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory,
             string? logicalName = null)
         {
+            _context = context;
             _hostBuilder = hostBuilder;
             _configuration = configuration;
             _optionsFactory = optionsFactory;
@@ -45,15 +49,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
             ConfigureAspNetCoreServices(serviceCollection, _configuration);
 
             HostExtensions.InitializeIntegrationTransport(
+                new HostBuilderContext(_hostBuilder.Properties) { HostingEnvironment = _context.HostingEnvironment, Configuration = _context.Configuration },
                 _hostBuilder,
                 WithSimpleInjector(_optionsFactory, serviceCollection),
                 _logicalName)(serviceCollection);
 
-            static Func<ITransportEndpointBuilder, EndpointOptions> WithSimpleInjector(
+            static Func<HostBuilderContext, ITransportEndpointBuilder, EndpointOptions> WithSimpleInjector(
                 Func<ITransportEndpointBuilder, EndpointOptions> optionsFactory,
                 IServiceCollection serviceCollection)
             {
-                return builder => optionsFactory(ModifyContainerOptions(builder, serviceCollection));
+                return (_, builder) => optionsFactory(ModifyContainerOptions(builder, serviceCollection));
             }
 
             static ITransportEndpointBuilder ModifyContainerOptions(

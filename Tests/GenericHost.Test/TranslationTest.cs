@@ -119,12 +119,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     var manualRegistrations = new IManualRegistration[]
                     {
-                        new QueryExpressionsCollectorManualRegistration(),
-                        new IsolationLevelManualRegistration(IsolationLevel.ReadCommitted)
+                        new QueryExpressionsCollectorManualRegistration()
                     };
 
                     var host = hostBuilder
-                       .UseIntegrationTransport(builder => builder
+                       .UseIntegrationTransport((_, builder) => builder
                            .WithInMemoryIntegrationTransport(hostBuilder)
                            .BuildOptions())
                        .UseEndpoint(TestIdentity.Endpoint10,
@@ -1066,19 +1065,17 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 var endpointDependencyContainer = host.Value.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
-                var sqlDatabaseSettings = await endpointDependencyContainer
-                   .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
-                   .Get(cts.Token)
-                   .ConfigureAwait(false);
+                var sqlDatabaseSettings = endpointDependencyContainer
+                    .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
+                    .Get();
 
                 Assert.Equal(nameof(CommandTranslationTest), sqlDatabaseSettings.Database);
                 Assert.Equal(IsolationLevel.ReadCommitted, sqlDatabaseSettings.IsolationLevel);
                 Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                var ormSettings = await endpointDependencyContainer
+                var ormSettings = endpointDependencyContainer
                     .Resolve<ISettingsProvider<OrmSettings>>()
-                    .Get(cts.Token)
-                    .ConfigureAwait(false);
+                    .Get();
 
                 Assert.Equal(10u, ormSettings.CommandSecondsTimeout);
 

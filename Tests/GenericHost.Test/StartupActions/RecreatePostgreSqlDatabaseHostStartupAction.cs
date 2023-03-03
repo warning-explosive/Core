@@ -30,38 +30,35 @@ drop database if exists ""{0}"" with (FORCE);
 create database ""{0}"";
 grant all privileges on database ""{0}"" to ""{1}"";";
 
+        private readonly SqlDatabaseSettings _sqlDatabaseSettings;
         private readonly IDependencyContainer _dependencyContainer;
-        private readonly ISettingsProvider<SqlDatabaseSettings> _sqlDatabaseSettingsProvider;
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
         public RecreatePostgreSqlDatabaseHostStartupAction(
-            IDependencyContainer dependencyContainer,
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
+            IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider)
         {
+            _sqlDatabaseSettings = sqlDatabaseSettingsProvider.Get();
+
             _dependencyContainer = dependencyContainer;
-            _sqlDatabaseSettingsProvider = sqlDatabaseSettingsProvider;
             _connectionProvider = connectionProvider;
         }
 
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
         public async Task Run(CancellationToken token)
         {
-            var sqlDatabaseSettings = await _sqlDatabaseSettingsProvider
-               .Get(token)
-               .ConfigureAwait(false);
-
             var command = new SqlCommand(
-                CommandText.Format(sqlDatabaseSettings.Database, sqlDatabaseSettings.Username),
+                CommandText.Format(_sqlDatabaseSettings.Database, _sqlDatabaseSettings.Username),
                 Array.Empty<SqlCommandParameter>());
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
-                Host = sqlDatabaseSettings.Host,
-                Port = sqlDatabaseSettings.Port,
+                Host = _sqlDatabaseSettings.Host,
+                Port = _sqlDatabaseSettings.Port,
                 Database = "postgres",
-                Username = sqlDatabaseSettings.Username,
-                Password = sqlDatabaseSettings.Password
+                Username = _sqlDatabaseSettings.Username,
+                Password = _sqlDatabaseSettings.Password
             };
 
             var npgSqlConnection = new NpgsqlConnection(connectionStringBuilder.ConnectionString);

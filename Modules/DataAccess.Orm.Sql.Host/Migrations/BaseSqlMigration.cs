@@ -4,12 +4,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Persisting;
     using Connection;
+    using Linq;
     using Model;
     using Orm.Host.Abstractions;
     using Orm.Linq;
-    using Transaction;
+    using Orm.Transaction;
     using Translation;
 
     /// <summary>
@@ -61,7 +61,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
                 Name);
 
             await transaction
-                .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token)
+                .Insert(new[] { appliedMigration }, EnInsertBehavior.Default)
+                .Invoke(token)
                 .ConfigureAwait(false);
 
             return commands;

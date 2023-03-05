@@ -14,13 +14,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <param name="name">Name</param>
         /// <param name="value">Value</param>
         /// <param name="type">Type</param>
-        /// <param name="isJsonValue">Should value be converted to json object</param>
-        public SqlCommandParameter(string name, object? value, Type type, bool isJsonValue = false)
+        public SqlCommandParameter(string name, object? value, Type type)
         {
             Name = name;
             Value = value;
             Type = type;
-            IsJsonValue = isJsonValue;
         }
 
         /// <summary>
@@ -39,27 +37,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         public Type Type { get; }
 
         /// <summary>
-        /// Should value be converted to json object
-        /// </summary>
-        public bool IsJsonValue { get; }
-
-        /// <summary>
         /// Deconstruct
         /// </summary>
         /// <param name="name">Name</param>
         /// <param name="value">Value</param>
         /// <param name="type">Type</param>
-        /// <param name="isJsonValue">Should value be converted to json object</param>
         public void Deconstruct(
             out string name,
             out object? value,
-            out Type type,
-            out bool isJsonValue)
+            out Type type)
         {
             name = Name;
             value = Value;
             type = Type;
-            isJsonValue = IsJsonValue;
         }
 
         /// <inheritdoc />
@@ -83,7 +73,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 ? Type.Name
                 : Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).Name + "?";
 
-            if (IsJsonValue)
+            if (!Type.IsPrimitive() && !Type.IsCollection())
             {
                 sb.Append($"({type}, JSON)");
             }

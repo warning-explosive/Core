@@ -11,9 +11,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using Basics;
     using Basics.Enumerations;
     using Basics.Primitives;
-    using Core.DataAccess.Api.Persisting;
-    using Core.DataAccess.Api.Transaction;
     using Core.DataAccess.Orm.Linq;
+    using Core.DataAccess.Orm.Sql.Linq;
     using Core.DataAccess.Orm.Transaction;
     using CrossCuttingConcerns.Logging;
     using Deduplication;
@@ -157,13 +156,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     true);
 
                 await databaseContext
-                   .Insert(new[] { inbox }, EnInsertBehavior.DoNothing, token)
+                   .Insert(new[] { inbox }, EnInsertBehavior.DoNothing)
+                   .Invoke(token)
                    .ConfigureAwait(false);
             }
             else
             {
                 await databaseContext
-                    .Update<InboxMessage, bool>(message => message.Handled, _ => true, message => message.PrimaryKey == inbox.PrimaryKey, token)
+                    .Update<InboxMessage>()
+                    .Set(message => message.Handled.Assign(true))
+                    .Where(message => message.PrimaryKey == inbox.PrimaryKey)
+                    /* TODO: .CachedExpression("45A2D69C-BB68-403C-9A12-037D60959BC2")*/
+                    .Invoke(token)
                     .ConfigureAwait(false);
             }
         }
@@ -182,7 +186,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity, message, false))
                .ToArray();
 
-            return databaseContext.Insert(outboxMessages, EnInsertBehavior.Default, token);
+            return outboxMessages.Any()
+                ? databaseContext
+                    .Insert(outboxMessages, EnInsertBehavior.Default)
+                    .Invoke(token)
+                : Task.CompletedTask;
         }
 
         private static Task DeliverOutgoingMessages(

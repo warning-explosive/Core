@@ -12,17 +12,19 @@
         private readonly IModelProvider _modelProvider;
         private readonly HashSet<Relation> _relations;
 
-        public ExtractRelationsExpressionVisitor(IModelProvider modelProvider)
+        private ExtractRelationsExpressionVisitor(IModelProvider modelProvider)
         {
             _modelProvider = modelProvider;
             _relations = new HashSet<Relation>();
         }
 
-        public IReadOnlyCollection<Relation> Extract(Expression node)
+        public static IReadOnlyCollection<Relation> Extract(Expression node, IModelProvider modelProvider)
         {
-            _ = Visit(node);
+            var visitor = new ExtractRelationsExpressionVisitor(modelProvider);
 
-            return _relations;
+            _ = visitor.Visit(node);
+
+            return visitor._relations;
         }
 
         protected override Expression VisitMember(MemberExpression node)

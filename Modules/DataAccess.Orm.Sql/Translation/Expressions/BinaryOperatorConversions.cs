@@ -17,6 +17,7 @@
         {
             return type switch
             {
+                ExpressionType.Assign => BinaryOperator.Assign,
                 ExpressionType.Equal => BinaryOperator.Equal,
                 ExpressionType.NotEqual => BinaryOperator.NotEqual,
                 ExpressionType.GreaterThanOrEqual => BinaryOperator.GreaterThanOrEqual,

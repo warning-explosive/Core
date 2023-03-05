@@ -5,8 +5,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
-    using Api.Reading;
+    using Api.Model;
     using Basics;
+    using CompositionRoot;
+    using Transaction;
 
     /// <summary>
     /// LinqMethods
@@ -16,7 +18,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
 
         private static MethodInfo? _repositoryAll;
+        private static MethodInfo? _repositoryInsert;
+        private static MethodInfo? _repositoryUpdate;
+        private static MethodInfo? _repositoryUpdateWhere;
+        private static MethodInfo? _repositoryUpdateSet;
+        private static MethodInfo? _repositoryChainedUpdateSet;
+        private static MethodInfo? _repositoryDelete;
+        private static MethodInfo? _repositoryDeleteWhere;
         private static MethodInfo? _cachedExpression;
+        private static MethodInfo? _assign;
+        private static MethodInfo? _withDependencyContainer;
         private static MethodInfo? _queryableSingle;
         private static MethodInfo? _queryableSingle2;
         private static MethodInfo? _queryableSingleOrDefault;
@@ -43,44 +54,187 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         private static MethodInfo? _queryableSelectMany;
 
         /// <summary>
-        /// Does method represent query root (IReadRepository.All())
+        /// IRepository.All
         /// </summary>
-        /// <param name="method">MethodInfo</param>
-        /// <returns>IsQueryRoot</returns>
-        public static bool IsQueryRoot(this MethodInfo method)
-        {
-            return method.Name.Equals(nameof(IReadRepository.All), StringComparison.Ordinal)
-                   && method.ReflectedType == typeof(IReadRepository);
-        }
-
-        /// <summary>
-        /// IReadRepository.All
-        /// </summary>
-        /// <returns>IReadRepository.All MethodInfo</returns>
+        /// <returns>IRepository.All MethodInfo</returns>
         public static MethodInfo RepositoryAll()
         {
-            return _repositoryAll ??= new MethodFinder(typeof(IReadRepository),
-                    nameof(IReadRepository.All),
+            return _repositoryAll ??= new MethodFinder(typeof(IRepository),
+                    nameof(IRepository.All),
                     BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(IUniqueIdentified) }
+                }
                 .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Api.Abstractions.IReadRepository.All()"));
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.All()"));
         }
 
         /// <summary>
-        /// AsyncQueryExtensions.CachedExpression
+        /// IRepository.Insert
         /// </summary>
-        /// <returns>AsyncQueryExtensions.CachedExpression MethodInfo</returns>
+        /// <returns>IRepository.Insert MethodInfo</returns>
+        public static MethodInfo RepositoryInsert()
+        {
+            return _repositoryInsert ??= new MethodFinder(typeof(IRepository),
+                    nameof(IRepository.Insert),
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+                {
+                    ArgumentTypes = new[] { typeof(IDatabaseContext), typeof(IReadOnlyCollection<IDatabaseEntity>), typeof(EnInsertBehavior) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.Insert()"));
+        }
+
+        /// <summary>
+        /// IRepository.Update
+        /// </summary>
+        /// <returns>IRepository.Update MethodInfo</returns>
+        public static MethodInfo RepositoryUpdate()
+        {
+            return _repositoryUpdate ??= new MethodFinder(typeof(IRepository),
+                    nameof(IRepository.Update),
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(IDatabaseEntity) },
+                    ArgumentTypes = new[] { typeof(IDatabaseContext) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.Update()"));
+        }
+
+        /// <summary>
+        /// IRepository.Update.Where
+        /// </summary>
+        /// <returns>IRepository.Update.Where MethodInfo</returns>
+        public static MethodInfo RepositoryUpdateWhere()
+        {
+            return _repositoryUpdateWhere ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Where),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(ISetUpdateQueryable<object>), typeof(Expression<Func<object, bool>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Where()"));
+        }
+
+        /// <summary>
+        /// IRepository.Update.Set
+        /// </summary>
+        /// <returns>IRepository.Update.Set MethodInfo</returns>
+        public static MethodInfo RepositoryUpdateSet()
+        {
+            return _repositoryUpdateSet ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Set),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IUpdateQueryable<object>), typeof(Expression<Action<object>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Set()"));
+        }
+
+        /// <summary>
+        /// IRepository.Update.Set
+        /// </summary>
+        /// <returns>IRepository.Update.Set MethodInfo</returns>
+        public static MethodInfo RepositoryChainedUpdateSet()
+        {
+            return _repositoryChainedUpdateSet ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Set),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(ISetUpdateQueryable<object>), typeof(Expression<Action<object>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Set()"));
+        }
+
+        /// <summary>
+        /// IRepository.Delete
+        /// </summary>
+        /// <returns>IRepository.Delete MethodInfo</returns>
+        public static MethodInfo RepositoryDelete()
+        {
+            return _repositoryDelete ??= new MethodFinder(typeof(IRepository),
+                    nameof(IRepository.Delete),
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(IDatabaseEntity) },
+                    ArgumentTypes = new[] { typeof(IDatabaseContext) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.Delete()"));
+        }
+
+        /// <summary>
+        /// IRepository.Delete.Where
+        /// </summary>
+        /// <returns>IRepository.Delete.Where MethodInfo</returns>
+        public static MethodInfo RepositoryDeleteWhere()
+        {
+            return _repositoryDeleteWhere ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Where),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IDeleteQueryable<object>), typeof(Expression<Func<object, bool>>) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Where()"));
+        }
+
+        /// <summary>
+        /// LinqExtensions.CachedExpression
+        /// </summary>
+        /// <returns>LinqExtensions.CachedExpression MethodInfo</returns>
         public static MethodInfo CachedExpression()
         {
-            return _cachedExpression ??= new MethodFinder(typeof(AsyncQueryExtensions),
-                    nameof(AsyncQueryExtensions.CachedExpression),
+            return _cachedExpression ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.CachedExpression),
                     BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(string) }
                 }
                 .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Api.Abstractions.IReadRepository.All()"));
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.CachedExpression()"));
+        }
+
+        /// <summary>
+        /// LinqExtensions.Assign
+        /// </summary>
+        /// <returns>LinqExtensions.Assign MethodInfo</returns>
+        public static MethodInfo Assign()
+        {
+            return _assign ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Assign),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(object), typeof(object) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Assign()"));
+        }
+
+        /// <summary>
+        /// LinqExtensions.WithDependencyContainer
+        /// </summary>
+        /// <returns>LinqExtensions.WithDependencyContainer MethodInfo</returns>
+        public static MethodInfo WithDependencyContainer()
+        {
+            return _withDependencyContainer ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.WithDependencyContainer),
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    ArgumentTypes = new[] { typeof(IInsertQueryable<IDatabaseEntity>), typeof(IDependencyContainer) }
+                }
+                .FindMethod()
+                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.WithDependencyContainer()"));
         }
 
         /// <summary>

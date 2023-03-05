@@ -6,6 +6,8 @@
     using Basics;
     using Basics.Attributes;
     using CompositionRoot;
+    using Core.DataAccess.Orm.Linq;
+    using Core.DataAccess.Orm.Sql.Linq;
     using Core.DataAccess.Orm.Transaction;
     using CrossCuttingConcerns.Logging;
     using Deduplication;
@@ -15,7 +17,6 @@
     using Microsoft.Extensions.Logging;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.DataAccess.Api.Transaction;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
     using EndpointIdentity = Contract.EndpointIdentity;
     using IntegrationMessage = Messaging.IntegrationMessage;
@@ -88,7 +89,11 @@
                .Value;
 
             await transaction
-               .Update<InboxMessage, bool>(message => message.IsError, _ => true, message => message.PrimaryKey == id, token)
+               .Update<InboxMessage>()
+               .Set(message => message.IsError.Assign(true))
+               .Where(message => message.PrimaryKey == id)
+               /* TODO: .CachedExpression("5A3B2946-028C-4CA8-9E8D-1E9C3BBB1EEB")*/
+               .Invoke(token)
                .ConfigureAwait(false);
         }
 

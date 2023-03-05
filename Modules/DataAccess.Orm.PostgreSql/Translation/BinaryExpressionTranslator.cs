@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                                                 IResolvable<ISqlExpressionTranslator<BinaryExpression>>,
                                                 ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
         private static readonly IReadOnlyDictionary<BinaryOperator, string> FunctionalOperators
             = new Dictionary<BinaryOperator, string>
@@ -26,6 +26,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         private static readonly IReadOnlyDictionary<BinaryOperator, string> Operators
             = new Dictionary<BinaryOperator, string>
             {
+                [BinaryOperator.Assign] = "=",
                 [BinaryOperator.Equal] = "=",
                 [BinaryOperator.NotEqual] = "!=",
                 [BinaryOperator.Is] = "IS",
@@ -45,9 +46,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 [BinaryOperator.Modulo] = "%"
             };
 
-        public BinaryExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
+        public BinaryExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -63,24 +64,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             if (expression.Operator == BinaryOperator.Contains)
             {
-                sb.Append(_sqlExpressionTranslator.Translate(expression.Left, depth));
+                sb.Append(_translator.Translate(expression.Left, depth));
                 sb.Append(" = ANY");
                 sb.Append('(');
-                sb.Append(_sqlExpressionTranslator.Translate(expression.Right, depth + 1));
+                sb.Append(_translator.Translate(expression.Right, depth + 1));
                 sb.Append(')');
             }
             else if (FunctionalOperators.ContainsKey(expression.Operator))
             {
                 sb.Append(FunctionalOperators[expression.Operator]);
                 sb.Append('(');
-                sb.Append(_sqlExpressionTranslator.Translate(expression.Left, depth));
+                sb.Append(_translator.Translate(expression.Left, depth));
                 sb.Append(", ");
-                sb.Append(_sqlExpressionTranslator.Translate(expression.Right, depth));
+                sb.Append(_translator.Translate(expression.Right, depth));
                 sb.Append(')');
             }
             else
             {
-                sb.Append(_sqlExpressionTranslator.Translate(expression.Left, depth));
+                sb.Append(_translator.Translate(expression.Left, depth));
                 sb.Append(" ");
                 sb.Append(Operators[expression.Operator]);
 
@@ -94,7 +95,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                     sb.Append(" ");
                 }
 
-                sb.Append(_sqlExpressionTranslator.Translate(expression.Right, depth + 1));
+                sb.Append(_translator.Translate(expression.Right, depth + 1));
 
                 if (expression.Operator == BinaryOperator.Contains)
                 {

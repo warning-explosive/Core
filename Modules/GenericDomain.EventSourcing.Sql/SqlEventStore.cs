@@ -9,9 +9,9 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using DataAccess.Api.Persisting;
-    using DataAccess.Api.Transaction;
     using DataAccess.Orm.Linq;
+    using DataAccess.Orm.Sql.Linq;
+    using DataAccess.Orm.Transaction;
 
     [Component(EnLifestyle.Scoped)]
     internal class SqlEventStore : IEventStore,
@@ -64,20 +64,18 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
             DomainEventArgs args,
             CancellationToken token)
         {
-            return _databaseContext.Insert(
-                new[] { BuildDatabaseDomainEvent(args) },
-                EnInsertBehavior.Default,
-                token);
+            return _databaseContext
+                .Insert(new[] { BuildDatabaseDomainEvent(args) }, EnInsertBehavior.Default)
+                .Invoke(token);
         }
 
         public Task Append(
             IEnumerable<DomainEventArgs> args,
             CancellationToken token)
         {
-            return _databaseContext.Insert(
-                args.Select(BuildDatabaseDomainEvent).ToArray(),
-                EnInsertBehavior.Default,
-                token);
+            return _databaseContext
+                .Insert(args.Select(BuildDatabaseDomainEvent).ToArray(), EnInsertBehavior.Default)
+                .Invoke(token);
         }
 
         private DatabaseDomainEvent BuildDatabaseDomainEvent(DomainEventArgs args)

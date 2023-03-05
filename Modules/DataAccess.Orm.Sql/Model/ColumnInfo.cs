@@ -368,20 +368,20 @@
         /// </summary>
         /// <param name="parameter">Parameter expression</param>
         /// <returns>Expression tree</returns>
-        public IBindingSqlExpression BuildExpression(Translation.Expressions.ParameterExpression parameter)
+        public ColumnExpression BuildExpression(Translation.Expressions.ParameterExpression parameter)
         {
             if (parameter.Type != Table.Type)
             {
                 throw new InvalidOperationException($"Parameter expression should be constructed over {Table.Type.FullName} type instead of {parameter.Type.FullName}");
             }
 
-            _sqlExpressionExtractor ??= GetValueExtractor<ISqlExpression>(_chain, AggregateBindings);
+            _sqlExpressionExtractor ??= GetValueExtractor<ISqlExpression>(_chain, AggregateColumns);
 
-            return (IBindingSqlExpression)_sqlExpressionExtractor.Invoke(parameter);
+            return (ColumnExpression)_sqlExpressionExtractor.Invoke(parameter);
 
-            static ISqlExpression AggregateBindings(PropertyInfo property, ISqlExpression source)
+            static ISqlExpression AggregateColumns(PropertyInfo property, ISqlExpression source)
             {
-                return new SimpleBindingExpression(property, property.PropertyType, source);
+                return new ColumnExpression(property, property.PropertyType, source);
             }
         }
 

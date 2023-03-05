@@ -27,7 +27,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitConstant(ConstantExpression node)
         {
-            if (node.Value is IQueryable subQuery)
+            if (node.Value is IQueryable subQuery
+                && typeof(IQueryable).IsAssignableFrom(subQuery.Expression.Type))
             {
                 var expression = _dependencyContainer
                     .Resolve<ILinqExpressionPreprocessorComposite>()

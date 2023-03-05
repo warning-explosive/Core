@@ -1,15 +1,12 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using Basics;
 
     /// <summary>
     /// BinaryExpression
     /// </summary>
-    public class BinaryExpression : ISqlExpression,
-                                    IEquatable<BinaryExpression>,
-                                    ISafelyEquatable<BinaryExpression>,
-                                    IApplicable<SimpleBindingExpression>,
+    public class BinaryExpression : ITypedSqlExpression,
+                                    IApplicable<ColumnExpression>,
                                     IApplicable<ConditionalExpression>,
                                     IApplicable<BinaryExpression>,
                                     IApplicable<UnaryExpression>,
@@ -60,63 +57,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// </summary>
         public ISqlExpression Right { get; private set; }
 
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left BinaryExpression</param>
-        /// <param name="right">Right BinaryExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(BinaryExpression? left, BinaryExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left BinaryExpression</param>
-        /// <param name="right">Right BinaryExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(BinaryExpression? left, BinaryExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Type, Operator, Left, Right);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(BinaryExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(BinaryExpression other)
-        {
-            return Type == other.Type
-                   && Operator == other.Operator
-                   && Left.Equals(other.Left)
-                   && Right.Equals(other.Right);
-        }
-
-        #endregion
-
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        public void Apply(TranslationContext context, ColumnExpression expression)
         {
             ApplySource(context, expression);
         }

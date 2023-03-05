@@ -20,6 +20,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Connection
         Task<bool> DoesDatabaseExist(CancellationToken token);
 
         /// <summary>
+        /// Gets transactional version for optimistic concurrency support
+        /// </summary>
+        /// <param name="transaction">IAdvancedDatabaseTransaction</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task<long> GetVersion(IAdvancedDatabaseTransaction transaction, CancellationToken token);
+
+        /// <summary>
         /// Opens connection
         /// </summary>
         /// <param name="token">Cancellation token</param>

@@ -1,15 +1,12 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using Basics;
 
     /// <summary>
     /// ConditionalExpression
     /// </summary>
-    public class ConditionalExpression : ISqlExpression,
-                                         IEquatable<ConditionalExpression>,
-                                         ISafelyEquatable<ConditionalExpression>,
-                                         IApplicable<SimpleBindingExpression>,
+    public class ConditionalExpression : ITypedSqlExpression,
+                                         IApplicable<ColumnExpression>,
                                          IApplicable<ConditionalExpression>,
                                          IApplicable<BinaryExpression>,
                                          IApplicable<UnaryExpression>,
@@ -58,63 +55,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// </summary>
         public ISqlExpression Else { get; private set; }
 
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left ConditionalExpression</param>
-        /// <param name="right">Right ConditionalExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(ConditionalExpression? left, ConditionalExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left ConditionalExpression</param>
-        /// <param name="right">Right ConditionalExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(ConditionalExpression? left, ConditionalExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Type, When, Then, Else);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(ConditionalExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(ConditionalExpression other)
-        {
-            return Type == other.Type
-                   && When.Equals(other.When)
-                   && Then.Equals(other.Then)
-                   && Else.Equals(other.Else);
-        }
-
-        #endregion
-
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        public void Apply(TranslationContext context, ColumnExpression expression)
         {
             ApplySource(context, expression);
         }

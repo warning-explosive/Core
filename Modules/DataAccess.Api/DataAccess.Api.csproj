@@ -60,9 +60,6 @@
       <Compile Update="Model\SystemType.cs">
         <DependentUpon>IInlinedObject.cs</DependentUpon>
       </Compile>
-      <Compile Update="Transaction\IDatabaseTransaction.cs">
-        <DependentUpon>IDatabaseContext.cs</DependentUpon>
-      </Compile>
       <Compile Update="Exceptions\DatabaseConcurrentUpdateException.cs">
         <DependentUpon>DatabaseException.cs</DependentUpon>
       </Compile>

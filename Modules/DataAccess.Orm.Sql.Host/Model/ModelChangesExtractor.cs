@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Orm.Transaction;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using Transaction;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelChangesExtractor : IModelChangesExtractor,

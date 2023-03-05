@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
@@ -12,7 +13,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     public interface IAsyncQueryProvider : IQueryProvider
     {
         /// <summary>
-        /// Execute scalar linq query asynchronously
+        /// Expression executed
+        /// </summary>
+        event EventHandler<ExecutedExpressionEventArgs>? ExpressionExecuted;
+
+        /// <summary>
+        /// Executes linq query asynchronously
+        /// </summary>
+        /// <param name="expression">Linq query expression</param>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task<long> ExecuteNonQueryAsync(Expression expression, CancellationToken token);
+
+        /// <summary>
+        /// Executes scalar linq query asynchronously
         /// </summary>
         /// <param name="expression">Linq query expression</param>
         /// <param name="token">Cancellation token</param>
@@ -21,7 +35,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         Task<T> ExecuteScalarAsync<T>(Expression expression, CancellationToken token);
 
         /// <summary>
-        /// Execute linq query asynchronously
+        /// Executes linq query asynchronously
         /// </summary>
         /// <param name="expression">Linq query expression</param>
         /// <param name="token">Cancellation token</param>

@@ -1,15 +1,12 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using Basics;
 
     /// <summary>
     /// UnaryExpression
     /// </summary>
-    public class UnaryExpression : ISqlExpression,
-                                   IEquatable<UnaryExpression>,
-                                   ISafelyEquatable<UnaryExpression>,
-                                   IApplicable<SimpleBindingExpression>,
+    public class UnaryExpression : ITypedSqlExpression,
+                                   IApplicable<ColumnExpression>,
                                    IApplicable<ConditionalExpression>,
                                    IApplicable<BinaryExpression>,
                                    IApplicable<UnaryExpression>,
@@ -50,109 +47,57 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// </summary>
         public ISqlExpression Source { get; private set; }
 
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left UnaryExpression</param>
-        /// <param name="right">Right UnaryExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(UnaryExpression? left, UnaryExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left UnaryExpression</param>
-        /// <param name="right">Right UnaryExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(UnaryExpression? left, UnaryExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Type, Operator, Source);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(UnaryExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(UnaryExpression other)
-        {
-            return Type == other.Type
-                   && Operator == other.Operator
-                   && Source.Equals(other.Source);
-        }
-
-        #endregion
-
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        public void Apply(TranslationContext context, ColumnExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ConditionalExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, BinaryExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, UnaryExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ParameterExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, QueryParameterExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, SpecialExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, MethodCallExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
-        private void ApplySource(TranslationContext context, ISqlExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (Source == null)
             {

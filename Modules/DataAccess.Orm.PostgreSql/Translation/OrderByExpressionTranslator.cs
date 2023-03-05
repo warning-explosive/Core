@@ -15,11 +15,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                                                  IResolvable<ISqlExpressionTranslator<OrderByExpression>>,
                                                  ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public OrderByExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
+        public OrderByExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -33,22 +33,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(_sqlExpressionTranslator.Translate(expression.Source, depth));
+            sb.AppendLine(_translator.Translate(expression.Source, depth));
             sb.AppendLine("ORDER BY");
             sb.Append(new string('\t', depth + 1));
 
-            expression
-               .Bindings
-               .Select(binding => _sqlExpressionTranslator.Translate(binding, depth))
-               .Each((binding, i) =>
-               {
-                   if (i != 0)
-                   {
-                       sb.Append(", ");
-                   }
-
-                   sb.Append(binding);
-               });
+            sb.Append(expression
+                .Expressions
+                .Select(sqlExpression => _translator.Translate(sqlExpression, depth))
+                .ToString(", "));
 
             return sb.ToString();
         }

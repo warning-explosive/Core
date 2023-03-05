@@ -6,14 +6,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
-    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Settings;
     using Orm.Linq;
+    using Orm.Transaction;
     using Settings;
-    using Transaction;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseModelBuilder : IDatabaseModelBuilder,

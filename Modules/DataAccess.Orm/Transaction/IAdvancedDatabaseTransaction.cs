@@ -2,7 +2,8 @@
 {
     using System.Collections.Generic;
     using System.Data;
-    using Api.Transaction;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Linq;
 
     /// <summary>
@@ -51,5 +52,12 @@
         /// </summary>
         /// <param name="command">ICommand</param>
         void CollectCommand(ICommand command);
+
+        /// <summary>
+        /// Gets actual version for optimistic concurrency support
+        /// </summary>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task<long> GetVersion(CancellationToken token);
     }
 }

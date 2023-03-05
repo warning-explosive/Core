@@ -34,6 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                                                 IDisposable
     {
         private const string DatabaseExistsCommandText = @"select exists(select * from pg_catalog.pg_database where datname = @param_0);";
+        private const string TransactionIdCommandText = "select txid_current()";
 
         private readonly SqlDatabaseSettings _sqlDatabaseSettings;
         private readonly OrmSettings _ormSettings;
@@ -97,6 +98,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .TryAsync()
                 .Catch<Exception>()
                 .Invoke(static exception => exception.Flatten().All(ex => !ex.DatabaseDoesNotExist()), token);
+        }
+
+        public Task<long> GetVersion(IAdvancedDatabaseTransaction transaction, CancellationToken token)
+        {
+            return ExecuteScalar<long>(
+                transaction,
+                new SqlCommand(TransactionIdCommandText, Array.Empty<SqlCommandParameter>(), false),
+                token);
         }
 
         public async ValueTask<IDbConnection> OpenConnection(CancellationToken token)
@@ -353,11 +362,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         [SuppressMessage("Analysis", "CA1502", Justification = "NpgsqlParameter<T>")]
         private NpgsqlParameter GetNpgsqlParameter(SqlCommandParameter parameter)
         {
-            var (name, value, type, isJsonValue) = parameter;
+            var (name, value, type) = parameter;
 
             if (!TryCast(name, value, out var npgsqlParameter)
                 && !TryInfer(name, value, type, out npgsqlParameter)
-                && !TrySerialize(name, value, type, isJsonValue, _jsonSerializer, out npgsqlParameter))
+                && !TrySerialize(name, value, type, _jsonSerializer, out npgsqlParameter))
             {
                 throw new NotSupportedException($"Not supported sql command parameter: {parameter}");
             }
@@ -507,11 +516,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 string name,
                 object? value,
                 Type type,
-                bool isJsonValue,
                 IJsonSerializer jsonSerializer,
                 [NotNullWhen(true)] out NpgsqlParameter? npgsqlParameter)
             {
-                if (isJsonValue)
+                if (!type.IsPrimitive() && !type.IsCollection())
                 {
                     object jsonValue = value != null
                         ? jsonSerializer.SerializeObject(value, type)

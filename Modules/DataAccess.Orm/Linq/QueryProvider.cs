@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
+    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
@@ -11,6 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
+    using Connection;
     using Transaction;
 
     [Component(EnLifestyle.Singleton)]
@@ -19,22 +21,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                                    IResolvable<IQueryProvider>
     {
         private readonly IDependencyContainer _dependencyContainer;
+        private readonly IDatabaseConnectionProvider _connectionProvider;
         private readonly IExpressionTranslator _translator;
         private readonly ICommandMaterializerComposite _materializer;
 
         public QueryProvider(
             IDependencyContainer dependencyContainer,
+            IDatabaseConnectionProvider connectionProvider,
             IExpressionTranslator translator,
             ICommandMaterializerComposite materializer)
         {
             _dependencyContainer = dependencyContainer;
+            _connectionProvider = connectionProvider;
             _translator = translator;
             _materializer = materializer;
         }
 
+        public event EventHandler<ExecutedExpressionEventArgs>? ExpressionExecuted;
+
         IQueryable IQueryProvider.CreateQuery(Expression expression)
         {
-            var itemType = expression.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
+            var itemType = expression.Type.ExtractQueryableItemType();
 
             return (IQueryable)Activator.CreateInstance(
                 typeof(Queryable<>).MakeGenericType(itemType),
@@ -58,7 +65,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 
         public TResult Execute<TResult>(Expression expression)
         {
-            var itemType = expression.Type.ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>));
+            var itemType = expression.Type.ExtractQueryableItemType();
 
             var isScalar = typeof(TResult) == itemType;
 
@@ -99,6 +106,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
             }
         }
 
+        public async Task<long> ExecuteNonQueryAsync(Expression expression, CancellationToken token)
+        {
+            var transaction = _dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
+
+            var command = _translator.Translate(expression);
+
+            var result = await _connectionProvider
+                .Execute(transaction, command, token)
+                .ConfigureAwait(false);
+
+            ExpressionExecuted?.Invoke(this, new ExecutedExpressionEventArgs(expression));
+
+            return result;
+        }
+
         public async Task<T> ExecuteScalarAsync<T>(Expression expression, CancellationToken token)
         {
             var transaction = _dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
@@ -117,16 +139,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 buffer.Add(item);
             }
 
-            return buffer.SingleOrDefault();
+            var result = buffer.SingleOrDefault();
+
+            ExpressionExecuted?.Invoke(this, new ExecutedExpressionEventArgs(expression));
+
+            return result;
         }
 
-        public IAsyncEnumerable<T> ExecuteAsync<T>(Expression expression, CancellationToken token)
+        public async IAsyncEnumerable<T> ExecuteAsync<T>(
+            Expression expression,
+            [EnumeratorCancellation] CancellationToken token)
         {
             var transaction = _dependencyContainer.Resolve<IAdvancedDatabaseTransaction>();
 
             var command = _translator.Translate(expression);
 
-            return _materializer.Materialize<T>(transaction, command, token);
+            var asyncSource = _materializer
+                .Materialize<T>(transaction, command, token)
+                .WithCancellation(token)
+                .ConfigureAwait(false);
+
+            await foreach (var item in asyncSource)
+            {
+                yield return item;
+            }
+
+            ExpressionExecuted?.Invoke(this, new ExecutedExpressionEventArgs(expression));
         }
 
         private static T AsScalar<T>(Task<T> task)

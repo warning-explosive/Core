@@ -1,0 +1,55 @@
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Linq;
+    using Orm.Transaction;
+    using SpaceEngineers.Core.DataAccess.Api.Model;
+
+    /// <summary>
+    /// CreateEntityChange
+    /// </summary>
+    public class CreateEntityChange : ITransactionalChange
+    {
+        private readonly IReadOnlyCollection<IDatabaseEntity> _entities;
+        private readonly EnInsertBehavior _insertBehavior;
+
+        /// <summary> .cctor </summary>
+        /// <param name="entities">Entities</param>
+        /// <param name="insertBehavior">Insert behavior</param>
+        public CreateEntityChange(
+            IReadOnlyCollection<IDatabaseEntity> entities,
+            EnInsertBehavior insertBehavior)
+        {
+            if (!entities.Any())
+            {
+                throw new InvalidOperationException("Entities are empty");
+            }
+
+            _entities = entities;
+            _insertBehavior = insertBehavior;
+        }
+
+        /// <inheritdoc />
+        public Task Apply(
+            IAdvancedDatabaseTransaction transaction,
+            CancellationToken token)
+        {
+            return transaction
+                .Insert(_entities, _insertBehavior)
+                .Invoke(token);
+        }
+
+        /// <inheritdoc />
+        public void Apply(ITransactionalStore transactionalStore)
+        {
+            foreach (var entity in _entities)
+            {
+                transactionalStore.Store(entity);
+            }
+        }
+    }
+}

@@ -7,6 +7,7 @@
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using Basics.Attributes;
     using Orm.Linq;
 
@@ -27,7 +28,12 @@
 
             if (visitedNode is MethodCallExpression { Object: ConstantExpression or null } methodCallExpression)
             {
-                if (methodCallExpression.Method.IsQueryRoot())
+                var method = methodCallExpression.Method.GenericMethodDefinitionOrSelf();
+
+                if (method == LinqMethods.RepositoryAll()
+                    || method == LinqMethods.RepositoryInsert()
+                    || method == LinqMethods.RepositoryUpdate()
+                    || method == LinqMethods.RepositoryDelete())
                 {
                     return visitedNode;
                 }

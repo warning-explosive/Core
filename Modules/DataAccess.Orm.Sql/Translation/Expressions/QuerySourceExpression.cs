@@ -1,14 +1,11 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using Basics;
 
     /// <summary>
     /// QuerySourceExpression
     /// </summary>
-    public class QuerySourceExpression : ISqlExpression,
-                                         IEquatable<QuerySourceExpression>,
-                                         ISafelyEquatable<QuerySourceExpression>
+    public class QuerySourceExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -17,57 +14,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Type = type;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Type
+        /// </summary>
         public Type Type { get; }
-
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left QuerySourceExpression</param>
-        /// <param name="right">Right QuerySourceExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(QuerySourceExpression? left, QuerySourceExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left QuerySourceExpression</param>
-        /// <param name="right">Right QuerySourceExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(QuerySourceExpression? left, QuerySourceExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Type);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(QuerySourceExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(QuerySourceExpression other)
-        {
-            return Type == other.Type;
-        }
-
-        #endregion
     }
 }

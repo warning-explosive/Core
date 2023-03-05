@@ -13,11 +13,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                                                      IResolvable<ISqlExpressionTranslator<NamedSourceExpression>>,
                                                      ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public NamedSourceExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
+        public NamedSourceExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 sb.Append('(');
             }
 
-            sb.Append(_sqlExpressionTranslator.Translate(expression.Source, depth));
+            sb.Append(_translator.Translate(expression.Source, depth));
 
             if (parenthesis)
             {
@@ -46,7 +46,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             }
 
             sb.Append(' ');
-            sb.Append(_sqlExpressionTranslator.Translate(expression.Parameter, depth));
+            sb.Append(_translator.Translate(expression.Parameter, depth));
 
             return sb.ToString();
         }

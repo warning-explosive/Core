@@ -11,7 +11,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     /// Class that represents query to the database
     /// </summary>
     /// <typeparam name="T">T type-argument</typeparam>
-    public class Queryable<T> : IAsyncQueryable<T>, ICachedQueryable<T>
+    public class Queryable<T> : IQueryable<T>,
+                                IOrderedQueryable<T>,
+                                IAsyncEnumerable<T>,
+                                IInsertQueryable<T>,
+                                IUpdateQueryable<T>,
+                                ISetUpdateQueryable<T>,
+                                IFilteredUpdateQueryable<T>,
+                                IDeleteQueryable<T>,
+                                IFilteredDeleteQueryable<T>,
+                                ICachedQueryable<T>
     {
         private readonly IAsyncQueryProvider _queryProvider;
         private readonly Expression _expression;
@@ -31,14 +40,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <inheritdoc />
         public IQueryProvider Provider => _queryProvider;
 
-        /// <inheritdoc />
-        public Expression Expression => _expression;
+        /// <summary>
+        /// AsyncQueryProvider
+        /// </summary>
+        public IAsyncQueryProvider AsyncQueryProvider => _queryProvider;
 
         /// <inheritdoc />
-        public IQueryable<T> AsQueryable()
-        {
-            return this;
-        }
+        public Expression Expression => _expression;
 
         /// <inheritdoc />
         public IEnumerator<T> GetEnumerator()

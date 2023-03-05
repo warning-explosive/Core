@@ -1,14 +1,11 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using Basics;
 
     /// <summary>
     /// JoinExpression
     /// </summary>
     public class JoinExpression : ISqlExpression,
-                                  IEquatable<JoinExpression>,
-                                  ISafelyEquatable<JoinExpression>,
                                   IApplicable<JoinExpression>,
                                   IApplicable<NamedSourceExpression>,
                                   IApplicable<BinaryExpression>
@@ -32,9 +29,6 @@
         {
         }
 
-        /// <inheritdoc />
-        public Type Type => typeof(ValueTuple<,>).MakeGenericType(LeftSource.Type, RightSource.Type);
-
         /// <summary>
         /// Left source expression
         /// </summary>
@@ -49,59 +43,6 @@
         /// On expression
         /// </summary>
         public ISqlExpression On { get; private set; }
-
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left JoinExpression</param>
-        /// <param name="right">Right JoinExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(JoinExpression? left, JoinExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left JoinExpression</param>
-        /// <param name="right">Right JoinExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(JoinExpression? left, JoinExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Type, LeftSource, RightSource, On);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(JoinExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(JoinExpression other)
-        {
-            return Type == other.Type
-                   && LeftSource.Equals(other.LeftSource)
-                   && RightSource.Equals(other.RightSource)
-                   && On.Equals(other.On);
-        }
-
-        #endregion
 
         #region IApplicable
 

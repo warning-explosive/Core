@@ -13,11 +13,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                                                 IResolvable<ISqlExpressionTranslator<FilterExpression>>,
                                                 ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public FilterExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
+        public FilterExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -31,11 +31,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(_sqlExpressionTranslator.Translate(expression.Source, depth));
+            sb.AppendLine(_translator.Translate(expression.Source, depth));
             sb.Append(new string('\t', depth));
             sb.AppendLine("WHERE");
             sb.Append(new string('\t', depth + 1));
-            sb.Append(_sqlExpressionTranslator.Translate(expression.Predicate, depth));
+            sb.Append(_translator.Translate(expression.Predicate, depth));
 
             return sb.ToString();
         }

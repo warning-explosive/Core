@@ -9,11 +9,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     {
         private string? _cacheKey;
 
-        public bool TryGetCacheKey(Expression expression, [NotNullWhen(true)] out string? cacheKey)
+        private ExtractExpressionCacheKeyExpressionVisitor()
         {
-            _ = Visit(expression);
+        }
 
-            cacheKey = _cacheKey;
+        public static bool TryGetCacheKey(Expression expression, [NotNullWhen(true)] out string? cacheKey)
+        {
+            var visitor = new ExtractExpressionCacheKeyExpressionVisitor();
+
+            _ = visitor.Visit(expression);
+
+            cacheKey = visitor._cacheKey;
 
             return cacheKey != null;
         }

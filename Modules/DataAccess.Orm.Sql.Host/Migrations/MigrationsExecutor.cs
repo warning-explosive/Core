@@ -6,20 +6,19 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Persisting;
-    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot;
     using CrossCuttingConcerns.Logging;
     using Execution;
+    using Linq;
     using Microsoft.Extensions.Logging;
     using Model;
     using Orm.Host.Abstractions;
     using Orm.Linq;
+    using Orm.Transaction;
     using Sql.Model;
-    using Transaction;
     using Translation;
 
     [Component(EnLifestyle.Singleton)]
@@ -129,7 +128,8 @@
                 name);
 
             await transaction
-                .Insert(new[] { appliedMigration }, EnInsertBehavior.Default, token)
+                .Insert(new[] { appliedMigration }, EnInsertBehavior.Default)
+                .Invoke(token)
                 .ConfigureAwait(false);
 
             static async Task<int> GetMigrationIndex(

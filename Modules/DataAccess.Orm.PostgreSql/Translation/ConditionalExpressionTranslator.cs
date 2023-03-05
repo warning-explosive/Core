@@ -13,11 +13,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                                                      IResolvable<ISqlExpressionTranslator<ConditionalExpression>>,
                                                      ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public ConditionalExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
+        public ConditionalExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -32,11 +32,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             var sb = new StringBuilder();
 
             sb.Append("CASE WHEN ");
-            sb.Append(_sqlExpressionTranslator.Translate(expression.When, depth));
+            sb.Append(_translator.Translate(expression.When, depth));
             sb.Append(" THEN ");
-            sb.Append(_sqlExpressionTranslator.Translate(expression.Then, depth));
+            sb.Append(_translator.Translate(expression.Then, depth));
             sb.Append(" ELSE ");
-            sb.Append(_sqlExpressionTranslator.Translate(expression.Else, depth));
+            sb.Append(_translator.Translate(expression.Else, depth));
             sb.Append(" END");
 
             return sb.ToString();

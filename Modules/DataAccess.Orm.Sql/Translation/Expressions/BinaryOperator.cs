@@ -6,6 +6,11 @@
     public enum BinaryOperator
     {
         /// <summary>
+        /// Assign (=)
+        /// </summary>
+        Assign,
+
+        /// <summary>
         /// Equal (==)
         /// </summary>
         Equal,

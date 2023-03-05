@@ -9,36 +9,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
     internal class CompactExpressionVisitor : SqlExpressionVisitorBase
     {
-        private readonly IReadOnlyDictionary<string, ISqlExpression> _replacements;
+        private readonly IReadOnlyDictionary<string, ITypedSqlExpression> _replacements;
         private readonly Stack<string> _scope;
 
         public CompactExpressionVisitor(ProjectionExpression projection)
         {
             _replacements = projection
-                .Bindings
-                .OfType<IBindingSqlExpression>()
+                .Expressions
                 .ToDictionary(
-                    binding => binding.Name,
-                    NamedBindingExpression.Unwrap,
+                    expression => (expression as ColumnExpression)?.Name ?? (expression as RenameExpression).Name,
+                    expression => (ITypedSqlExpression)RenameExpression.UnwrapRenames(expression),
                     StringComparer.OrdinalIgnoreCase);
 
             _scope = new Stack<string>();
         }
 
-        protected override ISqlExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
+        protected override ISqlExpression VisitColumnExpression(ColumnExpression columnExpression)
         {
             using (Disposable.Create(_scope, Push, Pop))
             {
-                return simpleBindingExpression.Source is ParameterExpression
+                return columnExpression.Source is ParameterExpression
                     && _replacements.TryGetValue(_scope.ToString("_"), out var replacement)
-                    && replacement.Type == simpleBindingExpression.Type
+                    && replacement.Type == columnExpression.Type
                     ? replacement
-                    : base.VisitSimpleBinding(simpleBindingExpression);
+                    : base.VisitColumnExpression(columnExpression);
             }
 
             void Push(Stack<string> scope)
             {
-                scope.Push(simpleBindingExpression.Member.Name);
+                scope.Push(columnExpression.Member.Name);
             }
 
             void Pop(Stack<string> scope)
@@ -50,8 +49,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         protected override ISqlExpression VisitParameter(ParameterExpression parameterExpression)
         {
             return _replacements.Count == 1
-                   && _replacements.Single().Value is { } binding
-                ? binding
+                   && _replacements.Single().Value is { } expression
+                ? expression
                 : parameterExpression;
         }
     }

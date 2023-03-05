@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq.Expressions;
     using Expressions;
 
     internal class TranslatedSqlExpression : SqlExpression
@@ -9,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         public TranslatedSqlExpression(
             ISqlExpression expression,
             string commandText,
-            Func<object, IReadOnlyCollection<SqlCommandParameter>> commandParametersExtractor)
+            Func<Expression, IReadOnlyCollection<SqlCommandParameter>> commandParametersExtractor)
             : base(expression, commandParametersExtractor)
         {
             CommandText = commandText;

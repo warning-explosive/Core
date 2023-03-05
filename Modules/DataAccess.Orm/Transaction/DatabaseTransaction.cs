@@ -5,13 +5,9 @@
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
-    using Api.Persisting;
-    using Api.Reading;
-    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -27,7 +23,6 @@
                                          IResolvable<IDatabaseContext>
     {
         private readonly IDatabaseConnectionProvider _connectionProvider;
-        private readonly IReadRepository _readRepository;
         private readonly IRepository _repository;
 
         private readonly List<ITransactionalChange> _changes;
@@ -39,14 +34,14 @@
         [SuppressMessage("Analysis", "CA2213", Justification = "disposed with Interlocked.Exchange")]
         private IDbTransaction? _transaction;
 
+        private long? _version;
+
         public DatabaseTransaction(
             IDatabaseConnectionProvider connectionProvider,
-            IReadRepository readRepository,
             IRepository repository,
             ITransactionalStore transactionalStore)
         {
             _connectionProvider = connectionProvider;
-            _readRepository = readRepository;
             _repository = repository;
 
             Store = transactionalStore;
@@ -55,9 +50,7 @@
             _commands = new List<ICommand>();
         }
 
-        public bool HasChanges => _changes.Any();
-
-        public IReadOnlyCollection<ICommand> Commands => _commands;
+        #region IAdvancedDatabaseTransaction
 
         public IDbTransaction DbTransaction => _transaction ?? throw new InvalidOperationException("Transaction should be opened before any interactions with it");
 
@@ -102,68 +95,80 @@
             }
         }
 
+        public bool HasChanges => _changes.Any();
+
+        public IReadOnlyCollection<ICommand> Commands => _commands;
+
         public bool Connected => _connection != null;
 
         public ITransactionalStore Store { get; }
+
+        public void CollectChange(ITransactionalChange change)
+        {
+            _changes.Add(change);
+            Store.Apply(change);
+        }
+
+        public void CollectCommand(ICommand command)
+        {
+            _commands.Add(command);
+        }
+
+        public async Task<long> GetVersion(CancellationToken token)
+        {
+            _version ??= await _connectionProvider
+                .GetVersion(this, token)
+                .ConfigureAwait(false);
+
+            return _version.Value;
+        }
+
+        #endregion
 
         #region IDatabaseContext
 
         public IQueryable<TEntity> All<TEntity>()
             where TEntity : IUniqueIdentified
         {
-            return _readRepository.All<TEntity>();
+            return _repository.All<TEntity>();
         }
 
         public Task<TEntity> Single<TEntity, TKey>(TKey key, CancellationToken token)
             where TEntity : IUniqueIdentified
             where TKey : notnull
         {
-            return _readRepository.Single<TEntity, TKey>(key, token);
+            return _repository.Single<TEntity, TKey>(key, token);
         }
 
         public Task<TEntity?> SingleOrDefault<TEntity, TKey>(TKey key, CancellationToken token)
             where TEntity : IUniqueIdentified
             where TKey : notnull
         {
-            return _readRepository.SingleOrDefault<TEntity, TKey>(key, token);
+            return _repository.SingleOrDefault<TEntity, TKey>(key, token);
         }
 
-        public Task<long> Insert(
+        public IInsertQueryable<IDatabaseEntity> Insert(
             IReadOnlyCollection<IDatabaseEntity> entities,
-            EnInsertBehavior insertBehavior,
-            CancellationToken token)
+            EnInsertBehavior insertBehavior)
         {
-            return _repository.Insert(this, entities, insertBehavior, token);
+            return _repository.Insert(this, entities, insertBehavior);
         }
 
-        public Task<long> Update<TEntity, TValue>(
-            Expression<Func<TEntity, TValue>> accessor,
-            Expression<Func<TEntity, TValue>> valueProducer,
-            Expression<Func<TEntity, bool>> predicate,
-            CancellationToken token)
+        public IUpdateQueryable<TEntity> Update<TEntity>()
             where TEntity : IDatabaseEntity
         {
-            return _repository.Update(this, accessor, valueProducer, predicate, token);
+            return _repository.Update<TEntity>(this);
         }
 
-        public Task<long> Update<TEntity>(
-            IReadOnlyCollection<UpdateInfo<TEntity>> infos,
-            Expression<Func<TEntity, bool>> predicate,
-            CancellationToken token)
+        public IDeleteQueryable<TEntity> Delete<TEntity>()
             where TEntity : IDatabaseEntity
         {
-            return _repository.Update(this, infos, predicate, token);
-        }
-
-        public Task<long> Delete<TEntity>(
-            Expression<Func<TEntity, bool>> predicate,
-            CancellationToken token)
-            where TEntity : IDatabaseEntity
-        {
-            return _repository.Delete(this, predicate, token);
+            return _repository.Delete<TEntity>(this);
         }
 
         #endregion
+
+        #region IDatabaseTransaction
 
         public async Task<IAsyncDisposable> OpenScope(bool commit, CancellationToken token)
         {
@@ -235,20 +240,15 @@
             }
         }
 
+        #endregion
+
+        #region IDissposable
+
         public void Dispose()
         {
             Close(false, CancellationToken.None).Wait();
         }
 
-        public void CollectChange(ITransactionalChange change)
-        {
-            _changes.Add(change);
-            Store.Apply(change);
-        }
-
-        public void CollectCommand(ICommand command)
-        {
-            _commands.Add(command);
-        }
+        #endregion
     }
 }

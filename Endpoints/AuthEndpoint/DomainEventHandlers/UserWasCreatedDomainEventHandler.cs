@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using DataAccess.Api.Persisting;
-    using DataAccess.Api.Transaction;
+    using DataAccess.Orm.Sql.Linq;
+    using DataAccess.Orm.Transaction;
     using Domain;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.EventSourcing;
@@ -35,7 +35,8 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
             var user = new DatabaseModel.User(args.DomainEvent.AggregateId, args.DomainEvent.Username.ToString());
 
             await _databaseContext
-               .Insert(new[] { user }, EnInsertBehavior.Default, token)
+               .Insert(new[] { user }, EnInsertBehavior.Default)
+               .Invoke(token)
                .ConfigureAwait(false);
         }
     }

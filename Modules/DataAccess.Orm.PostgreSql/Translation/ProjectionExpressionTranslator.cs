@@ -15,11 +15,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                                                     IResolvable<ISqlExpressionTranslator<ProjectionExpression>>,
                                                     ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public ProjectionExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
+        public ProjectionExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -35,29 +35,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             sb.AppendLine(expression.IsDistinct ? "SELECT DISTINCT" : "SELECT");
 
-            if (expression.Bindings.Any())
+            if (expression.Expressions.Any())
             {
-                var lastBindingIndex = expression.Bindings.Count - 1;
-
-                expression
-                    .Bindings
-                    .Select(binding => _sqlExpressionTranslator.Translate(binding, depth))
-                    .Each((binding, i) =>
-                    {
-                        sb.Append(new string('\t', depth + 1));
-                        sb.Append(binding);
-                        var ending = i < lastBindingIndex
-                            ? ","
-                            : string.Empty;
-
-                        sb.AppendLine(ending);
-                    });
+                sb.AppendLine(expression
+                    .Expressions
+                    .Select(column => new string('\t', depth + 1) + _translator.Translate(column, depth))
+                    .ToString("," + Environment.NewLine));
             }
 
             sb.Append(new string('\t', depth));
             sb.AppendLine("FROM");
             sb.Append(new string('\t', depth + 1));
-            sb.Append(_sqlExpressionTranslator.Translate(expression.Source, depth + 1));
+            sb.Append(_translator.Translate(expression.Source, depth + 1));
 
             return sb.ToString();
         }

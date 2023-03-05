@@ -82,7 +82,7 @@ namespace SpaceEngineers.Core.Basics
             this Expression expression,
             ParameterExpression parameterExpression)
         {
-            return new ReplaceParameterVisitor(parameterExpression).Visit(expression);
+            return ReplaceParameterVisitor.Replace(expression, parameterExpression);
         }
 
         /// <summary>
@@ -100,16 +100,21 @@ namespace SpaceEngineers.Core.Basics
                 ExpressionType.ConvertChecked
             };
 
-            return new UnwrapUnaryExpressionVisitor(expressionTypes).Visit(expression);
+            return UnwrapUnaryExpressionVisitor.Unwrap(expression, expressionTypes);
         }
 
         private class ReplaceParameterVisitor : ExpressionVisitor
         {
-            private readonly Expression _replacement;
+            private readonly ParameterExpression _replacement;
 
-            public ReplaceParameterVisitor(Expression replacement)
+            private ReplaceParameterVisitor(ParameterExpression replacement)
             {
                 _replacement = replacement;
+            }
+
+            public static Expression Replace(Expression expression, ParameterExpression replacement)
+            {
+                return new ReplaceParameterVisitor(replacement).Visit(expression);
             }
 
             protected override Expression VisitParameter(ParameterExpression node)
@@ -122,9 +127,14 @@ namespace SpaceEngineers.Core.Basics
         {
             private readonly ExpressionType[] _expressionTypes;
 
-            public UnwrapUnaryExpressionVisitor(ExpressionType[] expressionTypes)
+            private UnwrapUnaryExpressionVisitor(ExpressionType[] expressionTypes)
             {
                 _expressionTypes = expressionTypes;
+            }
+
+            public static Expression Unwrap(Expression expression, ExpressionType[] expressionTypes)
+            {
+                return new UnwrapUnaryExpressionVisitor(expressionTypes).Visit(expression);
             }
 
             protected override Expression VisitUnary(UnaryExpression node)

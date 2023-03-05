@@ -74,7 +74,7 @@
       <Compile Update="Translation\LikeMemberInfoTranslator.cs">
         <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\Expressions\NamedSourceExpression.cs">
+      <Compile Update="Translation\Expressions\RenamedSourceExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\FilterExpression.cs">
@@ -83,13 +83,13 @@
       <Compile Update="Translation\Expressions\ProjectionExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\Expressions\NamedBindingExpression.cs">
-        <DependentUpon>IBindingSqlExpression.cs</DependentUpon>
+      <Compile Update="Translation\Expressions\RenameExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\Expressions\SimpleBindingExpression.cs">
-        <DependentUpon>IBindingSqlExpression.cs</DependentUpon>
+      <Compile Update="Translation\Expressions\ColumnExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\Expressions\NewExpression.cs">
+      <Compile Update="Translation\Expressions\RenewExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\ConditionalExpression.cs">
@@ -105,9 +105,6 @@
         <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\QuerySourceExpression.cs">
-        <DependentUpon>ISqlExpression.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\Expressions\IBindingSqlExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\BinaryExpression.cs">
@@ -137,14 +134,11 @@
       <Compile Update="Translation\ExtractRelationsExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\ReplaceJoinBindingsVisitor.cs">
+      <Compile Update="Translation\ReplaceJoinExpressionsVisitor.cs">
         <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ExtractParametersVisitor.cs">
         <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Translation\ExtractMembersChainExpressionVisitor.cs">
-        <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\RowsFetchLimitExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
@@ -176,7 +170,7 @@
       <Compile Update="Translation\Expressions\OrderByExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\Expressions\OrderByBindingExpression.cs">
+      <Compile Update="Translation\Expressions\OrderByExpressionExpression.cs">
         <DependentUpon>OrderByExpression.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\SqlExpressionTranslatorComposite.cs">
@@ -217,6 +211,42 @@
       </Compile>
       <Compile Update="Translation\ExtractExpressionCacheKeyExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\AssignMemberInfoTranslator.cs">
+        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\SetExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\InsertExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\BatchExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ValuesExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\InsertCommandExpressionVisitor.cs">
+        <DependentUpon>SqlLinqExtensions.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\DeleteExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\UpdateExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExtractUpdateQueryRootExpressionVisitor.cs">
+        <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\DeleteCommandExpressionVisitor.cs">
+        <DependentUpon>SqlLinqExtensions.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\UpdateCommandExpressionVisitor.cs">
+        <DependentUpon>SqlLinqExtensions.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\ReplaceAssignExpressionVisitor.cs">
+        <DependentUpon>UpdateEntityChange.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

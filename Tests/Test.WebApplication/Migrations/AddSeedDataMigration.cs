@@ -11,8 +11,8 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using Basics.Attributes;
     using CompositionRoot;
     using DataAccess.Api.Model;
-    using DataAccess.Api.Persisting;
     using DataAccess.Orm.Host.Abstractions;
+    using DataAccess.Orm.Sql.Linq;
     using DataAccess.Orm.Transaction;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.EventSourcing;
@@ -64,7 +64,8 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
             var userDatabaseEntity = new AuthEndpoint.DatabaseModel.User(aggregateId, username);
 
             await transaction
-                .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default, token)
+                .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default)
+                .Invoke(token)
                 .ConfigureAwait(false);
         }
     }

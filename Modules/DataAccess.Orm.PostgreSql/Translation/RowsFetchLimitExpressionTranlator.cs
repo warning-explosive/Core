@@ -14,11 +14,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                                                         IResolvable<ISqlExpressionTranslator<RowsFetchLimitExpression>>,
                                                         ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public RowsFetchLimitExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
+        public RowsFetchLimitExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -33,10 +33,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             var sb = new StringBuilder();
 
             sb.Append(new string('\t', depth));
-            sb.AppendLine(_sqlExpressionTranslator.Translate(expression.Source, depth));
+            sb.AppendLine(_translator.Translate(expression.Source, depth));
 
             sb.Append(new string('\t', depth));
-            sb.Append(CultureInfo.InvariantCulture, $"fetch first {expression.RowsFetchLimit} rows only");
+            sb.Append(CultureInfo.InvariantCulture, $"FETCH FIRST {expression.RowsFetchLimit} ROWS ONLY");
 
             return sb.ToString();
         }

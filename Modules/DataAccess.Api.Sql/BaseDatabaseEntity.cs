@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Api.Sql
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(PrimaryKey, GetType());
+            return HashCode.Combine(PrimaryKey, Version, GetType());
         }
 
         /// <inheritdoc />

@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     typeof(bool),
                     BinaryOperator.IsNot,
                     default!,
-                    new SpecialExpression(type, "NULL"));
+                    new SpecialExpression("NULL"));
 
                 return true;
             }

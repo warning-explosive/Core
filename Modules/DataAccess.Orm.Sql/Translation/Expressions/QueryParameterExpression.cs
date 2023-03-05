@@ -2,14 +2,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
     using System.Linq.Expressions;
-    using Basics;
 
     /// <summary>
     /// QueryParameterExpression
     /// </summary>
-    public class QueryParameterExpression : ISqlExpression,
-                                            IEquatable<QueryParameterExpression>,
-                                            ISafelyEquatable<QueryParameterExpression>
+    public class QueryParameterExpression : ITypedSqlExpression
     {
         /// <summary> .cctor </summary>
         /// <param name="context">TranslationContext</param>
@@ -35,58 +32,5 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// Query parameter name
         /// </summary>
         public string Name { get; }
-
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left QueryParameterExpression</param>
-        /// <param name="right">Right QueryParameterExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(QueryParameterExpression? left, QueryParameterExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left QueryParameterExpression</param>
-        /// <param name="right">Right QueryParameterExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(QueryParameterExpression? left, QueryParameterExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(
-                Type,
-                Name.GetHashCode(StringComparison.OrdinalIgnoreCase));
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(QueryParameterExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(QueryParameterExpression other)
-        {
-            return Type == other.Type
-                   && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase);
-        }
-
-        #endregion
     }
 }

@@ -86,6 +86,7 @@ namespace SpaceEngineers.Core.Basics
         public static bool IsCollection(this Type type)
         {
             return typeof(IEnumerable).IsAssignableFrom(type)
+                   && !typeof(IQueryable).IsAssignableFrom(type)
                    && type != typeof(string);
         }
 

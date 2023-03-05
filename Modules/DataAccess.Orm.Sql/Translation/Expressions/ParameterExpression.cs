@@ -1,14 +1,11 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using Basics;
 
     /// <summary>
     /// ParameterExpression
     /// </summary>
-    public class ParameterExpression : ISqlExpression,
-                                       IEquatable<ParameterExpression>,
-                                       ISafelyEquatable<ParameterExpression>
+    public class ParameterExpression : ITypedSqlExpression
     {
         private readonly Func<string> _nameProducer;
 
@@ -17,69 +14,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="type">Type</param>
         public ParameterExpression(TranslationContext context, Type type)
         {
-            Type = type;
             _nameProducer = context.NextLambdaParameterName();
+            Type = type;
         }
-
-        /// <inheritdoc />
-        public Type Type { get; }
 
         /// <summary>
         /// Name
         /// </summary>
         public string Name => _nameProducer();
 
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left ParameterExpression</param>
-        /// <param name="right">Right ParameterExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(ParameterExpression? left, ParameterExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left ParameterExpression</param>
-        /// <param name="right">Right ParameterExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(ParameterExpression? left, ParameterExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
         /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(
-                Type,
-                Name.GetHashCode(StringComparison.OrdinalIgnoreCase));
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(ParameterExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(ParameterExpression other)
-        {
-            return Type == other.Type
-                   && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase);
-        }
-
-        #endregion
+        public Type Type { get; }
     }
 }

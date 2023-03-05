@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                                                IResolvable<ISqlExpressionTranslator<UnaryExpression>>,
                                                ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
         private static readonly IReadOnlyDictionary<UnaryOperator, string> Operators
             = new Dictionary<UnaryOperator, string>
@@ -22,9 +22,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 [UnaryOperator.Not] = "NOT"
             };
 
-        public UnaryExpressionTranslator(ISqlExpressionTranslatorComposite sqlExpressionTranslatorComposite)
+        public UnaryExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _sqlExpressionTranslator = sqlExpressionTranslatorComposite;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             sb.Append(Operators[expression.Operator]);
             sb.Append(" ");
-            sb.Append(_sqlExpressionTranslator.Translate(expression.Source, depth));
+            sb.Append(_translator.Translate(expression.Source, depth));
 
             return sb.ToString();
         }

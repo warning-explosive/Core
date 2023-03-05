@@ -8,6 +8,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using CompositionRoot;
+    using Core.DataAccess.Orm.Linq;
+    using Core.DataAccess.Orm.Sql.Linq;
     using Core.DataAccess.Orm.Transaction;
     using Deduplication;
     using GenericEndpoint.UnitOfWork;
@@ -69,7 +71,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             }
 
             await transaction
-                .Update<OutboxMessage, bool>(outbox => outbox.Sent, _ => true, message => sent.Contains(message.PrimaryKey), token)
+                .Update<OutboxMessage>()
+                .Set(outbox => outbox.Sent.Assign(true))
+                .Where(message => sent.Contains(message.PrimaryKey))
+                /* TODO: .CachedExpression("6714446E-9263-42EA-A988-3B47941313BA")*/
+                .Invoke(token)
                 .ConfigureAwait(false);
         }
     }

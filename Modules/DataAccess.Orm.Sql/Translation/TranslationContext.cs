@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private int _lambdaParameterIndex;
         private int _lambdaParametersCount;
 
-        private ISqlExpression? _expression;
+        private ISqlExpression? _sqlSqlExpression;
 
         /// <summary> .cctor </summary>
         internal TranslationContext()
@@ -46,14 +46,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             _lambdaParametersCount = 0;
         }
 
-        internal ISqlExpression? Expression
+        internal System.Linq.Expressions.Expression? Expression { get; private set; }
+
+        internal ISqlExpression? SqlExpression
         {
-            get => _expression;
+            get => _sqlSqlExpression;
 
             private set
             {
                 ReverseLambdaParametersNames();
-                _expression = value;
+                _sqlSqlExpression = value;
             }
         }
 
@@ -109,12 +111,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             };
         }
 
-        internal void WithinScope<T>(T expression, Action? action = null)
+        internal void WithinScope<T>(T expression, Action action)
             where T : class, ISqlExpression
         {
             using (Disposable.Create(_stack, Push, Pop))
             {
-                action?.Invoke();
+                action.Invoke();
             }
 
             void Push(Stack<ISqlExpression> stack)
@@ -124,26 +126,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             void Pop(Stack<ISqlExpression> stack)
             {
-                var expr = (T)stack.Pop();
+                var sqlExpression = (T)stack.Pop();
 
                 if (_stack.TryPeek(out var outer))
                 {
-                    Apply(outer, expr);
+                    Apply(outer, sqlExpression);
                 }
                 else
                 {
-                    Expression = expr;
+                    SqlExpression = sqlExpression;
                 }
             }
         }
 
-        internal void WithoutScopeDuplication<T>(Func<T> sqlExpressionProducer, Action? action = null)
+        internal void WithoutScopeDuplication<T>(Func<T> sqlExpressionProducer, Action action)
             where T : class, ISqlExpression
         {
             if (_stack.TryPeek(out var outer)
                 && outer is T)
             {
-                action?.Invoke();
+                action.Invoke();
             }
             else
             {
@@ -154,8 +156,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
         internal void WithinConditionalScope(
             Func<ISqlExpression?, bool> condition,
-            Action<Action?> conditionalAction,
-            Action? action = null)
+            Action<Action> conditionalAction,
+            Action action)
         {
             if (condition(Parent))
             {
@@ -163,7 +165,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
             else
             {
-                action?.Invoke();
+                action.Invoke();
             }
         }
 
@@ -293,12 +295,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal Func<object, IReadOnlyCollection<SqlCommandParameter>> BuildCommandParametersExtractor(
+        internal Func<System.Linq.Expressions.Expression, IReadOnlyCollection<SqlCommandParameter>> BuildCommandParametersExtractor(
             ILinqExpressionPreprocessorComposite preProcessor)
         {
             return expression =>
             {
-                var visitedExpression = preProcessor.Visit((System.Linq.Expressions.Expression)expression);
+                var visitedExpression = preProcessor.Visit(expression);
 
                 return _extractors
                     .Select(pair =>
@@ -471,6 +473,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         internal void PushPath(System.Linq.Expressions.Expression expression)
         {
             _path.Push(expression);
+
+            Expression ??= expression;
         }
 
         internal void PopPath(System.Linq.Expressions.Expression expression)

@@ -5,7 +5,7 @@
 
     internal class ExtractParametersVisitor : SqlExpressionVisitorBase
     {
-        private const int BindingParameterOffset = 1_000_000;
+        private const int Offset = 1_000_000;
 
         private int _currentIndex;
 
@@ -34,15 +34,15 @@
                 parameter);
         }
 
-        protected override ISqlExpression VisitSimpleBinding(SimpleBindingExpression simpleBindingExpression)
+        protected override ISqlExpression VisitColumnExpression(ColumnExpression columnExpression)
         {
-            if (simpleBindingExpression.Source is ParameterExpression parameterExpression)
+            if (columnExpression.Source is ParameterExpression parameterExpression)
             {
-                Parameters.Add(BindingParameterOffset + _currentIndex++, parameterExpression);
-                return simpleBindingExpression;
+                Parameters.Add(Offset + _currentIndex++, parameterExpression);
+                return columnExpression;
             }
 
-            return base.VisitSimpleBinding(simpleBindingExpression);
+            return base.VisitColumnExpression(columnExpression);
         }
     }
 }

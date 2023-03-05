@@ -113,8 +113,10 @@ namespace SpaceEngineers.Core.Basics.Primitives
         public async Task Run(Func<TElement, CancellationToken, Task> callback, CancellationToken token)
         {
             using (await _exclusive.Run(token).ConfigureAwait(false))
-            using (Disposable.Create(() => _heap.RootNodeChanged += CancelScheduleOnRootNodeChanged,
-                () => _heap.RootNodeChanged -= CancelScheduleOnRootNodeChanged))
+            using (Disposable.Create(
+                       new EventHandler<RootNodeChangedEventArgs<HeapEntry<TElement, DateTime>>>(CancelScheduleOnRootNodeChanged),
+                       subscription => _heap.RootNodeChanged += subscription,
+                       subscription => _heap.RootNodeChanged -= subscription))
             {
                 while (!token.IsCancellationRequested)
                 {

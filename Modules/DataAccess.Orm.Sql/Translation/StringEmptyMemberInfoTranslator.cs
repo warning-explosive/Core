@@ -24,6 +24,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     context,
                     typeof(string),
                     static _ => System.Linq.Expressions.Expression.Constant(string.Empty, typeof(string)));
+
                 return true;
             }
 

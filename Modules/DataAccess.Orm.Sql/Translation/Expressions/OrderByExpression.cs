@@ -3,45 +3,36 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Basics;
 
     /// <summary>
     /// OrderByExpression
     /// </summary>
     public class OrderByExpression : ISqlExpression,
-                                     IEquatable<OrderByExpression>,
-                                     ISafelyEquatable<OrderByExpression>,
                                      IApplicable<OrderByExpression>,
                                      IApplicable<NamedSourceExpression>,
                                      IApplicable<QuerySourceExpression>,
                                      IApplicable<FilterExpression>,
                                      IApplicable<ProjectionExpression>,
                                      IApplicable<JoinExpression>,
-                                     IApplicable<OrderByBindingExpression>
+                                     IApplicable<OrderByExpressionExpression>
     {
-        private readonly List<ISqlExpression> _bindings;
+        private readonly List<ISqlExpression> _expressions;
 
         /// <summary> .cctor </summary>
-        /// <param name="type">Type</param>
         /// <param name="source">Source expression</param>
-        /// <param name="bindings">Order by expression bindings</param>
+        /// <param name="expressions">Order by expressions</param>
         public OrderByExpression(
-            Type type,
             ISqlExpression source,
-            IReadOnlyCollection<ISqlExpression> bindings)
+            IReadOnlyCollection<ISqlExpression> expressions)
         {
-            Type = type;
             Source = source;
-            _bindings = bindings.ToList();
+            _expressions = expressions.ToList();
         }
 
         internal OrderByExpression(Type type)
-            : this(type, null!, Array.Empty<ISqlExpression>())
+            : this(null!, Array.Empty<ISqlExpression>())
         {
         }
-
-        /// <inheritdoc />
-        public Type Type { get; }
 
         /// <summary>
         /// Source expression
@@ -49,61 +40,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public ISqlExpression Source { get; private set; }
 
         /// <summary>
-        /// Order by expression bindings
+        /// Order by expressions
         /// </summary>
-        public IReadOnlyCollection<ISqlExpression> Bindings => _bindings;
-
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left OrderByExpression</param>
-        /// <param name="right">Right OrderByExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(OrderByExpression? left, OrderByExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left OrderByExpression</param>
-        /// <param name="right">Right OrderByExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(OrderByExpression? left, OrderByExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Type, Source, Bindings);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(OrderByExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(OrderByExpression other)
-        {
-            return Type == other.Type
-                && Source.Equals(other.Source)
-                && Bindings.SequenceEqual(other.Bindings);
-        }
-
-        #endregion
+        public IReadOnlyCollection<ISqlExpression> Expressions => _expressions;
 
         #region IApplicable
 
@@ -144,9 +83,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, OrderByBindingExpression expression)
+        public void Apply(TranslationContext context, OrderByExpressionExpression expression)
         {
-            ApplyBinding(expression);
+            ApplyExpression(expression);
         }
 
         private void ApplySource(ISqlExpression expression)
@@ -159,11 +98,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Source = expression;
         }
 
-        private void ApplyBinding(ISqlExpression expression)
+        private void ApplyExpression(ISqlExpression expression)
         {
             if (Source is JoinExpression join)
             {
-                expression = expression.ReplaceJoinBindings(join, false);
+                expression = expression.ReplaceJoinExpressions(join, false);
             }
             else if (Source is ProjectionExpression projection)
             {
@@ -171,11 +110,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
                 if (projection.Source is JoinExpression projectionJoin)
                 {
-                    expression = expression.ReplaceJoinBindings(projectionJoin, false);
+                    expression = expression.ReplaceJoinExpressions(projectionJoin, false);
                 }
             }
 
-            _bindings.Add(expression);
+            _expressions.Add(expression);
         }
 
         #endregion

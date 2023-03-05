@@ -344,6 +344,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
             where T : IEquatable<T>, IComparable<T>, IComparable
         {
             private readonly BinaryHeap<T> _heap;
+            private readonly EventHandler _subscription;
 
             private int _current;
             private bool _changed;
@@ -353,7 +354,8 @@ namespace SpaceEngineers.Core.Basics.Primitives
                 _heap = heap;
                 _current = -1;
 
-                _heap.Changed += OnChanged;
+                _subscription = OnChanged;
+                _heap.Changed += _subscription;
             }
 
             public T Current
@@ -380,7 +382,7 @@ namespace SpaceEngineers.Core.Basics.Primitives
 
             public void Dispose()
             {
-                _heap.Changed -= OnChanged;
+                _heap.Changed -= _subscription;
                 Reset();
             }
 

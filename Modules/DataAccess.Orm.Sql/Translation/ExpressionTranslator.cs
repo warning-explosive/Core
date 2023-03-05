@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     {
         private readonly IModelProvider _modelProvider;
         private readonly ILinqExpressionPreprocessorComposite _preprocessor;
-        private readonly ISqlExpressionTranslatorComposite _sqlExpressionTranslator;
+        private readonly ISqlExpressionTranslatorComposite _translator;
         private readonly IEnumerable<IMemberInfoTranslator> _sqlFunctionProviders;
 
         private readonly ConcurrentDictionary<string, TranslatedSqlExpression> _cache;
@@ -27,12 +27,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         public ExpressionTranslator(
             IModelProvider modelProvider,
             ILinqExpressionPreprocessorComposite preprocessor,
-            ISqlExpressionTranslatorComposite sqlExpressionTranslator,
+            ISqlExpressionTranslatorComposite translator,
             IEnumerable<IMemberInfoTranslator> sqlFunctionProviders)
         {
             _modelProvider = modelProvider;
             _preprocessor = preprocessor;
-            _sqlExpressionTranslator = sqlExpressionTranslator;
+            _translator = translator;
             _sqlFunctionProviders = sqlFunctionProviders;
 
             _cache = new ConcurrentDictionary<string, TranslatedSqlExpression>(StringComparer.Ordinal);
@@ -42,7 +42,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         public ICommand Translate(Expression expression)
         {
             // TODO: #backlog - handle repository update/delete cache misses
-            var translatedSqlExpression = new ExtractExpressionCacheKeyExpressionVisitor().TryGetCacheKey(expression, out var cacheKey)
+            var translatedSqlExpression = ExtractExpressionCacheKeyExpressionVisitor.TryGetCacheKey(expression, out var cacheKey)
                 ? _cache.GetOrAdd(cacheKey, _factory, expression)
                 : _factory(string.Empty, expression);
 
@@ -61,13 +61,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         private TranslatedSqlExpression TranslateUnsafe(Expression expression)
         {
-            var visitor = new TranslationExpressionVisitor(new TranslationContext(), _modelProvider, _preprocessor, _sqlFunctionProviders);
-
-            var sqlExpression = visitor.Translate(_preprocessor.Visit(expression));
+            var sqlExpression = TranslationExpressionVisitor.Translate(
+                new TranslationContext(),
+                _modelProvider,
+                _preprocessor,
+                _sqlFunctionProviders,
+                expression);
 
             return new TranslatedSqlExpression(
                 sqlExpression.Expression,
-                _sqlExpressionTranslator.Translate(sqlExpression.Expression, 0),
+                _translator.Translate(sqlExpression.Expression, 0),
                 sqlExpression.CommandParametersExtractor);
         }
     }

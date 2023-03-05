@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using DataAccess.Api.Persisting;
-    using DataAccess.Api.Transaction;
+    using DataAccess.Orm.Sql.Linq;
+    using DataAccess.Orm.Transaction;
     using DatabaseEntities;
     using GenericEndpoint.Api.Abstractions;
     using Messages;
@@ -24,7 +24,9 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
         public Task Handle(Reply message, CancellationToken token)
         {
-            return _databaseContext.Insert(new[] { DatabaseEntity.Generate() }, EnInsertBehavior.Default, token);
+            return _databaseContext
+                .Insert(new[] { DatabaseEntity.Generate() }, EnInsertBehavior.Default)
+                .Invoke(token);
         }
     }
 }

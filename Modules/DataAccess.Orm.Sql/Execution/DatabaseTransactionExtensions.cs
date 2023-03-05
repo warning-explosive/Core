@@ -6,9 +6,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
     using System.Linq.Expressions;
     using System.Reflection;
     using Api.Model;
-    using Api.Transaction;
     using Basics;
     using Model;
+    using Orm.Transaction;
 
     /// <summary>
     /// DatabaseTransactionExtensions
@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            var columnName = new ExtractMemberAccessExpressionVisitor().ExtractName(columnAccessor);
+            var columnName = ExtractMemberAccessExpressionVisitor.ExtractName(columnAccessor);
 
             var table = modelProvider.Tables[typeof(TLeft)];
 
@@ -51,11 +51,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
         {
             private MemberInfo? _member;
 
-            public string ExtractName(Expression expression)
+            private ExtractMemberAccessExpressionVisitor()
             {
-                _ = Visit(expression);
+            }
 
-                return _member
+            public static string ExtractName(Expression expression)
+            {
+                var visitor = new ExtractMemberAccessExpressionVisitor();
+
+                _ = visitor.Visit(expression);
+
+                return visitor
+                    ._member
                     .EnsureNotNull($"Unable to find member name in expression: {expression}")
                     .Name;
             }

@@ -3,15 +3,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Basics;
 
     /// <summary>
     /// MethodCallExpression
     /// </summary>
-    public class MethodCallExpression : ISqlExpression,
-                                        IEquatable<MethodCallExpression>,
-                                        ISafelyEquatable<MethodCallExpression>,
-                                        IApplicable<SimpleBindingExpression>,
+    public class MethodCallExpression : ITypedSqlExpression,
+                                        IApplicable<ColumnExpression>,
                                         IApplicable<ConditionalExpression>
     {
         private readonly List<ISqlExpression> _arguments;
@@ -51,67 +48,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// </summary>
         public IReadOnlyCollection<ISqlExpression> Arguments => _arguments;
 
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left MethodCallExpression`</param>
-        /// <param name="right">Right MethodCallExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(MethodCallExpression? left, MethodCallExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left MethodCallExpression</param>
-        /// <param name="right">Right MethodCallExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(MethodCallExpression? left, MethodCallExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(
-                Type,
-                Name.GetHashCode(StringComparison.OrdinalIgnoreCase),
-                Source,
-                Arguments);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(MethodCallExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(MethodCallExpression other)
-        {
-            return Type == other.Type
-                   && Name.Equals(other.Name, StringComparison.OrdinalIgnoreCase)
-                   && Source == other.Source
-                   && Arguments.SequenceEqual(other.Arguments);
-        }
-
-        #endregion
-
         #region IApplicable
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        public void Apply(TranslationContext context, ColumnExpression expression)
         {
             ApplyInternal(expression);
         }

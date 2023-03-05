@@ -2,11 +2,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.ObjectTransformers
 {
     using System.Threading;
     using Api.Model;
-    using Api.Transaction;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.ObjectBuilder;
+    using Orm.Transaction;
 
     [Component(EnLifestyle.Scoped)]
     internal class PrimaryKeyToEntityObjectTransformer<TEntity, TKey> : IObjectTransformer<TKey, TEntity>,

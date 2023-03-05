@@ -14,11 +14,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
     using Model;
     using Orm.Linq;
     using Orm.Model;
+    using Orm.Transaction;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.DataAccess.Api.Model;
-    using Transaction;
     using Translation;
 
     [Component(EnLifestyle.Singleton)]

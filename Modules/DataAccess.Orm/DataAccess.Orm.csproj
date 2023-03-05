@@ -48,25 +48,13 @@
       <Compile Update="Linq\QueryProvider.cs">
         <DependentUpon>IAsyncQueryProvider.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\IAsyncQueryProvider.cs">
-        <DependentUpon>Queryable.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\ICommandMaterializer.cs">
         <DependentUpon>IQuery.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\IExpressionTranslator.cs">
         <DependentUpon>IQuery.cs</DependentUpon>
       </Compile>
-      <Compile Update="Transaction\UpdateEntityChange.cs">
-        <DependentUpon>ITransactionalChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Transaction\CreateEntityChange.cs">
-        <DependentUpon>ITransactionalChange.cs</DependentUpon>
-      </Compile>
       <Compile Update="Transaction\ModelChange.cs">
-        <DependentUpon>ITransactionalChange.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Transaction\DeleteEntityChange.cs">
         <DependentUpon>ITransactionalChange.cs</DependentUpon>
       </Compile>
       <Compile Update="Linq\CommandMaterializerComposite.cs">
@@ -78,11 +66,35 @@
       <Compile Update="Transaction\DatabaseTransaction.cs">
         <DependentUpon>IAdvancedDatabaseTransaction.cs</DependentUpon>
       </Compile>
-      <Compile Update="Linq\IAsyncQueryable.cs">
-        <DependentUpon>Queryable.cs</DependentUpon>
-      </Compile>
       <Compile Update="Linq\ICachedQueryable.cs">
         <DependentUpon>Queryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\IAdvancedDatabaseTransaction.cs">
+        <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IDeleteQueryable.cs">
+        <DependentUpon>Queryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IUpdateQueryable.cs">
+        <DependentUpon>Queryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IInsertQueryable.cs">
+        <DependentUpon>Queryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Repository.cs">
+        <DependentUpon>IRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ISetUpdateQueryable.cs">
+        <DependentUpon>IUpdateQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IFilteredDeleteQueryable.cs">
+        <DependentUpon>IDeleteQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IFilteredUpdateQueryable.cs">
+        <DependentUpon>IUpdateQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ExecutedExpressionEventArgs.cs">
+        <DependentUpon>QueryProvider.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

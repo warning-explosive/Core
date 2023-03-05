@@ -95,7 +95,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     + $"@{nextCommandParameterName}"
                     + nextCommandText.Substring(Math.Min(nextCommandText.Length, match.Groups[0].Index + match.Groups[0].Length));
 
-                nextCommandParameters.Add(new SqlCommandParameter(nextCommandParameterName, param.Value, param.Type, param.IsJsonValue));
+                nextCommandParameters.Add(new SqlCommandParameter(nextCommandParameterName, param.Value, param.Type));
 
                 nextIndex++;
             }

@@ -18,11 +18,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using CrossCuttingConcerns.Settings;
     using DataAccess.Api.Exceptions;
     using DataAccess.Api.Model;
-    using DataAccess.Api.Persisting;
     using DataAccess.Api.Sql.Attributes;
-    using DataAccess.Api.Transaction;
+    using DataAccess.Orm.Linq;
     using DataAccess.Orm.PostgreSql.Connection;
     using DataAccess.Orm.Sql.Execution;
+    using DataAccess.Orm.Sql.Linq;
     using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Transaction;
@@ -407,7 +407,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         var entity = DatabaseEntity.Generate(primaryKey);
 
                         _ = await transaction
-                           .Insert(new[] { entity }, EnInsertBehavior.Default, token)
+                           .Insert(new[] { entity }, EnInsertBehavior.Default)
+                           .Invoke(token)
                            .ConfigureAwait(false);
 
                         version = entity.Version;
@@ -450,7 +451,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
                         _ = await transaction
-                           .Update<DatabaseEntity, int>(entity => entity.IntField, entity => entity.IntField + 1, entity => entity.PrimaryKey == primaryKey, token)
+                           .Update<DatabaseEntity>()
+                           .Set(entity => entity.IntField.Assign(entity.IntField + 1))
+                           .Where(entity => entity.PrimaryKey == primaryKey)
+                           /* TODO: .CachedExpression("2CD18D09-05F8-4D80-AC19-96F7F524D28B")*/
+                           .Invoke(token)
                            .ConfigureAwait(false);
 
                         await sync
@@ -477,7 +482,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     await using (await transaction.OpenScope(true, token).ConfigureAwait(false))
                     {
                         _ = await transaction
-                           .Delete<DatabaseEntity>(entity => entity.PrimaryKey == primaryKey, token)
+                           .Delete<DatabaseEntity>()
+                           .Where(entity => entity.PrimaryKey == primaryKey)
+                           /* TODO: .CachedExpression("2ADC594A-13EF-4F52-BD50-0F7FF62E5462")*/
+                           .Invoke(token)
                            .ConfigureAwait(false);
 
                         await sync
@@ -720,7 +728,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 var entity = DatabaseEntity.Generate(primaryKey);
 
                 _ = await transaction
-                   .Insert(new[] { entity }, EnInsertBehavior.Default, token)
+                   .Insert(new[] { entity }, EnInsertBehavior.Default)
+                   .Invoke(token)
                    .ConfigureAwait(false);
             }
 
@@ -740,7 +749,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 CancellationToken token)
             {
                 _ = await transaction
-                   .Update<DatabaseEntity, int>(entity => entity.IntField, entity => entity.IntField + 1, entity => entity.PrimaryKey == primaryKey, token)
+                   .Update<DatabaseEntity>()
+                   .Set(entity => entity.IntField.Assign(entity.IntField + 1))
+                   .Where(entity => entity.PrimaryKey == primaryKey)
+                   /* TODO: .CachedExpression("8391A774-81D3-40C7-980D-C5F9A874C4B1")*/
+                   .Invoke(token)
                    .ConfigureAwait(false);
             }
 
@@ -750,7 +763,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 CancellationToken token)
             {
                 _ = await transaction
-                   .Delete<DatabaseEntity>(entity => entity.PrimaryKey == primaryKey, token)
+                   .Delete<DatabaseEntity>()
+                   .Where(entity => entity.PrimaryKey == primaryKey)
+                   /* TODO: .CachedExpression("32A01EBD-B109-434F-BC0D-5EDEB2341289")*/
+                   .Invoke(token)
                    .ConfigureAwait(false);
             }
         }
@@ -1200,7 +1216,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 CancellationToken token)
             {
                 var affectedRowsCount = await transaction
-                    .Delete<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage>(_ => true, token)
+                    .Delete<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage>()
+                    .Where(_ => true)
+                    /* TODO: .CachedExpression("4C8F330F-9142-486C-90BE-6F76B262487A")*/
+                    .Invoke(token)
                     .ConfigureAwait(false);
 
                 Assert.Equal(2, affectedRowsCount);

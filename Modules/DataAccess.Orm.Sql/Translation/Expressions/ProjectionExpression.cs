@@ -9,38 +9,34 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// ProjectionExpression
     /// </summary>
     public class ProjectionExpression : ISqlExpression,
-                                        IEquatable<ProjectionExpression>,
-                                        ISafelyEquatable<ProjectionExpression>,
                                         IApplicable<FilterExpression>,
                                         IApplicable<JoinExpression>,
                                         IApplicable<NamedSourceExpression>,
                                         IApplicable<NewExpression>,
-                                        IApplicable<SimpleBindingExpression>,
-                                        IApplicable<NamedBindingExpression>,
+                                        IApplicable<ColumnExpression>,
+                                        IApplicable<RenameExpression>,
                                         IApplicable<BinaryExpression>,
                                         IApplicable<UnaryExpression>,
                                         IApplicable<ConditionalExpression>,
                                         IApplicable<MethodCallExpression>
     {
-        private readonly List<ISqlExpression> _bindings;
+        private readonly List<ISqlExpression> _expressions;
 
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
         /// <param name="source">Source expression</param>
-        /// <param name="bindings">Bindings expressions</param>
+        /// <param name="expressions">Expressions</param>
         public ProjectionExpression(
             Type type,
             ISqlExpression source,
-            IEnumerable<ISqlExpression> bindings)
+            IEnumerable<ISqlExpression> expressions)
         {
             Type = type;
             Source = source;
-            IsProjectionToClass = type.IsClass
-                                  && !type.IsPrimitive()
-                                  && !type.IsCollection();
+            IsProjectionToClass = type.IsClass && !type.IsPrimitive() && !type.IsCollection();
             IsAnonymousProjection = type.IsAnonymous();
 
-            _bindings = bindings.ToList();
+            _expressions = expressions.ToList();
         }
 
         internal ProjectionExpression(Type type)
@@ -48,7 +44,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Type
+        /// </summary>
         public Type Type { get; }
 
         /// <summary>
@@ -72,64 +70,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public ISqlExpression Source { get; private set; }
 
         /// <summary>
-        /// Bindings expressions
+        /// Expressions
         /// </summary>
-        public IReadOnlyCollection<ISqlExpression> Bindings => _bindings;
-
-        #region IEquatable
-
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left ProjectionExpression</param>
-        /// <param name="right">Right ProjectionExpression</param>
-        /// <returns>equals</returns>
-        public static bool operator ==(ProjectionExpression? left, ProjectionExpression? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left ProjectionExpression</param>
-        /// <param name="right">Right ProjectionExpression</param>
-        /// <returns>not equals</returns>
-        public static bool operator !=(ProjectionExpression? left, ProjectionExpression? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Type, IsProjectionToClass, IsAnonymousProjection, IsDistinct, Source, Bindings);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        /// <inheritdoc />
-        public bool Equals(ProjectionExpression? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public bool SafeEquals(ProjectionExpression other)
-        {
-            return Type == other.Type
-                   && IsProjectionToClass == other.IsProjectionToClass
-                   && IsAnonymousProjection == other.IsAnonymousProjection
-                   && IsDistinct == other.IsDistinct
-                   && Source.Equals(other.Source)
-                   && Bindings.SequenceEqual(other.Bindings);
-        }
-
-        #endregion
+        public IReadOnlyCollection<ISqlExpression> Expressions => _expressions;
 
         #region IApplicable
 
@@ -141,39 +84,39 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SimpleBindingExpression expression)
+        public void Apply(TranslationContext context, ColumnExpression expression)
         {
-            ApplyBinding(expression);
+            ApplyExpression(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, NamedBindingExpression expression)
+        public void Apply(TranslationContext context, RenameExpression expression)
         {
-            ApplyBinding(expression);
+            ApplyExpression(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, BinaryExpression expression)
         {
-            ApplyBinding(expression);
+            ApplyExpression(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, UnaryExpression expression)
         {
-            ApplyBinding(expression);
+            ApplyExpression(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ConditionalExpression expression)
         {
-            ApplyBinding(expression);
+            ApplyExpression(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, MethodCallExpression expression)
         {
-            ApplyBinding(expression);
+            ApplyExpression(expression);
         }
 
         /// <inheritdoc />
@@ -194,11 +137,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ApplySource(expression);
         }
 
-        private void ApplyBinding(ISqlExpression expression)
+        private void ApplyExpression(ISqlExpression expression)
         {
             if (Source is JoinExpression join)
             {
-                expression = expression.ReplaceJoinBindings(join, true);
+                expression = expression.ReplaceJoinExpressions(join, true);
             }
 
             if (expression is ParameterExpression)
@@ -206,7 +149,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                 return;
             }
 
-            _bindings.Add(expression);
+            _expressions.Add(expression);
         }
 
         private void ApplySource(ISqlExpression expression)

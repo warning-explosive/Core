@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using Api.Exceptions;
     using Basics;
     using Npgsql;
-    using NpgsqlTypes;
     using Sql.Translation;
 
     internal static class PostgresExceptionExtensions
@@ -56,7 +55,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         {
             var sqlCommand = new SqlCommand(
                 command.CommandText,
-                command.Parameters.Select(param => new SqlCommandParameter(param.ParameterName, param.Value, typeof(object), param.NpgsqlDbType == NpgsqlDbType.Jsonb)).ToList());
+                command.Parameters.Select(param => new SqlCommandParameter(param.ParameterName, param.Value, typeof(object))).ToList());
 
             DatabaseException databaseException = exception.Flatten().Any(ex => ex.IsSerializationFailure())
                 ? new DatabaseConcurrentUpdateException(sqlCommand.ToString(), exception)
@@ -72,7 +71,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 .AsEnumerable<DbBatchCommand>()
                 .Select(command => new SqlCommand(
                     command.CommandText,
-                    command.Parameters.AsEnumerable<NpgsqlParameter>().Select(param => new SqlCommandParameter(param.ParameterName, param.Value, typeof(object), param.NpgsqlDbType == NpgsqlDbType.Jsonb)).ToList()))
+                    command.Parameters.AsEnumerable<NpgsqlParameter>().Select(param => new SqlCommandParameter(param.ParameterName, param.Value, typeof(object))).ToList()))
                     .Aggregate((prev, next) => prev.Merge(next, ";" + Environment.NewLine));
 
             DatabaseException databaseException = exception.Flatten().Any(ex => ex.IsSerializationFailure())

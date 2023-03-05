@@ -1,9 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
-    using System;
     using System.Collections.Generic;
-    using System.Linq.Expressions;
-    using System.Reflection;
     using Expressions;
     using ParameterExpression = Expressions.ParameterExpression;
 
@@ -39,31 +36,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         }
 
         /// <summary>
-        /// Replaces join bindings
+        /// Replaces join expressions
         /// </summary>
         /// <param name="expression">ISqlExpression</param>
         /// <param name="joinExpression">JoinExpression</param>
         /// <param name="applyNaming">Apply naming</param>
-        /// <returns>ISqlExpression with replaced join bindings</returns>
-        public static ISqlExpression ReplaceJoinBindings(
+        /// <returns>ISqlExpression with replaced join expressions</returns>
+        public static ISqlExpression ReplaceJoinExpressions(
             this ISqlExpression expression,
             JoinExpression joinExpression,
             bool applyNaming)
         {
-            return new ReplaceJoinBindingsVisitor(joinExpression, applyNaming).Visit(expression);
-        }
-
-        /// <summary>
-        /// Extracts members chain
-        /// </summary>
-        /// <param name="accessor">Accessor</param>
-        /// <typeparam name="TEntity">TEntity type-argument</typeparam>
-        /// <returns>Members chain</returns>
-        public static PropertyInfo[] ExtractMembersChain<TEntity>(this Expression<Func<TEntity, object?>> accessor)
-        {
-            var visitor = new ExtractMembersChainExpressionVisitor();
-            _ = visitor.Visit(accessor);
-            return visitor.Chain;
+            return new ReplaceJoinExpressionsVisitor(joinExpression, applyNaming).Visit(expression);
         }
     }
 }

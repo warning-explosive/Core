@@ -6,9 +6,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System.Threading;
     using System.Threading.Tasks;
     using Basics.Primitives;
+    using Orm.Transaction;
     using SpaceEngineers.Core.DataAccess.Orm.Host.Abstractions;
     using SpaceEngineers.Core.DataAccess.Orm.Linq;
-    using Transaction;
 
     /// <summary>
     /// BaseAddSeedDataMigration

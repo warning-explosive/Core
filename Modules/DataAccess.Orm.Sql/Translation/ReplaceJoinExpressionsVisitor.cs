@@ -8,23 +8,20 @@
 
     internal class ReplaceJoinExpressionsVisitor : SqlExpressionVisitorBase
     {
-        private readonly IReadOnlyDictionary<Type, ITypedSqlExpression> _replacements;
+        private readonly JoinExpression _joinExpression;
         private readonly bool _applyNaming;
 
-        public ReplaceJoinExpressionsVisitor(JoinExpression joinExpression, bool applyNaming)
-        {
-            _replacements = joinExpression
-                .ExtractParameters()
-                .GroupBy(parameter => parameter.Value.Type)
-                .ToDictionary(
-                    grp => grp.Key,
-                    grp => grp
-                        .OrderBy(parameter => parameter.Key)
-                        .Select(parameter => parameter.Value)
-                        .Cast<ITypedSqlExpression>()
-                        .First());
+        private IReadOnlyDictionary<Type, ParameterExpression>? _replacements;
 
+        private ReplaceJoinExpressionsVisitor(JoinExpression joinExpression, bool applyNaming)
+        {
+            _joinExpression = joinExpression;
             _applyNaming = applyNaming;
+        }
+
+        public static ISqlExpression Replace(ISqlExpression expression, JoinExpression joinExpression, bool applyNaming)
+        {
+            return new ReplaceJoinExpressionsVisitor(joinExpression, applyNaming).Visit(expression);
         }
 
         protected override ISqlExpression VisitColumnExpression(ColumnExpression columnExpression)
@@ -38,7 +35,10 @@
                     break;
                 }
 
-                if (!_replacements.TryGetValue(column.Type, out var replacement))
+                _replacements ??= ExtractParametersVisitor.ExtractParameters(_joinExpression);
+
+                if (!_replacements.TryGetValue(column.Type, out var parameterExpression)
+                    || parameterExpression is not ITypedSqlExpression replacement)
                 {
                     stack.Push(column);
                     continue;

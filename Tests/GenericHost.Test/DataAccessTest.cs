@@ -79,12 +79,15 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var timeout = TimeSpan.FromSeconds(60);
 
             Func<string, DirectoryInfo> settingsDirectoryProducer =
-                testDirectory => SolutionExtensions
-                   .ProjectFile()
-                   .Directory
-                   .EnsureNotNull("Project directory wasn't found")
-                   .StepInto("Settings")
-                   .StepInto(testDirectory);
+                testDirectory =>
+                {
+                    var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                               ?? throw new InvalidOperationException("Project directory wasn't found");
+
+                    return projectFileDirectory
+                        .StepInto("Settings")
+                        .StepInto(testDirectory);
+                };
 
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder>(
                 static (hostBuilder, options) => hostBuilder
@@ -408,6 +411,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                         _ = await transaction
                            .Insert(new[] { entity }, EnInsertBehavior.Default)
+                           .CachedExpression("4FC0EDC1-C658-4CA9-88A0-96DFA933AD7F")
                            .Invoke(token)
                            .ConfigureAwait(false);
 
@@ -454,7 +458,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                            .Update<DatabaseEntity>()
                            .Set(entity => entity.IntField.Assign(entity.IntField + 1))
                            .Where(entity => entity.PrimaryKey == primaryKey)
-                           /* TODO: .CachedExpression("2CD18D09-05F8-4D80-AC19-96F7F524D28B")*/
+                           .CachedExpression("2CD18D09-05F8-4D80-AC19-96F7F524D28B")
                            .Invoke(token)
                            .ConfigureAwait(false);
 
@@ -484,7 +488,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         _ = await transaction
                            .Delete<DatabaseEntity>()
                            .Where(entity => entity.PrimaryKey == primaryKey)
-                           /* TODO: .CachedExpression("2ADC594A-13EF-4F52-BD50-0F7FF62E5462")*/
+                           .CachedExpression("2ADC594A-13EF-4F52-BD50-0F7FF62E5462")
                            .Invoke(token)
                            .ConfigureAwait(false);
 
@@ -729,6 +733,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 _ = await transaction
                    .Insert(new[] { entity }, EnInsertBehavior.Default)
+                   .CachedExpression("19ECB7D0-20CC-4AB1-819E-B40E6AC56E98")
                    .Invoke(token)
                    .ConfigureAwait(false);
             }
@@ -752,7 +757,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                    .Update<DatabaseEntity>()
                    .Set(entity => entity.IntField.Assign(entity.IntField + 1))
                    .Where(entity => entity.PrimaryKey == primaryKey)
-                   /* TODO: .CachedExpression("8391A774-81D3-40C7-980D-C5F9A874C4B1")*/
+                   .CachedExpression("8391A774-81D3-40C7-980D-C5F9A874C4B1")
                    .Invoke(token)
                    .ConfigureAwait(false);
             }
@@ -765,7 +770,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 _ = await transaction
                    .Delete<DatabaseEntity>()
                    .Where(entity => entity.PrimaryKey == primaryKey)
-                   /* TODO: .CachedExpression("32A01EBD-B109-434F-BC0D-5EDEB2341289")*/
+                   .CachedExpression("32A01EBD-B109-434F-BC0D-5EDEB2341289")
                    .Invoke(token)
                    .ConfigureAwait(false);
             }
@@ -1193,22 +1198,20 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 };
             }
 
-            static Task CheckRows(
+            static async Task CheckRows(
                 IAdvancedDatabaseTransaction transaction,
                 IModelProvider modelProvider,
                 CancellationToken token)
             {
-                Assert.True(transaction.All<InboxMessage>().Any());
-                Assert.True(transaction.All<OutboxMessage>().Any());
-                Assert.True(transaction.All<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage>().Any());
-                Assert.True(transaction.All<IntegrationMessageHeader>().Any());
-                Assert.True(transaction.AllMtm<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage, IntegrationMessageHeader, Guid, Guid>(modelProvider, message => message.Headers).Any());
+                Assert.True(await transaction.All<InboxMessage>().CachedExpression("75B52E36-C22C-4FAE-BA89-E67C232ED2BE").AnyAsync(token).ConfigureAwait(false));
+                Assert.True(await transaction.All<OutboxMessage>().CachedExpression("D50AA461-3C90-42BA-AF90-FD0E059562BA").AnyAsync(token).ConfigureAwait(false));
+                Assert.True(await transaction.All<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage>().CachedExpression("C2F0D883-68FB-4887-B11E-54E2F835E552").AnyAsync(token).ConfigureAwait(false));
+                Assert.True(await transaction.All<IntegrationMessageHeader>().CachedExpression("CCAEB0A3-B95E-45D1-88FA-609B91F4737B").AnyAsync(token).ConfigureAwait(false));
+                Assert.True(await transaction.AllMtm<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage, IntegrationMessageHeader, Guid, Guid>(modelProvider, message => message.Headers).CachedExpression("04494178-C124-4BF1-8841-DEA3427A3E99").AnyAsync(token).ConfigureAwait(false));
 
-                var rowsCount = transaction.All<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage>().Count();
+                var rowsCount = await transaction.All<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage>().CachedExpression("37A34847-5A14-4D4E-928A-75683BBB1514").CountAsync(token).ConfigureAwait(false);
 
                 Assert.Equal(2, rowsCount);
-
-                return Task.CompletedTask;
             }
 
             static async Task Delete(
@@ -1218,25 +1221,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 var affectedRowsCount = await transaction
                     .Delete<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage>()
                     .Where(_ => true)
-                    /* TODO: .CachedExpression("4C8F330F-9142-486C-90BE-6F76B262487A")*/
+                    .CachedExpression("4C8F330F-9142-486C-90BE-6F76B262487A")
                     .Invoke(token)
                     .ConfigureAwait(false);
 
                 Assert.Equal(2, affectedRowsCount);
             }
 
-            static Task CheckEmptyRows(
+            static async Task CheckEmptyRows(
                 IAdvancedDatabaseTransaction transaction,
                 IModelProvider modelProvider,
                 CancellationToken token)
             {
-                Assert.False(transaction.All<InboxMessage>().Any());
-                Assert.False(transaction.All<OutboxMessage>().Any());
-                Assert.False(transaction.All<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage>().Any());
-                Assert.False(transaction.All<IntegrationMessageHeader>().Any());
-                Assert.False(transaction.AllMtm<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage, IntegrationMessageHeader, Guid, Guid>(modelProvider, message => message.Headers).Any());
-
-                return Task.CompletedTask;
+                Assert.False(await transaction.All<InboxMessage>().CachedExpression("75B52E36-C22C-4FAE-BA89-E67C232ED2BE").AnyAsync(token).ConfigureAwait(false));
+                Assert.False(await transaction.All<OutboxMessage>().CachedExpression("D50AA461-3C90-42BA-AF90-FD0E059562BA").AnyAsync(token).ConfigureAwait(false));
+                Assert.False(await transaction.All<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage>().CachedExpression("C2F0D883-68FB-4887-B11E-54E2F835E552").AnyAsync(token).ConfigureAwait(false));
+                Assert.False(await transaction.All<IntegrationMessageHeader>().CachedExpression("CCAEB0A3-B95E-45D1-88FA-609B91F4737B").AnyAsync(token).ConfigureAwait(false));
+                Assert.False(await transaction.AllMtm<SpaceEngineers.Core.GenericEndpoint.DataAccess.Deduplication.IntegrationMessage, IntegrationMessageHeader, Guid, Guid>(modelProvider, message => message.Headers).CachedExpression("04494178-C124-4BF1-8841-DEA3427A3E99").AnyAsync(token).ConfigureAwait(false));
             }
         }
     }

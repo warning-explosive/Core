@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Linq;
     using DataAccess.Orm.Transaction;
     using DatabaseEntities;
@@ -30,6 +31,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
         {
             await _databaseContext
                .Insert(new[] { DatabaseEntity.Generate() }, EnInsertBehavior.Default)
+               .CachedExpression("BD9DABE3-B49F-4D3E-ADCC-3C22B387AA14")
                .Invoke(token)
                .ConfigureAwait(false);
 

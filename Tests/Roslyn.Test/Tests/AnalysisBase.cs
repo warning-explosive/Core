@@ -49,11 +49,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             output.WriteLine($"Used framework version: {Version}");
             output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
-            var settingsDirectory = SolutionExtensions
-                .ProjectFile()
-                .Directory
-                .EnsureNotNull("Project directory not found")
-                .StepInto("Settings");
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory not found");
+
+            var settingsDirectory = projectFileDirectory.StepInto("Settings");
 
             var options = new DependencyContainerOptions()
                 .WithManualRegistrations(new AnalyzersManualRegistration())

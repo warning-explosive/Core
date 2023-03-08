@@ -80,7 +80,7 @@ namespace SpaceEngineers.Core.Basics
                     .Where(e => e.Name == "AssemblyName");
             }
 
-            string Amb(IEnumerable<XElement> source)
+            static string Amb(IEnumerable<XElement> source)
             {
                 return string.Join(Environment.NewLine, source.Select(e => e.Value));
             }
@@ -104,7 +104,7 @@ namespace SpaceEngineers.Core.Basics
                 throw new DirectoryNotFoundException($"Directory with {pattern} not found");
             }
 
-            return file.EnsureNotNull("File must exists");
+            return file ?? throw new InvalidOperationException("File must exists");
 
             bool FileExist(DirectoryInfo directoryInfo, out FileInfo? fileInfo)
             {

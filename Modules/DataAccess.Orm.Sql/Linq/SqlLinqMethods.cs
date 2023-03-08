@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
 {
+    using System;
     using System.Reflection;
     using Basics;
     using Execution;
@@ -27,8 +28,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 {
                     ArgumentTypes = new[] { typeof(string), typeof(string) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SqlExpressionsExtensions.Like()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SqlExpressionsExtensions.Like()"));
         }
 
         /// <summary>
@@ -43,8 +43,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 {
                     ArgumentTypes = new[] { typeof(object) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SqlExpressionsExtensions.IsNull()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SqlExpressionsExtensions.IsNull()"));
         }
 
         /// <summary>
@@ -59,8 +58,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 {
                     ArgumentTypes = new[] { typeof(object) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SqlExpressionsExtensions.IsNotNull()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SqlExpressionsExtensions.IsNotNull()"));
         }
     }
 }

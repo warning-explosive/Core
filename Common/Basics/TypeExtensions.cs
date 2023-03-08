@@ -343,13 +343,13 @@ namespace SpaceEngineers.Core.Basics
             where TAttribute : Attribute
         {
             return TypeInfoStorage
-                .Get(type)
-                .Attributes
-                .OfType<TAttribute>()
-                .InformativeSingleOrDefault(Amb)
-                .EnsureNotNull(() => new AttributeRequiredException(typeof(TAttribute), type));
+                       .Get(type)
+                       .Attributes
+                       .OfType<TAttribute>()
+                       .InformativeSingleOrDefault(Amb)
+                   ?? throw new AttributeRequiredException(typeof(TAttribute), type);
 
-            string Amb(IEnumerable<TAttribute> arg)
+            static string Amb(IEnumerable<TAttribute> arg)
             {
                 return $"Type has more than one {typeof(TAttribute)}";
             }
@@ -387,7 +387,7 @@ namespace SpaceEngineers.Core.Basics
                 .OfType<TAttribute>()
                 .InformativeSingleOrDefault(Amb);
 
-            string Amb(IEnumerable<TAttribute> arg)
+            static string Amb(IEnumerable<TAttribute> arg)
             {
                 return $"Type has more than one {typeof(TAttribute)}";
             }
@@ -547,26 +547,27 @@ namespace SpaceEngineers.Core.Basics
         /// <summary>
         /// Extracts required type-argument from derived class of open-generic type at specified index
         /// </summary>
-        /// <param name="typeToUnwrap">Type to unwrap</param>
+        /// <param name="source">Source type</param>
         /// <param name="openGeneric">Open generic wrapper</param>
         /// <param name="typeArgumentAt">Type argument position</param>
         /// <returns>Unwrapped type</returns>
-        public static Type ExtractGenericArgumentAt(this Type typeToUnwrap, Type openGeneric, int typeArgumentAt = 0)
+        public static Type ExtractGenericArgumentAt(this Type source, Type openGeneric, int typeArgumentAt = 0)
         {
-            return typeToUnwrap.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).Single();
+            return source.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).Single();
         }
 
         /// <summary>
         /// Extracts type-argument from derived class of open-generic type at specified index if possible
         /// </summary>
-        /// <param name="typeToUnwrap">Type to unwrap</param>
+        /// <param name="source">Source type</param>
         /// <param name="openGeneric">Open generic wrapper</param>
         /// <param name="typeArgumentAt">Type argument position</param>
         /// <returns>Unwrapped type</returns>
-        public static Type ExtractGenericArgumentAtOrSelf(this Type typeToUnwrap, Type openGeneric, int typeArgumentAt = 0)
+        public static Type ExtractGenericArgumentAtOrSelf(this Type source, Type openGeneric, int typeArgumentAt = 0)
         {
-            return typeToUnwrap.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).SingleOrDefault()
-                ?? typeToUnwrap;
+            return openGeneric == typeof(Nullable<>)
+                ? Nullable.GetUnderlyingType(source) ?? source
+                : source.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).SingleOrDefault() ?? source;
         }
 
         /// <summary>
@@ -593,12 +594,12 @@ namespace SpaceEngineers.Core.Basics
         /// <summary>
         /// Extracts required combination of type-arguments from derived class of open-generic type
         /// </summary>
-        /// <param name="typeToUnwrap">Type to unwrap</param>
+        /// <param name="source">Source type</param>
         /// <param name="openGeneric">Open generic wrapper</param>
         /// <returns>Unwrapped type</returns>
-        public static Type[] ExtractGenericArguments(this Type typeToUnwrap, Type openGeneric)
+        public static Type[] ExtractGenericArguments(this Type source, Type openGeneric)
         {
-            return typeToUnwrap.ExtractAllGenericArguments(openGeneric).Single();
+            return source.ExtractAllGenericArguments(openGeneric).Single();
         }
 
         /// <summary>

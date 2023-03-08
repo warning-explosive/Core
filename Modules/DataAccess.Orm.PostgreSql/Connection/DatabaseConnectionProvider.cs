@@ -71,9 +71,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 IncludeErrorDetail = true
             };
 
-            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStringBuilder.ConnectionString)
-                .EnableParameterLogging()
-                .UseLoggerFactory(loggerFactory);
+            var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStringBuilder.ConnectionString);
 
             foreach (var info in modelProvider.Enums)
             {

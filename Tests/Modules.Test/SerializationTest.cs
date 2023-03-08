@@ -25,11 +25,10 @@ namespace SpaceEngineers.Core.Modules.Test
         public SerializationTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var settingsDirectory = SolutionExtensions
-                .ProjectFile()
-                .Directory
-                .EnsureNotNull("Project directory not found")
-                .StepInto("Settings");
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory not found");
+
+            var settingsDirectory = projectFileDirectory.StepInto("Settings");
 
             var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)));
 

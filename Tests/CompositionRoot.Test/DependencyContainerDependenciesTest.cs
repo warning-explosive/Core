@@ -41,9 +41,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             var solutionFile = SolutionExtensions.SolutionFile();
             Output.WriteLine(solutionFile.FullName);
 
-            var ourAssembliesNames = solutionFile
-                .Directory
-                .EnsureNotNull("Solution directory wasn't found")
+            var directory = solutionFile.Directory
+                            ?? throw new InvalidOperationException("Solution directory wasn't found");
+
+            var ourAssembliesNames = directory
                 .ProjectFiles()
                 .Select(p => p.AssemblyName())
                 .ToHashSet();

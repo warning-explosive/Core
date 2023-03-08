@@ -20,10 +20,10 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         [GlobalSetup]
         public void GlobalSetup()
         {
-            _file = SolutionExtensions
-                .SolutionFile()
-                .Directory
-                .EnsureNotNull("Unable to find solution directory")
+            var solutionFileDirectory = SolutionExtensions.SolutionFile().Directory
+                                        ?? throw new InvalidOperationException("Unable to find solution directory");
+
+            _file = solutionFileDirectory
                 .StepInto("Benchmarks")
                 .StepInto("Modules.Benchmark")
                 .StepInto("Settings")

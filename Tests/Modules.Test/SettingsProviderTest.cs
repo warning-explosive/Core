@@ -24,10 +24,10 @@ namespace SpaceEngineers.Core.Modules.Test
         public SettingsProviderTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var settingsDirectory = SolutionExtensions
-                .ProjectFile()
-                .Directory
-                .EnsureNotNull("Project directory not found")
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory not found");
+
+            var settingsDirectory = projectFileDirectory
                 .StepInto("Settings")
                 .StepInto(nameof(ReadSettingsTest));
 

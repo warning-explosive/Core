@@ -13,13 +13,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         private IAdvancedDatabaseTransaction? _transaction;
         private List<Expression<Action<TEntity>>> _setExpressions;
         private Expression<Func<TEntity, bool>>? _predicate;
+        private string? _cacheKey;
 
         private UpdateCommandExpressionVisitor()
         {
             _setExpressions = new List<Expression<Action<TEntity>>>();
         }
 
-        public static (IAdvancedDatabaseTransaction, IReadOnlyCollection<Expression<Action<TEntity>>>, Expression<Func<TEntity, bool>>) Extract(Expression expression)
+        public static (IAdvancedDatabaseTransaction, IReadOnlyCollection<Expression<Action<TEntity>>>, Expression<Func<TEntity, bool>>, string) Extract(Expression expression)
         {
             var visitor = new UpdateCommandExpressionVisitor<TEntity>();
 
@@ -32,7 +33,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 throw new InvalidOperationException("Unable to determine update query root");
             }
 
-            return (visitor._transaction, visitor._setExpressions, visitor._predicate);
+            if (visitor._cacheKey == null)
+            {
+                throw new InvalidOperationException("Unable to determine cached expression extension");
+            }
+
+            return (visitor._transaction, visitor._setExpressions, visitor._predicate, visitor._cacheKey);
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -53,6 +59,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 || method == LinqMethods.RepositoryChainedUpdateSet())
             {
                 _setExpressions.Add((Expression<Action<TEntity>>)node.Arguments[1].UnwrapUnaryExpression());
+            }
+
+            if (method == LinqMethods.CachedUpdateExpression())
+            {
+                _cacheKey = (string)((ConstantExpression)node.Arguments[1]).Value;
             }
 
             return base.VisitMethodCall(node);

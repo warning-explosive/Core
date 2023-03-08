@@ -10,7 +10,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CodeActions;
     using Microsoft.CodeAnalysis.CodeFixes;
@@ -63,13 +62,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             foreach (var codeAction in actions)
             {
                 document = (await codeAction
-                       .GetOperationsAsync(CancellationToken.None)
-                       .ConfigureAwait(false))
-                   .OfType<ApplyChangesOperation>()
-                   .Single()
-                   .ChangedSolution
-                   .GetDocument(document.Id)
-                   .EnsureNotNull($"{nameof(ApplyChangesOperation.ChangedSolution)} must contains document {document.Id}");
+                               .GetOperationsAsync(CancellationToken.None)
+                               .ConfigureAwait(false))
+                           .OfType<ApplyChangesOperation>()
+                           .Single()
+                           .ChangedSolution
+                           .GetDocument(document.Id)
+                           ?? throw new InvalidOperationException($"{nameof(ApplyChangesOperation.ChangedSolution)} must contains document {document.Id}");
             }
 
             return document;

@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System;
     using System.Collections.Generic;
     using Api.Abstractions;
-    using Basics;
     using Microsoft.Extensions.DependencyInjection;
 
     internal class FrameworkDependenciesProvider : IFrameworkDependenciesProvider
@@ -12,7 +11,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         private IServiceProvider? _serviceProvider;
 
-        private IServiceProvider ServiceProvider => _serviceProvider.EnsureNotNull(RequireFrameworkDependenciesProviderSetup);
+        private IServiceProvider ServiceProvider => _serviceProvider ?? throw new InvalidOperationException(RequireFrameworkDependenciesProviderSetup);
 
         public TService? GetService<TService>()
         {

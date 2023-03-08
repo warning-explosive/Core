@@ -96,5 +96,17 @@
       <Compile Update="Linq\ExecutedExpressionEventArgs.cs">
         <DependentUpon>QueryProvider.cs</DependentUpon>
       </Compile>
+      <Compile Update="Linq\ICachedUpdateQueryable.cs">
+        <DependentUpon>IUpdateQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ICachedDeleteQueryable.cs">
+        <DependentUpon>IDeleteQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ICustomQueryable.cs">
+        <DependentUpon>Queryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ICachedInsertQueryable.cs">
+        <DependentUpon>IInsertQueryable.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

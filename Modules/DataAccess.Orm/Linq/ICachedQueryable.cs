@@ -6,7 +6,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     /// ICachedQueryable
     /// </summary>
     /// <typeparam name="T">T type-argument</typeparam>
-    public interface ICachedQueryable<out T> : IQueryable<T>
+    public interface ICachedQueryable<out T> : IQueryable<T>,
+                                               ICustomQueryable
     {
     }
 }

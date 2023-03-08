@@ -56,10 +56,10 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
 
             var hostBuilder = new TestFixture().CreateHostBuilder();
 
-            var settingsDirectory = SolutionExtensions
-                .SolutionFile()
-                .Directory
-                .EnsureNotNull("Solution directory wasn't found")
+            var solutionFileDirectory = SolutionExtensions.SolutionFile().Directory
+                                        ?? throw new InvalidOperationException("Solution directory wasn't found");
+
+            var settingsDirectory = solutionFileDirectory
                 .StepInto(nameof(Benchmarks))
                 .StepInto(AssembliesExtensions.BuildName(nameof(GenericHost), nameof(Benchmark)))
                 .StepInto("Settings")

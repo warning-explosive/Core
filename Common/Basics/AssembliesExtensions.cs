@@ -56,7 +56,7 @@ namespace SpaceEngineers.Core.Basics
         public static Assembly FindRequiredAssembly(string assemblyName)
         {
             return FindAssembly(assemblyName)
-                .EnsureNotNull($"Assembly {assemblyName} should be found in current {nameof(AppDomain)}");
+                   ?? throw new InvalidOperationException($"Assembly {assemblyName} should be found in current {nameof(AppDomain)}");
         }
 
         /// <summary>
@@ -197,7 +197,6 @@ namespace SpaceEngineers.Core.Basics
                 .ToList();
 
             var allAssemblies = AppDomain.CurrentDomain
-                .EnsureNotNull($"{nameof(AppDomain.CurrentDomain)} is null")
                 .GetAssemblies()
                 .GroupBy(assembly => assembly.GetName().Name)
                 .SelectMany(RemoveDuplicates)

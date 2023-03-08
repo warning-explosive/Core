@@ -52,12 +52,15 @@
             var timeout = TimeSpan.FromSeconds(60);
 
             Func<string, DirectoryInfo> settingsDirectoryProducer =
-                testDirectory => SolutionExtensions
-                   .ProjectFile()
-                   .Directory
-                   .EnsureNotNull("Project directory wasn't found")
-                   .StepInto("Settings")
-                   .StepInto(testDirectory);
+                testDirectory =>
+                {
+                    var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                               ?? throw new InvalidOperationException("Project directory wasn't found");
+
+                    return projectFileDirectory
+                        .StepInto("Settings")
+                        .StepInto(testDirectory);
+                };
 
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 static hostBuilder => hostBuilder

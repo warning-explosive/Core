@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using Contract;
     using Contract.Abstractions;
     using IntegrationTransport.Api.Abstractions;
@@ -42,7 +41,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             _messagesCollector = messagesCollector;
         }
 
-        public IntegrationMessage Message => _message.EnsureNotNull($"{nameof(IAdvancedIntegrationContext)} should be initialized with integration message");
+        public IntegrationMessage Message => _message ?? throw new InvalidOperationException($"{nameof(IAdvancedIntegrationContext)} should be initialized with integration message");
 
         public void Initialize(IntegrationMessage message)
         {

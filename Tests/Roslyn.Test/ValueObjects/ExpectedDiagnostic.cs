@@ -1,6 +1,6 @@
 namespace SpaceEngineers.Core.Roslyn.Test.ValueObjects
 {
-    using Basics;
+    using System;
     using Microsoft.CodeAnalysis;
 
     /// <summary>
@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.ValueObjects
         /// <summary>
         /// Expected diagnostic location
         /// </summary>
-        public DiagnosticLocation Location => _location.EnsureNotNull($"Use {nameof(WithLocation)} before equality comparision");
+        public DiagnosticLocation Location => _location ?? throw new InvalidOperationException($"Use {nameof(WithLocation)} before equality comparision");
 
         /// <summary>
         /// Diagnostic descriptor

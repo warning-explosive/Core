@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Test.WebApplication
 {
+    using System;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
@@ -28,11 +29,10 @@ namespace SpaceEngineers.Core.Test.WebApplication
         [SuppressMessage("Analysis", "CA1506", Justification = "web application composition root")]
         public static Task Main(string[] args)
         {
-            var settingsDirectory = SolutionExtensions
-                .ProjectFile()
-                .Directory
-                .EnsureNotNull("Project directory wasn't found")
-                .StepInto("Settings");
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory wasn't found");
+
+            var settingsDirectory = projectFileDirectory.StepInto("Settings");
 
             return BuildHost(settingsDirectory, args).RunAsync();
         }

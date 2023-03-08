@@ -59,8 +59,7 @@ namespace SpaceEngineers.Core.Basics
                     (acc, next) => acc
                        .EnumerateDirectories()
                        .Where(it => string.Equals(it.Name, next, StringComparison.OrdinalIgnoreCase))
-                       .InformativeSingleOrDefault(Amb)
-                       .EnsureNotNull(() => new DirectoryNotFoundException(Path.Combine(acc.FullName, next))));
+                       .InformativeSingleOrDefault(Amb) ?? throw new DirectoryNotFoundException(Path.Combine(acc.FullName, next)));
         }
 
         /// <summary>
@@ -99,10 +98,10 @@ namespace SpaceEngineers.Core.Basics
             string? extension = null)
         {
             return directory
-               .EnumerateFiles()
-               .Where(file => EqualsFileName(file, fileNameWithoutExtension, extension))
-               .InformativeSingleOrDefault(Amb)
-               .EnsureNotNull(() => new FileNotFoundException(Path.Combine(directory.FullName, fileNameWithoutExtension)));
+                       .EnumerateFiles()
+                       .Where(file => EqualsFileName(file, fileNameWithoutExtension, extension))
+                       .InformativeSingleOrDefault(Amb)
+                   ?? throw new FileNotFoundException(Path.Combine(directory.FullName, fileNameWithoutExtension));
         }
 
         /// <summary>

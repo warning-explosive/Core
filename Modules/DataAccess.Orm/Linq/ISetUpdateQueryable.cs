@@ -1,10 +1,14 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
+    using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
+
     /// <summary>
     /// ISetUpdateQueryable
     /// </summary>
     /// <typeparam name="T">T type-argument</typeparam>
-    public interface ISetUpdateQueryable<out T>
+    [SuppressMessage("Analysis", "CA1010", Justification = "custom orm features")]
+    public interface ISetUpdateQueryable<out T> : IQueryable
     {
     }
 }

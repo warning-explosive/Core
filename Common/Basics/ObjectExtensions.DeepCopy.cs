@@ -40,9 +40,8 @@
         /// <returns>Deep copy of original object</returns>
         public static T DeepCopy<T>([DisallowNull] this T original)
         {
-            return original
-                .DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
-                .EnsureNotNull<T>("Not nullable input should be copied into not nullable output");
+            return (T?)original.DeepCopyInternal(new Dictionary<object, object>(new ReferenceEqualityComparer<object>()))
+                   ?? throw new InvalidOperationException("Not nullable input should be copied into not nullable output");
         }
 
         /// <summary>

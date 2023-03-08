@@ -15,12 +15,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         private IAdvancedDatabaseTransaction? _transaction;
         private IReadOnlyCollection<IDatabaseEntity>? _entities;
         private EnInsertBehavior? _insertBehavior;
+        private string? _cacheKey;
 
         private InsertCommandExpressionVisitor()
         {
         }
 
-        public static (IDependencyContainer, IAdvancedDatabaseTransaction, IReadOnlyCollection<IDatabaseEntity>, EnInsertBehavior) Extract(Expression expression)
+        public static (IDependencyContainer, IAdvancedDatabaseTransaction, IReadOnlyCollection<IDatabaseEntity>, EnInsertBehavior, string) Extract(Expression expression)
         {
             var visitor = new InsertCommandExpressionVisitor();
 
@@ -34,7 +35,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 throw new InvalidOperationException("Unable to determine insert query root");
             }
 
-            return (visitor._dependencyContainer, visitor._transaction, visitor._entities, visitor._insertBehavior.Value);
+            if (visitor._cacheKey == null)
+            {
+                throw new InvalidOperationException("Unable to determine cached expression extension");
+            }
+
+            return (visitor._dependencyContainer, visitor._transaction, visitor._entities, visitor._insertBehavior.Value, visitor._cacheKey);
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -51,6 +57,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             if (method == LinqMethods.WithDependencyContainer())
             {
                 _dependencyContainer = (IDependencyContainer)((ConstantExpression)node.Arguments[1]).Value;
+            }
+
+            if (method == LinqMethods.CachedInsertExpression())
+            {
+                _cacheKey = (string)((ConstantExpression)node.Arguments[1]).Value;
             }
 
             return base.VisitMethodCall(node);

@@ -54,12 +54,35 @@ namespace SpaceEngineers.Core.Basics
             TKey key,
             Func<TKey, TValue> producer)
         {
-            if (dictionary.TryGetValue(key, out var value))
+            if (dictionary.TryGetValue(key, out var taken))
             {
-                return value;
+                return taken;
             }
 
-            value = producer(key);
+            var value = producer(key);
+            dictionary[key] = value;
+            return value;
+        }
+
+        /// <summary>
+        /// Get or add
+        /// </summary>
+        /// <param name="dictionary">Dictionary</param>
+        /// <param name="key">Key</param>
+        /// <param name="value">Value</param>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TValue">TValue type-argument</typeparam>
+        /// <returns>Existed or produced value</returns>
+        public static TValue GetOrAdd<TKey, TValue>(
+            this IDictionary<TKey, TValue> dictionary,
+            TKey key,
+            TValue value)
+        {
+            if (dictionary.TryGetValue(key, out var taken))
+            {
+                return taken;
+            }
+
             dictionary[key] = value;
             return value;
         }

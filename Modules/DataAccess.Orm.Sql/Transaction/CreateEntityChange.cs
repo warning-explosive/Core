@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
     using System.Threading;
     using System.Threading.Tasks;
     using Linq;
+    using Orm.Linq;
     using Orm.Transaction;
     using SpaceEngineers.Core.DataAccess.Api.Model;
 
@@ -16,13 +17,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
     {
         private readonly IReadOnlyCollection<IDatabaseEntity> _entities;
         private readonly EnInsertBehavior _insertBehavior;
+        private readonly string _cacheKey;
 
         /// <summary> .cctor </summary>
         /// <param name="entities">Entities</param>
         /// <param name="insertBehavior">Insert behavior</param>
+        /// <param name="cacheKey">Cache key</param>
         public CreateEntityChange(
             IReadOnlyCollection<IDatabaseEntity> entities,
-            EnInsertBehavior insertBehavior)
+            EnInsertBehavior insertBehavior,
+            string cacheKey)
         {
             if (!entities.Any())
             {
@@ -31,6 +35,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
 
             _entities = entities;
             _insertBehavior = insertBehavior;
+            _cacheKey = cacheKey;
         }
 
         /// <inheritdoc />
@@ -40,6 +45,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
         {
             return transaction
                 .Insert(_entities, _insertBehavior)
+                .CachedExpression(_cacheKey)
                 .Invoke(token);
         }
 

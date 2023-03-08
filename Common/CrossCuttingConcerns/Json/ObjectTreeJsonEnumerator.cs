@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 {
+    using System;
     using System.Collections;
     using System.Collections.Generic;
-    using Basics;
     using Newtonsoft.Json;
 
     internal class ObjectTreeJsonEnumerator : IEnumerator<IObjectTreeNode>
@@ -29,7 +29,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
         /// <inheritdoc />
         object? IEnumerator.Current => _current;
 
-        private IObjectTreeNode CurrentParent => _current.Parent.EnsureNotNull("Parent cannot be null");
+        private IObjectTreeNode CurrentParent => _current.Parent ?? throw new InvalidOperationException("Parent cannot be null");
 
         /// <inheritdoc />
         public bool MoveNext()
@@ -61,7 +61,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
                     read = _reader.Read();
                     break;
                 case JsonToken.PropertyName when _current is ObjectNode objectNode:
-                    var property = _reader.Value.EnsureNotNull("null named property").ToString();
+                    var property = _reader.Value?.ToString() ?? throw new InvalidOperationException("null named property");
                     objectNode.Members.Add(property, new ValueNode(objectNode, _reader.Path));
                     objectNode.CurrentProperty = property;
                     next = _current;

@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using CompositionRoot;
     using DataAccess.Api.Model;
     using DataAccess.Orm.Host.Abstractions;
+    using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Linq;
     using DataAccess.Orm.Transaction;
     using GenericDomain.Api.Abstractions;
@@ -65,6 +66,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
 
             await transaction
                 .Insert(new IDatabaseEntity[] { userDatabaseEntity }, EnInsertBehavior.Default)
+                .CachedExpression("4271E906-F346-46FB-877C-675818B148E5")
                 .Invoke(token)
                 .ConfigureAwait(false);
         }

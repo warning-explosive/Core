@@ -58,7 +58,7 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing operation</returns>
         Task Append(
-            IEnumerable<DomainEventArgs> args,
+            IReadOnlyCollection<DomainEventArgs> args,
             CancellationToken token);
     }
 }

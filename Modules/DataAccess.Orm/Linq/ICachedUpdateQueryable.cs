@@ -1,10 +1,10 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Linq
 {
     /// <summary>
-    /// IDeleteQueryable
+    /// ICachedUpdateQueryable
     /// </summary>
     /// <typeparam name="T">T type-argument</typeparam>
-    public interface IDeleteQueryable<out T> : ICustomQueryable
+    public interface ICachedUpdateQueryable<out T> : ICustomQueryable
     {
     }
 }

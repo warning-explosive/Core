@@ -126,15 +126,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             if (Source is JoinExpression join)
             {
-                expression = expression.ReplaceJoinExpressions(join, false);
+                expression = ReplaceJoinExpressionsVisitor.Replace(expression, join, false);
             }
             else if (Source is ProjectionExpression projection)
             {
-                expression = expression.CompactExpression(projection);
+                expression = CompactExpressionVisitor.Compact(expression, projection);
 
                 if (projection.Source is JoinExpression projectionJoin)
                 {
-                    expression = expression.ReplaceJoinExpressions(projectionJoin, false);
+                    expression = ReplaceJoinExpressionsVisitor.Replace(expression, projectionJoin, false);
                 }
             }
 

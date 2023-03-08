@@ -18,16 +18,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
 
         private static MethodInfo? _repositoryAll;
+        private static MethodInfo? _cachedExpression;
         private static MethodInfo? _repositoryInsert;
+        private static MethodInfo? _cachedInsertExpression;
+        private static MethodInfo? _withDependencyContainer;
         private static MethodInfo? _repositoryUpdate;
         private static MethodInfo? _repositoryUpdateWhere;
         private static MethodInfo? _repositoryUpdateSet;
         private static MethodInfo? _repositoryChainedUpdateSet;
+        private static MethodInfo? _assign;
+        private static MethodInfo? _cachedUpdateExpression;
         private static MethodInfo? _repositoryDelete;
         private static MethodInfo? _repositoryDeleteWhere;
-        private static MethodInfo? _cachedExpression;
-        private static MethodInfo? _assign;
-        private static MethodInfo? _withDependencyContainer;
+        private static MethodInfo? _cachedDeleteExpression;
         private static MethodInfo? _queryableSingle;
         private static MethodInfo? _queryableSingle2;
         private static MethodInfo? _queryableSingleOrDefault;
@@ -52,6 +55,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         private static MethodInfo? _queryableThenBy;
         private static MethodInfo? _queryableThenByDescending;
         private static MethodInfo? _queryableSelectMany;
+        private static MethodInfo? _queryableCast;
 
         /// <summary>
         /// IRepository.All
@@ -65,126 +69,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 {
                     TypeArguments = new[] { typeof(IUniqueIdentified) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.All()"));
-        }
-
-        /// <summary>
-        /// IRepository.Insert
-        /// </summary>
-        /// <returns>IRepository.Insert MethodInfo</returns>
-        public static MethodInfo RepositoryInsert()
-        {
-            return _repositoryInsert ??= new MethodFinder(typeof(IRepository),
-                    nameof(IRepository.Insert),
-                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
-                {
-                    ArgumentTypes = new[] { typeof(IDatabaseContext), typeof(IReadOnlyCollection<IDatabaseEntity>), typeof(EnInsertBehavior) }
-                }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.Insert()"));
-        }
-
-        /// <summary>
-        /// IRepository.Update
-        /// </summary>
-        /// <returns>IRepository.Update MethodInfo</returns>
-        public static MethodInfo RepositoryUpdate()
-        {
-            return _repositoryUpdate ??= new MethodFinder(typeof(IRepository),
-                    nameof(IRepository.Update),
-                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
-                {
-                    TypeArguments = new[] { typeof(IDatabaseEntity) },
-                    ArgumentTypes = new[] { typeof(IDatabaseContext) }
-                }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.Update()"));
-        }
-
-        /// <summary>
-        /// IRepository.Update.Where
-        /// </summary>
-        /// <returns>IRepository.Update.Where MethodInfo</returns>
-        public static MethodInfo RepositoryUpdateWhere()
-        {
-            return _repositoryUpdateWhere ??= new MethodFinder(typeof(LinqExtensions),
-                    nameof(LinqExtensions.Where),
-                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
-                {
-                    TypeArguments = new[] { typeof(object) },
-                    ArgumentTypes = new[] { typeof(ISetUpdateQueryable<object>), typeof(Expression<Func<object, bool>>) }
-                }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Where()"));
-        }
-
-        /// <summary>
-        /// IRepository.Update.Set
-        /// </summary>
-        /// <returns>IRepository.Update.Set MethodInfo</returns>
-        public static MethodInfo RepositoryUpdateSet()
-        {
-            return _repositoryUpdateSet ??= new MethodFinder(typeof(LinqExtensions),
-                    nameof(LinqExtensions.Set),
-                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
-                {
-                    TypeArguments = new[] { typeof(object) },
-                    ArgumentTypes = new[] { typeof(IUpdateQueryable<object>), typeof(Expression<Action<object>>) }
-                }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Set()"));
-        }
-
-        /// <summary>
-        /// IRepository.Update.Set
-        /// </summary>
-        /// <returns>IRepository.Update.Set MethodInfo</returns>
-        public static MethodInfo RepositoryChainedUpdateSet()
-        {
-            return _repositoryChainedUpdateSet ??= new MethodFinder(typeof(LinqExtensions),
-                    nameof(LinqExtensions.Set),
-                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
-                {
-                    TypeArguments = new[] { typeof(object) },
-                    ArgumentTypes = new[] { typeof(ISetUpdateQueryable<object>), typeof(Expression<Action<object>>) }
-                }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Set()"));
-        }
-
-        /// <summary>
-        /// IRepository.Delete
-        /// </summary>
-        /// <returns>IRepository.Delete MethodInfo</returns>
-        public static MethodInfo RepositoryDelete()
-        {
-            return _repositoryDelete ??= new MethodFinder(typeof(IRepository),
-                    nameof(IRepository.Delete),
-                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
-                {
-                    TypeArguments = new[] { typeof(IDatabaseEntity) },
-                    ArgumentTypes = new[] { typeof(IDatabaseContext) }
-                }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.Delete()"));
-        }
-
-        /// <summary>
-        /// IRepository.Delete.Where
-        /// </summary>
-        /// <returns>IRepository.Delete.Where MethodInfo</returns>
-        public static MethodInfo RepositoryDeleteWhere()
-        {
-            return _repositoryDeleteWhere ??= new MethodFinder(typeof(LinqExtensions),
-                    nameof(LinqExtensions.Where),
-                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
-                {
-                    TypeArguments = new[] { typeof(object) },
-                    ArgumentTypes = new[] { typeof(IDeleteQueryable<object>), typeof(Expression<Func<object, bool>>) }
-                }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Where()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.All()"));
         }
 
         /// <summary>
@@ -200,8 +85,117 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(string) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.CachedExpression()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.CachedExpression()"));
+        }
+
+        /// <summary>
+        /// IRepository.Insert
+        /// </summary>
+        /// <returns>IRepository.Insert MethodInfo</returns>
+        public static MethodInfo RepositoryInsert()
+        {
+            return _repositoryInsert ??= new MethodFinder(typeof(IRepository),
+                    nameof(IRepository.Insert),
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+                {
+                    ArgumentTypes = new[] { typeof(IDatabaseContext), typeof(IReadOnlyCollection<IDatabaseEntity>), typeof(EnInsertBehavior) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.Insert()"));
+        }
+
+        /// <summary>
+        /// LinqExtensions.CachedExpression
+        /// </summary>
+        /// <returns>LinqExtensions.CachedExpression MethodInfo</returns>
+        public static MethodInfo CachedInsertExpression()
+        {
+            return _cachedInsertExpression ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.CachedExpression),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IInsertQueryable<object>), typeof(string) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.CachedExpression()"));
+        }
+
+        /// <summary>
+        /// LinqExtensions.WithDependencyContainer
+        /// </summary>
+        /// <returns>LinqExtensions.WithDependencyContainer MethodInfo</returns>
+        public static MethodInfo WithDependencyContainer()
+        {
+            return _withDependencyContainer ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.WithDependencyContainer),
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    ArgumentTypes = new[] { typeof(IInsertQueryable<IDatabaseEntity>), typeof(IDependencyContainer) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.WithDependencyContainer()"));
+        }
+
+        /// <summary>
+        /// IRepository.Update
+        /// </summary>
+        /// <returns>IRepository.Update MethodInfo</returns>
+        public static MethodInfo RepositoryUpdate()
+        {
+            return _repositoryUpdate ??= new MethodFinder(typeof(IRepository),
+                    nameof(IRepository.Update),
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(IDatabaseEntity) },
+                    ArgumentTypes = new[] { typeof(IDatabaseContext) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.Update()"));
+        }
+
+        /// <summary>
+        /// IRepository.Update.Where
+        /// </summary>
+        /// <returns>IRepository.Update.Where MethodInfo</returns>
+        public static MethodInfo RepositoryUpdateWhere()
+        {
+            return _repositoryUpdateWhere ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Where),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(ISetUpdateQueryable<object>), typeof(Expression<Func<object, bool>>) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Where()"));
+        }
+
+        /// <summary>
+        /// IRepository.Update.Set
+        /// </summary>
+        /// <returns>IRepository.Update.Set MethodInfo</returns>
+        public static MethodInfo RepositoryUpdateSet()
+        {
+            return _repositoryUpdateSet ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Set),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IUpdateQueryable<object>), typeof(Expression<Action<object>>) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Set()"));
+        }
+
+        /// <summary>
+        /// IRepository.Update.Set
+        /// </summary>
+        /// <returns>IRepository.Update.Set MethodInfo</returns>
+        public static MethodInfo RepositoryChainedUpdateSet()
+        {
+            return _repositoryChainedUpdateSet ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Set),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(ISetUpdateQueryable<object>), typeof(Expression<Action<object>>) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Set()"));
         }
 
         /// <summary>
@@ -217,24 +211,71 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(object), typeof(object) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Assign()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Assign()"));
         }
 
         /// <summary>
-        /// LinqExtensions.WithDependencyContainer
+        /// LinqExtensions.CachedExpression
         /// </summary>
-        /// <returns>LinqExtensions.WithDependencyContainer MethodInfo</returns>
-        public static MethodInfo WithDependencyContainer()
+        /// <returns>LinqExtensions.CachedExpression MethodInfo</returns>
+        public static MethodInfo CachedUpdateExpression()
         {
-            return _withDependencyContainer ??= new MethodFinder(typeof(LinqExtensions),
-                    nameof(LinqExtensions.WithDependencyContainer),
-                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod)
+            return _cachedUpdateExpression ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.CachedExpression),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
                 {
-                    ArgumentTypes = new[] { typeof(IInsertQueryable<IDatabaseEntity>), typeof(IDependencyContainer) }
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IFilteredUpdateQueryable<object>), typeof(string) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.WithDependencyContainer()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.CachedExpression()"));
+        }
+
+        /// <summary>
+        /// IRepository.Delete
+        /// </summary>
+        /// <returns>IRepository.Delete MethodInfo</returns>
+        public static MethodInfo RepositoryDelete()
+        {
+            return _repositoryDelete ??= new MethodFinder(typeof(IRepository),
+                    nameof(IRepository.Delete),
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(IDatabaseEntity) },
+                    ArgumentTypes = new[] { typeof(IDatabaseContext) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.IRepository.Delete()"));
+        }
+
+        /// <summary>
+        /// IRepository.Delete.Where
+        /// </summary>
+        /// <returns>IRepository.Delete.Where MethodInfo</returns>
+        public static MethodInfo RepositoryDeleteWhere()
+        {
+            return _repositoryDeleteWhere ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Where),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IDeleteQueryable<object>), typeof(Expression<Func<object, bool>>) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.Where()"));
+        }
+
+        /// <summary>
+        /// LinqExtensions.CachedExpression
+        /// </summary>
+        /// <returns>LinqExtensions.CachedExpression MethodInfo</returns>
+        public static MethodInfo CachedDeleteExpression()
+        {
+            return _cachedDeleteExpression ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.CachedExpression),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IFilteredDeleteQueryable<object>), typeof(string) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Linq.LinqExtensions.CachedExpression()"));
         }
 
         /// <summary>
@@ -250,8 +291,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Single()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Single()"));
         }
 
         /// <summary>
@@ -267,8 +307,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(string) },
                     ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Single()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Single()"));
         }
 
         /// <summary>
@@ -284,8 +323,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SingleOrDefault()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SingleOrDefault()"));
         }
 
         /// <summary>
@@ -301,8 +339,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(string) },
                     ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SingleOrDefault()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SingleOrDefault()"));
         }
 
         /// <summary>
@@ -318,8 +355,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.First()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.First()"));
         }
 
         /// <summary>
@@ -335,8 +371,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(string) },
                     ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.First()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.First()"));
         }
 
         /// <summary>
@@ -352,8 +387,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.FirstOrDefault()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.FirstOrDefault()"));
         }
 
         /// <summary>
@@ -369,8 +403,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(string) },
                     ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.FirstOrDefault()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.FirstOrDefault()"));
         }
 
         /// <summary>
@@ -386,8 +419,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object), typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Select()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Select()"));
         }
 
         /// <summary>
@@ -403,8 +435,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, bool>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Where()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Where()"));
         }
 
         /// <summary>
@@ -420,8 +451,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Any()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Any()"));
         }
 
         /// <summary>
@@ -437,8 +467,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(string) },
                     ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Any()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Any()"));
         }
 
         /// <summary>
@@ -454,8 +483,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(string) },
                     ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
         }
 
         /// <summary>
@@ -471,8 +499,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
         }
 
         /// <summary>
@@ -488,8 +515,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(string) },
                     ArgumentTypes = new[] { typeof(IQueryable<string>), typeof(Expression<Func<string, bool>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.All()"));
         }
 
         /// <summary>
@@ -505,8 +531,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object), typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.GroupBy()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.GroupBy()"));
         }
 
         /// <summary>
@@ -522,8 +547,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object), typeof(object), typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>), typeof(Expression<Func<object, object>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.GroupBy()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.GroupBy()"));
         }
 
         /// <summary>
@@ -539,8 +563,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(object) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Contains()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Contains()"));
         }
 
         /// <summary>
@@ -556,8 +579,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Distinct()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Distinct()"));
         }
 
         /// <summary>
@@ -573,8 +595,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object), typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.OrderBy()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.OrderBy()"));
         }
 
         /// <summary>
@@ -590,8 +611,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object), typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, object>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.OrderByDescending()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.OrderByDescending()"));
         }
 
         /// <summary>
@@ -607,8 +627,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object), typeof(object) },
                     ArgumentTypes = new[] { typeof(IOrderedQueryable<object>), typeof(Expression<Func<object, object>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.ThenBy()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.ThenBy()"));
         }
 
         /// <summary>
@@ -624,8 +643,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object), typeof(object) },
                     ArgumentTypes = new[] { typeof(IOrderedQueryable<object>), typeof(Expression<Func<object, object>>) }
                 }
-                .FindMethod()
-                .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.ThenByDescending()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.ThenByDescending()"));
         }
 
         /// <summary>
@@ -641,8 +659,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                     TypeArguments = new[] { typeof(object), typeof(object) },
                     ArgumentTypes = new[] { typeof(IQueryable<object>), typeof(Expression<Func<object, IEnumerable<object>>>) }
                 }
-               .FindMethod()
-               .EnsureNotNull(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SelectMany()"));
+               .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.SelectMany()"));
+        }
+
+        /// <summary>
+        /// Queryable.Cast
+        /// </summary>
+        /// <returns>Queryable.Cast MethodInfo</returns>
+        public static MethodInfo QueryableCast()
+        {
+            return _queryableCast ??= new MethodFinder(typeof(Queryable),
+                    nameof(Queryable.Cast),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(IQueryable) }
+                }
+               .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Linq.Queryable.Cast()"));
         }
     }
 }

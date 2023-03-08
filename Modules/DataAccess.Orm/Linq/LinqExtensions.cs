@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Model;
-    using Basics;
     using CompositionRoot;
 
     /// <summary>
@@ -23,18 +22,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <returns>Item type</returns>
         public static Type ExtractQueryableItemType(this Type type)
         {
-            return type
-                .ExtractGenericArgumentAtOrSelf(typeof(IQueryable<>))
-                .ExtractGenericArgumentAtOrSelf(typeof(ICachedQueryable<>))
-                .ExtractGenericArgumentAtOrSelf(typeof(IInsertQueryable<>))
-                .ExtractGenericArgumentAtOrSelf(typeof(IUpdateQueryable<>))
-                .ExtractGenericArgumentAtOrSelf(typeof(ISetUpdateQueryable<>))
-                .ExtractGenericArgumentAtOrSelf(typeof(IFilteredUpdateQueryable<>))
-                .ExtractGenericArgumentAtOrSelf(typeof(IDeleteQueryable<>))
-                .ExtractGenericArgumentAtOrSelf(typeof(IFilteredDeleteQueryable<>));
+            return (typeof(IQueryable).IsAssignableFrom(type) || typeof(ICustomQueryable).IsAssignableFrom(type))
+                   && type.IsGenericType
+                ? type.GetGenericArguments()[0]
+                : type;
         }
 
-        #region ICachedQueryable
+        #region IRepository.Insert
 
         /// <summary>
         /// Adds cache key attribute to query expression
@@ -42,20 +36,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         /// <param name="source">Source query</param>
         /// <param name="cacheKey">Cache key</param>
         /// <typeparam name="T">T type-argument</typeparam>
-        /// <returns>ICachedQueryable</returns>
-        public static ICachedQueryable<T> CachedExpression<T>(
-            this IQueryable<T> source,
+        /// <returns>ICachedInsertQueryable</returns>
+        public static ICachedInsertQueryable<T> CachedExpression<T>(
+            this IInsertQueryable<T> source,
             string cacheKey)
         {
             var queryable = (Queryable<T>)source;
 
             var expression = Expression.Call(
                 null,
-                LinqMethods.CachedExpression().MakeGenericMethod(typeof(T)),
+                LinqMethods.CachedInsertExpression().MakeGenericMethod(typeof(T)),
                 queryable.Expression,
                 Expression.Constant(cacheKey));
 
-            return (ICachedQueryable<T>)queryable.AsyncQueryProvider.CreateQuery<T>(expression);
+            return (ICachedInsertQueryable<T>)queryable.AsyncQueryProvider.CreateQuery<T>(expression);
         }
 
         #endregion
@@ -135,6 +129,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
         }
 
         /// <summary>
+        /// Adds cache key attribute to query expression
+        /// </summary>
+        /// <param name="source">Source query</param>
+        /// <param name="cacheKey">Cache key</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>ICachedUpdateQueryable</returns>
+        public static ICachedUpdateQueryable<T> CachedExpression<T>(
+            this IFilteredUpdateQueryable<T> source,
+            string cacheKey)
+        {
+            var queryable = (Queryable<T>)source;
+
+            var expression = Expression.Call(
+                null,
+                LinqMethods.CachedUpdateExpression().MakeGenericMethod(typeof(T)),
+                queryable.Expression,
+                Expression.Constant(cacheKey));
+
+            return (ICachedUpdateQueryable<T>)queryable.AsyncQueryProvider.CreateQuery<T>(expression);
+        }
+
+        /// <summary>
         /// Represents assign binary operator
         /// </summary>
         /// <param name="left">left operand</param>
@@ -173,9 +189,53 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                 .CreateQuery<TEntity>(expression);
         }
 
+        /// <summary>
+        /// Adds cache key attribute to query expression
+        /// </summary>
+        /// <param name="source">Source query</param>
+        /// <param name="cacheKey">Cache key</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>ICachedDeleteQueryable</returns>
+        public static ICachedDeleteQueryable<T> CachedExpression<T>(
+            this IFilteredDeleteQueryable<T> source,
+            string cacheKey)
+        {
+            var queryable = (Queryable<T>)source;
+
+            var expression = Expression.Call(
+                null,
+                LinqMethods.CachedDeleteExpression().MakeGenericMethod(typeof(T)),
+                queryable.Expression,
+                Expression.Constant(cacheKey));
+
+            return (ICachedDeleteQueryable<T>)queryable.AsyncQueryProvider.CreateQuery<T>(expression);
+        }
+
         #endregion
 
         #region IRepository.All
+
+        /// <summary>
+        /// Adds cache key attribute to query expression
+        /// </summary>
+        /// <param name="source">Source query</param>
+        /// <param name="cacheKey">Cache key</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>ICachedQueryable</returns>
+        public static ICachedQueryable<T> CachedExpression<T>(
+            this IQueryable<T> source,
+            string cacheKey)
+        {
+            var queryable = (Queryable<T>)source;
+
+            var expression = Expression.Call(
+                null,
+                LinqMethods.CachedExpression().MakeGenericMethod(typeof(T)),
+                queryable.Expression,
+                Expression.Constant(cacheKey));
+
+            return (ICachedQueryable<T>)queryable.AsyncQueryProvider.CreateQuery<T>(expression);
+        }
 
         /// <summary>
         /// Asynchronously materializes query to array

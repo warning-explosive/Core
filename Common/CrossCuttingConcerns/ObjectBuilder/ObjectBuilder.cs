@@ -36,18 +36,18 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
 
             // 1. find .cctor (should have public constructor .cctor)
             var cctor = type
-                .GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance)
-                .Select(info =>
-                {
-                    var constructorInfo = info;
-                    var parameters = info.GetParameters();
-                    return (constructorInfo, parameters);
-                })
-                .Where(info => info.parameters.All(parameter => values.ContainsKey(parameter.Name)))
-                .OrderByDescending(info => info.parameters.Length)
-                .Select(info => info.constructorInfo)
-                .FirstOrDefault()
-                .EnsureNotNull($"{type.FullName} should have the default public constructor or a constructor that takes additional parameters");
+                            .GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance)
+                            .Select(info =>
+                            {
+                                var constructorInfo = info;
+                                var parameters = info.GetParameters();
+                                return (constructorInfo, parameters);
+                            })
+                            .Where(info => info.parameters.All(parameter => values.ContainsKey(parameter.Name)))
+                            .OrderByDescending(info => info.parameters.Length)
+                            .Select(info => info.constructorInfo)
+                            .FirstOrDefault()
+                        ?? throw new InvalidOperationException($"{type.FullName} should have the default public constructor or a constructor that takes additional parameters");
 
             // 2. convert .cctor parameters
             var cctorParameters = cctor.GetParameters();

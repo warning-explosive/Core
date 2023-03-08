@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
-    using System;
     using System.Linq;
     using Expressions;
 
@@ -32,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 JoinExpression joinExpression => VisitJoinExpression(joinExpression),
                 RowsFetchLimitExpression rowsFetchLimitExpression => VisitRowsFetchLimitExpression(rowsFetchLimitExpression),
                 SpecialExpression specialExpression => VisitSpecialExpression(specialExpression),
-                _ => throw new NotSupportedException(expression.GetType().FullName)
+                _ => expression
             };
         }
 
@@ -46,8 +45,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return new BinaryExpression(
                 binaryExpression.Type,
                 binaryExpression.Operator,
-                Visit(binaryExpression.Left),
-                Visit(binaryExpression.Right));
+                binaryExpression.Left != null ? Visit(binaryExpression.Left) : null!,
+                binaryExpression.Right != null ? Visit(binaryExpression.Right) : null!);
         }
 
         /// <summary>
@@ -60,7 +59,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return new UnaryExpression(
                 unaryExpression.Type,
                 unaryExpression.Operator,
-                Visit(unaryExpression.Source));
+                unaryExpression.Source != null ? Visit(unaryExpression.Source) : null!);
         }
 
         /// <summary>
@@ -72,9 +71,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         {
             return new ConditionalExpression(
                 conditionalExpression.Type,
-                Visit(conditionalExpression.When),
-                Visit(conditionalExpression.Then),
-                Visit(conditionalExpression.Else));
+                conditionalExpression.When != null ? Visit(conditionalExpression.When) : null!,
+                conditionalExpression.Then != null ? Visit(conditionalExpression.Then) : null!,
+                conditionalExpression.Else != null ? Visit(conditionalExpression.Else) : null!);
         }
 
         /// <summary>
@@ -87,7 +86,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return new RenameExpression(
                 renameExpression.Type,
                 renameExpression.Name,
-                Visit(renameExpression.Source));
+                renameExpression.Source != null ? Visit(renameExpression.Source) : null!);
         }
 
         /// <summary>
@@ -111,8 +110,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         protected virtual ISqlExpression VisitFilter(FilterExpression filterExpression)
         {
             return new FilterExpression(
-                Visit(filterExpression.Source),
-                Visit(filterExpression.Predicate));
+                filterExpression.Source != null ? Visit(filterExpression.Source) : null!,
+                filterExpression.Predicate != null ? Visit(filterExpression.Predicate) : null!);
         }
 
         /// <summary>
@@ -124,8 +123,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         {
             return new NamedSourceExpression(
                 namedSourceExpression.Type,
-                Visit(namedSourceExpression.Source),
-                Visit(namedSourceExpression.Parameter));
+                namedSourceExpression.Source != null ? Visit(namedSourceExpression.Source) : null!,
+                namedSourceExpression.Parameter != null ? Visit(namedSourceExpression.Parameter) : null!);
         }
 
         /// <summary>
@@ -137,7 +136,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         {
             return new ProjectionExpression(
                 projectionExpression.Type,
-                Visit(projectionExpression.Source),
+                projectionExpression.Source != null ? Visit(projectionExpression.Source) : null!,
                 projectionExpression.Expressions.Select(Visit));
         }
 
@@ -173,7 +172,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         protected virtual ISqlExpression VisitOrderBy(OrderByExpression orderByExpression)
         {
             return new OrderByExpression(
-                Visit(orderByExpression.Source),
+                orderByExpression.Source != null ? Visit(orderByExpression.Source) : null!,
                 orderByExpression.Expressions.Select(Visit).ToList());
         }
 
@@ -185,7 +184,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         protected virtual ISqlExpression VisitOrderByExpression(OrderByExpressionExpression orderByExpressionExpression)
         {
             return new OrderByExpressionExpression(
-                Visit(orderByExpressionExpression.Expression),
+                orderByExpressionExpression.Expression != null ? Visit(orderByExpressionExpression.Expression) : null!,
                 orderByExpressionExpression.OrderingDirection);
         }
 
@@ -227,9 +226,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         protected virtual ISqlExpression VisitJoinExpression(JoinExpression joinExpression)
         {
             return new JoinExpression(
-                Visit(joinExpression.LeftSource),
-                Visit(joinExpression.RightSource),
-                Visit(joinExpression.On));
+                joinExpression.LeftSource != null ? Visit(joinExpression.LeftSource) : null!,
+                joinExpression.RightSource != null ? Visit(joinExpression.RightSource) : null!,
+                joinExpression.On != null ? Visit(joinExpression.On) : null!);
         }
 
         /// <summary>
@@ -241,7 +240,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         {
             return new RowsFetchLimitExpression(
                 rowsFetchLimitExpression.RowsFetchLimit,
-                Visit(rowsFetchLimitExpression.Source));
+                rowsFetchLimitExpression.Source != null ? Visit(rowsFetchLimitExpression.Source) : null!);
         }
 
         /// <summary>

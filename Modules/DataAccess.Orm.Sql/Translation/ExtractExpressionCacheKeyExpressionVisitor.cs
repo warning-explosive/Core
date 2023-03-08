@@ -28,7 +28,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         {
             var method = node.Method.GenericMethodDefinitionOrSelf();
 
-            if (method == LinqMethods.CachedExpression()
+            var isCachedExpressionMethod = method == LinqMethods.CachedExpression()
+                                           || method == LinqMethods.CachedInsertExpression()
+                                           || method == LinqMethods.CachedUpdateExpression()
+                                           || method == LinqMethods.CachedDeleteExpression();
+
+            if (isCachedExpressionMethod
                 && node.Arguments[1] is ConstantExpression constantExpression
                 && constantExpression.Value is string cacheKey)
             {

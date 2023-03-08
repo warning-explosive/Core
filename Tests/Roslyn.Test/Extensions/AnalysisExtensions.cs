@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Basics;
     using Basics.Exceptions;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -54,7 +53,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Extensions
             foreach (var projectId in projectTree.GetTopologicallySortedProjects())
             {
                 var project = solution.GetProject(projectId)
-                                      .EnsureNotNull($"Project with {projectId} must exist in solution");
+                              ?? throw new InvalidOperationException($"Project with {projectId} must exist in solution");
 
                 await foreach (var diagnostic in CompileProject(project, analyzers)
                                    .WithCancellation(CancellationToken.None)

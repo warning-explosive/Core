@@ -60,7 +60,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             _staticFixture = fixture;
         }
 
-        private static TestFixture StaticFixture => _staticFixture.EnsureNotNull(nameof(_staticFixture));
+        private static TestFixture StaticFixture => _staticFixture ?? throw new InvalidOperationException(nameof(_staticFixture));
 
         /// <summary>
         /// CommandTranslationTestData
@@ -82,12 +82,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
         internal static IEnumerable<object[]> CommandTranslationTestHosts()
         {
-            var settingsDirectory = SolutionExtensions
-               .ProjectFile()
-               .Directory
-               .EnsureNotNull("Project directory wasn't found")
-               .StepInto("Settings")
-               .StepInto(nameof(CommandTranslationTest));
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory wasn't found");
+
+            var settingsDirectory = projectFileDirectory
+                .StepInto("Settings")
+                .StepInto(nameof(CommandTranslationTest));
 
             var timeout = TimeSpan.FromSeconds(60);
 
@@ -1022,7 +1022,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - insert entity",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { databaseEntity }, EnInsertBehavior.Default).Invoke(CancellationToken.None).Result),
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { databaseEntity }, EnInsertBehavior.Default).CachedExpression(Guid.NewGuid().ToString()).Invoke(CancellationToken.None).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
                         $@"INSERT INTO ""{schema}"".""{nameof(DatabaseEntity)}"" (""{nameof(DatabaseEntity.BooleanField)}"", ""{nameof(DatabaseEntity.Enum)}"", ""{nameof(DatabaseEntity.IntField)}"", ""{nameof(DatabaseEntity.NullableStringField)}"", ""{nameof(DatabaseEntity.PrimaryKey)}"", ""{nameof(DatabaseEntity.StringField)}"", ""{nameof(DatabaseEntity.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_0, @param_1, @param_2, @param_3, @param_4, @param_5, @param_6)",
@@ -1033,7 +1033,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - insert several vales",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { databaseEntity, DatabaseEntity.Generate(aggregateId) }, EnInsertBehavior.Default).Invoke(CancellationToken.None).Result),
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { databaseEntity, DatabaseEntity.Generate(aggregateId) }, EnInsertBehavior.Default).CachedExpression(Guid.NewGuid().ToString()).Invoke(CancellationToken.None).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
                         $@"INSERT INTO ""{schema}"".""{nameof(DatabaseEntity)}"" (""{nameof(DatabaseEntity.BooleanField)}"", ""{nameof(DatabaseEntity.Enum)}"", ""{nameof(DatabaseEntity.IntField)}"", ""{nameof(DatabaseEntity.NullableStringField)}"", ""{nameof(DatabaseEntity.PrimaryKey)}"", ""{nameof(DatabaseEntity.StringField)}"", ""{nameof(DatabaseEntity.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_0, @param_1, @param_2, @param_3, @param_4, @param_5, @param_6),{Environment.NewLine}(@param_7, @param_8, @param_9, @param_10, @param_11, @param_12, @param_13)",
@@ -1044,7 +1044,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - insert entities",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { user, blog, post }, EnInsertBehavior.Default).Invoke(CancellationToken.None).Result),
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { user, blog, post }, EnInsertBehavior.Default).CachedExpression(Guid.NewGuid().ToString()).Invoke(CancellationToken.None).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
                         $@"INSERT INTO ""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" (""{nameof(DatabaseEntities.Relations.User.Nickname)}"", ""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"", ""{nameof(DatabaseEntities.Relations.User.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_0, @param_1, @param_2);{Environment.NewLine}INSERT INTO ""{schema}"".""{nameof(Blog)}"" (""{nameof(Blog.PrimaryKey)}"", ""{nameof(Blog.Theme)}"", ""{nameof(Blog.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_3, @param_4, @param_5);{Environment.NewLine}INSERT INTO ""{schema}"".""{nameof(Post)}"" (""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"", ""{nameof(Post.DateTime)}"", ""{nameof(Post.PrimaryKey)}"", ""{nameof(Post.Text)}"", ""{nameof(Post.User)}_{nameof(Post.PrimaryKey)}"", ""{nameof(Post.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_6, @param_7, @param_8, @param_9, @param_10, @param_11);{Environment.NewLine}INSERT INTO ""{schema}"".""{nameof(Blog)}_{nameof(Post)}"" (""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"", ""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_12, @param_13)",
@@ -1055,29 +1055,29 @@ namespace SpaceEngineers.Core.GenericHost.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - delete entity",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Delete<DatabaseEntity>().Where(it => it.BooleanField).Invoke(CancellationToken.None).Result),
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Delete<DatabaseEntity>().Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).Invoke(CancellationToken.None).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"DELETE FROM ""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
+                        $@"DELETE FROM ""{schema}"".""{nameof(DatabaseEntity)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}""{nameof(DatabaseEntity.BooleanField)}""",
                         Array.Empty<SqlCommandParameter>(),
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - delete entity with query parameter",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Delete<DatabaseEntity>().Where(it => it.BooleanField == true).Invoke(CancellationToken.None).Result),
+                $"{nameof(DataAccess.Orm.PostgreSql)} - delete entity with query parameters",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Delete<DatabaseEntity>().Where(it => it.BooleanField == true && it.IntField == 42).CachedExpression(Guid.NewGuid().ToString()).Invoke(CancellationToken.None).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"DELETE FROM ""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"" = @param_0",
-                        new[] { new SqlCommandParameter("param_0", true, typeof(bool)) },
+                        $@"DELETE FROM ""{schema}"".""{nameof(DatabaseEntity)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}""{nameof(DatabaseEntity.BooleanField)}"" = @param_0 AND ""{nameof(DatabaseEntity.IntField)}"" = @param_1",
+                        new[] { new SqlCommandParameter("param_0", true, typeof(bool)), new SqlCommandParameter("param_1", 42, typeof(int)) },
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - update entity with column reference",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Update<DatabaseEntity>().Set(it => it.IntField.Assign(it.IntField + 1)).Where(it => it.BooleanField).Invoke(CancellationToken.None).Result),
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Update<DatabaseEntity>().Set(it => it.IntField.Assign(it.IntField + 1)).Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).Invoke(CancellationToken.None).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
                         $@"UPDATE ""{schema}"".""{nameof(DatabaseEntity)}""{Environment.NewLine}SET ""{nameof(DatabaseEntity.IntField)}"" = ""{nameof(DatabaseEntity.IntField)}"" + @param_0{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}""{nameof(DatabaseEntity.BooleanField)}""",
@@ -1088,7 +1088,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - update entity with multiple sets",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Update<DatabaseEntity>().Set(it => it.IntField.Assign(it.IntField + 1)).Set(it => it.Enum.Assign(EnEnum.Two)).Where(it => it.BooleanField == true).Invoke(CancellationToken.None).Result),
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Update<DatabaseEntity>().Set(it => it.IntField.Assign(it.IntField + 1)).Set(it => it.Enum.Assign(EnEnum.Two)).Where(it => it.BooleanField == true).CachedExpression(Guid.NewGuid().ToString()).Invoke(CancellationToken.None).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
                         $@"UPDATE ""{schema}"".""{nameof(DatabaseEntity)}""{Environment.NewLine}SET ""{nameof(DatabaseEntity.IntField)}"" = ""{nameof(DatabaseEntity.IntField)}"" + @param_0, ""{nameof(DatabaseEntity.Enum)}"" = @param_1{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}""{nameof(DatabaseEntity.BooleanField)}"" = @param_2",
@@ -1096,6 +1096,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
+            /*TODO: #backlog - test update/delete with join in predicate*/
         }
 
         [Fact]
@@ -1211,6 +1212,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 {
                     await transaction
                     .Insert(entities, EnInsertBehavior.Default)
+                    .CachedExpression(Guid.NewGuid().ToString())
                     .Invoke(token)
                     .ConfigureAwait(false);
                 }
@@ -1233,7 +1235,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 }
                 else
                 {
-                    expression = collector.Expressions.Single();
+                    expression = collector.Expressions.Last();
 
                     item = queryOrItem;
                 }

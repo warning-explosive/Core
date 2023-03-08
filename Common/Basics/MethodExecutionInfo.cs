@@ -174,9 +174,8 @@ namespace SpaceEngineers.Core.Basics
                 ArgumentTypes = _argumentTypes.ToArray()
             };
 
-            var methodInfo = methodFinder
-                .FindMethod()
-                .EnsureNotNull(() => new NotFoundException($"Method not found: {methodFinder}"));
+            var methodInfo = methodFinder.FindMethod()
+                             ?? throw new NotFoundException($"Method not found: {methodFinder}");
 
             // 3 - call
             var isGenericMethod = _typeArguments.Any();

@@ -49,9 +49,9 @@ namespace SpaceEngineers.Core.CompositionRoot
             {
                 return ctx.Matches
                           .OrderBy(t => t.IsGenericType)
-                          .InformativeSingleOrDefault(Amb);
+                          .InformativeSingleOrDefault(Amb, ctx);
 
-                string Amb(IEnumerable<Type> source)
+                static string Amb(TypeArgumentSelectionContext ctx, IEnumerable<Type> source)
                 {
                     return "Type:"
                            + ctx.OpenGeneric
@@ -100,7 +100,8 @@ namespace SpaceEngineers.Core.CompositionRoot
             var typeArgument = genericType.GetGenericArguments()[at];
             var selectionContext = new TypeArgumentSelectionContext(genericType, typeArgument, matches, resolved);
 
-            return selector(selectionContext).EnsureNotNull($"Satisfying type for type argument {typeArgument} in {genericType} not found");
+            return selector(selectionContext)
+                   ?? throw new InvalidOperationException($"Satisfying type for type argument {typeArgument} in {genericType} not found");
         }
     }
 }

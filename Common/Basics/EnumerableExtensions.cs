@@ -300,6 +300,34 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Informative single extraction
+        /// </summary>
+        /// <param name="source">Source collection</param>
+        /// <param name="amb">Ambiguous message factory</param>
+        /// <param name="state">State</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <typeparam name="TState">TState type-argument</typeparam>
+        /// <returns>Single item with informative errors</returns>
+        /// <exception cref="NotFoundException">Throws if source is empty</exception>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static T InformativeSingle<T, TState>(this IEnumerable<T> source, Func<TState, IEnumerable<T>, string> amb, TState state)
+        {
+            var items = source.Take(2).ToList();
+
+            if (!items.Any())
+            {
+                throw new NotFoundException("Source collection is empty");
+            }
+
+            if (items.Count != 1)
+            {
+                throw new AmbiguousMatchException(amb(state, items));
+            }
+
+            return items.Single();
+        }
+
+        /// <summary>
         /// Informative single or default extraction
         /// </summary>
         /// <param name="source">Source collection</param>
@@ -314,6 +342,28 @@ namespace SpaceEngineers.Core.Basics
             if (items.Count >= 2)
             {
                 throw new AmbiguousMatchException(amb(items));
+            }
+
+            return items.SingleOrDefault();
+        }
+
+        /// <summary>
+        /// Informative single or default extraction
+        /// </summary>
+        /// <param name="source">Source collection</param>
+        /// <param name="amb">Ambiguous message factory</param>
+        /// <param name="state">State</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <typeparam name="TState">TState type-argument</typeparam>
+        /// <returns>Single item with informative errors</returns>
+        /// <exception cref="AmbiguousMatchException">Throws if source contains more than one element</exception>
+        public static T InformativeSingleOrDefault<T, TState>(this IEnumerable<T> source, Func<TState, IEnumerable<T>, string> amb, TState state)
+        {
+            var items = source.Take(2).ToList();
+
+            if (items.Count >= 2)
+            {
+                throw new AmbiguousMatchException(amb(state, items));
             }
 
             return items.SingleOrDefault();

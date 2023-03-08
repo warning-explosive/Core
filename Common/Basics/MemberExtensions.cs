@@ -33,11 +33,11 @@ namespace SpaceEngineers.Core.Basics
             where TAttribute : Attribute
         {
             return memberInfo
-                .GetCustomAttributes<TAttribute>()
-                .InformativeSingleOrDefault(Amb)
-                .EnsureNotNull(() => new AttributeRequiredException(typeof(TAttribute), memberInfo));
+                       .GetCustomAttributes<TAttribute>()
+                       .InformativeSingleOrDefault(Amb)
+                   ?? throw new AttributeRequiredException(typeof(TAttribute), memberInfo);
 
-            string Amb(IEnumerable<TAttribute> arg)
+            static string Amb(IEnumerable<TAttribute> arg)
             {
                 return $"Type has more than one {typeof(TAttribute)}";
             }
@@ -56,7 +56,7 @@ namespace SpaceEngineers.Core.Basics
                 .GetCustomAttributes<TAttribute>()
                 .InformativeSingleOrDefault(Amb);
 
-            string Amb(IEnumerable<TAttribute> arg)
+            static string Amb(IEnumerable<TAttribute> arg)
             {
                 return $"Type has more than one {typeof(TAttribute)}";
             }
@@ -84,11 +84,11 @@ namespace SpaceEngineers.Core.Basics
             where TAttribute : Attribute
         {
             return methodInfo
-                .GetCustomAttributes<TAttribute>()
-                .InformativeSingleOrDefault(Amb)
-                .EnsureNotNull(() => new AttributeRequiredException(typeof(TAttribute), methodInfo));
+                       .GetCustomAttributes<TAttribute>()
+                       .InformativeSingleOrDefault(Amb)
+                   ?? throw new AttributeRequiredException(typeof(TAttribute), methodInfo);
 
-            string Amb(IEnumerable<TAttribute> arg)
+            static string Amb(IEnumerable<TAttribute> arg)
             {
                 return $"Type has more than one {typeof(TAttribute)}";
             }
@@ -107,7 +107,7 @@ namespace SpaceEngineers.Core.Basics
                 .GetCustomAttributes<TAttribute>()
                 .InformativeSingleOrDefault(Amb);
 
-            string Amb(IEnumerable<TAttribute> arg)
+            static string Amb(IEnumerable<TAttribute> arg)
             {
                 return $"Type has more than one {typeof(TAttribute)}";
             }

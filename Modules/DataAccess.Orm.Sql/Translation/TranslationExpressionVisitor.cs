@@ -42,6 +42,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             _memberInfoTranslators = memberInfoTranslators;
         }
 
+        internal static MethodInfo GetInsertValuesMethod { get; } = new MethodFinder(
+                typeof(TranslationExpressionVisitor),
+                nameof(GetInsertValues),
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod)
+            {
+                ArgumentTypes = new[] { typeof(IModelProvider), typeof(IReadOnlyCollection<IDatabaseEntity>) }
+            }
+            .FindMethod() ?? throw new InvalidOperationException("SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.TranslationExpressionVisitor.GetInsertValues()");
+
         public static SqlExpression Translate(
             TranslationContext context,
             IModelProvider modelProvider,
@@ -58,15 +67,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             _ = visitor.Visit(preprocessor.Visit(expression));
 
             return new SqlExpression(
-                visitor._context.SqlExpression.EnsureNotNull("Sql expression wasn't built"),
+                visitor._context.SqlExpression ?? throw new InvalidOperationException("Sql expression wasn't built"),
                 visitor._context.BuildCommandParametersExtractor(preprocessor));
         }
 
         public sealed override Expression Visit(Expression node)
         {
-            using (Disposable.Create(node, _context.PushPath, _context.PopPath))
+            using (_context.WithinPathScope(node))
             {
-                return base.Visit(node) !;
+                _ = base.Visit(node);
+
+                return node;
             }
         }
 
@@ -77,9 +88,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             var itemType = node.Type.ExtractQueryableItemType();
 
             if (method == LinqMethods.CachedExpression()
+                || method == LinqMethods.CachedInsertExpression()
+                || method == LinqMethods.CachedUpdateExpression()
+                || method == LinqMethods.CachedDeleteExpression()
                 || method == LinqMethods.WithDependencyContainer())
             {
-                return Visit(node.Arguments[0]);
+                _ = Visit(node.Arguments[0]);
+
+                return node;
             }
 
             if (method == LinqMethods.RepositoryInsert())
@@ -88,40 +104,51 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     new BatchExpression(),
                     () =>
                     {
-                        _ = (IAdvancedDatabaseTransaction)((ConstantExpression)node.Arguments[0]).Value;
-                        var entities = (IReadOnlyCollection<IDatabaseEntity>)((ConstantExpression)node.Arguments[1]).Value;
-                        var insertBehavior = (EnInsertBehavior)((ConstantExpression)node.Arguments[2]).Value;
+                        var getInsertValuesMethodCallExpression = Expression.Call(
+                            null,
+                            GetInsertValuesMethod,
+                            Expression.Constant(_modelProvider),
+                            Expression.Constant(new List<IDatabaseEntity>(), typeof(IReadOnlyCollection<IDatabaseEntity>)));
 
-                        var map = entities
-                            .SelectMany(_modelProvider.Flatten)
-                            .Distinct(new UniqueIdentifiedEqualityComparer())
-                            .ToDictionary(entity => new EntityKey(entity), entity => entity);
-
-                        var stacks = map
-                            .Values
-                            .OrderByDependencies(entity => new EntityKey(entity), GetDependencies(_modelProvider, map))
-                            .Stack(entity => entity.GetType());
-
-                        foreach (var (type, stack) in stacks)
+                        using (_context.WithinPathScope(node.Arguments[1]))
+                        using (_context.WithinPathScope(getInsertValuesMethodCallExpression))
                         {
-                            var table = _modelProvider.Tables[type];
+                            _ = (IAdvancedDatabaseTransaction)((ConstantExpression)node.Arguments[0]).Value;
+                            var entities = (IReadOnlyCollection<IDatabaseEntity>)((ConstantExpression)node.Arguments[1]).Value;
+                            var insertBehavior = (EnInsertBehavior)((ConstantExpression)node.Arguments[2]).Value;
 
-                            _context.WithinScope(
-                                new InsertExpression(type, insertBehavior),
-                                () =>
-                                {
-                                    foreach (var entity in stack)
+                            var map = entities
+                                .SelectMany(_modelProvider.Flatten)
+                                .Distinct(new UniqueIdentifiedEqualityComparer())
+                                .ToDictionary(entity => new EntityKey(entity), entity => entity);
+
+                            var stacks = map
+                                .Values
+                                .OrderByDependencies(entity => new EntityKey(entity), GetDependencies(_modelProvider, map))
+                                .Stack(entity => entity.GetType());
+
+                            foreach (var (type, stack) in stacks)
+                            {
+                                var table = _modelProvider.Tables[type];
+
+                                _context.WithinScope(
+                                    new InsertExpression(type, insertBehavior),
+                                    () =>
                                     {
-                                        _context.WithinScope(new ValuesExpression(),
-                                            () =>
-                                            {
-                                                foreach (var column in table.Columns.Values.Where(column => !column.IsMultipleRelation))
+                                        foreach (var entity in stack)
+                                        {
+                                            _context.WithinScope(
+                                                new ValuesExpression(),
+                                                () =>
                                                 {
-                                                    _context.Apply(new QueryParameterExpression(_context, column.Type, _ => Expression.Constant(column.GetValue(entity), column.Type)));
-                                                }
-                                            });
-                                    }
-                                });
+                                                    foreach (var column in table.Columns.Values.Where(column => !column.IsMultipleRelation))
+                                                    {
+                                                        _context.Apply(new QueryParameterExpression(_context, column.Type));
+                                                    }
+                                                });
+                                        }
+                                    });
+                            }
                         }
                     });
 
@@ -200,7 +227,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                             if (TryBuildJoinExpression(_context, node.Arguments[0], expressions, itemType))
                             {
-                                Visit(expressions[0]);
+                                _ = Visit(expressions[0]);
                             }
                             else
                             {
@@ -228,7 +255,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                             if (TryBuildJoinExpression(_context, node.Arguments[0], expressions, itemType))
                             {
-                                Visit(expressions[0]);
+                                _ = Visit(expressions[0]);
                             }
                             else
                             {
@@ -284,7 +311,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                             if (!TryBuildJoinExpression(_context, source, expressions, itemType))
                             {
-                                Visit(source);
+                                _ = Visit(source);
                             }
 
                             foreach (var (expression, orderingDirection) in orderByExpressions)
@@ -336,7 +363,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                             new QueryParameterExpression(
                                 _context,
                                 typeof(int),
-                                static _ => Expression.Constant(0, typeof(int))));
+                                static (_, _) => Expression.Constant(0, typeof(int))));
 
                         _context.Apply(new RenameExpression(typeof(bool), method.Name, binaryExpression));
 
@@ -352,7 +379,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     new ProjectionExpression(itemType),
                     () =>
                     {
-                        Visit(node.Arguments[0]);
+                        _ = Visit(node.Arguments[0]);
 
                         // count(case when <condition> then 1 else null end) = count(*) as "All"
                         _context.WithinScope(
@@ -371,19 +398,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                                                     new Expressions.ConditionalExpression(typeof(int)),
                                                     () =>
                                                     {
-                                                        Visit(node.Arguments[1]);
-                                                        _context.Apply(new QueryParameterExpression(_context, typeof(int), static _ => Expression.Constant(1, typeof(int))));
+                                                        _ = Visit(node.Arguments[1]);
+                                                        _context.Apply(new QueryParameterExpression(_context, typeof(int), static (_, _) => Expression.Constant(1, typeof(int))));
                                                         _context.Apply(new SpecialExpression("NULL"));
                                                     });
                                             });
 
-                                        var countAllMethodCall = new Expressions.MethodCallExpression(
+                                        _context.Apply(new Expressions.MethodCallExpression(
                                             typeof(int),
                                             nameof(Queryable.Count),
                                             null,
-                                            new[] { new SpecialExpression("*") });
-
-                                        _context.Apply(countAllMethodCall);
+                                            new[] { new SpecialExpression("*") }));
                                     });
                             });
                     });
@@ -418,12 +443,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     new Expressions.BinaryExpression(typeof(bool), BinaryOperator.Contains),
                     () =>
                     {
-                        Visit(node.Arguments[1]);
+                        _ = Visit(node.Arguments[1]);
 
                         if (node.Arguments[0] is ConstantExpression constantExpression
                             && constantExpression.Value is IQueryable subQuery)
                         {
-                            using (Disposable.Create(constantExpression, _context.PushPath, _context.PopPath))
+                            using (_context.WithinPathScope(constantExpression))
                             {
                                 _context.Apply(TranslateSubQuery(subQuery.Expression).Expression);
                             }
@@ -439,9 +464,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             if (method == LinqMethods.QueryableDistinct())
             {
-                Visit(node.Arguments[0]);
-                var projection = _context.GetProjectionExpression(_context.SqlExpression) ?? throw new InvalidOperationException("Unable to find distinct projection");
+                _ = Visit(node.Arguments[0]);
+
+                var projection = ExtractProjectionExpression(_context.SqlExpression)
+                                 ?? throw new InvalidOperationException("Unable to find distinct projection");
+
                 projection.IsDistinct = true;
+
+                return node;
+            }
+
+            if (method == LinqMethods.QueryableCast())
+            {
+                _ = Visit(node.Arguments[0]);
 
                 return node;
             }
@@ -481,7 +516,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     && memberExpression.Member.MemberType == MemberTypes.Property
                     && memberExpression.Member.Name.Equals(memberInfo.Name, StringComparison.OrdinalIgnoreCase))
                 {
-                    Visit(argument);
+                    _ = Visit(argument);
                 }
                 else
                 {
@@ -537,20 +572,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            if (_context.Expression == null
-                || !ExtractUpdateQueryRootExpressionVisitor.IsUpdateQuery(_context.Expression))
+            if (_context.Expression != null
+                && (ExtractUpdateQueryRootExpressionVisitor.IsUpdateQuery(_context.Expression)
+                    || ExtractDeleteQueryRootExpressionVisitor.IsDeleteQuery(_context.Expression)))
             {
-                _context.WithinScope(
-                    _context.GetParameterExpression(node),
-                    () => base.VisitParameter(node));
+                return node;
             }
+
+            _context.WithinScope(
+                ExtractParametersVisitor.TryExtractParameter(_context.Outer!, node.Type, out var outerParameterExpression)
+                    ? outerParameterExpression
+                    : new Expressions.ParameterExpression(_context, node.Type),
+                () => base.VisitParameter(node));
 
             return node;
         }
 
         protected override Expression VisitLambda<T>(Expression<T> node)
         {
-            Visit(node.Body);
+            _ = Visit(node.Body);
 
             return node;
         }
@@ -583,7 +623,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return;
             }
 
-            var parameter = ExtractParameter(projection.Source, projection.Type);
+            var parameter = ExtractParametersVisitor.ExtractParameter(projection.Source, projection.Type);
 
             var flatProjectionColumns = _modelProvider
                 .Columns(projection.Type)
@@ -593,22 +633,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             foreach (var column in flatProjectionColumns)
             {
                 _context.Apply(column.BuildExpression(parameter));
-            }
-
-            static Expressions.ParameterExpression ExtractParameter(ISqlExpression source, Type parameterType)
-            {
-                var parameterExpression = source
-                    .ExtractParameters()
-                    .OrderBy(parameter => parameter.Key)
-                    .Select(parameter => parameter.Value)
-                    .FirstOrDefault(parameter => parameter.Type == parameterType);
-
-                if (parameterExpression == null)
-                {
-                    throw new InvalidOperationException("Unable to find appropriate parameter expression");
-                }
-
-                return parameterExpression;
             }
         }
 
@@ -624,13 +648,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 })
                 .Where(pair => pair.success)
                 .Select(pair => pair.info)
-                .InformativeSingleOrDefault(Amb);
+                .InformativeSingleOrDefault(Amb, memberInfo);
 
             return expression != null;
 
-            string Amb(IEnumerable<ISqlExpression?> infos)
+            static string Amb(MemberInfo memberInfo, IEnumerable<ISqlExpression?> infos)
             {
                 return $"More than one expression suitable for {memberInfo.DeclaringType}.{memberInfo.Name} member";
+            }
+        }
+
+        private static ProjectionExpression? ExtractProjectionExpression(ISqlExpression? expression)
+        {
+            switch (expression)
+            {
+                case NamedSourceExpression namedSourceExpression:
+                    return ExtractProjectionExpression(namedSourceExpression.Source);
+                case FilterExpression filterExpression:
+                    return ExtractProjectionExpression(filterExpression.Source);
+                case ProjectionExpression projectionExpression:
+                    return projectionExpression;
+                case JoinExpression:
+                    throw new InvalidOperationException("Ambiguous reference to join expression source");
+                case OrderByExpression orderByExpression:
+                    return ExtractProjectionExpression(orderByExpression.Source);
+                default:
+                    return default;
             }
         }
 
@@ -686,7 +729,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         new JoinExpression(),
                         () =>
                         {
-                            context.WithoutScopeDuplication(() => new NamedSourceExpression(relation.Target, context),
+                            context.WithoutScopeDuplication(
+                                () => new NamedSourceExpression(relation.Target, context),
                                 () => context.Apply(new QuerySourceExpression(relation.Target)));
 
                             BuildJoinExpressionRecursive(context, recursiveEnumerable, action);
@@ -707,14 +751,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         new ColumnExpression(
                             relation.Target.GetProperty(nameof(IUniqueIdentified.PrimaryKey)),
                             typeof(Guid),
-                            context.GetParameterExpression(relation.Target)),
+                            ExtractParametersVisitor.ExtractParameter(context.Outer!, relation.Target)),
                         new ColumnExpression(
                             relation.Target.GetProperty(nameof(IUniqueIdentified.PrimaryKey)),
                             typeof(Guid),
                             new ColumnExpression(
                                 relation.Property.Reflected,
                                 relation.Target,
-                                context.GetParameterExpression(relation.Source)))));
+                                ExtractParametersVisitor.ExtractParameter(context.Outer!, relation.Source)))));
                 }
             }
         }
@@ -745,6 +789,31 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         : column.GetRelationValue(entity);
                 }
             };
+        }
+
+        private static IReadOnlyDictionary<string, ConstantExpression> GetInsertValues(
+                IModelProvider modelProvider,
+                IReadOnlyCollection<IDatabaseEntity> entities)
+        {
+            var map = entities
+                .SelectMany(modelProvider.Flatten)
+                .Distinct(new UniqueIdentifiedEqualityComparer())
+                .ToDictionary(entity => new EntityKey(entity), entity => entity);
+
+            return map
+                .Values
+                .OrderByDependencies(entity => new EntityKey(entity), GetDependencies(modelProvider, map))
+                .SelectMany(entity => modelProvider
+                    .Tables[entity.GetType()]
+                    .Columns
+                    .Values
+                    .Where(column => !column.IsMultipleRelation)
+                    .Select(column => Expression.Constant(column.GetValue(entity), column.Type)))
+                .Select((expression, index) => (name: TranslationContext.CommandParameterFormat.Format(index), expression))
+                .ToDictionary(
+                    pair => pair.name,
+                    pair => pair.expression,
+                    StringComparer.OrdinalIgnoreCase);
         }
 
         private SqlExpression TranslateSubQuery(Expression expression)

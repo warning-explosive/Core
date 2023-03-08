@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -20,44 +19,61 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
     public class UpdateEntityChange<TEntity> : ITransactionalChange
         where TEntity : IDatabaseEntity
     {
-        private readonly long _version;
         private readonly long _affectedRowsCount;
+
+        private readonly Expression<Action<TEntity>> _setVersion;
+
         private readonly IReadOnlyCollection<Expression<Action<TEntity>>> _setExpressions;
+
+        private readonly IReadOnlyCollection<Action<TEntity>> _setFuncs;
+
         private readonly Expression<Func<TEntity, bool>> _predicate;
-        private readonly long _updateVersion;
+
+        private readonly string _cacheKey;
 
         /// <summary> .cctor </summary>
         /// <param name="version">Version</param>
+        /// <param name="updateVersion">Update version</param>
         /// <param name="affectedRowsCount">Affected rows count</param>
         /// <param name="setExpressions">Set expression</param>
         /// <param name="predicate">Predicate</param>
-        /// <param name="updateVersion">Update version</param>
+        /// <param name="cacheKey">Cache key</param>
         public UpdateEntityChange(
             long version,
+            long updateVersion,
             long affectedRowsCount,
             IReadOnlyCollection<Expression<Action<TEntity>>> setExpressions,
             Expression<Func<TEntity, bool>> predicate,
-            long updateVersion)
+            string cacheKey)
         {
-            _version = version;
             _affectedRowsCount = affectedRowsCount;
-            _setExpressions = setExpressions;
-            _predicate = predicate;
-            _updateVersion = updateVersion;
-        }
 
-        private Expression<Func<TEntity, bool>> Predicate => _predicate.And(entity => entity.Version == _version);
+            _setVersion = entity => entity.Version.Assign(updateVersion);
+
+            _setExpressions = setExpressions;
+
+            var setFuncs = new List<Action<TEntity>>(setExpressions.Count + 1) { SetFunc(_setVersion) };
+
+            foreach (var setExpression in setExpressions)
+            {
+                setFuncs.Add(SetFunc(setExpression));
+            }
+
+            _setFuncs = setFuncs;
+
+            _predicate = predicate.And(entity => entity.Version == version);
+
+            _cacheKey = cacheKey;
+        }
 
         /// <inheritdoc />
         public async Task Apply(
             IAdvancedDatabaseTransaction transaction,
             CancellationToken token)
         {
-            Expression<Action<TEntity>> setVersion = entity => entity.Version.Assign(_updateVersion);
-
             var updateSource = transaction
                 .Update<TEntity>()
-                .Set(setVersion);
+                .Set(_setVersion);
 
             foreach (var setExpression in _setExpressions)
             {
@@ -65,8 +81,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
             }
 
             var actualAffectedRowsCount = await updateSource
-                .Where(Predicate)
-                /* TODO: .CachedExpression("87E76EC1-A31A-43F5-A3D2-80FCF49AAA71")*/
+                .Where(_predicate)
+                .CachedExpression($"{nameof(UpdateEntityChange<TEntity>)}:{_cacheKey}")
                 .Invoke(token)
                 .ConfigureAwait(false);
 
@@ -79,20 +95,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
         /// <inheritdoc />
         public void Apply(ITransactionalStore transactionalStore)
         {
-            Expression<Action<TEntity>> setVersion = entity => entity.Version.Assign(_updateVersion);
-
-            var entities = transactionalStore.GetValues(Predicate);
+            var entities = transactionalStore.GetValues(_predicate);
 
             foreach (var entity in entities)
             {
-                foreach (var setExpression in _setExpressions.Concat(new[] { setVersion }))
+                foreach (var setFunc in _setFuncs)
                 {
-                    ReplaceAssignExpressionVisitor
-                        .Replace(setExpression)
-                        .Compile()
-                        .Invoke(entity);
+                    setFunc(entity);
                 }
             }
+        }
+
+        private static Action<TEntity> SetFunc(Expression<Action<TEntity>> setExpression)
+        {
+            return ReplaceAssignExpressionVisitor.Replace(setExpression).Compile();
         }
     }
 }

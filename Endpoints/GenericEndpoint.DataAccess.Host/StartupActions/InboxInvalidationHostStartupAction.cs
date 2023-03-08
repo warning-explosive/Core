@@ -92,7 +92,7 @@
                .Update<InboxMessage>()
                .Set(message => message.IsError.Assign(true))
                .Where(message => message.PrimaryKey == id)
-               /* TODO: .CachedExpression("5A3B2946-028C-4CA8-9E8D-1E9C3BBB1EEB")*/
+               .CachedExpression("5A3B2946-028C-4CA8-9E8D-1E9C3BBB1EEB")
                .Invoke(token)
                .ConfigureAwait(false);
         }

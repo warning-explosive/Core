@@ -129,6 +129,7 @@
 
             await transaction
                 .Insert(new[] { appliedMigration }, EnInsertBehavior.Default)
+                .CachedExpression("460A4A86-5AE4-41E5-94B9-6065C12096B7")
                 .Invoke(token)
                 .ConfigureAwait(false);
 

@@ -60,52 +60,52 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <inheritdoc />
         public void Apply(TranslationContext context, ColumnExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ConditionalExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, BinaryExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, UnaryExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ParameterExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, QueryParameterExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, SpecialExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, MethodCallExpression expression)
         {
-            ApplySource(context, expression);
+            ApplySource(expression);
         }
 
-        private void ApplySource(TranslationContext context, ISqlExpression expression)
+        private void ApplySource(ISqlExpression expression)
         {
             if (When == null)
             {

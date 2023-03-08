@@ -75,12 +75,12 @@
         /// <returns>Test cases</returns>
         public static IEnumerable<object[]> BuildHostTestData()
         {
-            var settingsDirectory = SolutionExtensions
-               .ProjectFile()
-               .Directory
-               .EnsureNotNull("Project directory wasn't found")
-               .StepInto("Settings")
-               .StepInto(nameof(BuildHostTest));
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory wasn't found");
+
+            var settingsDirectory = projectFileDirectory
+                .StepInto("Settings")
+                .StepInto(nameof(BuildHostTest));
 
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 hostBuilder => hostBuilder
@@ -116,12 +116,12 @@
         {
             var timeout = TimeSpan.FromSeconds(60);
 
-            var settingsDirectory = SolutionExtensions
-               .ProjectFile()
-               .Directory
-               .EnsureNotNull("Project directory wasn't found")
-               .StepInto("Settings")
-               .StepInto(nameof(BuildHostTest));
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory wasn't found");
+
+            var settingsDirectory = projectFileDirectory
+                .StepInto("Settings")
+                .StepInto(nameof(BuildHostTest));
 
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 static hostBuilder => hostBuilder

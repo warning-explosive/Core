@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
 
@@ -42,13 +41,13 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
         public object DeserializeObject(string serialized, Type type)
         {
             return JsonConvert.DeserializeObject(serialized, type, _settings)
-                              .EnsureNotNull("Object should be serializable");
+                   ?? throw new InvalidOperationException("Object should be serializable");
         }
 
         public T DeserializeObject<T>(string serialized)
         {
             return JsonConvert.DeserializeObject<T>(serialized, _settings)
-                              .EnsureNotNull<T>("Object should be serializable");
+                   ?? throw new InvalidOperationException("Object should be serializable");
         }
     }
 }

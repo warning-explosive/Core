@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.JwtAuthentication
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using Microsoft.IdentityModel.Tokens;
 
     [Component(EnLifestyle.Singleton)]
@@ -62,10 +61,7 @@ namespace SpaceEngineers.Core.JwtAuthentication
         {
             var claims = _tokenHandler.ValidateToken(token, _configuration.TokenValidationParameters, out _);
 
-            return claims
-                .Identity
-                .Name
-                .EnsureNotNull("Jwt token claims should contain user name");
+            return claims.Identity.Name ?? throw new InvalidOperationException("Jwt token claims should contain user name");
         }
 
         public IReadOnlyCollection<string> GetPermissions(string token)

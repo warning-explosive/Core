@@ -99,14 +99,14 @@ namespace SpaceEngineers.Core.Basics
                     .ToArray();
             }
 
-            string Amb(IEnumerable<MethodInfo> source)
+            return methods.InformativeSingle(Amb, this);
+
+            static string Amb(MethodFinder methodFinder, IEnumerable<MethodInfo> source)
             {
                 string Generics(MethodInfo m) => string.Join(", ", m.GetGenericArguments().Select(g => g.Name));
-                string Show(MethodInfo m) => DeclaringType.FullName + "." + m.Name + "[" + Generics(m) + "]";
-                return string.Join(", ", methods.Select(Show));
+                string Show(MethodInfo m) => methodFinder.DeclaringType.FullName + "." + m.Name + "[" + Generics(m) + "]";
+                return string.Join(", ", source.Select(Show));
             }
-
-            return methods.InformativeSingle(Amb);
         }
 
         private static bool ValidateParameters(IReadOnlyCollection<Type> actual, IReadOnlyCollection<Type> expected)

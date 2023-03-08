@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var table = _modelProvider.Tables[expression.Type];
 
-            return $@"DELETE FROM ""{table.Schema}"".""{table.Name}"" a";
+            return $@"DELETE FROM ""{table.Schema}"".""{table.Name}""";
         }
     }
 }

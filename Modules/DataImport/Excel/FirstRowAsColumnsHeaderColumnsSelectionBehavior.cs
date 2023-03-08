@@ -8,7 +8,6 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using DocumentFormat.OpenXml.Spreadsheet;
 
     [Component(EnLifestyle.Singleton)]
@@ -31,7 +30,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
         {
             var headerRow = rows.Take(1).Single();
 
-            var headerRowIndex = (headerRow.RowIndex?.Value).EnsureNotNull<uint>("Row should have index");
+            var headerRowIndex = headerRow.RowIndex?.Value ?? throw new InvalidOperationException("Row should have index");
 
             return headerRow
                 .Elements<Cell>()

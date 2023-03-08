@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Benchmark.Sources
 {
+    using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using Basics;
@@ -16,9 +17,9 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         private Assembly[]? _allAssemblies;
         private Assembly? _belowAssembly;
 
-        private Assembly[] AllAssemblies => _allAssemblies.EnsureNotNull(nameof(_allAssemblies));
+        private Assembly[] AllAssemblies => _allAssemblies ?? throw new InvalidOperationException(nameof(_allAssemblies));
 
-        private Assembly BelowAssembly => _belowAssembly.EnsureNotNull(nameof(_belowAssembly));
+        private Assembly BelowAssembly => _belowAssembly ?? throw new InvalidOperationException(nameof(_belowAssembly));
 
         /// <summary>
         /// GlobalSetup

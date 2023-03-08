@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         internal NamedSourceExpression(Type type, TranslationContext context)
-            : this(type, null!, context.NextParameterExpression(type))
+            : this(type, null!, new ParameterExpression(context, type))
         {
         }
 
@@ -132,7 +132,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         private void ForwardExpression(TranslationContext context, ISqlExpression expression)
         {
-            context.Apply(Source is FilterExpression filterExpression ? filterExpression.Source : Source, expression);
+            context.Apply(
+                Source is FilterExpression filterExpression ? filterExpression.Source : Source,
+                expression);
         }
 
         #endregion

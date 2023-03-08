@@ -58,10 +58,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             var providerTypeName = analyzerTypeName + Conventions.ExpectedDiagnosticsProviderSuffix;
 
             var providerType = _dependencyContainer
-                .Resolve<ITypeProvider>()
-                .OurTypes
-                .SingleOrDefault(t => t.Name == providerTypeName)
-                .EnsureNotNull(() => new NotFoundException($"Provide {nameof(ExpectedDiagnosticsProvider)} for {analyzerTypeName} or place it in directory different from source directory"));
+                                   .Resolve<ITypeProvider>()
+                                   .OurTypes
+                                   .SingleOrDefault(t => t.Name == providerTypeName)
+                               ?? throw new NotFoundException($"Provide {nameof(ExpectedDiagnosticsProvider)} for {analyzerTypeName} or place it in directory different from source directory");
 
             return (IExpectedDiagnosticsProvider)_dependencyContainer.Resolve(providerType);
         }
@@ -69,10 +69,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
         /// <inheritdoc />
         public IEnumerable<SourceFile> SourceFiles(DiagnosticAnalyzer analyzer, string? directorySuffix = null)
         {
-            return SolutionExtensions
-                  .ProjectFile()
-                  .Directory
-                  .EnsureNotNull($"Project directory {nameof(Roslyn)}.{nameof(Test)} wasn't found")
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                    ?? throw new InvalidOperationException($"Project directory {nameof(Roslyn)}.{nameof(Test)} wasn't found");
+
+            return projectFileDirectory
                   .StepInto(Conventions.SourceDirectory)
                   .StepInto(analyzer.GetType().Name + (directorySuffix ?? string.Empty))
                   .GetFiles("*" + AnalysisExtensions.CSharpDefaultFileExt, SearchOption.TopDirectoryOnly)

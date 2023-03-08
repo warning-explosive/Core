@@ -74,7 +74,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                 .Update<OutboxMessage>()
                 .Set(outbox => outbox.Sent.Assign(true))
                 .Where(message => sent.Contains(message.PrimaryKey))
-                /* TODO: .CachedExpression("6714446E-9263-42EA-A988-3B47941313BA")*/
+                .CachedExpression("6714446E-9263-42EA-A988-3B47941313BA")
                 .Invoke(token)
                 .ConfigureAwait(false);
         }

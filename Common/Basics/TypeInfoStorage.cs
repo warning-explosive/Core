@@ -57,7 +57,7 @@ namespace SpaceEngineers.Core.Basics
 
             return !type.IsGenericTypeDefinition && type.ContainsGenericParameters
                 ? type.ToString()
-                : type.FullName.EnsureNotNull($"Type cache doesn't support types without {nameof(Type.FullName)}: {type}");
+                : type.FullName ?? throw new InvalidOperationException($"Type cache doesn't support types without {nameof(Type.FullName)}: {type}");
         }
 
         private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>> InitializeTypesCache()

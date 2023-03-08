@@ -33,10 +33,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var username = "qwerty";
             var permissions = new[] { "amazing_feature_42" };
 
-            var appSettings = SolutionExtensions
-                .ProjectFile()
-                .Directory
-                .EnsureNotNull("Project directory wasn't found")
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory wasn't found");
+
+            var appSettings = projectFileDirectory
                 .StepInto("Settings")
                 .StepInto(nameof(JwtTokenProviderTest))
                 .GetFile("appsettings", ".json");

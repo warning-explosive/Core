@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Benchmark.Sources
 {
+    using System;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
@@ -20,7 +21,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]
         private Assembly[]? _assemblies;
 
-        private Assembly[] Assemblies => _assemblies.EnsureNotNull(nameof(_assemblies));
+        private Assembly[] Assemblies => _assemblies ?? throw new InvalidOperationException(nameof(_assemblies));
 
         /// <summary>
         /// GlobalSetup
@@ -28,10 +29,10 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
         [GlobalSetup]
         public void GlobalSetup()
         {
-            _settingsDirectory = SolutionExtensions
-                .SolutionFile()
-                .Directory
-                .EnsureNotNull("Solution directory wasn't found")
+            var solutionFileDirectory = SolutionExtensions.SolutionFile().Directory
+                                        ?? throw new InvalidOperationException("Solution directory wasn't found");
+
+            _settingsDirectory = solutionFileDirectory
                 .StepInto(nameof(Benchmarks))
                 .StepInto(AssembliesExtensions.BuildName(nameof(Modules), nameof(Benchmark)))
                 .StepInto("Settings");

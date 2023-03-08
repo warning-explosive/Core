@@ -35,25 +35,26 @@
         {
             using (var document = SpreadsheetDocument.Open(specification.File, false))
             {
-                var sheet = document
-                   .WorkbookPart
-                   .Workbook
-                   .Sheets
-                   .EnsureNotNull("Workbook has no sheets")
-                   .OfType<Sheet>()
-                   .SingleOrDefault(sheet => sheet.Name.Value.Equals(specification.SheetName, StringComparison.Ordinal))
-                   .EnsureNotNull($"Worksheet {specification.SheetName} not found");
+                var sheets = document
+                                 .WorkbookPart
+                                 .Workbook
+                                 .Sheets
+                             ?? throw new InvalidOperationException("Workbook has no sheets");
 
-                var worksheet = document
-                   .WorkbookPart
-                   .WorksheetParts
-                   .SingleOrDefault(part => part.Uri.OriginalString.EndsWith(sheet.LocalName + sheet.SheetId + ".xml", StringComparison.Ordinal))
-                   .EnsureNotNull($"Worksheet {specification.SheetName} not found")
-                   .Worksheet;
+                var sheet = sheets
+                                .OfType<Sheet>()
+                                .SingleOrDefault(sheet => sheet.Name.Value.Equals(specification.SheetName, StringComparison.Ordinal))
+                            ?? throw new InvalidOperationException($"Worksheet {specification.SheetName} not found");
+
+                var worksheetPart = document
+                                        .WorkbookPart
+                                        .WorksheetParts
+                                        .SingleOrDefault(part => part.Uri.OriginalString.EndsWith(sheet.LocalName + sheet.SheetId + ".xml", StringComparison.Ordinal))
+                                    ?? throw new InvalidOperationException($"Worksheet {specification.SheetName} not found");
 
                 var sharedStrings = SharedStrings(document);
 
-                return ProcessWorksheet(worksheet, sharedStrings, specification);
+                return ProcessWorksheet(worksheetPart.Worksheet, sharedStrings, specification);
             }
         }
 
@@ -115,7 +116,7 @@
             IReadOnlyDictionary<int, string> sharedStrings,
             DataTable dataTable)
         {
-            var rowIndex = (row.RowIndex?.Value).EnsureNotNull<uint>("Row should have index");
+            var rowIndex = row.RowIndex?.Value ?? throw new InvalidOperationException("Row should have index");
 
             return row
                 .Elements<Cell>()

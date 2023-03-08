@@ -63,10 +63,10 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
             var host = new Lazy<IHost>(() =>
                 {
-                    var settingsDirectory = SolutionExtensions
-                        .SolutionFile()
-                        .Directory
-                        .EnsureNotNull("Solution directory wasn't found")
+                    var solutionFileDirectory = SolutionExtensions.SolutionFile().Directory
+                                                ?? throw new InvalidOperationException("Solution directory wasn't found");
+
+                    var settingsDirectory = solutionFileDirectory
                         .StepInto("Tests")
                         .StepInto("Test.WebApplication")
                         .StepInto("Settings");
@@ -87,14 +87,14 @@ namespace SpaceEngineers.Core.WebApplication.Test
             var username = "qwerty";
             var password = "12345678";
 
-            var appSettings = SolutionExtensions
-               .SolutionFile()
-               .Directory
-               .EnsureNotNull("Solution directory wasn't found")
-               .StepInto("Tests")
-               .StepInto("Test.WebApplication")
-               .StepInto("Settings")
-               .GetFile("appsettings", ".json");
+            var solutionFileDirectory = SolutionExtensions.SolutionFile().Directory
+                                        ?? throw new InvalidOperationException("Solution directory wasn't found");
+
+            var appSettings = solutionFileDirectory
+                .StepInto("Tests")
+                .StepInto("Test.WebApplication")
+                .StepInto("Settings")
+                .GetFile("appsettings", ".json");
 
             var authEndpointConfiguration = new ConfigurationBuilder()
                .AddJsonFile(appSettings.FullName)

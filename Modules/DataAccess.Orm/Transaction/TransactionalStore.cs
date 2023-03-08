@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Transaction
         {
             if (_store.TryGetValue(typeof(TEntity), out var inner))
             {
-                return inner.Values.OfType<TEntity>();
+                return inner.Values.OfType<TEntity>().Where(predicate.Compile());
             }
 
             return Enumerable.Empty<TEntity>();

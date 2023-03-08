@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Linq;
     using DataAccess.Orm.Transaction;
     using Domain;
@@ -36,6 +37,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
 
             await _databaseContext
                .Insert(new[] { user }, EnInsertBehavior.Default)
+               .CachedExpression("44453009-60BD-4F7A-8042-F397B893E2D6")
                .Invoke(token)
                .ConfigureAwait(false);
         }

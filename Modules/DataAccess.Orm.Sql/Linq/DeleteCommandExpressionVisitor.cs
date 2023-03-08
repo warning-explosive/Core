@@ -10,12 +10,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
     {
         private IAdvancedDatabaseTransaction? _transaction;
         private Expression<Func<TEntity, bool>>? _predicate;
+        private string? _cacheKey;
 
         private DeleteCommandExpressionVisitor()
         {
         }
 
-        public static (IAdvancedDatabaseTransaction, Expression<Func<TEntity, bool>>) Extract(Expression expression)
+        public static (IAdvancedDatabaseTransaction, Expression<Func<TEntity, bool>>, string) Extract(Expression expression)
         {
             var visitor = new DeleteCommandExpressionVisitor<TEntity>();
 
@@ -27,7 +28,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 throw new InvalidOperationException("Unable to determine delete query root");
             }
 
-            return (visitor._transaction, visitor._predicate);
+            if (visitor._cacheKey == null)
+            {
+                throw new InvalidOperationException("Unable to determine cached expression extension");
+            }
+
+            return (visitor._transaction, visitor._predicate, visitor._cacheKey);
         }
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -42,6 +48,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             if (method == LinqMethods.RepositoryDeleteWhere())
             {
                 _predicate = (Expression<Func<TEntity, bool>>)node.Arguments[1].UnwrapUnaryExpression();
+            }
+
+            if (method == LinqMethods.CachedDeleteExpression())
+            {
+                _cacheKey = (string)((ConstantExpression)node.Arguments[1]).Value;
             }
 
             return base.VisitMethodCall(node);

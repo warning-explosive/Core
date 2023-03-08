@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
     /// IUpdateQueryable
     /// </summary>
     /// <typeparam name="T">T type-argument</typeparam>
-    public interface IUpdateQueryable<out T>
+    public interface IUpdateQueryable<out T> : ICustomQueryable
     {
     }
 }

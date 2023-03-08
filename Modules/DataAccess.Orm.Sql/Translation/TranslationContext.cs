@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics;
     using Basics.Primitives;
     using Expressions;
+    using Model;
 
     /// <summary>
     /// TranslationContext
@@ -18,12 +19,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// </summary>
         public const string CommandParameterFormat = "param_{0}";
 
-        private Dictionary<string, Func<System.Linq.Expressions.Expression, System.Linq.Expressions.ConstantExpression>> _extractors;
+        private Dictionary<string, Func<CommandParameterExtractorContext, string, System.Linq.Expressions.ConstantExpression>> _extractors;
         private Stack<System.Linq.Expressions.Expression> _path;
 
         private int _commandParameterIndex;
 
-        private Dictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression> _parameters;
         private Stack<ISqlExpression> _stack;
 
         private int _lambdaParameterIndex;
@@ -34,12 +34,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         /// <summary> .cctor </summary>
         internal TranslationContext()
         {
-            _extractors = new Dictionary<string, Func<System.Linq.Expressions.Expression, System.Linq.Expressions.ConstantExpression>>();
+            _extractors = new Dictionary<string, Func<CommandParameterExtractorContext, string, System.Linq.Expressions.ConstantExpression>>();
             _path = new Stack<System.Linq.Expressions.Expression>();
 
             _commandParameterIndex = -1;
 
-            _parameters = new Dictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression>();
             _stack = new Stack<ISqlExpression>();
 
             _lambdaParameterIndex = -1;
@@ -61,6 +60,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         internal ISqlExpression? Parent => _stack.TryPeek(out var parent) ? parent : default;
 
+        internal ISqlExpression? Outer => _stack
+            .FirstOrDefault(expression => expression is NamedSourceExpression
+                or FilterExpression
+                or ProjectionExpression
+                or JoinExpression
+                or OrderByExpression);
+
         internal System.Linq.Expressions.Expression? Node => _path.TryPeek(out var node) ? node : default;
 
         /// <inheritdoc />
@@ -73,7 +79,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                 _commandParameterIndex = _commandParameterIndex,
 
-                _parameters = new Dictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression>(),
                 _stack = new Stack<ISqlExpression>(),
 
                 _lambdaParameterIndex = -1,
@@ -111,8 +116,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             };
         }
 
-        internal void WithinScope<T>(T expression, Action action)
-            where T : class, ISqlExpression
+        internal void WithinScope(ISqlExpression expression, Action action)
         {
             using (Disposable.Create(_stack, Push, Pop))
             {
@@ -126,7 +130,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             void Pop(Stack<ISqlExpression> stack)
             {
-                var sqlExpression = (T)stack.Pop();
+                var sqlExpression = stack.Pop();
 
                 if (_stack.TryPeek(out var outer))
                 {
@@ -139,11 +143,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal void WithoutScopeDuplication<T>(Func<T> sqlExpressionProducer, Action action)
-            where T : class, ISqlExpression
+        internal void WithoutScopeDuplication<TExpression>(Func<TExpression> sqlExpressionProducer, Action action)
+            where TExpression : class, ISqlExpression
         {
             if (_stack.TryPeek(out var outer)
-                && outer is T)
+                && outer is TExpression)
             {
                 action.Invoke();
             }
@@ -183,83 +187,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         internal void Apply(ISqlExpression outer, ISqlExpression inner)
         {
-            var service = typeof(IApplicable<>).MakeGenericType(inner.GetType());
-
-            if (outer.IsInstanceOfType(service))
-            {
-                outer
-                    .CallMethod(nameof(IApplicable<ISqlExpression>.Apply))
-                    .WithArgument(this)
-                    .WithArgument(inner)
-                    .Invoke();
-            }
-            else
-            {
-                throw new InvalidOperationException($"Could not apply {inner.GetType().Name} for {outer.GetType().Name}");
-            }
-        }
-
-        internal ParameterExpression NextParameterExpression(Type type)
-        {
-            return new ParameterExpression(this, type);
-        }
-
-        internal ParameterExpression GetParameterExpression(System.Linq.Expressions.ParameterExpression parameterExpression)
-        {
-            return _parameters.GetOrAdd(parameterExpression, expression => GetParameterExpression(expression.Type));
-        }
-
-        internal ParameterExpression GetParameterExpression(Type type)
-        {
-            return ExtractNamedSourceParameterExpression(_stack, type)
-                ?? ExtractParameterExpression(_parameters, type)
-                ?? NextParameterExpression(type);
-
-            static ParameterExpression? ExtractNamedSourceParameterExpression(Stack<ISqlExpression> stack, Type type)
-            {
-                var sqlExpression = stack
-                   .FirstOrDefault(expression => expression
-                        is NamedSourceExpression
-                        or FilterExpression
-                        or ProjectionExpression
-                        or JoinExpression
-                        or OrderByExpression);
-
-                var namedSourceExpression = ExtractNamedSourceExpression(sqlExpression, type);
-
-                return namedSourceExpression?.Parameter as ParameterExpression;
-
-                static NamedSourceExpression? ExtractNamedSourceExpression(
-                    ISqlExpression? expression,
-                    Type type)
-                {
-                    switch (expression)
-                    {
-                        case NamedSourceExpression namedSourceExpression:
-                            return namedSourceExpression.Type == type
-                                ? namedSourceExpression
-                                : ExtractNamedSourceExpression(namedSourceExpression.Source, type);
-                        case FilterExpression filterExpression:
-                            return ExtractNamedSourceExpression(filterExpression.Source, type);
-                        case ProjectionExpression projectionExpression:
-                            return ExtractNamedSourceExpression(projectionExpression.Source, type);
-                        case JoinExpression joinExpression:
-                            return ExtractNamedSourceExpression(joinExpression.LeftSource, type)
-                                ?? ExtractNamedSourceExpression(joinExpression.RightSource, type);
-                        case OrderByExpression orderByExpression:
-                            return ExtractNamedSourceExpression(orderByExpression.Source, type);
-                        default:
-                            return default;
-                    }
-                }
-            }
-
-            static ParameterExpression? ExtractParameterExpression(
-                IReadOnlyDictionary<System.Linq.Expressions.ParameterExpression, ParameterExpression> parameters,
-                Type type)
-            {
-                return parameters.SingleOrDefault(it => it.Key.Type == type).Value;
-            }
+            outer
+                .CallMethod(nameof(IApplicable<ISqlExpression>.Apply))
+                .WithArgument(this)
+                .WithArgument(inner)
+                .Invoke();
         }
 
         internal void ReverseLambdaParametersNames()
@@ -270,55 +202,31 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
-        internal ProjectionExpression? GetProjectionExpression(ISqlExpression? sqlExpression)
-        {
-            return ExtractProjectionExpression(sqlExpression);
-
-            static ProjectionExpression? ExtractProjectionExpression(ISqlExpression? expression)
-            {
-                switch (expression)
-                {
-                    case NamedSourceExpression namedSourceExpression:
-                        return ExtractProjectionExpression(namedSourceExpression.Source);
-                    case FilterExpression filterExpression:
-                        return ExtractProjectionExpression(filterExpression.Source);
-                    case ProjectionExpression projectionExpression:
-                        return projectionExpression;
-                    case JoinExpression:
-                        throw new InvalidOperationException("Ambiguous reference to join expression source");
-                    case OrderByExpression orderByExpression:
-                        return ExtractProjectionExpression(orderByExpression.Source);
-                    default:
-                        return default;
-                }
-            }
-        }
-
         internal Func<System.Linq.Expressions.Expression, IReadOnlyCollection<SqlCommandParameter>> BuildCommandParametersExtractor(
             ILinqExpressionPreprocessorComposite preProcessor)
         {
             return expression =>
             {
-                var visitedExpression = preProcessor.Visit(expression);
+                var context = new CommandParameterExtractorContext(preProcessor.Visit(expression));
 
                 return _extractors
                     .Select(pair =>
                     {
-                        var constantExpression = pair.Value.Invoke(visitedExpression);
+                        var constantExpression = pair.Value.Invoke(context, pair.Key);
                         return new SqlCommandParameter(pair.Key, constantExpression.Value, constantExpression.Type);
                     })
                     .ToList();
             };
         }
 
+        [SuppressMessage("Analysis", "CA1502", Justification = "complex value extractor")]
         internal void CaptureCommandParameterExtractor(
-            string name,
-            Func<System.Linq.Expressions.Expression, System.Linq.Expressions.ConstantExpression>? extractor = null)
+            string commandParameterName,
+            Func<CommandParameterExtractorContext, string, System.Linq.Expressions.ConstantExpression>? extractor = null)
         {
             if (extractor == null)
             {
-                var expressionExtractor = new Func<System.Linq.Expressions.Expression, System.Linq.Expressions.Expression>(expression => expression);
+                var expressionExtractor = new Func<CommandParameterExtractorContext, string, System.Linq.Expressions.Expression>((context, _) => context.Expression);
 
                 var path = _path.Reverse().ToArray();
 
@@ -333,9 +241,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     }
                 }
 
-                _extractors[name] = expression =>
+                _extractors[commandParameterName] = (context, name) =>
                 {
-                    var extracted = expressionExtractor(expression);
+                    var extracted = expressionExtractor(context, name);
 
                     return extracted switch
                     {
@@ -346,13 +254,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
             else
             {
-                _extractors[name] = extractor;
+                _extractors[commandParameterName] = extractor;
             }
 
             static bool TryFold(
-                Func<System.Linq.Expressions.Expression, System.Linq.Expressions.Expression> acc,
+                Func<CommandParameterExtractorContext, string, System.Linq.Expressions.Expression> acc,
                 (System.Linq.Expressions.Expression, System.Linq.Expressions.Expression) pair,
-                out Func<System.Linq.Expressions.Expression, System.Linq.Expressions.Expression> extractor)
+                out Func<CommandParameterExtractorContext, string, System.Linq.Expressions.Expression> extractor)
             {
                 var (current, next) = pair;
 
@@ -363,7 +271,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         if (argumentProvider is System.Linq.Expressions.MethodCallExpression methodCallExpression
                             && methodCallExpression.Object == next)
                         {
-                            extractor = expression => ((System.Linq.Expressions.MethodCallExpression)acc(expression)).Object;
+                            extractor = (context, name) => ((System.Linq.Expressions.MethodCallExpression)acc(context, name)).Object;
                             return true;
                         }
 
@@ -371,7 +279,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         {
                             if (argumentProvider.GetArgument(i) == next)
                             {
-                                extractor = expression => ((System.Linq.Expressions.IArgumentProvider)acc(expression)).GetArgument(i);
+                                extractor = (context, name) => ((System.Linq.Expressions.IArgumentProvider)acc(context, name)).GetArgument(i);
                                 return true;
                             }
                         }
@@ -383,7 +291,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     {
                         if (unaryExpression.Operand == next)
                         {
-                            extractor = expression => ((System.Linq.Expressions.UnaryExpression)acc(expression)).Operand;
+                            extractor = (context, name) => ((System.Linq.Expressions.UnaryExpression)acc(context, name)).Operand;
                             return true;
                         }
 
@@ -394,13 +302,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     {
                         if (binaryExpression.Left == next)
                         {
-                            extractor = expression => ((System.Linq.Expressions.BinaryExpression)acc(expression)).Left;
+                            extractor = (context, name) => ((System.Linq.Expressions.BinaryExpression)acc(context, name)).Left;
                             return true;
                         }
 
                         if (binaryExpression.Right == next)
                         {
-                            extractor = expression => ((System.Linq.Expressions.BinaryExpression)acc(expression)).Right;
+                            extractor = (context, name) => ((System.Linq.Expressions.BinaryExpression)acc(context, name)).Right;
                             return true;
                         }
 
@@ -411,19 +319,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     {
                         if (conditionalExpression.Test == next)
                         {
-                            extractor = expression => ((System.Linq.Expressions.ConditionalExpression)acc(expression)).Test;
+                            extractor = (context, name) => ((System.Linq.Expressions.ConditionalExpression)acc(context, name)).Test;
                             return true;
                         }
 
                         if (conditionalExpression.IfTrue == next)
                         {
-                            extractor = expression => ((System.Linq.Expressions.ConditionalExpression)acc(expression)).IfTrue;
+                            extractor = (context, name) => ((System.Linq.Expressions.ConditionalExpression)acc(context, name)).IfTrue;
                             return true;
                         }
 
                         if (conditionalExpression.IfFalse == next)
                         {
-                            extractor = expression => ((System.Linq.Expressions.ConditionalExpression)acc(expression)).IfFalse;
+                            extractor = (context, name) => ((System.Linq.Expressions.ConditionalExpression)acc(context, name)).IfFalse;
                             return true;
                         }
 
@@ -434,7 +342,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     {
                         if (lambdaExpression.Body == next)
                         {
-                            extractor = expression => ((System.Linq.Expressions.LambdaExpression)acc(expression)).Body;
+                            extractor = (context, name) => ((System.Linq.Expressions.LambdaExpression)acc(context, name)).Body;
                             return true;
                         }
 
@@ -443,10 +351,33 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                     case System.Linq.Expressions.ConstantExpression constantExpression:
                     {
+                        if (next is System.Linq.Expressions.MethodCallExpression methodCallExpression
+                            && methodCallExpression.Method == TranslationExpressionVisitor.GetInsertValuesMethod
+                            && methodCallExpression.Arguments[0] is System.Linq.Expressions.ConstantExpression firstArgument
+                            && firstArgument.Value is IModelProvider modelProvider)
+                        {
+                            extractor = (context, name) =>
+                            {
+                                var insertValuesMap = context.GetOrAdd(
+                                    TranslationExpressionVisitor.GetInsertValuesMethod.Name,
+                                    () => (IReadOnlyDictionary<string, System.Linq.Expressions.ConstantExpression>)TranslationExpressionVisitor.GetInsertValuesMethod.Invoke(
+                                            null,
+                                            new[]
+                                            {
+                                                modelProvider,
+                                                ((System.Linq.Expressions.ConstantExpression)acc(context, name)).Value
+                                            }));
+
+                                return insertValuesMap[name];
+                            };
+
+                            return true;
+                        }
+
                         if (constantExpression.Value is IQueryable queryable
                             && queryable.Expression == next)
                         {
-                            extractor = expression => ((IQueryable)((System.Linq.Expressions.ConstantExpression)acc(expression)).Value).Expression;
+                            extractor = (context, name) => ((IQueryable)((System.Linq.Expressions.ConstantExpression)acc(context, name)).Value).Expression;
                             return true;
                         }
 
@@ -457,7 +388,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     {
                         if (memberExpression.Expression == next)
                         {
-                            extractor = expression => ((System.Linq.Expressions.MemberExpression)acc(expression)).Expression;
+                            extractor = (context, name) => ((System.Linq.Expressions.MemberExpression)acc(context, name)).Expression;
                             return true;
                         }
 
@@ -470,14 +401,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        internal void PushPath(System.Linq.Expressions.Expression expression)
+        internal DisposableAction<System.Linq.Expressions.Expression> WithinPathScope(
+            System.Linq.Expressions.Expression expression)
+        {
+            return Disposable.Create(expression, PushPath, PopPath);
+        }
+
+        private void PushPath(System.Linq.Expressions.Expression expression)
         {
             _path.Push(expression);
 
             Expression ??= expression;
         }
 
-        internal void PopPath(System.Linq.Expressions.Expression expression)
+        private void PopPath(System.Linq.Expressions.Expression expression)
         {
             _ = _path.Pop();
         }

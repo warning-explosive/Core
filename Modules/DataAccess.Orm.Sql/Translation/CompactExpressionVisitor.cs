@@ -9,19 +9,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
     internal class CompactExpressionVisitor : SqlExpressionVisitorBase
     {
-        private readonly IReadOnlyDictionary<string, ITypedSqlExpression> _replacements;
+        private readonly ProjectionExpression _projection;
         private readonly Stack<string> _scope;
 
-        public CompactExpressionVisitor(ProjectionExpression projection)
-        {
-            _replacements = projection
-                .Expressions
-                .ToDictionary(
-                    expression => (expression as ColumnExpression)?.Name ?? (expression as RenameExpression).Name,
-                    expression => (ITypedSqlExpression)RenameExpression.UnwrapRenames(expression),
-                    StringComparer.OrdinalIgnoreCase);
+        private IReadOnlyDictionary<string, ITypedSqlExpression>? _replacements;
 
+        private CompactExpressionVisitor(ProjectionExpression projection)
+        {
+            _projection = projection;
             _scope = new Stack<string>();
+        }
+
+        private IReadOnlyDictionary<string, ITypedSqlExpression> Replacements
+        {
+            get
+            {
+                _replacements ??= _projection
+                    .Expressions
+                    .ToDictionary(
+                        expression => (expression as ColumnExpression)?.Name ?? (expression as RenameExpression).Name,
+                        expression => (ITypedSqlExpression)RenameExpression.UnwrapRenames(expression),
+                        StringComparer.OrdinalIgnoreCase);
+
+                return _replacements;
+            }
+        }
+
+        public static ISqlExpression Compact(ISqlExpression expression, ProjectionExpression projection)
+        {
+            return new CompactExpressionVisitor(projection).Visit(expression);
         }
 
         protected override ISqlExpression VisitColumnExpression(ColumnExpression columnExpression)
@@ -29,7 +45,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             using (Disposable.Create(_scope, Push, Pop))
             {
                 return columnExpression.Source is ParameterExpression
-                    && _replacements.TryGetValue(_scope.ToString("_"), out var replacement)
+                    && Replacements.TryGetValue(_scope.ToString("_"), out var replacement)
                     && replacement.Type == columnExpression.Type
                     ? replacement
                     : base.VisitColumnExpression(columnExpression);
@@ -48,8 +64,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override ISqlExpression VisitParameter(ParameterExpression parameterExpression)
         {
-            return _replacements.Count == 1
-                   && _replacements.Single().Value is { } expression
+            return Replacements.Count == 1
+                   && Replacements.Single().Value is { } expression
                 ? expression
                 : parameterExpression;
         }

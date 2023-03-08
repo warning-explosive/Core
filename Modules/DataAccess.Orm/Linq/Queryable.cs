@@ -15,11 +15,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Linq
                                 IOrderedQueryable<T>,
                                 IAsyncEnumerable<T>,
                                 IInsertQueryable<T>,
+                                ICachedInsertQueryable<T>,
                                 IUpdateQueryable<T>,
                                 ISetUpdateQueryable<T>,
                                 IFilteredUpdateQueryable<T>,
+                                ICachedUpdateQueryable<T>,
                                 IDeleteQueryable<T>,
                                 IFilteredDeleteQueryable<T>,
+                                ICachedDeleteQueryable<T>,
                                 ICachedQueryable<T>
     {
         private readonly IAsyncQueryProvider _queryProvider;

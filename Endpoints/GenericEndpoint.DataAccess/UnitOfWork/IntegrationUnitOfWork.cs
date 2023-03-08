@@ -157,6 +157,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
 
                 await databaseContext
                    .Insert(new[] { inbox }, EnInsertBehavior.DoNothing)
+                   .CachedExpression("98696B21-1D0D-416B-9A39-AFA6AFB16A0A")
                    .Invoke(token)
                    .ConfigureAwait(false);
             }
@@ -166,7 +167,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
                     .Update<InboxMessage>()
                     .Set(message => message.Handled.Assign(true))
                     .Where(message => message.PrimaryKey == inbox.PrimaryKey)
-                    /* TODO: .CachedExpression("45A2D69C-BB68-403C-9A12-037D60959BC2")*/
+                    .CachedExpression("45A2D69C-BB68-403C-9A12-037D60959BC2")
                     .Invoke(token)
                     .ConfigureAwait(false);
             }
@@ -189,6 +190,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.UnitOfWork
             return outboxMessages.Any()
                 ? databaseContext
                     .Insert(outboxMessages, EnInsertBehavior.Default)
+                    .CachedExpression($"{nameof(PersistOutgoingMessages)}:{outboxMessages.Length}")
                     .Invoke(token)
                 : Task.CompletedTask;
         }

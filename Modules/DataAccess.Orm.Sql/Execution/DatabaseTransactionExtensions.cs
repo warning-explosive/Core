@@ -44,7 +44,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
             return context
                 .CallMethod(nameof(IDatabaseContext.All))
                 .WithTypeArgument(mtmType)
-                .Invoke<IQueryable<BaseMtmDatabaseEntity<TLeftKey, TRightKey>>>();
+                .Invoke<IQueryable>()
+                .Cast<BaseMtmDatabaseEntity<TLeftKey, TRightKey>>();
         }
 
         private class ExtractMemberAccessExpressionVisitor : ExpressionVisitor
@@ -61,10 +62,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Execution
 
                 _ = visitor.Visit(expression);
 
-                return visitor
-                    ._member
-                    .EnsureNotNull($"Unable to find member name in expression: {expression}")
-                    .Name;
+                return visitor._member?.Name
+                       ?? throw new InvalidOperationException($"Unable to find member name in expression: {expression}");
             }
 
             protected override Expression VisitMember(MemberExpression node)

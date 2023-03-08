@@ -460,16 +460,14 @@
                 var leftKey = mtmTable.ExtractGenericArgumentAt(typeof(BaseMtmDatabaseEntity<,>), 0);
                 var rightKey = mtmTable.ExtractGenericArgumentAt(typeof(BaseMtmDatabaseEntity<,>), 1);
 
-                return new MethodFinder(
-                        typeof(ColumnInfo),
-                        nameof(CreateMtmInstance),
-                        BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod)
-                    {
-                        TypeArguments = new[] { mtmTable, leftKey, rightKey },
-                        ArgumentTypes = new[] { leftKey, rightKey }
-                    }
-                    .FindMethod()
-                    .EnsureNotNull($"Could not find {nameof(CreateMtmInstance)} method")
+                return (new MethodFinder(typeof(ColumnInfo),
+                            nameof(CreateMtmInstance),
+                            BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod)
+                        {
+                            TypeArguments = new[] { mtmTable, leftKey, rightKey },
+                            ArgumentTypes = new[] { leftKey, rightKey }
+                        }
+                        .FindMethod() ?? throw new InvalidOperationException($"Could not find {nameof(CreateMtmInstance)} method"))
                     .MakeGenericMethod(mtmTable, leftKey, rightKey);
             }
         }

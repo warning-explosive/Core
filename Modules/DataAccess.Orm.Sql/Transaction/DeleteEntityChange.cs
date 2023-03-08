@@ -18,25 +18,27 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
     public class DeleteEntityChange<TEntity> : ITransactionalChange
         where TEntity : IDatabaseEntity
     {
-        private readonly long _version;
         private readonly long _affectedRowsCount;
         private readonly Expression<Func<TEntity, bool>> _predicate;
+        private readonly string _cacheKey;
 
         /// <summary> .cctor </summary>
         /// <param name="version">Version</param>
         /// <param name="affectedRowsCount">Affected rows count</param>
         /// <param name="predicate">Predicate</param>
+        /// <param name="cacheKey">Cache key</param>
         public DeleteEntityChange(
             long version,
             long affectedRowsCount,
-            Expression<Func<TEntity, bool>> predicate)
+            Expression<Func<TEntity, bool>> predicate,
+            string cacheKey)
         {
-            _version = version;
             _affectedRowsCount = affectedRowsCount;
-            _predicate = predicate;
-        }
 
-        private Expression<Func<TEntity, bool>> Predicate => _predicate.And(entity => entity.Version == _version);
+            _predicate = predicate.And(entity => entity.Version == version);
+
+            _cacheKey = cacheKey;
+        }
 
         /// <inheritdoc />
         public async Task Apply(
@@ -45,8 +47,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
         {
             var actualAffectedRowsCount = await transaction
                .Delete<TEntity>()
-               .Where(Predicate)
-               /* TODO: .CachedExpression("D584BA2A-EC1D-420B-8B99-40F58A03A595")*/
+               .Where(_predicate)
+               .CachedExpression($"{nameof(DeleteEntityChange<TEntity>)}:{_cacheKey}")
                .Invoke(token)
                .ConfigureAwait(false);
 
@@ -59,7 +61,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
         /// <inheritdoc />
         public void Apply(ITransactionalStore transactionalStore)
         {
-            var values = transactionalStore.GetValues(Predicate);
+            var values = transactionalStore.GetValues(_predicate);
 
             foreach (var entity in values)
             {

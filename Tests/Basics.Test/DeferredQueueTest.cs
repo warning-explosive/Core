@@ -203,7 +203,7 @@ namespace SpaceEngineers.Core.Basics.Test
 
             public DateTime Actual
             {
-                get => _actual.EnsureNotNull<DateTime>("Elapsed should be set");
+                get => _actual ?? throw new InvalidOperationException("Elapsed should be set");
                 set => _actual = value;
             }
 

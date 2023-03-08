@@ -66,7 +66,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
         }
 
         [Fact(Timeout = 300_000)]
-        internal async Task MessageHandlerMiddlewareBenchmarkTest()
+        internal static async Task MessageHandlerMiddlewareBenchmarkTest()
         {
             var source = new MessageHandlerMiddlewareBenchmarkSource();
 

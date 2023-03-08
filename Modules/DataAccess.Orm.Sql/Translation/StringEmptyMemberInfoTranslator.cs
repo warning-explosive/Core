@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 expression = new QueryParameterExpression(
                     context,
                     typeof(string),
-                    static _ => System.Linq.Expressions.Expression.Constant(string.Empty, typeof(string)));
+                    static (_, _) => System.Linq.Expressions.Expression.Constant(string.Empty, typeof(string)));
 
                 return true;
             }

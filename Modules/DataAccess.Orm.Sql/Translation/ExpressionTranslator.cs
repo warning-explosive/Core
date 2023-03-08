@@ -9,6 +9,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using CrossCuttingConcerns.Logging;
+    using Microsoft.Extensions.Logging;
     using Model;
     using Orm.Linq;
 
@@ -20,6 +22,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private readonly ILinqExpressionPreprocessorComposite _preprocessor;
         private readonly ISqlExpressionTranslatorComposite _translator;
         private readonly IEnumerable<IMemberInfoTranslator> _sqlFunctionProviders;
+        private readonly ILogger _logger;
 
         private readonly ConcurrentDictionary<string, TranslatedSqlExpression> _cache;
         private readonly Func<string, Expression, TranslatedSqlExpression> _factory;
@@ -28,12 +31,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             IModelProvider modelProvider,
             ILinqExpressionPreprocessorComposite preprocessor,
             ISqlExpressionTranslatorComposite translator,
-            IEnumerable<IMemberInfoTranslator> sqlFunctionProviders)
+            IEnumerable<IMemberInfoTranslator> sqlFunctionProviders,
+            ILogger logger)
         {
             _modelProvider = modelProvider;
             _preprocessor = preprocessor;
             _translator = translator;
             _sqlFunctionProviders = sqlFunctionProviders;
+            _logger = logger;
 
             _cache = new ConcurrentDictionary<string, TranslatedSqlExpression>(StringComparer.Ordinal);
             _factory = TranslateSafe();
@@ -41,10 +46,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         public ICommand Translate(Expression expression)
         {
-            // TODO: #backlog - handle repository update/delete cache misses
-            var translatedSqlExpression = ExtractExpressionCacheKeyExpressionVisitor.TryGetCacheKey(expression, out var cacheKey)
-                ? _cache.GetOrAdd(cacheKey, _factory, expression)
-                : _factory(string.Empty, expression);
+            TranslatedSqlExpression translatedSqlExpression;
+
+            if (ExtractExpressionCacheKeyExpressionVisitor.TryGetCacheKey(expression, out var cacheKey))
+            {
+                translatedSqlExpression = _cache.GetOrAdd(cacheKey, _factory, expression);
+            }
+            else
+            {
+                _logger.Warning($"{nameof(LinqExtensions.CachedExpression)} can be applied so as to eliminate repetitive translations");
+
+                translatedSqlExpression = _factory(string.Empty, expression);
+            }
 
             return new SqlCommand(
                 translatedSqlExpression.CommandText,
@@ -53,10 +66,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         private Func<string, Expression, TranslatedSqlExpression> TranslateSafe()
         {
-            return (_, expression) => ExecutionExtensions
-                .Try(TranslateUnsafe, expression)
-                .Catch<Exception>()
-                .Invoke(ex => throw new TranslationException(expression, ex));
+            return (key, expression) =>
+            {
+                _logger.Information($"building cached expression: {key}");
+
+                return ExecutionExtensions
+                    .Try(TranslateUnsafe, expression)
+                    .Catch<Exception>()
+                    .Invoke(ex => throw new TranslationException(expression, ex));
+            };
         }
 
         private TranslatedSqlExpression TranslateUnsafe(Expression expression)

@@ -62,6 +62,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 
             await transaction
                 .Insert(new[] { appliedMigration }, EnInsertBehavior.Default)
+                .CachedExpression("D4265ADC-0C92-4B5E-B3E4-B191FEE35AD7")
                 .Invoke(token)
                 .ConfigureAwait(false);
 

@@ -66,15 +66,17 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
         {
             return _databaseContext
                 .Insert(new[] { BuildDatabaseDomainEvent(args) }, EnInsertBehavior.Default)
+                .CachedExpression("FA2B0061-73A6-4CCA-B4D3-84D77357555A")
                 .Invoke(token);
         }
 
         public Task Append(
-            IEnumerable<DomainEventArgs> args,
+            IReadOnlyCollection<DomainEventArgs> args,
             CancellationToken token)
         {
             return _databaseContext
                 .Insert(args.Select(BuildDatabaseDomainEvent).ToArray(), EnInsertBehavior.Default)
+                .CachedExpression($"{nameof(Append)}DomainEvents:{args.Count}")
                 .Invoke(token);
         }
 

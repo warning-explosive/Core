@@ -34,7 +34,7 @@ namespace SpaceEngineers.Core.GenericHost.Internals
         {
             if (_serviceProvider != null)
             {
-                throw new InvalidOperationException("Service provider have already been set");
+                throw new InvalidOperationException("Service provider has already been set");
             }
 
             _serviceProvider = serviceProvider;

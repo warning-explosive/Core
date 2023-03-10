@@ -363,5 +363,8 @@
       <Compile Update="Linq\EnInsertBehavior.cs">
         <DependentUpon>Repository.cs</DependentUpon>
       </Compile>
+      <Compile Update="Translation\Expressions\ExplainExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

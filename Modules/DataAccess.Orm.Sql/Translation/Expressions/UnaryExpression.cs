@@ -99,13 +99,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         private void ApplySource(ISqlExpression expression)
         {
-            if (Source == null)
+            if (Source != null)
             {
-                Source = expression;
-                return;
+                throw new InvalidOperationException("Source expression has already been set");
             }
 
-            throw new InvalidOperationException("Unary expression source have already been set");
+            Source = expression;
         }
 
         #endregion

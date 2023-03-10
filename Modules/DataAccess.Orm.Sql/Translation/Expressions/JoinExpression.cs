@@ -51,7 +51,7 @@
         {
             if (On != null)
             {
-                throw new InvalidOperationException("Join on expression has already been set");
+                throw new InvalidOperationException("Source expression has already been set");
             }
 
             On = expression;
@@ -83,7 +83,7 @@
                 return;
             }
 
-            throw new InvalidOperationException("Join expression sources have already been set");
+            throw new InvalidOperationException("Source expression has already been set");
         }
 
         #endregion

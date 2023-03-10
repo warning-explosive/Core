@@ -96,7 +96,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             if (Expression != null)
             {
-                throw new InvalidOperationException("Order by expression source has already been set");
+                throw new InvalidOperationException("Source expression has already been set");
             }
 
             Expression = expression;

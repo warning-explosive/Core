@@ -322,6 +322,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
+            if (method == LinqMethods.Explain())
+            {
+                var analyze = (bool)((ConstantExpression)node.Arguments[1]).Value;
+
+                _context.WithinScope(
+                    new ExplainExpression(analyze),
+                    () => Visit(node.Arguments[0]));
+
+                return node;
+            }
+
             if (method == LinqMethods.QueryableSingle()
                 || method == LinqMethods.QueryableSingleOrDefault())
             {

@@ -37,7 +37,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 queryable.Expression,
                 Expression.Constant(cacheKey));
 
-            return (ICachedInsertQueryable<T>)queryable.AsyncQueryProvider.CreateQuery<T>(expression);
+            return (ICachedInsertQueryable<T>)queryable
+                .AsyncQueryProvider
+                .CreateQuery<T>(expression);
         }
 
         /// <summary>
@@ -172,7 +174,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 queryable.Expression,
                 Expression.Constant(cacheKey));
 
-            return (ICachedUpdateQueryable<T>)queryable.AsyncQueryProvider.CreateQuery<T>(expression);
+            return (ICachedUpdateQueryable<T>)queryable
+                .AsyncQueryProvider
+                .CreateQuery<T>(expression);
         }
 
         /// <summary>
@@ -257,7 +261,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 queryable.Expression,
                 Expression.Constant(cacheKey));
 
-            return (ICachedDeleteQueryable<T>)queryable.AsyncQueryProvider.CreateQuery<T>(expression);
+            return (ICachedDeleteQueryable<T>)queryable
+                .AsyncQueryProvider
+                .CreateQuery<T>(expression);
         }
 
         /// <summary>
@@ -296,6 +302,33 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         #region IRepository.All
 
         /// <summary>
+        /// Gets query plan from database
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <param name="analyze">Invokes sql command and grab statistics according to default_statistics_target</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>ICachedQueryable</returns>
+        public static Task<string> Explain<T>(
+            this ICachedQueryable<T> source,
+            bool analyze,
+            CancellationToken token)
+        {
+            var queryable = (Queryable<T>)source;
+
+            var expression = Expression.Call(
+                null,
+                LinqMethods.Explain().MakeGenericMethod(typeof(T)),
+                queryable.Expression,
+                Expression.Constant(analyze),
+                Expression.Constant(token));
+
+            return queryable
+                .AsyncQueryProvider
+                .ExecuteScalarAsync<string>(expression, token);
+        }
+
+        /// <summary>
         /// Adds cache key attribute to query expression
         /// </summary>
         /// <param name="source">Source query</param>
@@ -314,7 +347,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 queryable.Expression,
                 Expression.Constant(cacheKey));
 
-            return (ICachedQueryable<T>)queryable.AsyncQueryProvider.CreateQuery<T>(expression);
+            return (ICachedQueryable<T>)queryable
+                .AsyncQueryProvider
+                .CreateQuery<T>(expression);
         }
 
         /// <summary>

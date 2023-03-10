@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
+    using System.Threading;
     using Basics;
     using CompositionRoot;
     using Model;
@@ -14,6 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
     {
         private const string CouldNotFindMethodFormat = "Could not find {0} method";
 
+        private static MethodInfo? _explain;
         private static MethodInfo? _repositoryAll;
         private static MethodInfo? _cachedExpression;
         private static MethodInfo? _repositoryInsert;
@@ -53,6 +55,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         private static MethodInfo? _isNull;
         private static MethodInfo? _isNotNull;
         private static MethodInfo? _assign;
+
+        public static MethodInfo Explain()
+        {
+            return _explain ??= new MethodFinder(typeof(LinqExtensions),
+                    nameof(LinqExtensions.Explain),
+                    BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                {
+                    TypeArguments = new[] { typeof(object) },
+                    ArgumentTypes = new[] { typeof(ICachedQueryable<object>), typeof(bool), typeof(CancellationToken) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Sql.Linq.LinqExtensions.Explain()"));
+        }
 
         public static MethodInfo RepositoryAll()
         {

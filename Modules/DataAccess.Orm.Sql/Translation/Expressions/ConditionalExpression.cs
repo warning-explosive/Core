@@ -125,7 +125,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                 return;
             }
 
-            throw new InvalidOperationException("Conditional expression sources have already been set");
+            throw new InvalidOperationException("Source expression has already been set");
         }
 
         #endregion

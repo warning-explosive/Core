@@ -203,13 +203,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                     .CachedExpression("EB3A4174-DEE9-438E-993F-1CFABB671D9A")
                     .ToListAsync(token)
                     .ConfigureAwait(false))
-                .GroupBy(column => new { column.Schema, column.Table, column.IsUnique })
+                .GroupBy(column => new { column.Schema, column.Table, column.Unique })
                 .Select(grp => new IndexNode(
                     grp.Key.Schema,
                     grp.Key.Table,
                     grp.Where(column => column.IsKeyColumn).Select(column => column.Column).ToArray(),
                     grp.Where(column => !column.IsKeyColumn).Select(column => column.Column).ToArray(),
-                    grp.Key.IsUnique))
+                    grp.Key.Unique))
                 .ToList();
         }
     }

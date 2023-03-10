@@ -95,7 +95,7 @@
                 Schema.GetHashCode(StringComparison.OrdinalIgnoreCase),
                 Table.GetHashCode(StringComparison.OrdinalIgnoreCase),
                 Index.GetHashCode(StringComparison.OrdinalIgnoreCase),
-                Unique.Bit(),
+                Unique,
                 Columns.OrderBy(column => column).ToString(", ").GetHashCode(StringComparison.OrdinalIgnoreCase),
                 IncludedColumns.OrderBy(column => column).ToString(", ").GetHashCode(StringComparison.OrdinalIgnoreCase));
         }

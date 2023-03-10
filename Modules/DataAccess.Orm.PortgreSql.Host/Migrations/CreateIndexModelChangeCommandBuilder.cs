@@ -16,7 +16,7 @@
                                                           IResolvable<IModelChangeCommandBuilder<CreateIndex>>,
                                                           ICollectionResolvable<IModelChangeCommandBuilder>
     {
-        private const string CommandFormat = @"create {4}index ""{2}"" on ""{0}"".""{1}"" ({3})";
+        private const string CommandFormat = @"create {5}index ""{2}"" on ""{0}"".""{1}"" ({3}){4}";
         private const string ColumnFormat = @"""{0}""";
 
         private readonly IModelProvider _modelProvider;
@@ -47,11 +47,24 @@
                 .Select(column => ColumnFormat.Format(column.Name))
                 .ToString(", ");
 
+            var includedColumns = index.IncludedColumns.Any()
+                ? " include ({0})".Format(index
+                    .IncludedColumns
+                    .Select(column => ColumnFormat.Format(column.Name))
+                    .ToString(", "))
+                : string.Empty;
+
             var modifiers = index.Unique
                 ? "unique "
                 : string.Empty;
 
-            var commandText = CommandFormat.Format(change.Schema, change.Table, change.Index, columns, modifiers);
+            var commandText = CommandFormat.Format(
+                change.Schema,
+                change.Table,
+                change.Index,
+                columns,
+                includedColumns,
+                modifiers);
 
             yield return new SqlCommand(commandText, Array.Empty<SqlCommandParameter>());
         }

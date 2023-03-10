@@ -19,7 +19,7 @@ gen_random_uuid() as ""{nameof(DatabaseIndexColumn.PrimaryKey)}"",
 ns.nspname  as ""{nameof(DatabaseIndexColumn.Schema)}"",
 t.relname as ""{nameof(DatabaseIndexColumn.Table)}"",
 i.relname as ""{nameof(DatabaseIndexColumn.Index)}"",
-ix.indisunique as ""{nameof(DatabaseIndexColumn.IsUnique)}"",
+ix.indisunique as ""{nameof(DatabaseIndexColumn.Unique)}"",
 a.attname as ""{nameof(DatabaseIndexColumn.Column)}"",
 ix.idx < indnkeyatts as ""{nameof(DatabaseIndexColumn.IsKeyColumn)}"",
 pg_get_indexdef(ix.indexrelid, 0, true) as ""{nameof(DatabaseIndexColumn.Definition)}""

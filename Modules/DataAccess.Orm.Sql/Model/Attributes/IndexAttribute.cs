@@ -1,7 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model.Attributes
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
 
     /// <summary>
@@ -19,7 +18,7 @@
             Columns = new[] { column }
                 .Concat(columns)
                 .OrderBy(col => col)
-                .ToList();
+                .ToArray();
 
             IncludedColumns = Array.Empty<string>();
         }
@@ -27,12 +26,12 @@
         /// <summary>
         /// Columns
         /// </summary>
-        public IReadOnlyCollection<string> Columns { get; }
+        public string[] Columns { get; }
 
         /// <summary>
         /// Included columns
         /// </summary>
-        public IReadOnlyCollection<string> IncludedColumns { get; }
+        public string[] IncludedColumns { get; set; }
 
         /// <summary>
         /// Unique

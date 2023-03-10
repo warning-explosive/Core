@@ -18,6 +18,7 @@
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Transaction;
+    using DatabaseEntities;
     using DatabaseEntities.Relations;
     using GenericDomain.EventSourcing.Sql;
     using GenericEndpoint.Authorization;
@@ -770,6 +771,7 @@
         {
             var databaseEntities = new[]
             {
+                typeof(DatabaseEntity),
                 typeof(Community),
                 typeof(Participant),
                 typeof(Blog),
@@ -804,6 +806,8 @@
                     .Resolve<RecreatePostgreSqlDatabaseHostStartupAction>()
                     .Run(cts.Token)
                     .ConfigureAwait(false);
+
+                var modelProvider = endpointContainer.Resolve<IModelProvider>();
 
                 var actualModel = await endpointContainer.InvokeWithinTransaction(
                         false,
@@ -842,6 +846,7 @@
                         index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.EventSourcing)),
                         index => AssertCreateSchema(modelChanges, index, nameof(GenericHost) + nameof(Test)),
                         index => AssertCreateSchema(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations)),
+                        index => AssertCreateEnumType(modelChanges, index, nameof(GenericHost) + nameof(Test), nameof(EnEnum), nameof(EnEnum.One), nameof(EnEnum.Two), nameof(EnEnum.Three)),
                         index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnColumnConstraintType), nameof(EnColumnConstraintType.PrimaryKey), nameof(EnColumnConstraintType.ForeignKey)),
                         index =>
                         {
@@ -885,6 +890,17 @@
                             AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Community.Version), "not null");
                             AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Community.Name), "not null");
                             AssertMtmColumn(endpointContainer, modelChanges, index, $"{nameof(Community.Participants)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
+                        },
+                        index =>
+                        {
+                            AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(DatabaseEntity));
+                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.PrimaryKey), "not null primary key");
+                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.Version), "not null");
+                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.BooleanField), "not null");
+                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.StringField), "not null");
+                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.NullableStringField), string.Empty);
+                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.IntField), "not null");
+                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.Enum), "not null");
                         },
                         index =>
                         {
@@ -983,17 +999,18 @@
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseIndexColumn)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseSchema)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseView)),
-                        index => AssertCreateIndex(modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(GenericEndpoint.EventSourcing), nameof(DatabaseDomainEvent), $"{nameof(DatabaseDomainEvent.AggregateId)}_{nameof(DatabaseDomainEvent.Index)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(AppliedMigration), nameof(AppliedMigration.Name)),
-                        index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseColumn), $"{nameof(DatabaseColumn.Column)}_{nameof(DatabaseColumn.Schema)}_{nameof(DatabaseColumn.Table)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseEnumType), $"{nameof(DatabaseView.Schema)}_{nameof(DatabaseEnumType.Type)}_{nameof(DatabaseEnumType.Value)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseIndexColumn), $"{nameof(DatabaseIndexColumn.Column)}_{nameof(DatabaseIndexColumn.Index)}_{nameof(DatabaseIndexColumn.Schema)}_{nameof(DatabaseIndexColumn.Table)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseSchema), $"{nameof(DatabaseSchema.Name)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseView), $"{nameof(DatabaseView.Schema)}_{nameof(DatabaseView.View)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(SqlView), $"{nameof(SqlView.Schema)}_{nameof(SqlView.View)}")
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(GenericEndpoint.EventSourcing), nameof(DatabaseDomainEvent), new[] { nameof(DatabaseDomainEvent.AggregateId), nameof(DatabaseDomainEvent.Index) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, false, nameof(GenericHost) + nameof(Test), nameof(DatabaseEntity), new[] { nameof(DatabaseEntity.StringField) }, new[] { nameof(DatabaseEntity.IntField) }),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(AppliedMigration), new[] { nameof(AppliedMigration.Name) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseColumn), new[] { nameof(DatabaseColumn.Column), nameof(DatabaseColumn.Schema), nameof(DatabaseColumn.Table) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseEnumType), new[] { nameof(DatabaseView.Schema), nameof(DatabaseEnumType.Type), nameof(DatabaseEnumType.Value) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseIndexColumn), new[] { nameof(DatabaseIndexColumn.Column), nameof(DatabaseIndexColumn.Index), nameof(DatabaseIndexColumn.Schema), nameof(DatabaseIndexColumn.Table) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseSchema), new[] { nameof(DatabaseSchema.Name) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseView), new[] { nameof(DatabaseView.Schema), nameof(DatabaseView.View) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(SqlView), new[] { nameof(SqlView.Schema), nameof(SqlView.View) }, Array.Empty<string>())
                     };
 
                     Assert.Equal(assertions.Length, modelChanges.Length);
@@ -1097,13 +1114,17 @@
                     Assert.True(createView.View.Equals(view, StringComparison.OrdinalIgnoreCase));
                 }
 
-                static void AssertCreateIndex(IModelChange[] modelChanges, int index, string schema, string table, string indexName)
+                static void AssertCreateIndex(IModelProvider modelProvider, IModelChange[] modelChanges, int index, bool unique, string schema, string table, string[] columns, string[] includedColumns)
                 {
                     Assert.True(modelChanges[index] is CreateIndex);
                     var createIndex = (CreateIndex)modelChanges[index];
                     Assert.True(createIndex.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
                     Assert.True(createIndex.Table.Equals(table, StringComparison.OrdinalIgnoreCase));
-                    Assert.True(createIndex.Index.Equals(string.Join("__", table, indexName), StringComparison.OrdinalIgnoreCase));
+                    var indexName = string.Join("__", table, string.Join("_", columns));
+                    Assert.True(createIndex.Index.Equals(indexName, StringComparison.OrdinalIgnoreCase));
+                    var indexInfo = modelProvider.TablesMap[schema][table].Indexes[createIndex.Index];
+                    Assert.True(includedColumns.OrderBy(column => column).SequenceEqual(indexInfo.IncludedColumns.Select(column => column.Name).OrderBy(column => column), StringComparer.OrdinalIgnoreCase));
+                    Assert.Equal(unique, indexInfo.Unique);
                 }
             }
         }

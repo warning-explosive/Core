@@ -16,7 +16,7 @@
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="index">Index</param>
-        /// <param name="isUnique">Is unique</param>
+        /// <param name="unique">Unique</param>
         /// <param name="column">Column</param>
         /// <param name="isKeyColumn">Is key column</param>
         /// <param name="definition">Definition</param>
@@ -25,7 +25,7 @@
             string schema,
             string table,
             string index,
-            bool isUnique,
+            bool unique,
             string column,
             bool isKeyColumn,
             string definition)
@@ -34,7 +34,7 @@
             Schema = schema;
             Table = table;
             Index = index;
-            IsUnique = isUnique;
+            Unique = unique;
             Column = column;
             IsKeyColumn = isKeyColumn;
             Definition = definition;
@@ -56,9 +56,9 @@
         public string Index { get; set; }
 
         /// <summary>
-        /// Is unique
+        /// Unique
         /// </summary>
-        public bool IsUnique { get; set; }
+        public bool Unique { get; set; }
 
         /// <summary>
         /// Column

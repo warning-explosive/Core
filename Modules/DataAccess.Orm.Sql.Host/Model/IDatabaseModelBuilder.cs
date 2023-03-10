@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System.Threading;
     using System.Threading.Tasks;
-    using Orm.Transaction;
+    using Transaction;
 
     /// <summary>
     /// Builds database model from the existing database

@@ -2,8 +2,8 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
 {
     using System;
     using Api.Abstractions;
-    using DataAccess.Api.Sql;
-    using DataAccess.Api.Sql.Attributes;
+    using DataAccess.Orm.Sql.Model;
+    using DataAccess.Orm.Sql.Model.Attributes;
 
     /// <summary>
     /// DatabaseDomainEvent

@@ -6,9 +6,9 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using CrossCuttingConcerns.Settings;
-    using Linq;
     using Sql.Host.Model;
     using Sql.Settings;
+    using Sql.Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class CreateDatabaseModelChangeCommandBuilder : IModelChangeCommandBuilder<CreateDatabase>,

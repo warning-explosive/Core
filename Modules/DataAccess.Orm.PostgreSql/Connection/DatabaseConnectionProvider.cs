@@ -16,17 +16,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using CompositionRoot.Exceptions;
     using CrossCuttingConcerns.Json;
     using CrossCuttingConcerns.Settings;
-    using Linq;
     using Microsoft.Extensions.Logging;
     using Model;
     using Npgsql;
     using NpgsqlTypes;
-    using Orm.Connection;
-    using Settings;
+    using Sql.Connection;
     using Sql.Model;
     using Sql.Settings;
+    using Sql.Transaction;
     using Sql.Translation;
-    using Transaction;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseConnectionProvider : IDatabaseConnectionProvider,

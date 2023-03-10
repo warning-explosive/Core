@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using GenericEndpoint.Authorization;
     using GenericEndpoint.Authorization.Host;
     using GenericEndpoint.Contract;
-    using GenericEndpoint.DataAccess.Host;
+    using GenericEndpoint.DataAccess.Sql.Host;
     using GenericEndpoint.EventSourcing;
     using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.Host;

@@ -10,11 +10,9 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
     using CompositionRoot;
-    using DataAccess.Api.Model;
-    using DataAccess.Orm.Host.Abstractions;
-    using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Linq;
-    using DataAccess.Orm.Transaction;
+    using DataAccess.Orm.Sql.Model;
+    using DataAccess.Orm.Sql.Transaction;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.EventSourcing;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations;

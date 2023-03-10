@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using Basics;
     using CompositionRoot;
     using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.Connection;
+    using DataAccess.Orm.Sql.Connection;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Sql.Translation;
     using Npgsql;

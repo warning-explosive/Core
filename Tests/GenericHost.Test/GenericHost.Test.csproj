@@ -45,12 +45,11 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj" />
-        <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Host\GenericEndpoint.DataAccess.Host.csproj" />
+        <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Host\GenericEndpoint.DataAccess.Sql.Host.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />
         <ProjectReference Include="..\..\Endpoints\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
-        <ProjectReference Include="..\..\Modules\DataAccess.Orm.Host\DataAccess.Orm.Host.csproj" />
         <ProjectReference Include="..\..\Modules\DataAccess.Orm.PortgreSql.Host\DataAccess.Orm.PortgreSql.Host.csproj" />
         <ProjectReference Include="..\..\Modules\DataAccess.Orm.Sql.Host\DataAccess.Orm.Sql.Host.csproj" />
         <ProjectReference Include="..\..\Modules\GenericHost\GenericHost.csproj" />

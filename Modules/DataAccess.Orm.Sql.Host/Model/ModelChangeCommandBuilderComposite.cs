@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Orm.Linq;
+    using Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelChangeCommandBuilderComposite : IModelChangeCommandBuilderComposite,

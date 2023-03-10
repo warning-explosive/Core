@@ -3,8 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
     using System;
     using System.Linq.Expressions;
     using Basics;
-    using Orm.Linq;
-    using Orm.Transaction;
+    using Transaction;
 
     internal class DeleteCommandExpressionVisitor<TEntity> : ExpressionVisitor
     {

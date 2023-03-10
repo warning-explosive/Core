@@ -9,9 +9,8 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using DataAccess.Orm.Linq;
     using DataAccess.Orm.Sql.Linq;
-    using DataAccess.Orm.Transaction;
+    using DataAccess.Orm.Sql.Transaction;
 
     [Component(EnLifestyle.Scoped)]
     internal class SqlEventStore : IEventStore,

@@ -4,15 +4,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using System.Globalization;
     using System.Linq;
     using System.Text;
-    using Api.Model;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using Sql.Linq;
     using Sql.Model;
     using Sql.Translation;
     using Sql.Translation.Expressions;
-    using Transaction;
 
     [Component(EnLifestyle.Singleton)]
     internal class InsertExpressionTranslator : ISqlExpressionTranslator<InsertExpression>,

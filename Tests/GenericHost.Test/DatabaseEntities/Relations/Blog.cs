@@ -2,8 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
-    using DataAccess.Api.Sql;
-    using DataAccess.Api.Sql.Attributes;
+    using DataAccess.Orm.Sql.Model;
+    using DataAccess.Orm.Sql.Model.Attributes;
 
     [Schema(nameof(GenericHost) + nameof(Test))]
     internal record Blog : BaseDatabaseEntity<Guid>

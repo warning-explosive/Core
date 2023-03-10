@@ -2,8 +2,8 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using DataAccess.Api.Sql;
-    using DataAccess.Api.Sql.Attributes;
+    using DataAccess.Orm.Sql.Model;
+    using DataAccess.Orm.Sql.Model.Attributes;
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
     [Schema(nameof(GenericHost) + nameof(Test))]

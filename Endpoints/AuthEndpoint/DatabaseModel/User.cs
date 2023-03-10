@@ -2,8 +2,8 @@ namespace SpaceEngineers.Core.AuthEndpoint.DatabaseModel
 {
     using System;
     using System.Net;
-    using DataAccess.Api.Sql;
-    using DataAccess.Api.Sql.Attributes;
+    using DataAccess.Orm.Sql.Model;
+    using DataAccess.Orm.Sql.Model.Attributes;
 
     /// <summary>
     /// User

@@ -9,7 +9,7 @@
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Attributes;
-    using Orm.Linq;
+    using Linq;
 
     [Component(EnLifestyle.Singleton)]
     [After(typeof(UnwrapScalarQueryableMethodsExpressionVisitor))]

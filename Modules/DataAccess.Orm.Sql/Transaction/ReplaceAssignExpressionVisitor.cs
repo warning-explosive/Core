@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
     using System;
     using System.Linq.Expressions;
     using Basics;
-    using Orm.Linq;
+    using Linq;
 
     internal class ReplaceAssignExpressionVisitor : ExpressionVisitor
     {

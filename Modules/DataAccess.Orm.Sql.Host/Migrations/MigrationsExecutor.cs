@@ -11,14 +11,11 @@
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot;
     using CrossCuttingConcerns.Logging;
-    using Execution;
     using Linq;
     using Microsoft.Extensions.Logging;
     using Model;
-    using Orm.Host.Abstractions;
-    using Orm.Linq;
-    using Orm.Transaction;
     using Sql.Model;
+    using Transaction;
     using Translation;
 
     [Component(EnLifestyle.Singleton)]

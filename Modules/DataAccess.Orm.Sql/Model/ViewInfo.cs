@@ -3,25 +3,18 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Api.Sql.Attributes;
+    using Attributes;
     using Basics;
 
-    /// <summary>
-    /// ViewInfo
-    /// </summary>
-    public class ViewInfo : ITableInfo,
-                            IEquatable<ViewInfo>,
-                            ISafelyEquatable<ViewInfo>
+    internal class ViewInfo : ITableInfo,
+                              IEquatable<ViewInfo>,
+                              ISafelyEquatable<ViewInfo>
     {
         private readonly IModelProvider _modelProvider;
 
         private IReadOnlyDictionary<string, IndexInfo>? _indexes;
         private IReadOnlyDictionary<string, ColumnInfo>? _columns;
 
-        /// <summary> .cctor </summary>
-        /// <param name="type">Type</param>
-        /// <param name="query">Query</param>
-        /// <param name="modelProvider">IModelProvider</param>
         public ViewInfo(
             Type type,
             string query,
@@ -33,23 +26,14 @@
             _modelProvider = modelProvider;
         }
 
-        /// <inheritdoc />
         public string Schema => _modelProvider.SchemaName(Type);
 
-        /// <inheritdoc />
         public string Name => _modelProvider.TableName(Type);
 
-        /// <summary>
-        /// Type
-        /// </summary>
         public Type Type { get; }
 
-        /// <inheritdoc />
         public bool IsMtmTable { get; } = false;
 
-        /// <summary>
-        /// Columns
-        /// </summary>
         public IReadOnlyDictionary<string, ColumnInfo> Columns
         {
             get
@@ -67,9 +51,6 @@
             }
         }
 
-        /// <summary>
-        /// Indexes
-        /// </summary>
         public IReadOnlyDictionary<string, IndexInfo> Indexes
         {
             get
@@ -101,9 +82,6 @@
             }
         }
 
-        /// <summary>
-        /// Query
-        /// </summary>
         public string Query { get; }
 
         #region IEquatable
@@ -156,7 +134,6 @@
 
         #endregion
 
-        /// <inheritdoc />
         public override string ToString()
         {
             return $"{Schema}.{Name} ({Query})";

@@ -10,11 +10,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using Basics.Attributes;
     using Connection;
     using Model;
-    using Orm.Host.Abstractions;
-    using Orm.Linq;
-    using Orm.Transaction;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using Sql.Model;
+    using Transaction;
     using Translation;
 
     [Component(EnLifestyle.Singleton)]

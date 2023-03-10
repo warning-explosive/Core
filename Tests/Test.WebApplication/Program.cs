@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.Threading.Tasks;
     using AuthEndpoint.Host;
     using Basics;
-    using GenericEndpoint.DataAccess.Host;
+    using GenericEndpoint.DataAccess.Sql.Host;
     using GenericEndpoint.EventSourcing.Host;
     using GenericHost;
     using IntegrationTransport.WebHost;

@@ -7,7 +7,6 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Linq;
     using Sql.Host.Model;
     using Sql.Model;
     using Sql.Translation;

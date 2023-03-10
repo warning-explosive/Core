@@ -17,10 +17,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             MemberInfo member,
             [NotNullWhen(true)] out ISqlExpression? expression)
         {
-            if (member == SqlLinqMethods.IsNull())
+            if (member == LinqMethods.IsNull())
             {
-                var type = ((System.Linq.Expressions.IArgumentProvider)context.Node!).GetArgument(0).Type;
-
                 expression = new BinaryExpression(
                     typeof(bool),
                     BinaryOperator.Is,

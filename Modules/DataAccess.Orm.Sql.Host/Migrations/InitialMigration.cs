@@ -2,12 +2,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
 {
     using System;
     using System.Collections.Generic;
-    using Api.Model;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Connection;
     using Model;
+    using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class InitialMigration : ApplyDeltaMigration

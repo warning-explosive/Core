@@ -6,9 +6,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
     using System.Threading;
     using System.Threading.Tasks;
     using Linq;
-    using Orm.Linq;
-    using Orm.Transaction;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using Model;
 
     /// <summary>
     /// CreateEntityChange

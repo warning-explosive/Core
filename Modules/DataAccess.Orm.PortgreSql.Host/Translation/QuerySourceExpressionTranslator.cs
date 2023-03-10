@@ -2,13 +2,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Translation
 {
     using System;
     using System.Text;
-    using Api.Sql;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
     using GenericHost.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Translation;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions;
@@ -32,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Translation
              modelProvider,
              sqlViewQueryProvider,
              hostStartupActionsRegistry,
-             (IHostStartupAction)dependencyContainer.Resolve(TypeExtensions.FindType("SpaceEngineers.Core.GenericEndpoint.DataAccess.Host SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions.UpgradeDatabaseHostStartupAction")))
+             (IHostStartupAction)dependencyContainer.Resolve(TypeExtensions.FindType("SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Host SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Host.StartupActions.UpgradeDatabaseHostStartupAction")))
         {
         }
 

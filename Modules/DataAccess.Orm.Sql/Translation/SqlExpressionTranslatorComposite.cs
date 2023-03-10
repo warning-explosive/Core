@@ -3,12 +3,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
     using Expressions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Singleton)]
     internal class SqlExpressionTranslatorComposite : ISqlExpressionTranslatorComposite,

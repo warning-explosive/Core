@@ -2,17 +2,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.StartupActions
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
+    using GenericHost.Api.Abstractions;
     using Npgsql;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.DataAccess.Orm.Connection;
-    using SpaceEngineers.Core.GenericHost.Api.Abstractions;
+    using Sql.Connection;
 
     [Component(EnLifestyle.Singleton)]
     [Before("SpaceEngineers.Core.GenericEndpoint.Host SpaceEngineers.Core.GenericEndpoint.Host.StartupActions.GenericEndpointHostStartupAction")]
-    [After("SpaceEngineers.Core.GenericEndpoint.DataAccess.Host SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions.UpgradeDatabaseHostStartupAction")]
+    [After("SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Host SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Host.StartupActions.UpgradeDatabaseHostStartupAction")]
     internal class ReloadNpgsqlTypesHostStartupAction : IHostStartupAction,
                                                         ICollectionResolvable<IHostStartupAction>,
                                                         IResolvable<ReloadNpgsqlTypesHostStartupAction>

@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using System;
     using System.Collections.Concurrent;
     using System.Linq.Expressions;
-    using DataAccess.Orm.Linq;
+    using DataAccess.Orm.Sql.Linq;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
 

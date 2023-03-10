@@ -5,9 +5,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
     using System.Linq.Expressions;
     using Basics;
     using CompositionRoot;
-    using Orm.Linq;
-    using Orm.Transaction;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using Model;
+    using Transaction;
 
     internal class InsertCommandExpressionVisitor : ExpressionVisitor
     {

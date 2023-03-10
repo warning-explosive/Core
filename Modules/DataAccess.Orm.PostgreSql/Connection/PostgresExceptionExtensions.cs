@@ -4,9 +4,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using System.Data.Common;
     using System.Linq;
     using System.Threading.Tasks;
-    using Api.Exceptions;
     using Basics;
     using Npgsql;
+    using Sql.Exceptions;
     using Sql.Translation;
 
     internal static class PostgresExceptionExtensions

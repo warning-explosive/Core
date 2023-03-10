@@ -3,8 +3,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Api.Model;
-    using Api.Sql;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;

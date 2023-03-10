@@ -3,24 +3,18 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Api.Sql.Attributes;
+    using Attributes;
     using Basics;
 
-    /// <summary>
-    /// TableInfo
-    /// </summary>
-    public class TableInfo : ITableInfo,
-                             IEquatable<TableInfo>,
-                             ISafelyEquatable<TableInfo>
+    internal class TableInfo : ITableInfo,
+                               IEquatable<TableInfo>,
+                               ISafelyEquatable<TableInfo>
     {
         private readonly IModelProvider _modelProvider;
 
         private IReadOnlyDictionary<string, IndexInfo>? _indexes;
         private IReadOnlyDictionary<string, ColumnInfo>? _columns;
 
-        /// <summary> .cctor </summary>
-        /// <param name="type">Type</param>
-        /// <param name="modelProvider">IModelProvider</param>
         public TableInfo(
             Type type,
             IModelProvider modelProvider)
@@ -30,23 +24,14 @@
             _modelProvider = modelProvider;
         }
 
-        /// <inheritdoc />
         public string Schema => _modelProvider.SchemaName(Type);
 
-        /// <inheritdoc />
         public string Name => _modelProvider.TableName(Type);
 
-        /// <summary>
-        /// Type
-        /// </summary>
         public Type Type { get; }
 
-        /// <inheritdoc />
         public virtual bool IsMtmTable { get; } = false;
 
-        /// <summary>
-        /// Columns
-        /// </summary>
         public IReadOnlyDictionary<string, ColumnInfo> Columns
         {
             get
@@ -65,9 +50,6 @@
             }
         }
 
-        /// <summary>
-        /// Indexes
-        /// </summary>
         public IReadOnlyDictionary<string, IndexInfo> Indexes
         {
             get
@@ -101,47 +83,31 @@
 
         #region IEquatable
 
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left TableInfo</param>
-        /// <param name="right">Right TableInfo</param>
-        /// <returns>equals</returns>
         public static bool operator ==(TableInfo? left, TableInfo? right)
         {
             return Equatable.Equals(left, right);
         }
 
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left TableInfo</param>
-        /// <param name="right">Right TableInfo</param>
-        /// <returns>not equals</returns>
         public static bool operator !=(TableInfo? left, TableInfo? right)
         {
             return !Equatable.Equals(left, right);
         }
 
-        /// <inheritdoc />
         public override int GetHashCode()
         {
             return Type.GetHashCode();
         }
 
-        /// <inheritdoc />
         public override bool Equals(object? obj)
         {
             return Equatable.Equals(this, obj);
         }
 
-        /// <inheritdoc />
         public bool Equals(TableInfo? other)
         {
             return Equatable.Equals(this, other);
         }
 
-        /// <inheritdoc />
         public bool SafeEquals(TableInfo other)
         {
             return Type == other.Type;
@@ -149,7 +115,6 @@
 
         #endregion
 
-        /// <inheritdoc />
         public override string ToString()
         {
             return $"{Schema}.{Name}";

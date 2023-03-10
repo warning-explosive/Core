@@ -1,8 +1,8 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
 {
     using System;
-    using Api.Sql;
-    using Api.Sql.Attributes;
+    using Sql.Model;
+    using Sql.Model.Attributes;
 
     /// <summary>
     /// DatabaseSchema

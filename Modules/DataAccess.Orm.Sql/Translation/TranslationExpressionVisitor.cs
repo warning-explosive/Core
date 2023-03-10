@@ -6,14 +6,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
-    using Api.Model;
     using Basics;
     using Basics.Enumerations;
     using Basics.Primitives;
     using Expressions;
+    using Linq;
     using Model;
-    using Orm.Linq;
-    using Orm.Transaction;
+    using Transaction;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;
     using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;

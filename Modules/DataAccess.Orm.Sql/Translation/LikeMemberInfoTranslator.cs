@@ -17,7 +17,7 @@
             MemberInfo member,
             [NotNullWhen(true)] out ISqlExpression? expression)
         {
-            if (member == SqlLinqMethods.Like())
+            if (member == LinqMethods.Like())
             {
                 expression = new BinaryExpression(typeof(bool), BinaryOperator.Like);
                 return true;

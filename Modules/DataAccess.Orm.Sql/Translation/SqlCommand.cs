@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Text;
     using System.Text.RegularExpressions;
     using Basics;
-    using Orm.Linq;
 
     /// <summary>
     /// SqlCommand

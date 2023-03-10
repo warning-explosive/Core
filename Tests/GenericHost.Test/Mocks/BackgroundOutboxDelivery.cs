@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using GenericEndpoint.UnitOfWork;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using IntegrationUnitOfWork = GenericEndpoint.DataAccess.Sql.UnitOfWork.IntegrationUnitOfWork;
 
     [ComponentOverride]
     internal class BackgroundOutboxDelivery : IOutboxDelivery,
@@ -24,7 +25,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
             IReadOnlyCollection<IntegrationMessage> messages,
             CancellationToken token)
         {
-            return Environment.StackTrace.Contains(nameof(GenericEndpoint.DataAccess.UnitOfWork.IntegrationUnitOfWork), StringComparison.OrdinalIgnoreCase)
+            return Environment.StackTrace.Contains(nameof(IntegrationUnitOfWork), StringComparison.OrdinalIgnoreCase)
                 ? Task.CompletedTask
                 : Decoratee.DeliverMessages(messages, token);
         }

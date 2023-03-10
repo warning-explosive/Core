@@ -2,11 +2,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Model
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
-    using Api.Sql;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Sql.Host.Model;
+    using Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseColumnViewQueryProvider : ISqlViewQueryProvider<DatabaseColumn, Guid>,

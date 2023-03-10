@@ -28,8 +28,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 && node.Right.Type.IsPrimitive())
             {
                 return Expression.Condition(
-                    Expression.Call(null, SqlLinqMethods.IsNull(), node.Right),
-                    Expression.Call(null, node.NodeType == ExpressionType.Equal ? SqlLinqMethods.IsNull() : SqlLinqMethods.IsNotNull(), node.Left),
+                    Expression.Call(null, LinqMethods.IsNull(), node.Right),
+                    Expression.Call(null, node.NodeType == ExpressionType.Equal ? LinqMethods.IsNull() : LinqMethods.IsNotNull(), node.Left),
                     Expression.MakeBinary(node.NodeType, node.Left, node.Right));
             }
 

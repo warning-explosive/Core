@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using Basics;
-    using Orm.Linq;
+    using Linq;
 
     internal class ExtractExpressionCacheKeyExpressionVisitor : ExpressionVisitor
     {

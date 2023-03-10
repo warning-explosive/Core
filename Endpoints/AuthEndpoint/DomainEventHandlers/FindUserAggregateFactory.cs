@@ -8,8 +8,8 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Exceptions;
-    using DataAccess.Orm.Linq;
-    using DataAccess.Orm.Transaction;
+    using DataAccess.Orm.Sql.Linq;
+    using DataAccess.Orm.Sql.Transaction;
     using Domain;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.EventSourcing;

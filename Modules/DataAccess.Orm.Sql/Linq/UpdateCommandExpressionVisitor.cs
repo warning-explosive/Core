@@ -5,8 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
     using System.Linq;
     using System.Linq.Expressions;
     using Basics;
-    using Orm.Linq;
-    using Orm.Transaction;
+    using Transaction;
 
     internal class UpdateCommandExpressionVisitor<TEntity> : ExpressionVisitor
     {

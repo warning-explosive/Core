@@ -7,9 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using Connection;
     using Linq;
     using Model;
-    using Orm.Host.Abstractions;
-    using Orm.Linq;
-    using Orm.Transaction;
+    using Transaction;
     using Translation;
 
     /// <summary>

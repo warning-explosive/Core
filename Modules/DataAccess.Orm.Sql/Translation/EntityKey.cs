@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
     using Basics;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
+    using Model;
 
     internal class EntityKey : IEquatable<EntityKey>,
                                ISafelyEquatable<EntityKey>

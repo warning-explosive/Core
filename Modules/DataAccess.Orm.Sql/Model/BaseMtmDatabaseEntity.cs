@@ -1,8 +1,7 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
-    using Api.Model;
-    using Api.Sql.Attributes;
+    using Attributes;
 
     /// <summary>
     /// BaseMtmDatabaseEntity

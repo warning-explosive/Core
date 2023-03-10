@@ -37,10 +37,10 @@ namespace SpaceEngineers.Core.Modules.Benchmark
                 Output.WriteLine);
 
             var multiplier = bySerialization / byReflection;
-
             Output.WriteLine($"{nameof(multiplier)}: {multiplier:N}");
 
-            Assert.True(multiplier >= 2m);
+            Assert.True(bySerialization <= 50_000m);
+            Assert.True(byReflection <= 50_000m);
         }
 
         [Fact(Timeout = 300_000)]

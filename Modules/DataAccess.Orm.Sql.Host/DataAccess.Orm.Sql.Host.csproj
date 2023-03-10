@@ -29,8 +29,8 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
-      <ProjectReference Include="..\DataAccess.Orm.Host\DataAccess.Orm.Host.csproj" />
       <ProjectReference Include="..\DataAccess.Orm.Sql\DataAccess.Orm.Sql.csproj" />
+      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
     </ItemGroup>
     <ItemGroup>
       <Compile Update="Model\EnColumnConstraintType.cs">
@@ -134,6 +134,18 @@
       </Compile>
       <Compile Update="Model\AlterEnumType.cs">
         <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\BaseSqlMigration.cs">
+        <DependentUpon>IMigration.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\MigrationsExecutor.cs">
+        <DependentUpon>IMigrationsExecutor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\BaseAddSeedDataMigration.cs">
+        <DependentUpon>IMigration.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\ApplyDeltaMigration.cs">
+        <DependentUpon>IMigration.cs</DependentUpon>
       </Compile>
     </ItemGroup>
     <ItemGroup>

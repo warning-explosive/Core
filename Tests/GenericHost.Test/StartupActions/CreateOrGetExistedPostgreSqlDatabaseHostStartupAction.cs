@@ -9,14 +9,14 @@ namespace SpaceEngineers.Core.GenericHost.Test.StartupActions
     using Basics.Attributes;
     using CompositionRoot;
     using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.Connection;
+    using DataAccess.Orm.Sql.Connection;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Sql.Translation;
+    using GenericEndpoint.DataAccess.Sql.Host.StartupActions;
     using Npgsql;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.GenericEndpoint.DataAccess.Host.StartupActions;
 
     [Component(EnLifestyle.Singleton)]
     [Before(typeof(UpgradeDatabaseHostStartupAction))]

@@ -5,20 +5,14 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Linq.Expressions;
     using System.Reflection;
-    using Api.Model;
-    using Api.Sql.Attributes;
+    using Attributes;
     using Basics;
-    using Orm.Model;
     using Translation.Expressions;
 
-    /// <summary>
-    /// ColumnInfo
-    /// </summary>
-    public class ColumnInfo : IModelInfo,
-                              IEquatable<ColumnInfo>,
-                              ISafelyEquatable<ColumnInfo>
+    internal class ColumnInfo : IModelInfo,
+                                IEquatable<ColumnInfo>,
+                                ISafelyEquatable<ColumnInfo>
     {
         private readonly ColumnProperty[] _chain;
         private readonly IModelProvider _modelProvider;
@@ -32,16 +26,11 @@
         private bool? _isMultipleRelation;
         private bool? _isInlinedObject;
         private IReadOnlyCollection<string>? _constraints;
-        private Func<Expression, Expression>? _expressionExtractor;
         private Func<ISqlExpression, ISqlExpression>? _sqlExpressionExtractor;
         private Func<object?, object?>? _valueExtractor;
         private Func<object?, object?>? _relationValueExtractor;
         private MethodInfo? _mtmCctor;
 
-        /// <summary> .cctor </summary>
-        /// <param name="table">Table</param>
-        /// <param name="chain">Property chain</param>
-        /// <param name="modelProvider">IModelProvider</param>
         public ColumnInfo(
             ITableInfo table,
             ColumnProperty[] chain,
@@ -59,14 +48,8 @@
             _modelProvider = modelProvider;
         }
 
-        /// <summary>
-        /// Table type
-        /// </summary>
         public ITableInfo Table { get; }
 
-        /// <summary>
-        /// Name
-        /// </summary>
         public string Name
         {
             get
@@ -83,14 +66,8 @@
             }
         }
 
-        /// <summary>
-        /// Type
-        /// </summary>
         public Type Type => Property.PropertyType;
 
-        /// <summary>
-        /// IsSupportedColumn
-        /// </summary>
         public bool IsSupportedColumn
         {
             get
@@ -100,9 +77,6 @@
             }
         }
 
-        /// <summary>
-        /// IsEnum
-        /// </summary>
         public bool IsEnum
         {
             get
@@ -112,9 +86,6 @@
             }
         }
 
-        /// <summary>
-        /// IsJsonColumn
-        /// </summary>
         public bool IsJsonColumn
         {
             get
@@ -124,14 +95,8 @@
             }
         }
 
-        /// <summary>
-        /// Column lenght
-        /// </summary>
         public uint? ColumnLength => Property.Declared.GetAttribute<ColumnLenghtAttribute>()?.Length;
 
-        /// <summary>
-        /// Relation
-        /// </summary>
         public Relation? Relation
         {
             get
@@ -177,16 +142,8 @@
             }
         }
 
-        /// <summary>
-        /// Is column relation
-        /// </summary>
-        /// <returns>Column is relation on not</returns>
         public bool IsRelation => Relation != null && !IsMultipleRelation;
 
-        /// <summary>
-        /// Is column multiple relation
-        /// </summary>
-        /// <returns>Column is multiple relation on not</returns>
         public bool IsMultipleRelation
         {
             get
@@ -201,16 +158,9 @@
             }
         }
 
-        /// <summary>
-        /// Multiple relation table
-        /// </summary>
         [NotNullIfNotNull(nameof(IsMultipleRelation))]
         public Type? MultipleRelationTable => IsMultipleRelation ? Property.ReflectedType : null;
 
-        /// <summary>
-        /// Is column inlined object
-        /// </summary>
-        /// <returns>Column is inlined object on not</returns>
         public bool IsInlinedObject
         {
             get
@@ -225,9 +175,6 @@
             }
         }
 
-        /// <summary>
-        /// Constraints
-        /// </summary>
         public IReadOnlyCollection<string> Constraints
         {
             get
@@ -286,47 +233,31 @@
 
         #region IEquatable
 
-        /// <summary>
-        /// operator ==
-        /// </summary>
-        /// <param name="left">Left ColumnInfo</param>
-        /// <param name="right">Right ColumnInfo</param>
-        /// <returns>equals</returns>
         public static bool operator ==(ColumnInfo? left, ColumnInfo? right)
         {
             return Equatable.Equals(left, right);
         }
 
-        /// <summary>
-        /// operator !=
-        /// </summary>
-        /// <param name="left">Left ColumnInfo</param>
-        /// <param name="right">Right ColumnInfo</param>
-        /// <returns>not equals</returns>
         public static bool operator !=(ColumnInfo? left, ColumnInfo? right)
         {
             return !Equatable.Equals(left, right);
         }
 
-        /// <inheritdoc />
         public override int GetHashCode()
         {
             return _chain.Aggregate(Table.GetHashCode(), HashCode.Combine);
         }
 
-        /// <inheritdoc />
         public override bool Equals(object? obj)
         {
             return Equatable.Equals(this, obj);
         }
 
-        /// <inheritdoc />
         public bool Equals(ColumnInfo? other)
         {
             return Equatable.Equals(this, other);
         }
 
-        /// <inheritdoc />
         public bool SafeEquals(ColumnInfo other)
         {
             return Table.Equals(other.Table)
@@ -335,39 +266,11 @@
 
         #endregion
 
-        /// <inheritdoc />
         public override string ToString()
         {
             return $"{Table.Schema}.{Table.Name}.{Name} ({Constraints.ToString(", ")})";
         }
 
-        /// <summary>
-        /// Builds expression tree
-        /// </summary>
-        /// <param name="source">Source expression</param>
-        /// <returns>Expression tree</returns>
-        public Expression BuildExpression(Expression source)
-        {
-            if (source.Type != Table.Type)
-            {
-                throw new InvalidOperationException($"Expression should be constructed over {Table.Type.FullName} type instead of {source.Type.FullName}");
-            }
-
-            _expressionExtractor ??= GetValueExtractor<Expression>(_chain, MakeMemberAccess);
-
-            return _expressionExtractor.Invoke(Expression.Parameter(Table.Type));
-
-            static Expression MakeMemberAccess(PropertyInfo property, Expression expression)
-            {
-                return Expression.MakeMemberAccess(expression, property);
-            }
-        }
-
-        /// <summary>
-        /// Builds sql expression tree
-        /// </summary>
-        /// <param name="parameter">Parameter expression</param>
-        /// <returns>Expression tree</returns>
         public ColumnExpression BuildExpression(Translation.Expressions.ParameterExpression parameter)
         {
             if (parameter.Type != Table.Type)
@@ -385,11 +288,6 @@
             }
         }
 
-        /// <summary>
-        /// Gets entity column value
-        /// </summary>
-        /// <param name="entity">Entity</param>
-        /// <returns>Column value</returns>
         public object? GetValue(IUniqueIdentified entity)
         {
             if (IsMultipleRelation)
@@ -402,11 +300,6 @@
             return _valueExtractor.Invoke(entity);
         }
 
-        /// <summary>
-        /// Gets entity relation value
-        /// </summary>
-        /// <param name="entity">Entity</param>
-        /// <returns>Relation value</returns>
         public IUniqueIdentified? GetRelationValue(IUniqueIdentified entity)
         {
             if (IsRelation)
@@ -419,11 +312,6 @@
             return null;
         }
 
-        /// <summary>
-        /// Gets entity multiple relation value
-        /// </summary>
-        /// <param name="entity">Entity</param>
-        /// <returns>Multiple relation value</returns>
         public IEnumerable<IUniqueIdentified> GetMultipleRelationValue(IUniqueIdentified entity)
         {
             if (IsMultipleRelation)
@@ -436,12 +324,6 @@
             return Enumerable.Empty<IUniqueIdentified>();
         }
 
-        /// <summary>
-        /// Creates multiple relation entity (mtm)
-        /// </summary>
-        /// <param name="left">Left (owner)</param>
-        /// <param name="right">Right (dependency)</param>
-        /// <returns>IUniqueIdentified</returns>
         public IUniqueIdentified CreateMtm(
             IUniqueIdentified left,
             IUniqueIdentified right)

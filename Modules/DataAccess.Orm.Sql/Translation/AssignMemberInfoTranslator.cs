@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Expressions;
-    using Orm.Linq;
+    using Linq;
 
     [Component(EnLifestyle.Singleton)]
     internal class AssignMemberInfoTranslator : IMemberInfoTranslator,

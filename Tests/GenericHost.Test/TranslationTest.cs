@@ -16,18 +16,16 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using CompositionRoot.Registration;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.Linq;
-    using DataAccess.Orm.Settings;
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Linq;
     using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Settings;
+    using DataAccess.Orm.Sql.Transaction;
     using DataAccess.Orm.Sql.Translation;
-    using DataAccess.Orm.Transaction;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
     using GenericDomain.EventSourcing.Sql;
-    using GenericEndpoint.DataAccess.Host;
+    using GenericEndpoint.DataAccess.Sql.Host;
     using GenericEndpoint.Host;
     using GenericHost;
     using IntegrationTransport.Host;
@@ -35,7 +33,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Microsoft.Extensions.Hosting;
     using Mocks;
     using Registrations;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
     using SpaceEngineers.Core.Test.Api;
     using StartupActions;
     using Xunit;

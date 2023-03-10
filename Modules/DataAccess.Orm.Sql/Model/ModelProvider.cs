@@ -5,17 +5,13 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using Api.Model;
-    using Api.Sql;
-    using Api.Sql.Attributes;
+    using Attributes;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Dynamic;
     using Dynamic.Abstractions;
-    using Orm.Model;
-    using Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelProvider : IModelProvider,
@@ -96,21 +92,11 @@
                 .ToList();
         }
 
-        /// <summary>
-        /// Gets table name
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Schema name</returns>
         public string TableName(Type type)
         {
             return type.Name;
         }
 
-        /// <summary>
-        /// Gets schema name
-        /// </summary>
-        /// <param name="type">Type</param>
-        /// <returns>Schema name</returns>
         public string SchemaName(Type type)
         {
             if (type.IsMtmTable())
@@ -198,7 +184,7 @@
         {
             if (!property.Declared.IsSupportedColumn())
             {
-                throw new NotSupportedException($"Not supported column type: {property.Name} - {property.PropertyType}");
+                throw new NotSupportedException($"Not supported column type: {property.Reflected} - {property.PropertyType}");
             }
 
             foreach (var chain in FlattenSpecialTypes(property))

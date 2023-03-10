@@ -5,12 +5,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
     using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Exceptions;
     using Basics;
+    using Exceptions;
     using Linq;
-    using Orm.Transaction;
-    using SpaceEngineers.Core.DataAccess.Api.Model;
-    using SpaceEngineers.Core.DataAccess.Orm.Linq;
+    using Model;
 
     /// <summary>
     /// UpdateEntityChange

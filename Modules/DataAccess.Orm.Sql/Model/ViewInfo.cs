@@ -63,12 +63,12 @@
                 {
                     return Type
                         .GetAttributes<IndexAttribute>()
-                        .Select(index => new IndexInfo(this, GetColumns(index).ToList(), index.Unique))
+                        .Select(index => new IndexInfo(this, GetColumns(index.Columns).ToList(), GetColumns(index.IncludedColumns).ToList(), index.Unique))
                         .ToDictionary(index => index.Name);
 
-                    IEnumerable<ColumnInfo> GetColumns(IndexAttribute index)
+                    IEnumerable<ColumnInfo> GetColumns(IEnumerable<string> indexColumns)
                     {
-                        foreach (var column in index.Columns)
+                        foreach (var column in indexColumns)
                         {
                             if (!Columns.TryGetValue(column, out var info))
                             {

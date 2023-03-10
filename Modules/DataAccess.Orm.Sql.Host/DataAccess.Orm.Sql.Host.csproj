@@ -36,7 +36,7 @@
       <Compile Update="Model\EnColumnConstraintType.cs">
         <DependentUpon>DatabaseColumnConstraint.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\DatabaseIndex.cs">
+      <Compile Update="Model\DatabaseIndexColumn.cs">
         <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\DatabaseSchema.cs">

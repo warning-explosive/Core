@@ -12,16 +12,20 @@
         public IndexInfo(
             ITableInfo table,
             IReadOnlyCollection<ColumnInfo> columns,
+            IReadOnlyCollection<ColumnInfo> includedColumns,
             bool unique)
         {
             Table = table;
             Columns = columns;
+            IncludedColumns = includedColumns;
             Unique = unique;
         }
 
         public ITableInfo Table { get; }
 
         public IReadOnlyCollection<ColumnInfo> Columns { get; }
+
+        public IReadOnlyCollection<ColumnInfo> IncludedColumns { get; }
 
         public string Name => string.Join(
             "__",
@@ -66,7 +70,7 @@
 
         public override string ToString()
         {
-            return $"{Table.Schema}.{Table.Name}.{Name} ({Unique})";
+            return $"{Table.Schema}.{Name} ({Unique})";
         }
     }
 }

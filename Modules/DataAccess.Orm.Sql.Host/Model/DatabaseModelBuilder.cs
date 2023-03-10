@@ -198,12 +198,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             CancellationToken token)
         {
             return (await databaseContext
-                    .All<DatabaseIndex>()
-                    .Where(index => index.Schema == schema)
+                    .All<DatabaseIndexColumn>()
+                    .Where(column => column.Schema == schema)
                     .CachedExpression("EB3A4174-DEE9-438E-993F-1CFABB671D9A")
                     .ToListAsync(token)
                     .ConfigureAwait(false))
-                .Select(index => IndexNode.FromDb(index.Schema, index.Table, index.Index, index.Definition))
+                .GroupBy(column => new { column.Schema, column.Table, column.IsUnique })
+                .Select(grp => new IndexNode(
+                    grp.Key.Schema,
+                    grp.Key.Table,
+                    grp.Where(column => column.IsKeyColumn).Select(column => column.Column).ToArray(),
+                    grp.Where(column => !column.IsKeyColumn).Select(column => column.Column).ToArray(),
+                    grp.Key.IsUnique))
                 .ToList();
         }
     }

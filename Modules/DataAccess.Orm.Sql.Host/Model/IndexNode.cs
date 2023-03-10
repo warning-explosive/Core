@@ -15,16 +15,19 @@
         /// <param name="schema">Schema</param>
         /// <param name="table">Table</param>
         /// <param name="columns">Columns</param>
+        /// <param name="includedColumns">Included columns</param>
         /// <param name="unique">Unique</param>
         public IndexNode(
             string schema,
             string table,
             IReadOnlyCollection<string> columns,
+            IReadOnlyCollection<string> includedColumns,
             bool unique)
         {
             Schema = schema;
             Table = table;
             Columns = columns;
+            IncludedColumns = includedColumns;
             Unique = unique;
         }
 
@@ -39,9 +42,12 @@
         public string Table { get; }
 
         /// <summary>
-        /// Columns
+        /// Index
         /// </summary>
-        public IReadOnlyCollection<string> Columns { get; }
+        public string Index => string.Join(
+            "__",
+            Table,
+            string.Join("_", Columns.OrderBy(column => column)));
 
         /// <summary>
         /// Unique
@@ -49,12 +55,14 @@
         public bool Unique { get; }
 
         /// <summary>
-        /// Index
+        /// Columns
         /// </summary>
-        public string Index => string.Join(
-            "__",
-            Table,
-            string.Join("_", Columns.OrderBy(it => it)));
+        public IReadOnlyCollection<string> Columns { get; }
+
+        /// <summary>
+        /// Included columns
+        /// </summary>
+        public IReadOnlyCollection<string> IncludedColumns { get; }
 
         #region IEquatable
 
@@ -83,7 +91,13 @@
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return Index.GetHashCode(StringComparison.OrdinalIgnoreCase);
+            return HashCode.Combine(
+                Schema.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Table.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Index.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Unique.Bit(),
+                Columns.OrderBy(column => column).ToString(", ").GetHashCode(StringComparison.OrdinalIgnoreCase),
+                IncludedColumns.OrderBy(column => column).ToString(", ").GetHashCode(StringComparison.OrdinalIgnoreCase));
         }
 
         /// <inheritdoc />
@@ -101,7 +115,12 @@
         /// <inheritdoc />
         public bool SafeEquals(IndexNode other)
         {
-            return Index.Equals(other.Index, StringComparison.OrdinalIgnoreCase);
+            return Schema.Equals(other.Schema, StringComparison.OrdinalIgnoreCase)
+                && Table.Equals(other.Table, StringComparison.OrdinalIgnoreCase)
+                && Index.Equals(other.Index, StringComparison.OrdinalIgnoreCase)
+                && Unique == other.Unique
+                && Columns.OrderBy(column => column).SequenceEqual(other.Columns.OrderBy(column => column), StringComparer.OrdinalIgnoreCase)
+                && IncludedColumns.OrderBy(column => column).SequenceEqual(other.IncludedColumns.OrderBy(column => column), StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -109,26 +128,7 @@
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Schema}.{Table}.{Index}";
-        }
-
-        /// <summary>
-        /// Builds IndexNode from actual index name
-        /// </summary>
-        /// <param name="schema">Schema</param>
-        /// <param name="table">Table</param>
-        /// <param name="name">Name</param>
-        /// <param name="definition">Definition</param>
-        /// <returns>IndexNode</returns>
-        public static IndexNode FromDb(string schema, string table, string name, string definition)
-        {
-            var columns = name.Substring((table + "__").Length)
-                .Split("_", StringSplitOptions.RemoveEmptyEntries)
-                .ToList();
-
-            var unique = definition.Contains("create unique index", StringComparison.OrdinalIgnoreCase);
-
-            return new IndexNode(schema, table, columns, unique);
+            return $"{Schema}.{Index}";
         }
     }
 }

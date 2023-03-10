@@ -20,12 +20,19 @@
                 .Concat(columns)
                 .OrderBy(col => col)
                 .ToList();
+
+            IncludedColumns = Array.Empty<string>();
         }
 
         /// <summary>
         /// Columns
         /// </summary>
         public IReadOnlyCollection<string> Columns { get; }
+
+        /// <summary>
+        /// Included columns
+        /// </summary>
+        public IReadOnlyCollection<string> IncludedColumns { get; }
 
         /// <summary>
         /// Unique

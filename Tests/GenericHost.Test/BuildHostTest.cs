@@ -980,7 +980,7 @@
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseColumn)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseColumnConstraint)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseEnumType)),
-                        index => AssertCreateView(modelChanges, index, nameof(DatabaseIndex)),
+                        index => AssertCreateView(modelChanges, index, nameof(DatabaseIndexColumn)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseSchema)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseView)),
                         index => AssertCreateIndex(modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}", $"{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"),
@@ -990,7 +990,7 @@
                         index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(AppliedMigration), nameof(AppliedMigration.Name)),
                         index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseColumn), $"{nameof(DatabaseColumn.Column)}_{nameof(DatabaseColumn.Schema)}_{nameof(DatabaseColumn.Table)}"),
                         index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseEnumType), $"{nameof(DatabaseView.Schema)}_{nameof(DatabaseEnumType.Type)}_{nameof(DatabaseEnumType.Value)}"),
-                        index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseIndex), $"{nameof(DatabaseIndex.Index)}_{nameof(DatabaseIndex.Schema)}_{nameof(DatabaseIndex.Table)}"),
+                        index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseIndexColumn), $"{nameof(DatabaseIndexColumn.Column)}_{nameof(DatabaseIndexColumn.Index)}_{nameof(DatabaseIndexColumn.Schema)}_{nameof(DatabaseIndexColumn.Table)}"),
                         index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseSchema), $"{nameof(DatabaseSchema.Name)}"),
                         index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseView), $"{nameof(DatabaseView.Schema)}_{nameof(DatabaseView.View)}"),
                         index => AssertCreateIndex(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(SqlView), $"{nameof(SqlView.Schema)}_{nameof(SqlView.View)}")

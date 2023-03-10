@@ -114,7 +114,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 .Select(column => column.Name)
                 .ToList();
 
-            return new IndexNode(indexInfo.Table.Schema, indexInfo.Table.Name, columns, indexInfo.Unique);
+            var includedColumns = indexInfo
+                .IncludedColumns
+                .Select(column => column.Name)
+                .ToList();
+
+            return new IndexNode(indexInfo.Table.Schema, indexInfo.Table.Name, columns, includedColumns, indexInfo.Unique);
         }
     }
 }

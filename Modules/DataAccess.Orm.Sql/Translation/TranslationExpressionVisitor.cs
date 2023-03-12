@@ -27,18 +27,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private readonly TranslationContext _context;
         private readonly IModelProvider _modelProvider;
         private readonly ILinqExpressionPreprocessorComposite _preprocessor;
-        private readonly IEnumerable<IMemberInfoTranslator> _memberInfoTranslators;
+        private readonly IEnumerable<IUnknownExpressionTranslator> _unknownExpressionTranslators;
 
         private TranslationExpressionVisitor(
             TranslationContext context,
             IModelProvider modelProvider,
             ILinqExpressionPreprocessorComposite preprocessor,
-            IEnumerable<IMemberInfoTranslator> memberInfoTranslators)
+            IEnumerable<IUnknownExpressionTranslator> unknownExpressionTranslators)
         {
             _context = context;
             _modelProvider = modelProvider;
             _preprocessor = preprocessor;
-            _memberInfoTranslators = memberInfoTranslators;
+            _unknownExpressionTranslators = unknownExpressionTranslators;
         }
 
         internal static MethodInfo GetInsertValuesMethod { get; } = new MethodFinder(
@@ -54,14 +54,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             TranslationContext context,
             IModelProvider modelProvider,
             ILinqExpressionPreprocessorComposite preprocessor,
-            IEnumerable<IMemberInfoTranslator> memberInfoTranslators,
+            IEnumerable<IUnknownExpressionTranslator> unknownExpressionTranslators,
             Expression expression)
         {
             var visitor = new TranslationExpressionVisitor(
                 context,
                 modelProvider,
                 preprocessor,
-                memberInfoTranslators);
+                unknownExpressionTranslators);
 
             _ = visitor.Visit(preprocessor.Visit(expression));
 
@@ -491,12 +491,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return node;
             }
 
-            if (TryGetMemberInfoExpression(node.Method, out var recognized))
+            if (TryTranslateUnknownExpression(node))
             {
-                _context.WithinScope(
-                    recognized,
-                    () => base.VisitMethodCall(node));
-
                 return node;
             }
 
@@ -505,12 +501,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            var expression = TryGetMemberInfoExpression(node.Member, out var recognized)
-                ? recognized
-                : new ColumnExpression(node.Member, node.Type);
+            if (TryTranslateUnknownExpression(node))
+            {
+                return node;
+            }
 
             _context.WithinScope(
-                expression,
+                new ColumnExpression(node.Member, node.Type),
                 () => base.VisitMember(node));
 
             return node;
@@ -633,7 +630,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return;
             }
 
-            var parameter = ExtractParametersVisitor.ExtractParameter(projection.Source, projection.Type);
+            if (!ExtractParametersVisitor.TryExtractParameter(projection.Source, projection.Type, out var parameter))
+            {
+                return;
+            }
 
             var flatProjectionColumns = _modelProvider
                 .Columns(projection.Type)
@@ -646,25 +646,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             }
         }
 
-        private bool TryGetMemberInfoExpression(
-            MemberInfo memberInfo,
-            [NotNullWhen(true)] out ISqlExpression? expression)
+        private bool TryTranslateUnknownExpression(Expression expression)
         {
-            expression = _memberInfoTranslators
-                .Select(provider =>
-                {
-                    var success = provider.TryRecognize(_context, memberInfo, out var info);
-                    return (success, info);
-                })
-                .Where(pair => pair.success)
-                .Select(pair => pair.info)
-                .InformativeSingleOrDefault(Amb, memberInfo);
+            return _unknownExpressionTranslators
+                .Where(translator => translator.TryTranslate(_context, expression, this))
+                .InformativeSingleOrDefault(Amb, expression) != null;
 
-            return expression != null;
-
-            static string Amb(MemberInfo memberInfo, IEnumerable<ISqlExpression?> infos)
+            static string Amb(Expression expression, IEnumerable<IUnknownExpressionTranslator> infos)
             {
-                return $"More than one expression suitable for {memberInfo.DeclaringType}.{memberInfo.Name} member";
+                return $"More than one translations suitable for expression: {expression}";
             }
         }
 
@@ -818,7 +808,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     .Columns
                     .Values
                     .Where(column => !column.IsMultipleRelation)
-                    .Select(column => Expression.Constant(column.GetValue(entity), column.Type)))
+                    .Select(column =>
+                    {
+                        var value = column.GetValue(entity);
+
+                        return column.IsJsonColumn
+                            ? Expression.Constant(new DatabaseJsonObject(value, column.Type), typeof(DatabaseJsonObject))
+                            : Expression.Constant(value, column.Type);
+                    }))
                 .Select((expression, index) => (name: TranslationContext.CommandParameterFormat.Format(index), expression))
                 .ToDictionary(
                     pair => pair.name,
@@ -832,7 +829,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 _context.Clone(),
                 _modelProvider,
                 _preprocessor,
-                _memberInfoTranslators,
+                _unknownExpressionTranslators,
                 expression);
         }
     }

@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                          IApplicable<QuerySourceExpression>,
                                          IApplicable<NewExpression>,
                                          IApplicable<ColumnExpression>,
+                                         IApplicable<JsonAttributeExpression>,
                                          IApplicable<RenameExpression>,
                                          IApplicable<BinaryExpression>,
                                          IApplicable<ConditionalExpression>,
@@ -86,6 +87,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ColumnExpression expression)
+        {
+            ForwardExpression(context, expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, JsonAttributeExpression expression)
         {
             ForwardExpression(context, expression);
         }

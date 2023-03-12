@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         private readonly IModelProvider _modelProvider;
         private readonly ILinqExpressionPreprocessorComposite _preprocessor;
         private readonly ISqlExpressionTranslatorComposite _translator;
-        private readonly IEnumerable<IMemberInfoTranslator> _sqlFunctionProviders;
+        private readonly IEnumerable<IUnknownExpressionTranslator> _unknownExpressionTranslators;
         private readonly ILogger _logger;
 
         private readonly ConcurrentDictionary<string, TranslatedSqlExpression> _cache;
@@ -31,13 +31,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             IModelProvider modelProvider,
             ILinqExpressionPreprocessorComposite preprocessor,
             ISqlExpressionTranslatorComposite translator,
-            IEnumerable<IMemberInfoTranslator> sqlFunctionProviders,
+            IEnumerable<IUnknownExpressionTranslator> unknownExpressionTranslators,
             ILogger logger)
         {
             _modelProvider = modelProvider;
             _preprocessor = preprocessor;
             _translator = translator;
-            _sqlFunctionProviders = sqlFunctionProviders;
+            _unknownExpressionTranslators = unknownExpressionTranslators;
             _logger = logger;
 
             _cache = new ConcurrentDictionary<string, TranslatedSqlExpression>(StringComparer.Ordinal);
@@ -83,7 +83,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 new TranslationContext(),
                 _modelProvider,
                 _preprocessor,
-                _sqlFunctionProviders,
+                _unknownExpressionTranslators,
                 expression);
 
             return new TranslatedSqlExpression(

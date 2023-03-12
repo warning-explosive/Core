@@ -21,6 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     using Npgsql;
     using NpgsqlTypes;
     using Sql.Connection;
+    using Sql.Linq;
     using Sql.Model;
     using Sql.Settings;
     using Sql.Transaction;
@@ -362,9 +363,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
         {
             var (name, value, type) = parameter;
 
-            if (!TryCast(name, value, out var npgsqlParameter)
-                && !TryInfer(name, value, type, out npgsqlParameter)
-                && !TrySerialize(name, value, type, _jsonSerializer, out npgsqlParameter))
+            if (!TryCast(name, value, _jsonSerializer, out var npgsqlParameter)
+                && !TryInfer(name, value, type, _jsonSerializer, out npgsqlParameter))
             {
                 throw new NotSupportedException($"Not supported sql command parameter: {parameter}");
             }
@@ -374,6 +374,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             static bool TryCast(
                 string name,
                 object? value,
+                IJsonSerializer jsonSerializer,
                 [NotNullWhen(true)] out NpgsqlParameter? npgsqlParameter)
             {
                 npgsqlParameter = value switch
@@ -390,6 +391,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                     byte[] byteArray => new NpgsqlParameter<byte[]>(name, NpgsqlDbType.Bytea) { TypedValue = byteArray },
                     DateTime dateTime => new NpgsqlParameter<DateTime>(name, NpgsqlDbType.TimestampTz) { TypedValue = dateTime.ToUniversalTime() },
                     TimeSpan timeSpan => new NpgsqlParameter<TimeSpan>(name, NpgsqlDbType.Interval) { TypedValue = timeSpan },
+                    DatabaseJsonObject jsonObject => new NpgsqlParameter(name, NpgsqlDbType.Jsonb) { Value = jsonObject.Value != null ? jsonSerializer.SerializeObject(jsonObject.Value, jsonObject.Type) : DBNull.Value },
                     _ => null
                 };
 
@@ -400,6 +402,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 string name,
                 object? value,
                 Type type,
+                IJsonSerializer jsonSerializer,
                 [NotNullWhen(true)] out NpgsqlParameter? npgsqlParameter)
             {
                 var nullType = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
@@ -496,34 +499,19 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                     return true;
                 }
 
+                if (typeof(DatabaseJsonObject).IsAssignableFrom(type))
+                {
+                    npgsqlParameter = new NpgsqlParameter(name, NpgsqlDbType.Jsonb) { Value = value is DatabaseJsonObject jsonObject && jsonObject.Value != null ? jsonSerializer.SerializeObject(jsonObject.Value, jsonObject.Type) : DBNull.Value };
+                    return true;
+                }
+
                 if (nullType.IsCollection()
-                    && TryInfer(name, null, nullType.ExtractGenericArgumentAt(typeof(IEnumerable<>)), out var itemNpgsqlParameter))
+                    && TryInfer(name, null, nullType.ExtractGenericArgumentAt(typeof(IEnumerable<>)), jsonSerializer, out var itemNpgsqlParameter))
                 {
                     npgsqlParameter = itemNpgsqlParameter.DataTypeName == null
                         ? new NpgsqlParameter(name, NpgsqlDbType.Array | itemNpgsqlParameter.NpgsqlDbType) { Value = value ?? DBNull.Value }
                         : new NpgsqlParameter(name, value ?? DBNull.Value) { DataTypeName = itemNpgsqlParameter.DataTypeName + "[]" };
 
-                    return true;
-                }
-
-                npgsqlParameter = null;
-                return false;
-            }
-
-            static bool TrySerialize(
-                string name,
-                object? value,
-                Type type,
-                IJsonSerializer jsonSerializer,
-                [NotNullWhen(true)] out NpgsqlParameter? npgsqlParameter)
-            {
-                if (!type.IsPrimitive() && !type.IsCollection())
-                {
-                    object jsonValue = value != null
-                        ? jsonSerializer.SerializeObject(value, type)
-                        : DBNull.Value;
-
-                    npgsqlParameter = new NpgsqlParameter(name, NpgsqlDbType.Jsonb) { Value = jsonValue };
                     return true;
                 }
 

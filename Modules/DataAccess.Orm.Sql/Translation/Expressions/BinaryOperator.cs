@@ -103,6 +103,16 @@
         /// <summary>
         /// Modulo (a % b)
         /// </summary>
-        Modulo
+        Modulo,
+
+        /// <summary>
+        /// Does the json object have an attribute
+        /// </summary>
+        HasJsonAttribute,
+
+        /// <summary>
+        /// Concatenates json objects (left || right)
+        /// </summary>
+        ConcatJsonObjects
     }
 }

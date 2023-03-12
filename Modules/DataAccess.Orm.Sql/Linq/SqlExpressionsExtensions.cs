@@ -69,5 +69,62 @@
         {
             throw new InvalidOperationException($"Method {nameof(Assign)} shouldn't be used outside of expression trees");
         }
+
+        /// <summary>
+        /// Does json object have an attribute with specified name
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <param name="name">Json attribute name</param>
+        /// <returns>Json object attribute existence</returns>
+        public static bool HasJsonAttribute(this DatabaseJsonObject source, string name)
+        {
+            throw new InvalidOperationException($"Method {nameof(HasJsonAttribute)} shouldn't be used outside of expression trees");
+        }
+
+        /// <summary>
+        /// Gets value of json object attribute by specified name
+        /// </summary>
+        /// <param name="jsonObject">Json object</param>
+        /// <param name="name">Json attribute name</param>
+        /// <typeparam name="TValue">TValue type-argument</typeparam>
+        /// <returns>Json object attribute value</returns>
+        public static DatabaseJsonObject<TValue> GetJsonAttribute<TValue>(this DatabaseJsonObject jsonObject, string name)
+        {
+            throw new InvalidOperationException($"Method {nameof(GetJsonAttribute)} shouldn't be used outside of expression trees");
+        }
+
+        /// <summary>
+        /// Concatenates two json objects into single one
+        /// </summary>
+        /// <param name="left">Left json object</param>
+        /// <param name="right">Right json object</param>
+        /// <typeparam name="TValue">TValue type-argument</typeparam>
+        /// <returns>Concatenated json object</returns>
+        public static DatabaseJsonObject<TValue> ConcatJsonObjects<TValue>(this DatabaseJsonObject left, DatabaseJsonObject right)
+        {
+            throw new InvalidOperationException($"Method {nameof(ConcatJsonObjects)} shouldn't be used outside of expression trees");
+        }
+
+        /// <summary>
+        /// Excludes an attribute from json object
+        /// </summary>
+        /// <param name="jsonObject">Json object</param>
+        /// <param name="name">Json attribute name</param>
+        /// <returns>Altered json object</returns>
+        public static DatabaseJsonObject ExcludeJsonAttribute(this DatabaseJsonObject jsonObject, string name)
+        {
+            throw new InvalidOperationException($"Method {nameof(ExcludeJsonAttribute)} shouldn't be used outside of expression trees");
+        }
+
+        /// <summary>
+        /// Converts object to json object wrapper necessary for translation
+        /// </summary>
+        /// <param name="value">Value</param>
+        /// <typeparam name="TValue">TValue type-argument</typeparam>
+        /// <returns>JsonObject translation wrapper</returns>
+        public static DatabaseJsonObject<TValue> AsJsonObject<TValue>(this TValue value)
+        {
+            return new DatabaseJsonObject<TValue>(value);
+        }
     }
 }

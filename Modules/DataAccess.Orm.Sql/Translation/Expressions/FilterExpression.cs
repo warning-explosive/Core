@@ -16,7 +16,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                     IApplicable<BinaryExpression>,
                                     IApplicable<UnaryExpression>,
                                     IApplicable<ConditionalExpression>,
-                                    IApplicable<ColumnExpression>
+                                    IApplicable<ColumnExpression>,
+                                    IApplicable<JsonAttributeExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="source">Source expression</param>
@@ -78,6 +79,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ColumnExpression expression)
+        {
+            ApplyPredicate(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, JsonAttributeExpression expression)
         {
             ApplyPredicate(expression);
         }

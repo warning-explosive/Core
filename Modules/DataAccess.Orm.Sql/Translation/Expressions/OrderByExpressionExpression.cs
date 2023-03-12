@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// </summary>
     public class OrderByExpressionExpression : ISqlExpression,
                                                IApplicable<ColumnExpression>,
+                                               IApplicable<JsonAttributeExpression>,
                                                IApplicable<RenameExpression>,
                                                IApplicable<BinaryExpression>,
                                                IApplicable<ConditionalExpression>,
@@ -46,6 +47,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ColumnExpression expression)
+        {
+            ApplyExpression(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, JsonAttributeExpression expression)
         {
             ApplyExpression(expression);
         }

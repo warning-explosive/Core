@@ -43,7 +43,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 [BinaryOperator.Subtract] = "-",
                 [BinaryOperator.Divide] = "/",
                 [BinaryOperator.Multiply] = "*",
-                [BinaryOperator.Modulo] = "%"
+                [BinaryOperator.Modulo] = "%",
+                [BinaryOperator.HasJsonAttribute] = "?",
+                [BinaryOperator.ConcatJsonObjects] = "||"
             };
 
         public BinaryExpressionTranslator(ISqlExpressionTranslatorComposite translator)
@@ -84,23 +86,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 sb.Append(_translator.Translate(expression.Left, depth));
                 sb.Append(" ");
                 sb.Append(Operators[expression.Operator]);
-
-                if (expression.Operator == BinaryOperator.Contains)
-                {
-                    sb.Append(" ");
-                    sb.Append('(');
-                }
-                else
-                {
-                    sb.Append(" ");
-                }
-
+                sb.Append(" ");
                 sb.Append(_translator.Translate(expression.Right, depth + 1));
-
-                if (expression.Operator == BinaryOperator.Contains)
-                {
-                    sb.Append(')');
-                }
             }
 
             return sb.ToString();

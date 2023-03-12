@@ -1,24 +1,22 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
-    using System.Diagnostics.CodeAnalysis;
-    using System.Reflection;
-    using Expressions;
+    using System.Linq.Expressions;
 
     /// <summary>
     /// IMemberInfoTranslator
     /// </summary>
-    public interface IMemberInfoTranslator
+    public interface IUnknownExpressionTranslator
     {
         /// <summary>
-        /// Recognize sql function
+        /// Translates sql expression
         /// </summary>
         /// <param name="context">TranslationContext</param>
-        /// <param name="member">MemberInfo</param>
         /// <param name="expression">Expression</param>
+        /// <param name="visitor">Visitor</param>
         /// <returns>Recognition result</returns>
-        bool TryRecognize(
+        bool TryTranslate(
             TranslationContext context,
-            MemberInfo member,
-            [NotNullWhen(true)] out ISqlExpression? expression);
+            Expression expression,
+            ExpressionVisitor visitor);
     }
 }

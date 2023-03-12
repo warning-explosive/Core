@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// </summary>
     public class MethodCallExpression : ITypedSqlExpression,
                                         IApplicable<ColumnExpression>,
+                                        IApplicable<JsonAttributeExpression>,
                                         IApplicable<ConditionalExpression>
     {
         private readonly List<ISqlExpression> _arguments;
@@ -52,6 +53,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ColumnExpression expression)
+        {
+            ApplyInternal(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, JsonAttributeExpression expression)
         {
             ApplyInternal(expression);
         }

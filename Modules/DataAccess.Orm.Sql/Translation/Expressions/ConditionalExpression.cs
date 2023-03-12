@@ -7,6 +7,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// </summary>
     public class ConditionalExpression : ITypedSqlExpression,
                                          IApplicable<ColumnExpression>,
+                                         IApplicable<JsonAttributeExpression>,
                                          IApplicable<ConditionalExpression>,
                                          IApplicable<BinaryExpression>,
                                          IApplicable<UnaryExpression>,
@@ -59,6 +60,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ColumnExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, JsonAttributeExpression expression)
         {
             ApplySource(expression);
         }

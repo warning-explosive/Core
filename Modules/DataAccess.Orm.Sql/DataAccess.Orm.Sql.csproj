@@ -51,11 +51,11 @@
       <Compile Update="Translation\CompactExpressionVisitor.cs">
         <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\StringEmptyMemberInfoTranslator.cs">
-        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      <Compile Update="Translation\StringEmptyUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\StringLengthMemberInfoTranslator.cs">
-        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      <Compile Update="Translation\StringLengthUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\SqlExpressionVisitorBase.cs">
         <DependentUpon>ISqlExpressionVisitor.cs</DependentUpon>
@@ -63,14 +63,14 @@
       <Compile Update="Translation\TranslationExpressionVisitor.cs">
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\ContainsMemberInfoTranslator.cs">
-        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      <Compile Update="Translation\ContainsUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\BinaryOperator.cs">
         <DependentUpon>BinaryExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\LikeMemberInfoTranslator.cs">
-        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      <Compile Update="Translation\LikeUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\NamedSourceExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
@@ -141,8 +141,8 @@
       <Compile Update="Translation\Expressions\SpecialExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\ObjectEqualsMemberInfoTranslator.cs">
-        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      <Compile Update="Translation\ObjectEqualsUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Model\ColumnProperty.cs">
         <DependentUpon>ColumnInfo.cs</DependentUpon>
@@ -189,11 +189,11 @@
       <Compile Update="Translation\TranslatedSqlExpression.cs">
         <DependentUpon>SqlExpression.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\IsNullMemberInfoTranslator.cs">
-        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      <Compile Update="Translation\IsNullUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\IsNotNullMemberInfoTranslator.cs">
-        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      <Compile Update="Translation\IsNotNullUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\SqlQueryParameter.cs">
         <DependentUpon>SqlQuery.cs</DependentUpon>
@@ -207,8 +207,8 @@
       <Compile Update="Translation\ExtractExpressionCacheKeyExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\AssignMemberInfoTranslator.cs">
-        <DependentUpon>IMemberInfoTranslator.cs</DependentUpon>
+      <Compile Update="Translation\AssignUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\Expressions\SetExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
@@ -365,6 +365,27 @@
       </Compile>
       <Compile Update="Translation\Expressions\ExplainExpression.cs">
         <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\HasJsonAttributeUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\GetJsonAttributeUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\JsonAttributeExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\DatabaseJsonObjectValueUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ConcatJsonObjectsUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExcludeJsonAttributeUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\AsJsonObjectUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

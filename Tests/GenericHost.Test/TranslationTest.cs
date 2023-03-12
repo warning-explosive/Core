@@ -1002,7 +1002,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseDomainEvent>().Where(it => it.AggregateId == aggregateId).Select(it => it.DomainEvent)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseDomainEvent.DomainEvent)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.DomainEvent)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Index)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Timestamp)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{nameof(GenericDomain.EventSourcing)}"".""{nameof(DatabaseDomainEvent)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"" = @param_0) b",
+                        $@"SELECT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseDomainEvent.DomainEvent)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.DomainEvent)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Index)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Timestamp)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{nameof(GenericEndpoint.EventSourcing)}"".""{nameof(DatabaseDomainEvent)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"" = @param_0) b",
                         new[] { new SqlCommandParameter("param_0", aggregateId, typeof(Guid)) },
                         log)),
                 new IDatabaseEntity[] { domainEvent }
@@ -1010,11 +1010,33 @@ namespace SpaceEngineers.Core.GenericHost.Test
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - select json column to anonymous type",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseDomainEvent>().Where(it => it.AggregateId == aggregateId).Select(it => new { it.DomainEvent })),
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseDomainEvent>().Where(it => it.AggregateId == aggregateId).Select(it => new { it.AggregateId, it.DomainEvent })),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseDomainEvent.DomainEvent)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.DomainEvent)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Index)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Timestamp)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{nameof(GenericDomain.EventSourcing)}"".""{nameof(DatabaseDomainEvent)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"" = @param_0) b",
+                        $@"SELECT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseDomainEvent.AggregateId)}"",{Environment.NewLine}{'\t'}b.""{nameof(DatabaseDomainEvent.DomainEvent)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.DomainEvent)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Index)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Timestamp)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{nameof(GenericEndpoint.EventSourcing)}"".""{nameof(DatabaseDomainEvent)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"" = @param_0) b",
                         new[] { new SqlCommandParameter("param_0", aggregateId, typeof(Guid)) },
+                        log)),
+                new IDatabaseEntity[] { domainEvent }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - select json attribute",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseDomainEvent>().Where(it => it.DomainEvent.AsJsonObject().HasJsonAttribute(nameof(UserWasCreated.Username)) && it.DomainEvent.AsJsonObject().GetJsonAttribute<Username>(nameof(UserWasCreated.Username)).HasJsonAttribute(nameof(Username.Value)) && it.DomainEvent.AsJsonObject().GetJsonAttribute<Username>(nameof(UserWasCreated.Username)).GetJsonAttribute<string>(nameof(Username.Value)) == username.AsJsonObject()).Select(it => it.DomainEvent.AsJsonObject().GetJsonAttribute<Username>(nameof(UserWasCreated.Username)).GetJsonAttribute<string>(nameof(Username.Value)).Value)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseDomainEvent.DomainEvent)}""[@param_6][@param_7]{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.AggregateId)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.DomainEvent)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Index)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Timestamp)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{nameof(GenericEndpoint.EventSourcing)}"".""{nameof(DatabaseDomainEvent)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseDomainEvent.DomainEvent)}"" ? @param_0 AND a.""{nameof(DatabaseDomainEvent.DomainEvent)}""[@param_1] ? @param_2 AND a.""{nameof(DatabaseDomainEvent.DomainEvent)}""[@param_3][@param_4] = @param_5) b",
+                        new[] { new SqlCommandParameter("param_0", nameof(UserWasCreated.Username), typeof(string)), new SqlCommandParameter("param_1", nameof(UserWasCreated.Username), typeof(string)), new SqlCommandParameter("param_2", nameof(Username.Value), typeof(string)), new SqlCommandParameter("param_3", nameof(UserWasCreated.Username), typeof(string)), new SqlCommandParameter("param_4", nameof(Username.Value), typeof(string)), new SqlCommandParameter("param_5", username.AsJsonObject(), typeof(DatabaseJsonObject<string>)), new SqlCommandParameter("param_6", nameof(UserWasCreated.Username), typeof(string)), new SqlCommandParameter("param_7", nameof(Username.Value), typeof(string)) },
+                        log)),
+                new IDatabaseEntity[] { domainEvent }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - compose json object",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseDomainEvent>().Select(it => it.DomainEvent.AsJsonObject().ExcludeJsonAttribute("$type").ExcludeJsonAttribute(nameof(UserWasCreated.Salt)).ExcludeJsonAttribute(nameof(UserWasCreated.PasswordHash)).ExcludeJsonAttribute(nameof(UserWasCreated.Username)).ConcatJsonObjects<ComposedJsonObject>(it.DomainEvent.AsJsonObject().GetJsonAttribute<Username>(nameof(UserWasCreated.Username))).TypedValue)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseDomainEvent.DomainEvent)}"" - @param_0 - @param_1 - @param_2 - @param_3 || a.""{nameof(DatabaseDomainEvent.DomainEvent)}""[@param_4]{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{nameof(GenericEndpoint.EventSourcing)}"".""{nameof(DatabaseDomainEvent)}"" a",
+                        new[] { new SqlCommandParameter("param_0", "$type", typeof(string)), new SqlCommandParameter("param_1", nameof(UserWasCreated.Salt), typeof(string)), new SqlCommandParameter("param_2", nameof(UserWasCreated.PasswordHash), typeof(string)), new SqlCommandParameter("param_3", nameof(UserWasCreated.Username), typeof(string)), new SqlCommandParameter("param_4", nameof(UserWasCreated.Username), typeof(string)) },
                         log)),
                 new IDatabaseEntity[] { domainEvent }
             };
@@ -1257,6 +1279,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 checkCommand(command, output);
 
                 Assert.NotNull(item);
+
+                output.WriteLine("Dump:");
 
                 var dump = item.GetType().IsPrimitive()
                     ? item.ToString() !

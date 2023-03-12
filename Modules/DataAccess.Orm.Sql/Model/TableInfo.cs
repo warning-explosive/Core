@@ -62,7 +62,12 @@
                 {
                     return Type
                         .GetAttributes<IndexAttribute>()
-                        .Select(index => new IndexInfo(this, GetColumns(index.Columns).ToList(), GetColumns(index.IncludedColumns).ToList(), index.Unique))
+                        .Select(index => new IndexInfo(
+                            this,
+                            GetColumns(index.Columns).ToList(),
+                            GetColumns(index.IncludedColumns).ToList(),
+                            index.Unique,
+                            index.Predicate))
                         .ToDictionary(index => index.Name);
 
                     IEnumerable<ColumnInfo> GetColumns(IEnumerable<string> indexColumns)

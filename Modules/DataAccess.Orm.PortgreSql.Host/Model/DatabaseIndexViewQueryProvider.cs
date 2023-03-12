@@ -20,10 +20,11 @@ ns.nspname  as ""{nameof(DatabaseIndexColumn.Schema)}"",
 t.relname as ""{nameof(DatabaseIndexColumn.Table)}"",
 i.relname as ""{nameof(DatabaseIndexColumn.Index)}"",
 ix.indisunique as ""{nameof(DatabaseIndexColumn.Unique)}"",
+case when ix.indpred is not null then trim(both ' ' from split_part(pg_get_indexdef(ix.indexrelid, 0, true), 'WHERE', 2)) end as ""{nameof(DatabaseIndexColumn.Predicate)}"",
 a.attname as ""{nameof(DatabaseIndexColumn.Column)}"",
 ix.idx < indnkeyatts as ""{nameof(DatabaseIndexColumn.IsKeyColumn)}"",
 pg_get_indexdef(ix.indexrelid, 0, true) as ""{nameof(DatabaseIndexColumn.Definition)}""
-from (select indrelid, indexrelid, unnest(indkey) as attnum, indnkeyatts, indisunique, generate_subscripts(indkey, 1) as idx from pg_index) ix
+from (select indrelid, indexrelid, unnest(indkey) as attnum, indnkeyatts, indisunique, indpred, generate_subscripts(indkey, 1) as idx from pg_index) ix
 join pg_class t on t.oid = ix.indrelid
 join pg_class i on i.oid = ix.indexrelid
 join pg_namespace ns on ns.oid = i.relnamespace

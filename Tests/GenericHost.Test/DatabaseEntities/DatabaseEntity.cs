@@ -7,7 +7,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
 
     [SuppressMessage("Analysis", "SA1649", Justification = "StyleCop analyzer error")]
     [Schema(nameof(GenericHost) + nameof(Test))]
-    [Index(nameof(StringField), IncludedColumns = new[] { nameof(IntField) })]
+    [Index(nameof(StringField), IncludedColumns = new[] { nameof(IntField) }, Predicate = $@"""{nameof(BooleanField)}""")]
     internal record DatabaseEntity : BaseDatabaseEntity<Guid>
     {
         public DatabaseEntity(

@@ -82,7 +82,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 indexes.AddRange(obj.Indexes.Select(index => BuildIndexNode(index.Value)));
             }
 
-            return new SchemaNode(schema, enumTypes, tables, views, indexes);
+            return new SchemaNode(
+                schema,
+                enumTypes,
+                tables,
+                views,
+                indexes);
         }
 
         private TableNode BuildTableNode(TableInfo tableInfo)
@@ -92,19 +97,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 .Select(column => BuildColumnNode(column.Value))
                 .ToList();
 
-            return new TableNode(tableInfo.Schema, tableInfo.Name, columns);
+            return new TableNode(
+                tableInfo.Schema,
+                tableInfo.Name,
+                columns);
         }
 
         private ColumnNode BuildColumnNode(ColumnInfo columnInfo)
         {
             var dataType = _columnDataTypeProvider.GetColumnDataType(columnInfo);
 
-            return new ColumnNode(columnInfo.Table.Schema, columnInfo.Table.Name, columnInfo.Name, dataType, columnInfo.Constraints);
+            return new ColumnNode(
+                columnInfo.Table.Schema,
+                columnInfo.Table.Name,
+                columnInfo.Name,
+                dataType,
+                columnInfo.Constraints);
         }
 
         private static ViewNode BuildViewNode(ViewInfo viewInfo)
         {
-            return new ViewNode(viewInfo.Schema, viewInfo.Name, viewInfo.Query);
+            return new ViewNode(
+                viewInfo.Schema,
+                viewInfo.Name,
+                viewInfo.Query);
         }
 
         private static IndexNode BuildIndexNode(IndexInfo indexInfo)
@@ -119,7 +135,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 .Select(column => column.Name)
                 .ToList();
 
-            return new IndexNode(indexInfo.Table.Schema, indexInfo.Table.Name, columns, includedColumns, indexInfo.Unique);
+            return new IndexNode(
+                indexInfo.Table.Schema,
+                indexInfo.Table.Name,
+                columns,
+                includedColumns,
+                indexInfo.Unique,
+                indexInfo.Predicate);
         }
     }
 }

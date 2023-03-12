@@ -17,6 +17,7 @@
         /// <param name="table">Table</param>
         /// <param name="index">Index</param>
         /// <param name="unique">Unique</param>
+        /// <param name="predicate">Partial index predicate</param>
         /// <param name="column">Column</param>
         /// <param name="isKeyColumn">Is key column</param>
         /// <param name="definition">Definition</param>
@@ -26,6 +27,7 @@
             string table,
             string index,
             bool unique,
+            string? predicate,
             string column,
             bool isKeyColumn,
             string definition)
@@ -35,6 +37,7 @@
             Table = table;
             Index = index;
             Unique = unique;
+            Predicate = predicate;
             Column = column;
             IsKeyColumn = isKeyColumn;
             Definition = definition;
@@ -59,6 +62,11 @@
         /// Unique
         /// </summary>
         public bool Unique { get; set; }
+
+        /// <summary>
+        /// Partial index predicate
+        /// </summary>
+        public string? Predicate { get; set; }
 
         /// <summary>
         /// Column

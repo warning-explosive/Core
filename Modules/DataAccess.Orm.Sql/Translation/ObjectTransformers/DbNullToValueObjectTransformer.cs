@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.ObjectTransformers
 {
     using System;
+    using System.ComponentModel;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -8,21 +9,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.ObjectTransformers
     using CrossCuttingConcerns.ObjectBuilder;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DbNullToValueObjectTransformer<TValue> : IObjectTransformer<DBNull, TValue>,
+    internal class DbNullToValueObjectTransformer<TValue> : TypeConverter,
+                                                            IObjectTransformer<DBNull, TValue>,
                                                             IResolvable<IObjectTransformer<DBNull, TValue>>
     {
+        static DbNullToValueObjectTransformer()
+        {
+            TypeDescriptor.AddAttributes(
+                typeof(DBNull),
+                new TypeConverterAttribute(typeof(DbNullTypeConverter)));
+        }
+
         public TValue Transform(DBNull value)
         {
-            if (typeof(TValue).IsReference())
+            if (typeof(TValue).IsReference() || typeof(TValue).IsNullable())
             {
                 return (TValue)typeof(TValue).DefaultValue() !;
-            }
-
-            var valueType = typeof(TValue).ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
-
-            if (valueType != typeof(TValue))
-            {
-                return (TValue)typeof(Nullable<>).MakeGenericType(valueType).DefaultValue() !;
             }
 
             throw new NotSupportedException($"{nameof(DBNull)} cannot be transformed to {typeof(TValue).FullName}");

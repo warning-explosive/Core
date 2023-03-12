@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             if ((node.NodeType == ExpressionType.Equal || node.NodeType == ExpressionType.NotEqual)
                 && node.Right is ConstantExpression
-                && (node.Right.Type.IsNullable() || node.Right.Type.IsReference())
+                && (node.Right.Type.IsReference() || node.Right.Type.IsNullable())
                 && node.Right.Type.IsPrimitive())
             {
                 return Expression.Condition(

@@ -850,148 +850,290 @@
                         index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnColumnConstraintType), nameof(EnColumnConstraintType.PrimaryKey), nameof(EnColumnConstraintType.ForeignKey)),
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), typeof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Payload), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.ReflectedType)}_{nameof(SystemType.Type)}", "not null");
-                            AssertMtmColumn(endpointContainer, modelChanges, index, $"{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Headers)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericEndpoint.DataAccess.Sql.Deduplication),
+                                typeof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage),
+                                new[]
+                                {
+                                    (nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.PrimaryKey), "not null primary key"),
+                                    (nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Version), "not null"),
+                                    (nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Payload), "not null"),
+                                    ($"{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.ReflectedType)}_{nameof(SystemType.Type)}", "not null")
+                                },
+                                new[]
+                                {
+                                    $"{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Headers)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"
+                                });
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), typeof(IntegrationMessageHeader));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(IntegrationMessageHeader.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(IntegrationMessageHeader.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(IntegrationMessageHeader.Message)}_{nameof(IntegrationMessageHeader.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(IntegrationMessageHeader.Payload), "not null");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericEndpoint.DataAccess.Sql.Deduplication),
+                                typeof(IntegrationMessageHeader),
+                                new[]
+                                {
+                                    (nameof(IntegrationMessageHeader.PrimaryKey), "not null primary key"),
+                                    (nameof(IntegrationMessageHeader.Version), "not null"),
+                                    ($"{nameof(IntegrationMessageHeader.Message)}_{nameof(IntegrationMessageHeader.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    (nameof(IntegrationMessageHeader.Payload), "not null")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericDomain.EventSourcing), typeof(DatabaseDomainEvent));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.AggregateId), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Index), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.Timestamp), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseDomainEvent.DomainEvent), "not null");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericDomain.EventSourcing),
+                                typeof(DatabaseDomainEvent),
+                                new[]
+                                {
+                                    (nameof(DatabaseDomainEvent.PrimaryKey), "not null primary key"),
+                                    (nameof(DatabaseDomainEvent.Version), "not null"),
+                                    (nameof(DatabaseDomainEvent.AggregateId), "not null"),
+                                    (nameof(DatabaseDomainEvent.Index), "not null"),
+                                    (nameof(DatabaseDomainEvent.Timestamp), "not null"),
+                                    (nameof(DatabaseDomainEvent.DomainEvent), "not null")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(Blog));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Blog.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Blog.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Blog.Theme), "not null");
-                            AssertMtmColumn(endpointContainer, modelChanges, index, $"{nameof(Blog.Posts)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericHost) + nameof(Test),
+                                typeof(Blog),
+                                new[]
+                                {
+                                    (nameof(Blog.PrimaryKey), "not null primary key"),
+                                    (nameof(Blog.Version), "not null"),
+                                    (nameof(Blog.Theme), "not null")
+                                },
+                                new[]
+                                {
+                                    $"{nameof(Blog.Posts)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"
+                                });
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(Community));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Community.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Community.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Community.Name), "not null");
-                            AssertMtmColumn(endpointContainer, modelChanges, index, $"{nameof(Community.Participants)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericHost) + nameof(Test),
+                                typeof(Community),
+                                new[]
+                                {
+                                    (nameof(Community.PrimaryKey), "not null primary key"),
+                                    (nameof(Community.Version), "not null"),
+                                    (nameof(Community.Name), "not null")
+                                },
+                                new[]
+                                {
+                                    $"{nameof(Community.Participants)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"
+                                });
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(DatabaseEntity));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.BooleanField), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.StringField), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.NullableStringField), string.Empty);
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.IntField), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(DatabaseEntity.Enum), "not null");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericHost) + nameof(Test),
+                                typeof(DatabaseEntity),
+                                new[]
+                                {
+                                    (nameof(DatabaseEntity.PrimaryKey), "not null primary key"),
+                                    (nameof(DatabaseEntity.Version), "not null"),
+                                    (nameof(DatabaseEntity.BooleanField), "not null"),
+                                    (nameof(DatabaseEntity.StringField), "not null"),
+                                    (nameof(DatabaseEntity.NullableStringField), string.Empty),
+                                    (nameof(DatabaseEntity.IntField), "not null"),
+                                    (nameof(DatabaseEntity.Enum), "not null")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(Participant));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Participant.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Participant.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Participant.Name), "not null");
-                            AssertMtmColumn(endpointContainer, modelChanges, index, $"{nameof(Participant.Communities)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericHost) + nameof(Test),
+                                typeof(Participant),
+                                new[]
+                                {
+                                    (nameof(Participant.PrimaryKey), "not null primary key"),
+                                    (nameof(Participant.Version), "not null"),
+                                    (nameof(Participant.Name), "not null")
+                                },
+                                new[]
+                                {
+                                    $"{nameof(Participant.Communities)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"
+                                });
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(User));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(User.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(User.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(User.Nickname), "not null");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericHost) + nameof(Test),
+                                typeof(User),
+                                new[]
+                                {
+                                    (nameof(User.PrimaryKey), "not null primary key"),
+                                    (nameof(User.Version), "not null"),
+                                    (nameof(User.Nickname), "not null")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), typeof(AppliedMigration));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.DateTime), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.CommandText), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(AppliedMigration.Name), "not null");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(DataAccess.Orm.Sql.Host.Migrations),
+                                typeof(AppliedMigration),
+                                new[]
+                                {
+                                    (nameof(AppliedMigration.PrimaryKey), "not null primary key"),
+                                    (nameof(AppliedMigration.Version), "not null"),
+                                    (nameof(AppliedMigration.DateTime), "not null"),
+                                    (nameof(AppliedMigration.CommandText), "not null"),
+                                    (nameof(AppliedMigration.Name), "not null")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), typeof(SqlView));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.Schema), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.View), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(SqlView.Query), "not null");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(DataAccess.Orm.Sql.Host.Migrations),
+                                typeof(SqlView),
+                                new[]
+                                {
+                                    (nameof(SqlView.PrimaryKey), "not null primary key"),
+                                    (nameof(SqlView.Version), "not null"),
+                                    (nameof(SqlView.Schema), "not null"),
+                                    (nameof(SqlView.View), "not null"),
+                                    (nameof(SqlView.Query), "not null")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), typeof(InboxMessage));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(InboxMessage.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(InboxMessage.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(InboxMessage.Message)}_{nameof(InboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.LogicalName)}", "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.InstanceName)}", "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(InboxMessage.IsError), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(InboxMessage.Handled), "not null");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericEndpoint.DataAccess.Sql.Deduplication),
+                                typeof(InboxMessage),
+                                new[]
+                                {
+                                    (nameof(InboxMessage.PrimaryKey), "not null primary key"),
+                                    (nameof(InboxMessage.Version), "not null"),
+                                    ($"{nameof(InboxMessage.Message)}_{nameof(InboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    ($"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.LogicalName)}", "not null"),
+                                    ($"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.InstanceName)}", "not null"),
+                                    (nameof(InboxMessage.IsError), "not null"),
+                                    (nameof(InboxMessage.Handled), "not null")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {
-                            AssertCreateMtmTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}");
-                            AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IUniqueIdentified.PrimaryKey));
-                            AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IDatabaseEntity.Version));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessageHeader)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
+                            AssertCreateMtmTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericEndpoint.DataAccess.Sql.Deduplication),
+                                $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}",
+                                new[]
+                                {
+                                    (nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    (nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessageHeader)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade")
+                                });
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), typeof(OutboxMessage));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.OutboxId), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.Timestamp), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.LogicalName)}", "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.InstanceName)}", "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(OutboxMessage.Message)}_{nameof(OutboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(OutboxMessage.Sent), "not null");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericEndpoint.DataAccess.Sql.Deduplication),
+                                typeof(OutboxMessage),
+                                new[]
+                                {
+                                    (nameof(OutboxMessage.PrimaryKey), "not null primary key"),
+                                    (nameof(OutboxMessage.Version), "not null"),
+                                    (nameof(OutboxMessage.OutboxId), "not null"),
+                                    (nameof(OutboxMessage.Timestamp), "not null"),
+                                    ($"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.LogicalName)}", "not null"),
+                                    ($"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.InstanceName)}", "not null"),
+                                    ($"{nameof(OutboxMessage.Message)}_{nameof(OutboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    (nameof(OutboxMessage.Sent), "not null")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {
-                            AssertCreateMtmTable(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}");
-                            AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IUniqueIdentified.PrimaryKey));
-                            AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IDatabaseEntity.Version));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Community)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Participant)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
+                            AssertCreateMtmTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericHost) + nameof(Test),
+                                $"{nameof(Community)}_{nameof(Participant)}",
+                                new[]
+                                {
+                                    (nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Community)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    (nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Participant)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade")
+                                });
                         },
                         index =>
                         {
-                            AssertCreateTable(modelChanges, index, nameof(GenericHost) + nameof(Test), typeof(Post));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Post.PrimaryKey), "not null primary key");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Post.Version), "not null");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(Post.DateTime), "not null");
-                            AssertHasNoColumn(endpointContainer, modelChanges, index, $"{nameof(Blog)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}");
-                            AssertHasNoColumn(endpointContainer, modelChanges, index, $"{nameof(Blog)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, $"{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(User)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete restrict");
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericHost) + nameof(Test),
+                                typeof(Post),
+                                new[]
+                                {
+                                    (nameof(Post.PrimaryKey), "not null primary key"),
+                                    (nameof(Post.Version), "not null"),
+                                    (nameof(Post.DateTime), "not null"),
+                                    (nameof(Post.Text), "not null"),
+                                    ($"{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    ($"{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(User)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete restrict")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {
-                            AssertCreateMtmTable(modelChanges, index, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}");
-                            AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IUniqueIdentified.PrimaryKey));
-                            AssertHasNoColumn(endpointContainer, modelChanges, index, nameof(IDatabaseEntity.Version));
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
-                            AssertColumnConstraints(endpointContainer, modelChanges, index, nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Post)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade");
+                            AssertCreateMtmTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericHost) + nameof(Test),
+                                $"{nameof(Blog)}_{nameof(Post)}",
+                                new[]
+                                {
+                                    (nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    (nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Post)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade")
+                                });
                         },
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseColumn)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseColumnConstraint)),
@@ -999,18 +1141,18 @@
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseIndexColumn)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseSchema)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseView)),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(GenericEndpoint.EventSourcing), nameof(DatabaseDomainEvent), new[] { nameof(DatabaseDomainEvent.AggregateId), nameof(DatabaseDomainEvent.Index) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, false, nameof(GenericHost) + nameof(Test), nameof(DatabaseEntity), new[] { nameof(DatabaseEntity.StringField) }, new[] { nameof(DatabaseEntity.IntField) }),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(AppliedMigration), new[] { nameof(AppliedMigration.Name) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseColumn), new[] { nameof(DatabaseColumn.Column), nameof(DatabaseColumn.Schema), nameof(DatabaseColumn.Table) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseEnumType), new[] { nameof(DatabaseView.Schema), nameof(DatabaseEnumType.Type), nameof(DatabaseEnumType.Value) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseIndexColumn), new[] { nameof(DatabaseIndexColumn.Column), nameof(DatabaseIndexColumn.Index), nameof(DatabaseIndexColumn.Schema), nameof(DatabaseIndexColumn.Table) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseSchema), new[] { nameof(DatabaseSchema.Name) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseView), new[] { nameof(DatabaseView.Schema), nameof(DatabaseView.View) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(SqlView), new[] { nameof(SqlView.Schema), nameof(SqlView.View) }, Array.Empty<string>())
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericEndpoint.EventSourcing), nameof(DatabaseDomainEvent), new[] { nameof(DatabaseDomainEvent.AggregateId), nameof(DatabaseDomainEvent.Index) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, false, $@"""{nameof(DatabaseEntity.BooleanField)}""",  nameof(GenericHost) + nameof(Test), nameof(DatabaseEntity), new[] { nameof(DatabaseEntity.StringField) }, new[] { nameof(DatabaseEntity.IntField) }),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(AppliedMigration), new[] { nameof(AppliedMigration.Name) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseColumn), new[] { nameof(DatabaseColumn.Column), nameof(DatabaseColumn.Schema), nameof(DatabaseColumn.Table) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseEnumType), new[] { nameof(DatabaseView.Schema), nameof(DatabaseEnumType.Type), nameof(DatabaseEnumType.Value) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseIndexColumn), new[] { nameof(DatabaseIndexColumn.Column), nameof(DatabaseIndexColumn.Index), nameof(DatabaseIndexColumn.Schema), nameof(DatabaseIndexColumn.Table) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseSchema), new[] { nameof(DatabaseSchema.Name) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseView), new[] { nameof(DatabaseView.Schema), nameof(DatabaseView.View) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(SqlView), new[] { nameof(SqlView.Schema), nameof(SqlView.View) }, Array.Empty<string>())
                     };
 
                     Assert.Equal(assertions.Length, modelChanges.Length);
@@ -1020,70 +1162,93 @@
                         assertions[i](i);
                     }
 
-                    static void AssertCreateTable(IModelChange[] modelChanges, int index, string schema, Type table)
+                    static void AssertCreateTable(
+                        IModelProvider modelProvider,
+                        IModelChange[] modelChanges,
+                        int index,
+                        string schema,
+                        Type table,
+                        (string column, string constraints)[] columnsAssertions,
+                        string[] mtmColumnsAssertions)
                     {
                         Assert.True(modelChanges[index] is CreateTable);
                         var createTable = (CreateTable)modelChanges[index];
                         Assert.Equal($"{schema}.{table.Name}", $"{createTable.Schema}.{createTable.Table}");
+
+                        AssertColumns(modelProvider, modelChanges, index, columnsAssertions);
+                        AssertMtmColumns(modelProvider, modelChanges, index, mtmColumnsAssertions);
                     }
 
-                    static void AssertCreateMtmTable(IModelChange[] modelChanges, int index, string schema, string table)
+                    static void AssertCreateMtmTable(
+                        IModelProvider modelProvider,
+                        IModelChange[] modelChanges,
+                        int index,
+                        string schema,
+                        string table,
+                        (string column, string constraints)[] columnsAssertions)
                     {
                         Assert.True(modelChanges[index] is CreateTable);
                         var createTable = (CreateTable)modelChanges[index];
                         Assert.Equal($"{schema}.{table}", $"{createTable.Schema}.{createTable.Table}");
+
+                        AssertColumns(modelProvider, modelChanges, index, columnsAssertions);
+                        AssertMtmColumns(modelProvider, modelChanges, index, Array.Empty<string>());
                     }
 
-                    static void AssertColumnConstraints(IDependencyContainer dependencyContainer, IModelChange[] modelChanges, int index, string column, string constraints)
+                    static void AssertColumns(
+                        IModelProvider modelProvider,
+                        IModelChange[] modelChanges,
+                        int index,
+                        (string column, string constraints)[] assertions)
                     {
                         Assert.True(modelChanges[index] is CreateTable);
                         var createTable = (CreateTable)modelChanges[index];
-                        var modelProvider = dependencyContainer.Resolve<IModelProvider>();
                         Assert.True(modelProvider.TablesMap.ContainsKey(createTable.Schema));
                         Assert.True(modelProvider.TablesMap[createTable.Schema].ContainsKey(createTable.Table));
                         Assert.True(modelProvider.TablesMap[createTable.Schema][createTable.Table] is TableInfo);
                         var tableInfo = (TableInfo)modelProvider.TablesMap[createTable.Schema][createTable.Table];
-                        Assert.True(tableInfo.Columns.ContainsKey(column));
-                        var columnInfo = tableInfo.Columns[column];
-                        var actualConstraints = columnInfo.Constraints.ToString(" ");
-                        Assert.True(actualConstraints.Equals(constraints, StringComparison.OrdinalIgnoreCase));
-                        Assert.False(columnInfo.IsMultipleRelation);
+                        Assert.Equal(tableInfo.Columns.Values.Count(column => !column.IsMultipleRelation), assertions.Length);
 
-                        if (constraints.Contains("references", StringComparison.OrdinalIgnoreCase))
+                        foreach (var (column, constraints) in assertions)
                         {
+                            Assert.True(tableInfo.Columns.ContainsKey(column));
+                            var columnInfo = tableInfo.Columns[column];
+                            var actualConstraints = columnInfo.Constraints.ToString(" ");
+                            Assert.True(actualConstraints.Equals(constraints, StringComparison.OrdinalIgnoreCase));
+                            Assert.False(columnInfo.IsMultipleRelation);
+
+                            if (constraints.Contains("references", StringComparison.OrdinalIgnoreCase))
+                            {
+                                Assert.NotNull(columnInfo.Relation);
+                            }
+                            else
+                            {
+                                Assert.Null(columnInfo.Relation);
+                            }
+                        }
+                    }
+
+                    static void AssertMtmColumns(
+                        IModelProvider modelProvider,
+                        IModelChange[] modelChanges,
+                        int index,
+                        string[] columns)
+                    {
+                        Assert.True(modelChanges[index] is CreateTable);
+                        var createTable = (CreateTable)modelChanges[index];
+                        Assert.True(modelProvider.TablesMap.ContainsKey(createTable.Schema));
+                        Assert.True(modelProvider.TablesMap[createTable.Schema].ContainsKey(createTable.Table));
+                        Assert.True(modelProvider.TablesMap[createTable.Schema][createTable.Table] is TableInfo);
+                        var tableInfo = (TableInfo)modelProvider.TablesMap[createTable.Schema][createTable.Table];
+                        Assert.Equal(tableInfo.Columns.Values.Count(column => column.IsMultipleRelation), columns.Length);
+
+                        foreach (var column in columns)
+                        {
+                            Assert.True(tableInfo.Columns.ContainsKey(column));
+                            var columnInfo = tableInfo.Columns[column];
+                            Assert.True(columnInfo.IsMultipleRelation);
                             Assert.NotNull(columnInfo.Relation);
                         }
-                        else
-                        {
-                            Assert.Null(columnInfo.Relation);
-                        }
-                    }
-
-                    static void AssertMtmColumn(IDependencyContainer dependencyContainer, IModelChange[] modelChanges, int index, string column)
-                    {
-                        Assert.True(modelChanges[index] is CreateTable);
-                        var createTable = (CreateTable)modelChanges[index];
-                        var modelProvider = dependencyContainer.Resolve<IModelProvider>();
-                        Assert.True(modelProvider.TablesMap.ContainsKey(createTable.Schema));
-                        Assert.True(modelProvider.TablesMap[createTable.Schema].ContainsKey(createTable.Table));
-                        Assert.True(modelProvider.TablesMap[createTable.Schema][createTable.Table] is TableInfo);
-                        var tableInfo = (TableInfo)modelProvider.TablesMap[createTable.Schema][createTable.Table];
-                        Assert.True(tableInfo.Columns.ContainsKey(column));
-                        var columnInfo = tableInfo.Columns[column];
-                        Assert.True(columnInfo.IsMultipleRelation);
-                        Assert.NotNull(columnInfo.Relation);
-                    }
-
-                    static void AssertHasNoColumn(IDependencyContainer dependencyContainer, IModelChange[] modelChanges, int index, string column)
-                    {
-                        Assert.True(modelChanges[index] is CreateTable);
-                        var createTable = (CreateTable)modelChanges[index];
-                        var modelProvider = dependencyContainer.Resolve<IModelProvider>();
-                        Assert.True(modelProvider.TablesMap.ContainsKey(createTable.Schema));
-                        Assert.True(modelProvider.TablesMap[createTable.Schema].ContainsKey(createTable.Table));
-                        Assert.True(modelProvider.TablesMap[createTable.Schema][createTable.Table] is TableInfo);
-                        var tableInfo = (TableInfo)modelProvider.TablesMap[createTable.Schema][createTable.Table];
-                        Assert.True(tableInfo.Columns.Keys.All(key => !key.Contains(column, StringComparison.OrdinalIgnoreCase)));
                     }
                 }
                 else
@@ -1091,14 +1256,22 @@
                     throw new NotSupportedException(databaseConnectionProvider.GetType().FullName);
                 }
 
-                static void AssertCreateSchema(IModelChange[] modelChanges, int index, string schema)
+                static void AssertCreateSchema(
+                    IModelChange[] modelChanges,
+                    int index,
+                    string schema)
                 {
                     Assert.True(modelChanges[index] is CreateSchema);
                     var createSchema = (CreateSchema)modelChanges[index];
                     Assert.True(createSchema.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
                 }
 
-                static void AssertCreateEnumType(IModelChange[] modelChanges, int index, string schema, string type, params string[] values)
+                static void AssertCreateEnumType(
+                    IModelChange[] modelChanges,
+                    int index,
+                    string schema,
+                    string type,
+                    params string[] values)
                 {
                     Assert.True(modelChanges[index] is CreateEnumType);
                     var createEnumType = (CreateEnumType)modelChanges[index];
@@ -1107,14 +1280,26 @@
                     Assert.True(createEnumType.Values.SequenceEqual(values, StringComparer.Ordinal));
                 }
 
-                static void AssertCreateView(IModelChange[] modelChanges, int index, string view)
+                static void AssertCreateView(
+                    IModelChange[] modelChanges,
+                    int index,
+                    string view)
                 {
                     Assert.True(modelChanges[index] is CreateView);
                     var createView = (CreateView)modelChanges[index];
                     Assert.True(createView.View.Equals(view, StringComparison.OrdinalIgnoreCase));
                 }
 
-                static void AssertCreateIndex(IModelProvider modelProvider, IModelChange[] modelChanges, int index, bool unique, string schema, string table, string[] columns, string[] includedColumns)
+                static void AssertCreateIndex(
+                    IModelProvider modelProvider,
+                    IModelChange[] modelChanges,
+                    int index,
+                    bool unique,
+                    string? predicate,
+                    string schema,
+                    string table,
+                    string[] columns,
+                    string[] includedColumns)
                 {
                     Assert.True(modelChanges[index] is CreateIndex);
                     var createIndex = (CreateIndex)modelChanges[index];
@@ -1125,6 +1310,7 @@
                     var indexInfo = modelProvider.TablesMap[schema][table].Indexes[createIndex.Index];
                     Assert.True(includedColumns.OrderBy(column => column).SequenceEqual(indexInfo.IncludedColumns.Select(column => column.Name).OrderBy(column => column), StringComparer.OrdinalIgnoreCase));
                     Assert.Equal(unique, indexInfo.Unique);
+                    Assert.Equal(predicate, indexInfo.Predicate);
                 }
             }
         }

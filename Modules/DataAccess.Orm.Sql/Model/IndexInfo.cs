@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
     using Basics;
 
     internal class IndexInfo : IModelInfo,
@@ -13,12 +14,14 @@
             ITableInfo table,
             IReadOnlyCollection<ColumnInfo> columns,
             IReadOnlyCollection<ColumnInfo> includedColumns,
-            bool unique)
+            bool unique,
+            string? predicate)
         {
             Table = table;
             Columns = columns;
             IncludedColumns = includedColumns;
             Unique = unique;
+            Predicate = predicate;
         }
 
         public ITableInfo Table { get; }
@@ -33,6 +36,8 @@
             string.Join("_", Columns.OrderBy(column => column.Name).Select(column => column.Name)));
 
         public bool Unique { get; }
+
+        public string? Predicate { get; }
 
         #region IEquatable
 
@@ -70,7 +75,29 @@
 
         public override string ToString()
         {
-            return $"{Table.Schema}.{Name} ({Unique})";
+            var sb = new StringBuilder();
+
+            sb.Append($"{Table.Schema}.{Name}");
+
+            var attributes = new List<string>();
+
+            if (Unique)
+            {
+                attributes.Add("Unique");
+            }
+
+            if (!Predicate.IsNullOrWhiteSpace())
+            {
+                attributes.Add(Predicate);
+            }
+
+            if (attributes.Any())
+            {
+                sb.Append(" ");
+                sb.Append(attributes.ToString(", "));
+            }
+
+            return sb.ToString();
         }
     }
 }

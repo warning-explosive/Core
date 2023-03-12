@@ -37,5 +37,10 @@
         /// Unique
         /// </summary>
         public bool Unique { get; set; }
+
+        /// <summary>
+        /// Partial index predicate
+        /// </summary>
+        public string? Predicate { get; set; }
     }
 }

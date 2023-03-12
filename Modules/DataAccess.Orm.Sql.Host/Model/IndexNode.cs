@@ -17,18 +17,21 @@
         /// <param name="columns">Columns</param>
         /// <param name="includedColumns">Included columns</param>
         /// <param name="unique">Unique</param>
+        /// <param name="predicate">Partial index predicate</param>
         public IndexNode(
             string schema,
             string table,
             IReadOnlyCollection<string> columns,
             IReadOnlyCollection<string> includedColumns,
-            bool unique)
+            bool unique,
+            string? predicate)
         {
             Schema = schema;
             Table = table;
             Columns = columns;
             IncludedColumns = includedColumns;
             Unique = unique;
+            Predicate = predicate;
         }
 
         /// <summary>
@@ -64,6 +67,11 @@
         /// </summary>
         public IReadOnlyCollection<string> IncludedColumns { get; }
 
+        /// <summary>
+        /// Partial index predicate
+        /// </summary>
+        public string? Predicate { get; }
+
         #region IEquatable
 
         /// <summary>
@@ -97,7 +105,8 @@
                 Index.GetHashCode(StringComparison.OrdinalIgnoreCase),
                 Unique,
                 Columns.OrderBy(column => column).ToString(", ").GetHashCode(StringComparison.OrdinalIgnoreCase),
-                IncludedColumns.OrderBy(column => column).ToString(", ").GetHashCode(StringComparison.OrdinalIgnoreCase));
+                IncludedColumns.OrderBy(column => column).ToString(", ").GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Predicate?.GetHashCode(StringComparison.OrdinalIgnoreCase));
         }
 
         /// <inheritdoc />
@@ -120,7 +129,8 @@
                 && Index.Equals(other.Index, StringComparison.OrdinalIgnoreCase)
                 && Unique == other.Unique
                 && Columns.OrderBy(column => column).SequenceEqual(other.Columns.OrderBy(column => column), StringComparer.OrdinalIgnoreCase)
-                && IncludedColumns.OrderBy(column => column).SequenceEqual(other.IncludedColumns.OrderBy(column => column), StringComparer.OrdinalIgnoreCase);
+                && IncludedColumns.OrderBy(column => column).SequenceEqual(other.IncludedColumns.OrderBy(column => column), StringComparer.OrdinalIgnoreCase)
+                && ((Predicate == null && other.Predicate == null) || Predicate.Equals(other.Predicate, StringComparison.OrdinalIgnoreCase));
         }
 
         #endregion

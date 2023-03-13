@@ -16,17 +16,23 @@
         /// <param name="tables">Tables</param>
         /// <param name="views">Views</param>
         /// <param name="indexes">Indexes</param>
+        /// <param name="functions">Functions</param>
+        /// <param name="triggers">Triggers</param>
         public SchemaNode(string schema,
             IReadOnlyCollection<EnumTypeNode> types,
             IReadOnlyCollection<TableNode> tables,
             IReadOnlyCollection<ViewNode> views,
-            IReadOnlyCollection<IndexNode> indexes)
+            IReadOnlyCollection<IndexNode> indexes,
+            IReadOnlyCollection<FunctionNode> functions,
+            IReadOnlyCollection<TriggerNode> triggers)
         {
             Schema = schema;
             Types = types;
             Tables = tables;
             Views = views;
             Indexes = indexes;
+            Functions = functions;
+            Triggers = triggers;
         }
 
         /// <summary>
@@ -53,6 +59,16 @@
         /// Indexes
         /// </summary>
         public IReadOnlyCollection<IndexNode> Indexes { get; }
+
+        /// <summary>
+        /// Functions
+        /// </summary>
+        public IReadOnlyCollection<FunctionNode> Functions { get; }
+
+        /// <summary>
+        /// Triggers
+        /// </summary>
+        public IReadOnlyCollection<TriggerNode> Triggers { get; }
 
         #region IEquatable
 

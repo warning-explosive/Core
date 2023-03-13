@@ -1,7 +1,6 @@
 ﻿namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Host.Model
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -13,8 +12,7 @@
                                                                IResolvable<ISqlViewQueryProvider<DatabaseColumnConstraint, Guid>>,
                                                                ICollectionResolvable<ISqlViewQueryProvider>
     {
-        [SuppressMessage("Analysis", "CA1802", Justification = "interpolated string")]
-        private static readonly string Query = $@"select
+        private const string Query = $@"select
 gen_random_uuid() as ""{nameof(DatabaseColumnConstraint.PrimaryKey)}"",
 tc.table_schema as ""{nameof(DatabaseColumnConstraint.Schema)}"",
 tc.table_name as ""{nameof(DatabaseColumnConstraint.Table)}"",

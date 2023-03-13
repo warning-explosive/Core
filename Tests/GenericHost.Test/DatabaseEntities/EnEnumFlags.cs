@@ -1,20 +1,23 @@
 namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
 {
-    internal enum EnEnum
+    using System;
+
+    [Flags]
+    internal enum EnEnumFlags
     {
         /// <summary>
-        /// One
+        /// A
         /// </summary>
-        One = 1,
+        A = 1 << 0,
 
         /// <summary>
-        /// Two
+        /// B
         /// </summary>
-        Two = 2,
+        B = 1 << 1,
 
         /// <summary>
-        /// Three
+        /// c
         /// </summary>
-        Three = 4
+        C = 1 << 2
     }
 }

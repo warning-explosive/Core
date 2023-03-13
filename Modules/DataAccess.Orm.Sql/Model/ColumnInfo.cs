@@ -16,9 +16,11 @@
     {
         private readonly ColumnProperty[] _chain;
         private readonly IModelProvider _modelProvider;
+        private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
         private string? _name;
         private ColumnProperty? _property;
+        private string? _dataType;
         private bool? _isSupportedColumn;
         private bool? _isEnum;
         private bool? _isJsonColumn;
@@ -34,7 +36,8 @@
         public ColumnInfo(
             ITableInfo table,
             ColumnProperty[] chain,
-            IModelProvider modelProvider)
+            IModelProvider modelProvider,
+            IColumnDataTypeProvider columnDataTypeProvider)
         {
             Table = table;
 
@@ -46,6 +49,7 @@
             _chain = chain;
 
             _modelProvider = modelProvider;
+            _columnDataTypeProvider = columnDataTypeProvider;
         }
 
         public ITableInfo Table { get; }
@@ -67,6 +71,15 @@
         }
 
         public Type Type => Property.PropertyType;
+
+        public string DataType
+        {
+            get
+            {
+                _dataType ??= _columnDataTypeProvider.GetColumnDataType(this);
+                return _dataType;
+            }
+        }
 
         public bool IsSupportedColumn
         {
@@ -271,7 +284,7 @@
             return $"{Table.Schema}.{Table.Name}.{Name} ({Constraints.ToString(", ")})";
         }
 
-        public ColumnExpression BuildExpression(Translation.Expressions.ParameterExpression parameter)
+        public ColumnExpression BuildExpression(ParameterExpression parameter)
         {
             if (parameter.Type != Table.Type)
             {

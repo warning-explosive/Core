@@ -68,7 +68,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             [EnumeratorCancellation] CancellationToken token)
         {
             var asyncSource = _connectionProvider
-                .Query(transaction, command, token)
+                .Query<T>(transaction, command, token)
                 .WithCancellation(token)
                 .ConfigureAwait(false);
 
@@ -140,7 +140,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             }
 
             if (values.Count == 1
-                && values.Single().Value is string json
+                && values.Single() is var (arrayKey, arrayValue) && arrayValue is Array arrayValues)
+            {
+                var elementType = type.IsDatabaseArray(out var itemType)
+                    ? itemType ?? throw new InvalidOperationException($"Unable to determine array element type for {arrayKey}")
+                    : type;
+
+                var buffer = Array.CreateInstance(elementType, arrayValues.Length);
+
+                var enumerator = arrayValues.GetEnumerator();
+
+                for (var i = 0; enumerator.MoveNext(); i++)
+                {
+                    values[arrayKey] = enumerator.Current;
+                    buffer.SetValue(Build(elementType, values), i);
+                }
+
+                return type == elementType
+                       && elementType.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
+                    ? buffer.Cast<int>().Aggregate((prev, next) => prev + next)
+                    : buffer;
+            }
+
+            if (values.Count == 1
+                && values.Single() is var (jsonKey, jsonValue) && jsonValue is string json
                 && type != typeof(string)
                 && !type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
                 && !type.IsAnonymous()
@@ -169,7 +192,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             }
 
             if (values.Count == 1
-                && values.Single().Value is string
+                && values.Single() is var (arrayKey, arrayValue) && arrayValue is Array arrayValues)
+            {
+                return values;
+            }
+
+            if (values.Count == 1
+                && values.Single() is var (jsonKey, jsonValue) && jsonValue is string json
                 && type != typeof(string)
                 && !type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
                 && !type.IsAnonymous()

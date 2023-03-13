@@ -3,10 +3,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelComparator : IModelComparator,
@@ -86,6 +86,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 {
                     yield return viewDiff;
                 }
+
+                foreach (var functionDiff in ExtractFunctionsDiff(actualModel.Functions, expectedModel.Functions))
+                {
+                    yield return functionDiff;
+                }
+
+                foreach (var triggerDiff in ExtractTriggersDiff(actualModel.Triggers, expectedModel.Triggers))
+                {
+                    yield return triggerDiff;
+                }
             }
             else if (actualModel != null && expectedModel == null)
             {
@@ -113,6 +123,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 foreach (var viewDiff in ExtractIndexesDiff(Enumerable.Empty<IndexNode>(), expectedModel.Indexes))
                 {
                     yield return viewDiff;
+                }
+
+                foreach (var functionDiff in ExtractFunctionsDiff(Enumerable.Empty<FunctionNode>(), expectedModel.Functions))
+                {
+                    yield return functionDiff;
+                }
+
+                foreach (var triggerDiff in ExtractTriggersDiff(Enumerable.Empty<TriggerNode>(), expectedModel.Triggers))
+                {
+                    yield return triggerDiff;
                 }
             }
         }
@@ -348,6 +368,86 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             else
             {
                 throw new InvalidOperationException("Wrong database index change");
+            }
+        }
+
+        private static IEnumerable<IModelChange> ExtractFunctionsDiff(IEnumerable<FunctionNode> actualModel, IEnumerable<FunctionNode> expectedModel)
+        {
+            var modelChanges = actualModel
+                .FullOuterJoin(
+                    expectedModel,
+                    actual => actual,
+                    expected => expected,
+                    FunctionChangesSelector)
+                .SelectMany(change => change);
+
+            foreach (var modelChange in modelChanges)
+            {
+                yield return modelChange;
+            }
+        }
+
+        private static IEnumerable<IModelChange> FunctionChangesSelector(FunctionNode? actualModel, FunctionNode? expectedModel)
+        {
+            if (actualModel != null && expectedModel != null)
+            {
+                if (!actualModel.Equals(expectedModel))
+                {
+                    yield return new DropFunction(actualModel.Schema, actualModel.Function);
+                    yield return new CreateFunction(expectedModel.Schema, expectedModel.Function, expectedModel.Definition);
+                }
+            }
+            else if (actualModel != null && expectedModel == null)
+            {
+                yield return new DropFunction(actualModel.Schema, actualModel.Function);
+            }
+            else if (actualModel == null && expectedModel != null)
+            {
+                yield return new CreateFunction(expectedModel.Schema, expectedModel.Function, expectedModel.Definition);
+            }
+            else
+            {
+                throw new InvalidOperationException("Wrong database function change");
+            }
+        }
+
+        private static IEnumerable<IModelChange> ExtractTriggersDiff(IEnumerable<TriggerNode> actualModel, IEnumerable<TriggerNode> expectedModel)
+        {
+            var modelChanges = actualModel
+                .FullOuterJoin(
+                    expectedModel,
+                    actual => actual,
+                    expected => expected,
+                    TriggerChangesSelector)
+                .SelectMany(change => change);
+
+            foreach (var modelChange in modelChanges)
+            {
+                yield return modelChange;
+            }
+        }
+
+        private static IEnumerable<IModelChange> TriggerChangesSelector(TriggerNode? actualModel, TriggerNode? expectedModel)
+        {
+            if (actualModel != null && expectedModel != null)
+            {
+                if (!actualModel.Equals(expectedModel))
+                {
+                    yield return new DropTrigger(actualModel.Schema, actualModel.Function);
+                    yield return new CreateTrigger(expectedModel.Trigger, expectedModel.Schema, expectedModel.Table, expectedModel.Function, expectedModel.Type, expectedModel.Event);
+                }
+            }
+            else if (actualModel != null && expectedModel == null)
+            {
+                yield return new DropTrigger(actualModel.Schema, actualModel.Function);
+            }
+            else if (actualModel == null && expectedModel != null)
+            {
+                yield return new CreateTrigger(expectedModel.Trigger, expectedModel.Schema, expectedModel.Table, expectedModel.Function, expectedModel.Type, expectedModel.Event);
+            }
+            else
+            {
+                throw new InvalidOperationException("Wrong database trigger change");
             }
         }
     }

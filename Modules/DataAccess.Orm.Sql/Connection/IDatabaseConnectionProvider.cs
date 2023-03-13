@@ -96,8 +96,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Connection
         /// <param name="transaction">IAdvancedDatabaseTransaction</param>
         /// <param name="command">Command</param>
         /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Rows</returns>
-        IAsyncEnumerable<IDictionary<string, object?>> Query(
+        IAsyncEnumerable<IDictionary<string, object?>> Query<T>(
             IAdvancedDatabaseTransaction transaction,
             ICommand command,
             CancellationToken token);
@@ -108,8 +109,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Connection
         /// <param name="connection">IDbConnection</param>
         /// <param name="command">Command</param>
         /// <param name="token">Cancellation token</param>
+        /// <typeparam name="T">T type-argument</typeparam>
         /// <returns>Rows</returns>
-        IAsyncEnumerable<IDictionary<string, object?>> Query(
+        IAsyncEnumerable<IDictionary<string, object?>> Query<T>(
             IDbConnection connection,
             ICommand command,
             CancellationToken token);

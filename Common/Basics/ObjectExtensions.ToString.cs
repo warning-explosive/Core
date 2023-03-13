@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -34,11 +35,32 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Property values of passed instance</returns>
         public static string ShowProperties(this object instance, BindingFlags flags, params string[] blackList)
         {
-            return string.Join(Environment.NewLine,
-                        instance.GetType()
-                                .GetProperties(flags)
-                                .Where(z => !blackList.Contains(z.Name))
-                                .Select(z => $"[{z.Name}] - {z.GetValue(instance)?.ToString() ?? "null"}"));
+            var values = instance
+                .GetType()
+                .GetProperties(flags)
+                .Where(property => !blackList.Contains(property.Name))
+                .Select(property =>
+                {
+                    var value = property.GetValue(instance);
+
+                    if (value is IEnumerable enumerable)
+                    {
+                        var enumerator = enumerable.GetEnumerator();
+
+                        var buffer = new List<string>();
+
+                        while (enumerator.MoveNext())
+                        {
+                            buffer.Add(enumerator.Current?.ToString() ?? "null");
+                        }
+
+                        return $"[{property.Name}] - [{buffer.ToString(", ")}]";
+                    }
+
+                    return $"[{property.Name}] - {value?.ToString() ?? "null"}";
+                });
+
+            return string.Join(Environment.NewLine, values);
         }
     }
 }

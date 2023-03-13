@@ -20,7 +20,7 @@
                 throw new NotSupportedException($"Unsupported column type: {column.Type}");
             }
 
-            if (TryGetPrimitiveDataType(column, out var dataType))
+            if (TryGetPrimitiveDataType(column.Type, column.Table.Schema, column.ColumnLength, column.IsJsonColumn, out var dataType))
             {
                 return dataType;
             }
@@ -28,9 +28,14 @@
             throw new NotSupportedException($"Unsupported column type: {column.Type}");
         }
 
-        private static bool TryGetPrimitiveDataType(ColumnInfo column, [NotNullWhen(true)] out string? dataType)
+        private static bool TryGetPrimitiveDataType(
+            Type type,
+            string schema,
+            uint? columnLength,
+            bool isJsonColumn,
+            [NotNullWhen(true)] out string? dataType)
         {
-            var type = column.Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
+            type = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
             if (type == typeof(short))
             {
@@ -138,13 +143,13 @@
                  * character type
                  * variable-length with limit or with no limit
                  */
-                dataType = column.ColumnLength == null
+                dataType = columnLength == null
                     ? NpgsqlDbType.Text.ToString()
-                    : $"{NpgsqlDbType.Varchar}({column.ColumnLength})";
+                    : $"{NpgsqlDbType.Varchar}({columnLength})";
                 return true;
             }
 
-            if (column.IsJsonColumn)
+            if (isJsonColumn)
             {
                 /*
                  * json stored in a decomposed binary format with indexing support
@@ -214,7 +219,26 @@
 
             if (type.IsEnum)
             {
-                dataType = new EnumTypeInfo(column.Table.Schema, type).Name;
+                var enumDataType = new EnumTypeInfo(schema, type).Name;
+
+                dataType = type.IsEnumFlags()
+                    ? $"{enumDataType}[]"
+                    : enumDataType;
+
+                return true;
+            }
+
+            if (type.IsDatabaseArray(out var arrayElementColumn)
+                && arrayElementColumn != null
+                && TryGetPrimitiveDataType(arrayElementColumn, schema, null, false, out var arrayElementDataType))
+            {
+                dataType = $"{arrayElementDataType}[]";
+
+                if (arrayElementColumn.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnumFlags())
+                {
+                    throw new InvalidOperationException($"Unsupported column type: {dataType}");
+                }
+
                 return true;
             }
 

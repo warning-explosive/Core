@@ -49,14 +49,14 @@
             var sqlView = new SqlView(Guid.NewGuid(), change.Schema, change.View, view.Query);
 
             yield return new SqlCommand(
-                InsertViewCommandFormat.Format(change.Schema, change.View, view.Query),
+                InsertViewCommandFormat,
                 new[]
                 {
                     new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(0.ToString(CultureInfo.InvariantCulture)), sqlView.PrimaryKey, typeof(Guid)),
                     new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(1.ToString(CultureInfo.InvariantCulture)), sqlView.Version, typeof(long)),
                     new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(2.ToString(CultureInfo.InvariantCulture)), sqlView.Schema, typeof(string)),
                     new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(3.ToString(CultureInfo.InvariantCulture)), sqlView.View, typeof(string)),
-                    new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(4.ToString(CultureInfo.InvariantCulture)), sqlView.Query, typeof(string)),
+                    new SqlCommandParameter(TranslationContext.CommandParameterFormat.Format(4.ToString(CultureInfo.InvariantCulture)), sqlView.Query, typeof(string))
                 });
         }
     }

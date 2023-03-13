@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
+    using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
@@ -13,19 +14,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
     {
         private static readonly Type MultipleRelation = typeof(List<>);
 
-        private static readonly Type[] SupportedMultipleRelations =
-            new[]
-            {
-                typeof(IReadOnlyCollection<>)
-            };
-
         private static readonly ConcurrentDictionary<Type, ColumnProperty[]> ColumnsCache
             = new ConcurrentDictionary<Type, ColumnProperty[]>();
 
         public static bool IsSupportedColumn(this PropertyInfo property)
         {
             var isItemTypeSupported = property.PropertyType.IsMultipleRelation(out var itemType)
-                ? IsItemTypeSupported(itemType)
+                ? itemType.IsDatabaseEntity()
                 : IsItemTypeSupported(property.PropertyType);
 
             return isItemTypeSupported || property.IsJsonColumn();
@@ -50,7 +45,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                        || type == TypeExtensions.FindType("System.Private.CoreLib System.DateOnly")
                        || type == TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly")
                        || type.IsDatabaseEntity()
-                       || type.IsInlinedObject();
+                       || type.IsInlinedObject()
+                       || (type.IsDatabaseArray(out var elementType) && elementType != null);
             }
         }
 
@@ -76,20 +72,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                    && property.PropertyType != typeof(string);
         }
 
+        public static bool IsDatabaseArray(this Type type, out Type? itemType)
+        {
+            if (typeof(IEnumerable).IsAssignableFrom(type)
+                && type != typeof(string))
+            {
+                itemType = type.IsArray() && type.HasElementType
+                    ? type.GetElementType()
+                    : type.ExtractGenericArgumentsAt(typeof(IEnumerable<>)).SingleOrDefault();
+
+                return itemType == null ||
+                       (itemType != type && !itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)));
+            }
+
+            itemType = null;
+            return false;
+        }
+
         public static bool IsMultipleRelation(this Type type, [NotNullWhen(true)] out Type? itemType)
         {
-            itemType = SupportedMultipleRelations
-                .Select(collection =>
-                {
-                    var collectionItemType = type.ExtractGenericArgumentAtOrSelf(collection);
-                    var isCollection = collectionItemType != type;
-                    return (collectionItemType, isCollection);
-                })
-                .Where(info => info.isCollection)
-                .Select(info => info.collectionItemType)
+            itemType = type
+                .ExtractGenericArgumentsAt(typeof(IEnumerable<>))
                 .FirstOrDefault();
 
-            return itemType != null;
+            return itemType != null
+                   && itemType != type
+                   && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>));
         }
 
         public static Type GetMultipleRelationItemType(this Type type)

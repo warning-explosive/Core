@@ -1,10 +1,12 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Data;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -34,6 +36,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
     {
         private const string DatabaseExistsCommandText = @"select exists(select * from pg_catalog.pg_database where datname = @param_0);";
         private const string TransactionIdCommandText = "select txid_current()";
+
+        private static ConcurrentDictionary<Type, ConcurrentDictionary<int, NullableArrayInfo>> _nullableArrayCache
+            = new ConcurrentDictionary<Type, ConcurrentDictionary<int, NullableArrayInfo>>();
+
+        private static MethodInfo _getFieldValueGenericMethod = new MethodFinder(
+                typeof(NpgsqlDataReader),
+                nameof(NpgsqlDataReader.GetFieldValue),
+                BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+            {
+                TypeArguments = new[] { typeof(object) },
+                ArgumentTypes = new[] { typeof(int) }
+            }.FindMethod() ?? throw new InvalidOperationException($"Could not find {nameof(NpgsqlDataReader)}.{nameof(NpgsqlDataReader.GetFieldValue)}() method");
 
         private readonly SqlDatabaseSettings _sqlDatabaseSettings;
         private readonly OrmSettings _ormSettings;
@@ -155,20 +169,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             return Execute(connection, default, commands, token);
         }
 
-        public IAsyncEnumerable<IDictionary<string, object?>> Query(
+        public IAsyncEnumerable<IDictionary<string, object?>> Query<T>(
             IAdvancedDatabaseTransaction transaction,
             ICommand command,
             CancellationToken token)
         {
-            return Query(transaction.DbConnection, transaction, command, token);
+            return Query<T>(transaction.DbConnection, transaction, command, token);
         }
 
-        public IAsyncEnumerable<IDictionary<string, object?>> Query(
+        public IAsyncEnumerable<IDictionary<string, object?>> Query<T>(
             IDbConnection connection,
             ICommand command,
             CancellationToken token)
         {
-            return Query(connection, default, command, token);
+            return Query<T>(connection, default, command, token);
         }
 
         public Task<T> ExecuteScalar<T>(
@@ -221,7 +235,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             }
         }
 
-        private async IAsyncEnumerable<IDictionary<string, object?>> Query(
+        private async IAsyncEnumerable<IDictionary<string, object?>> Query<T>(
             IDbConnection connection,
             IAdvancedDatabaseTransaction? transaction,
             ICommand command,
@@ -233,6 +247,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
              * https://github.com/npgsql/npgsql/issues/3990
              */
             var buffer = new List<IDictionary<string, object?>>();
+
+            var type = typeof(T);
 
             using (var npgsqlCommand = CreateCommand(connection, transaction, command, _ormSettings))
             {
@@ -247,9 +263,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                     {
                         var row = new Dictionary<string, object?>(reader.FieldCount);
 
-                        for (var i = 0; i < reader.FieldCount; i++)
+                        for (var ordinal = 0; ordinal < reader.FieldCount; ordinal++)
                         {
-                            row[reader.GetName(i)] = reader.GetValue(i);
+                            var name = reader.GetName(ordinal);
+
+                            var nullableArrayInfo = _nullableArrayCache
+                                .GetOrAdd(
+                                    type,
+                                    static (_, _) => new ConcurrentDictionary<int, NullableArrayInfo>(),
+                                    ordinal)
+                                .GetOrAdd(
+                                    ordinal,
+                                    static (_, state) => new NullableArrayInfo(state.reader, state.ordinal, state.name, state.type),
+                                    (reader, ordinal, name, type));
+
+                            if (nullableArrayInfo.IsNullableArray(out var getFieldValueMethod))
+                            {
+                                row[name] = getFieldValueMethod.Invoke(reader, new object?[] { ordinal });
+                            }
+                            else
+                            {
+                                row[name] = reader.GetValue(ordinal);
+                            }
                         }
 
                         buffer.Add(row);
@@ -358,7 +393,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             return npgsqlCommand;
         }
 
-        [SuppressMessage("Analysis", "CA1502", Justification = "NpgsqlParameter<T>")]
+        [SuppressMessage("Analysis", "CA1502", Justification = "complex infrastructural code")]
         private NpgsqlParameter GetNpgsqlParameter(SqlCommandParameter parameter)
         {
             var (name, value, type) = parameter;
@@ -481,13 +516,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                     return true;
                 }
 
-                if (nullType == TypeExtensions.FindType("System.Private.CoreLib System.DateOnly"))
+                if (nullType == Basics.TypeExtensions.FindType("System.Private.CoreLib System.DateOnly"))
                 {
                     npgsqlParameter = new NpgsqlParameter(name, NpgsqlDbType.Date) { Value = value ?? DBNull.Value };
                     return true;
                 }
 
-                if (nullType == TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly"))
+                if (nullType == Basics.TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly"))
                 {
                     npgsqlParameter = new NpgsqlParameter(name, NpgsqlDbType.Time) { Value = value ?? DBNull.Value };
                     return true;
@@ -495,7 +530,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
                 if (nullType.IsEnum)
                 {
-                    npgsqlParameter = new NpgsqlParameter(name, value ?? DBNull.Value) { DataTypeName = nullType.Name };
+                    string enumDataTypeName;
+                    object? enumValue;
+
+                    if (nullType.IsEnumFlags())
+                    {
+                        enumValue = value is Enum @enum
+                            ? @enum.EnumFlagsValues()
+                            : null;
+
+                        enumDataTypeName = nullType.Name + "[]";
+                    }
+                    else
+                    {
+                        enumValue = value;
+                        enumDataTypeName = nullType.Name;
+                    }
+
+                    npgsqlParameter = new NpgsqlParameter(name, enumValue ?? DBNull.Value) { DataTypeName = enumDataTypeName };
                     return true;
                 }
 
@@ -542,6 +594,31 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
             return await _dependencyContainer
                 .InvokeWithinTransaction(false, command, ExecuteScalar<bool>, token)
                 .ConfigureAwait(false);
+        }
+
+        private class NullableArrayInfo
+        {
+            private readonly MethodInfo? _getFieldValueMethod;
+
+            public NullableArrayInfo(
+                NpgsqlDataReader reader,
+                int ordinal,
+                string propertyName,
+                Type targetType)
+            {
+                _getFieldValueMethod = reader.GetFieldType(ordinal).IsDatabaseArray(out var elementType)
+                                       && (elementType != null || targetType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance).PropertyType.IsDatabaseArray(out elementType))
+                                       && elementType != null
+                                       && elementType.IsNullable()
+                    ? _getFieldValueGenericMethod.MakeGenericMethod(elementType.MakeArrayType())
+                    : null;
+            }
+
+            public bool IsNullableArray([NotNullWhen(true)] out MethodInfo? getFieldValueMethod)
+            {
+                getFieldValueMethod = _getFieldValueMethod;
+                return getFieldValueMethod != null;
+            }
         }
     }
 }

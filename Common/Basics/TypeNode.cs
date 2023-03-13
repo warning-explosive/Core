@@ -24,7 +24,7 @@ namespace SpaceEngineers.Core.Basics
                    .ToList()
                 : new List<TypeNode>();
 
-            IsArray = type.IsArray;
+            IsArray = type.IsArray();
         }
 
         private TypeNode(string assembly, string type, IReadOnlyCollection<TypeNode> genericArguments)
@@ -203,11 +203,7 @@ namespace SpaceEngineers.Core.Basics
                     return node.GenericArguments.Any()
                         ? type.MakeGenericType(node.GenericArguments.Select(BuildType).ToArray())
                         : node.IsArray
-                            ? typeof(Array)
-                               .CallMethod(nameof(Array.Empty))
-                               .WithTypeArgument(type)
-                               .Invoke()
-                               .GetType()
+                            ? type.MakeArrayType()
                             : type;
                 }
 

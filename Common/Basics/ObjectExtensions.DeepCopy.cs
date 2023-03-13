@@ -147,7 +147,7 @@
                 return;
             }
 
-            if (typeToReflect.IsArray)
+            if (typeToReflect.IsArray())
             {
                 var arrayClone = (Array)clone;
 

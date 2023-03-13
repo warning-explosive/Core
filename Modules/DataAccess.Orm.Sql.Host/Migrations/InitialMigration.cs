@@ -17,7 +17,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
             IModelChangeCommandBuilderComposite commandBuilder,
             IDatabaseConnectionProvider connectionProvider)
             : base(
-                new InitialMigrationDatabaseTypeProvider(new[] { typeof(AppliedMigration), typeof(SqlView) }),
+                new InitialMigrationDatabaseTypeProvider(new[] { typeof(AppliedMigration), typeof(SqlView), typeof(FunctionView) }),
                 modelChangesExtractor,
                 commandBuilder,
                 connectionProvider)

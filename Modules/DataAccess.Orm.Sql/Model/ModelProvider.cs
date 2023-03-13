@@ -19,6 +19,7 @@
     {
         private readonly IDynamicClassProvider _dynamicClassProvider;
         private readonly IDatabaseTypeProvider _databaseTypeProvider;
+        private readonly IColumnDataTypeProvider _columnDataTypeProvider;
         private readonly ISqlViewQueryProviderComposite _sqlViewQueryProvider;
 
         private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>> _columnsCache;
@@ -31,10 +32,12 @@
         public ModelProvider(
             IDynamicClassProvider dynamicClassProvider,
             IDatabaseTypeProvider databaseTypeProvider,
+            IColumnDataTypeProvider columnDataTypeProvider,
             ISqlViewQueryProviderComposite sqlViewQueryProvider)
         {
             _dynamicClassProvider = dynamicClassProvider;
             _databaseTypeProvider = databaseTypeProvider;
+            _columnDataTypeProvider = columnDataTypeProvider;
             _sqlViewQueryProvider = sqlViewQueryProvider;
 
             _columnsCache = new ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>>();
@@ -189,7 +192,7 @@
 
             foreach (var chain in FlattenSpecialTypes(property))
             {
-                yield return new ColumnInfo(table, chain, this);
+                yield return new ColumnInfo(table, chain, this, _columnDataTypeProvider);
             }
         }
 

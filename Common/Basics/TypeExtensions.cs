@@ -79,15 +79,25 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Is type collection or not
+        /// Does type represent collection or not
         /// </summary>
         /// <param name="type">Type</param>
-        /// <returns>Is type can be interpreted as collection</returns>
+        /// <returns>Result of check</returns>
         public static bool IsCollection(this Type type)
         {
             return typeof(IEnumerable).IsAssignableFrom(type)
                    && !typeof(IQueryable).IsAssignableFrom(type)
                    && type != typeof(string);
+        }
+
+        /// <summary>
+        /// Does type represent array or not
+        /// </summary>
+        /// <param name="type">Type</param>
+        /// <returns>Result of check</returns>
+        public static bool IsArray(this Type type)
+        {
+            return type.IsArray || type == typeof(Array);
         }
 
         /// <summary>
@@ -177,6 +187,17 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Does type represent enum flags
+        /// </summary>
+        /// <param name="type">Type for check</param>
+        /// <returns>Result of check</returns>
+        public static bool IsEnumFlags(this Type type)
+        {
+            return type.IsEnum
+                   && type.IsDefined(typeof(FlagsAttribute), false);
+        }
+
+        /// <summary>
         /// Does type represents reference type
         /// </summary>
         /// <param name="type">Type for check</param>
@@ -233,7 +254,7 @@ namespace SpaceEngineers.Core.Basics
         public static bool IsConcreteType(this Type type)
         {
             return !type.IsAbstract
-                   && !type.IsArray
+                   && !type.IsArray()
                    && type != typeof(object)
                    && !typeof(Delegate).IsAssignableFrom(type);
         }

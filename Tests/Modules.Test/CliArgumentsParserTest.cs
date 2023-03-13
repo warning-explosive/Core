@@ -378,9 +378,9 @@ namespace SpaceEngineers.Core.Modules.Test
         [Flags]
         private enum TestFlagsEnum
         {
-            Default,
-            Value1,
-            Value2
+            Default = 0,
+            Value1 = 1 << 0,
+            Value2 = 1 << 1
         }
 
         private class TestPoco

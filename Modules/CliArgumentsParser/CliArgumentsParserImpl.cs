@@ -170,7 +170,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             {
                 var flagsValues = strValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
 
-                if (enumType.IsDefined(typeof(FlagsAttribute), false) && flagsValues.Length > 1)
+                if (enumType.IsEnumFlags() && flagsValues.Length > 1)
                 {
                     if (TryParseEnum(enumType, string.Join(", ", flagsValues), out var result))
                     {

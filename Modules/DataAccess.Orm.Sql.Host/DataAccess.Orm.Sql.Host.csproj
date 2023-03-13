@@ -147,6 +147,36 @@
       <Compile Update="Migrations\ApplyDeltaMigration.cs">
         <DependentUpon>IMigration.cs</DependentUpon>
       </Compile>
+      <Compile Update="Model\FunctionNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseFunction.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\TriggerNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseTrigger.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\EnTriggerEvent.cs">
+        <DependentUpon>TriggerNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\EnTriggerType.cs">
+        <DependentUpon>TriggerNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateTrigger.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateFunction.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropFunction.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropTrigger.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">

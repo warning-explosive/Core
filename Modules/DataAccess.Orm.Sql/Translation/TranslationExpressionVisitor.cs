@@ -20,8 +20,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using ParameterExpression = System.Linq.Expressions.ParameterExpression;
     using UnaryExpression = System.Linq.Expressions.UnaryExpression;
 
-    [SuppressMessage("Analysis", "CA1502", Justification = "complex expression visitor")]
-    [SuppressMessage("Analysis", "CA1506", Justification = "complex expression visitor")]
+    [SuppressMessage("Analysis", "CA1502", Justification = "complex infrastructural code")]
+    [SuppressMessage("Analysis", "CA1506", Justification = "complex infrastructural code")]
     internal class TranslationExpressionVisitor : ExpressionVisitor
     {
         private readonly TranslationContext _context;

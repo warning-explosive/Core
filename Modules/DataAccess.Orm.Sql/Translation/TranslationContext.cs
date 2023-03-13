@@ -219,7 +219,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             };
         }
 
-        [SuppressMessage("Analysis", "CA1502", Justification = "complex value extractor")]
+        [SuppressMessage("Analysis", "CA1502", Justification = "complex infrastructural code")]
         internal void CaptureCommandParameterExtractor(
             string commandParameterName,
             Func<CommandParameterExtractorContext, string, System.Linq.Expressions.ConstantExpression>? extractor = null)

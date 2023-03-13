@@ -5,12 +5,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
     using Connection;
     using Model;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using Sql.Model;
     using Transaction;
     using Translation;

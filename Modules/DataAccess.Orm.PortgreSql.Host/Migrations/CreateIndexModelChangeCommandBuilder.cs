@@ -17,6 +17,7 @@
                                                           ICollectionResolvable<IModelChangeCommandBuilder>
     {
         private const string CommandFormat = @"create {0}index ""{1}"" on ""{2}"".""{3}"" ({4}){5}{6}";
+        private const string JsonIndexCommandFormat = @"create index ""{0}"" on ""{1}"".""{2}"" using gin ({3})";
         private const string ColumnFormat = @"""{0}""";
 
         private readonly IModelProvider _modelProvider;
@@ -42,36 +43,52 @@
                 throw new InvalidOperationException($"{change.Schema}.{change.Table}.{change.Index} isn't presented in the model");
             }
 
-            var unique = index.Unique
-                ? "unique "
-                : string.Empty;
+            if (index.Columns.Count == 1
+                && index.Columns.Single() is ColumnInfo jsonColumn
+                && jsonColumn.IsJsonColumn
+                && index.IncludedColumns.Count == 0)
+            {
+                var commandText = JsonIndexCommandFormat.Format(
+                    change.Index + "_gin",
+                    change.Schema,
+                    change.Table,
+                    ColumnFormat.Format(jsonColumn.Name));
 
-            var columns = index
-                .Columns
-                .Select(column => ColumnFormat.Format(column.Name))
-                .ToString(", ");
+                yield return new SqlCommand(commandText, Array.Empty<SqlCommandParameter>());
+            }
+            else
+            {
+                var unique = index.Unique
+                    ? "unique "
+                    : string.Empty;
 
-            var includedColumns = index.IncludedColumns.Any()
-                ? " include ({0})".Format(index
-                    .IncludedColumns
+                var columns = index
+                    .Columns
                     .Select(column => ColumnFormat.Format(column.Name))
-                    .ToString(", "))
-                : string.Empty;
+                    .ToString(", ");
 
-            var predicate = !index.Predicate.IsNullOrWhiteSpace()
-                ? $"where {index.Predicate}"
-                : string.Empty;
+                var includedColumns = index.IncludedColumns.Any()
+                    ? " include ({0})".Format(index
+                        .IncludedColumns
+                        .Select(column => ColumnFormat.Format(column.Name))
+                        .ToString(", "))
+                    : string.Empty;
 
-            var commandText = CommandFormat.Format(
-                unique,
-                change.Index,
-                change.Schema,
-                change.Table,
-                columns,
-                includedColumns,
-                predicate);
+                var predicate = !index.Predicate.IsNullOrWhiteSpace()
+                    ? $"where {index.Predicate}"
+                    : string.Empty;
 
-            yield return new SqlCommand(commandText, Array.Empty<SqlCommandParameter>());
+                var commandText = CommandFormat.Format(
+                    unique,
+                    change.Index,
+                    change.Schema,
+                    change.Table,
+                    columns,
+                    includedColumns,
+                    predicate);
+
+                yield return new SqlCommand(commandText, Array.Empty<SqlCommandParameter>());
+            }
         }
     }
 }

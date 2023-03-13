@@ -72,8 +72,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             var tables = await BuildTableNodes(databaseContext, schema, constraints, token).ConfigureAwait(false);
             var views = await BuildViewNodes(databaseContext, schema, token).ConfigureAwait(false);
             var indexes = await BuildIndexNodes(databaseContext, schema, token).ConfigureAwait(false);
+            var functions = await BuildFunctionNodes(databaseContext, schema, token).ConfigureAwait(false);
+            var triggers = await BuildTriggerNodes(databaseContext, schema, token).ConfigureAwait(false);
 
-            return new SchemaNode(schema, types, tables, views, indexes);
+            return new SchemaNode(schema, types, tables, views, indexes, functions, triggers);
         }
 
         private static async Task<IReadOnlyCollection<EnumTypeNode>> BuildEnumTypeNodes(
@@ -211,6 +213,36 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                     grp.Where(column => !column.IsKeyColumn).Select(column => column.Column).ToArray(),
                     grp.Key.Unique,
                     grp.Key.Predicate))
+                .ToList();
+        }
+
+        private static async Task<IReadOnlyCollection<FunctionNode>> BuildFunctionNodes(
+            IDatabaseContext databaseContext,
+            string schema,
+            CancellationToken token)
+        {
+            return (await databaseContext
+                    .All<DatabaseFunction>()
+                    .Where(column => column.Schema == schema)
+                    .CachedExpression("F6D29943-434C-41D1-9EA2-3CE0CBE5264B")
+                    .ToListAsync(token)
+                    .ConfigureAwait(false))
+                .Select(function => new FunctionNode(function.Schema, function.Function, function.Definition))
+                .ToList();
+        }
+
+        private static async Task<IReadOnlyCollection<TriggerNode>> BuildTriggerNodes(
+            IDatabaseContext databaseContext,
+            string schema,
+            CancellationToken token)
+        {
+            return (await databaseContext
+                    .All<DatabaseTrigger>()
+                    .Where(column => column.Schema == schema)
+                    .CachedExpression("AADDEFAE-2C58-4E08-91D9-C57E9F614230")
+                    .ToListAsync(token)
+                    .ConfigureAwait(false))
+                .Select(trigger => new TriggerNode(trigger.Schema, trigger.Trigger, trigger.Table, trigger.Function, trigger.Type, trigger.Event))
                 .ToList();
         }
     }

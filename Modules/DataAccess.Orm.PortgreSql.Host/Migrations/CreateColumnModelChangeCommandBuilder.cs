@@ -20,14 +20,10 @@
         private const string CommandFormat = @"alter table ""{0}"".""{1}"" add ""{2}"" {3}{4}";
 
         private readonly IModelProvider _modelProvider;
-        private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
-        public CreateColumnModelChangeCommandBuilder(
-            IModelProvider modelProvider,
-            IColumnDataTypeProvider columnDataTypeProvider)
+        public CreateColumnModelChangeCommandBuilder(IModelProvider modelProvider)
         {
             _modelProvider = modelProvider;
-            _columnDataTypeProvider = columnDataTypeProvider;
         }
 
         public IEnumerable<ICommand> BuildCommands(IModelChange change)
@@ -51,23 +47,14 @@
                 yield break;
             }
 
-            var (columnName, dataType, constraints) = CreateColumn(column);
-
             var commandText = CommandFormat.Format(
                 change.Schema,
                 change.Table,
-                columnName,
-                dataType,
-                constraints.Any() ? " " + constraints.ToString(" ") : string.Empty);
+                column.Name,
+                column.DataType,
+                column.Constraints.Any() ? " " + column.Constraints.ToString(" ") : string.Empty);
 
             yield return new SqlCommand(commandText, Array.Empty<SqlCommandParameter>());
-        }
-
-        internal (string Column, string DataType, IReadOnlyCollection<string> Constraints) CreateColumn(ColumnInfo column)
-        {
-            var dataType = _columnDataTypeProvider.GetColumnDataType(column);
-
-            return (column.Name, dataType, column.Constraints);
         }
     }
 }

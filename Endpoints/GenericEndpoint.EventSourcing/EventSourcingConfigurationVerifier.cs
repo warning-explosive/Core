@@ -76,11 +76,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
                 Type aggregate,
                 ICollection<Exception> exceptions)
             {
-                var parameterType = typeof(Array)
-                    .CallMethod(nameof(Array.Empty))
-                    .WithTypeArgument(typeof(IDomainEvent<>).MakeGenericType(aggregate))
-                    .Invoke()
-                    .GetType();
+                var parameterType = typeof(IDomainEvent<>)
+                    .MakeGenericType(aggregate)
+                    .MakeArrayType();
 
                 var cctor = aggregate
                     .GetConstructors()

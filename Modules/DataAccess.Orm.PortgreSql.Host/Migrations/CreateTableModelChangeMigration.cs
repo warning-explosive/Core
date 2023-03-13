@@ -64,12 +64,10 @@
 
         private string CreateColumn(ColumnInfo column)
         {
-            var (columnName, dataType, constraints) = _createColumnCommandBuilder.CreateColumn(column);
-
             return ColumnFormat.Format(
-                columnName,
-                dataType,
-                constraints.Any() ? " " + constraints.ToString(" ") : string.Empty);
+                column.Name,
+                column.DataType,
+                column.Constraints.Any() ? " " + column.Constraints.ToString(" ") : string.Empty);
         }
     }
 }

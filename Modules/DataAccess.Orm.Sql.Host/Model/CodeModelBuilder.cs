@@ -8,9 +8,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using CrossCuttingConcerns.Settings;
     using Settings;
     using Sql.Model;
+    using Sql.Model.Attributes;
 
     [Component(EnLifestyle.Singleton)]
     internal class CodeModelBuilder : ICodeModelBuilder,
@@ -18,17 +20,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     {
         private readonly SqlDatabaseSettings _sqlDatabaseSettings;
         private readonly IModelProvider _modelProvider;
-        private readonly IColumnDataTypeProvider _columnDataTypeProvider;
+        private readonly IDatabaseFunctionProvider<AppendOnlyAttribute> _appendOnlyFunctionProvider;
 
         public CodeModelBuilder(
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
             IModelProvider modelProvider,
-            IColumnDataTypeProvider columnDataTypeProvider)
+            IDatabaseFunctionProvider<AppendOnlyAttribute> appendOnlyFunctionProvider)
         {
             _sqlDatabaseSettings = sqlDatabaseSettingsProvider.Get();
 
             _modelProvider = modelProvider;
-            _columnDataTypeProvider = columnDataTypeProvider;
+            _appendOnlyFunctionProvider = appendOnlyFunctionProvider;
         }
 
         public Task<DatabaseNode?> BuildModel(IReadOnlyCollection<Type> databaseEntities, CancellationToken token)
@@ -67,30 +69,33 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
             var tables = new List<TableNode>();
             var views = new List<ViewNode>();
             var indexes = new List<IndexNode>();
+            var functions = new List<FunctionNode>();
+            var triggers = new List<TriggerNode>();
 
             foreach (var obj in objects)
             {
-                if (obj is TableInfo tableInfo)
+                if (obj is TableInfo table)
                 {
-                    tables.Add(BuildTableNode(tableInfo));
+                    tables.Add(BuildTableNode(table));
+
+                    if (table.Type.HasAttribute<AppendOnlyAttribute>())
+                    {
+                        functions.Add(new FunctionNode(schema, nameof(AppendOnlyAttribute), _appendOnlyFunctionProvider.GetDefinition(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { ["schema"] = schema })));
+                        triggers.Add(new TriggerNode(schema, $"{table.Name}_aotrg", table.Name, nameof(AppendOnlyAttribute), EnTriggerType.Before, EnTriggerEvent.Update | EnTriggerEvent.Delete));
+                    }
                 }
-                else if (obj is ViewInfo viewInfo)
+                else if (obj is ViewInfo view)
                 {
-                    views.Add(BuildViewNode(viewInfo));
+                    views.Add(BuildViewNode(view));
                 }
 
                 indexes.AddRange(obj.Indexes.Select(index => BuildIndexNode(index.Value)));
             }
 
-            return new SchemaNode(
-                schema,
-                enumTypes,
-                tables,
-                views,
-                indexes);
+            return new SchemaNode(schema, enumTypes, tables, views, indexes, functions, triggers);
         }
 
-        private TableNode BuildTableNode(TableInfo tableInfo)
+        private static TableNode BuildTableNode(TableInfo tableInfo)
         {
             var columns = tableInfo
                 .Columns
@@ -103,15 +108,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
                 columns);
         }
 
-        private ColumnNode BuildColumnNode(ColumnInfo columnInfo)
+        private static ColumnNode BuildColumnNode(ColumnInfo columnInfo)
         {
-            var dataType = _columnDataTypeProvider.GetColumnDataType(columnInfo);
-
             return new ColumnNode(
                 columnInfo.Table.Schema,
                 columnInfo.Table.Name,
                 columnInfo.Name,
-                dataType,
+                columnInfo.DataType,
                 columnInfo.Constraints);
         }
 

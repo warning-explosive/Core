@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Basics
 {
     using System;
+    using System.Globalization;
+    using System.Linq;
 
     /// <summary>
     /// Enum extensions
@@ -8,16 +10,26 @@ namespace SpaceEngineers.Core.Basics
     public static class EnumExtensions
     {
         /// <summary>
-        /// Does source enum have the specified flag
+        /// Get enum flags values flatten to array
         /// </summary>
-        /// <param name="source">Source enum</param>
-        /// <param name="flag">Expected flag</param>
-        /// <typeparam name="TEnum">TEnum type-argument</typeparam>
-        /// <returns>Result of check</returns>
-        public static bool HasFlag<TEnum>(this TEnum? source, TEnum flag)
-            where TEnum : Enum
+        /// <param name="source">source</param>
+        /// <returns>Flatten enum flags values</returns>
+        public static Array EnumFlagsValues(this Enum source)
         {
-            return flag.HasFlag(flag);
+            var type = source.GetType();
+
+            return Enum
+                .GetValues(type)
+                .OfType<Enum>()
+                .Where(flag =>
+                {
+                    // Checks whether x is a power of 2
+                    var value = Convert.ToInt64(flag, CultureInfo.InvariantCulture);
+                    return value != 0 && (value & (value - 1)) == 0;
+                })
+                .Where(source.HasFlag)
+                .Select(flag => Convert.ChangeType(flag, type, CultureInfo.InvariantCulture))
+                .ToArray();
         }
     }
 }

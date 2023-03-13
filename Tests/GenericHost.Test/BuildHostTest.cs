@@ -17,6 +17,7 @@
     using DataAccess.Orm.Sql.Connection;
     using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Model;
+    using DataAccess.Orm.Sql.Model.Attributes;
     using DataAccess.Orm.Sql.Transaction;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
@@ -848,6 +849,8 @@
                         index => AssertCreateSchema(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations)),
                         index => AssertCreateEnumType(modelChanges, index, nameof(GenericHost) + nameof(Test), nameof(EnEnum), nameof(EnEnum.One), nameof(EnEnum.Two), nameof(EnEnum.Three)),
                         index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnColumnConstraintType), nameof(EnColumnConstraintType.PrimaryKey), nameof(EnColumnConstraintType.ForeignKey)),
+                        index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnTriggerEvent), nameof(EnTriggerEvent.Insert), nameof(EnTriggerEvent.Update), nameof(EnTriggerEvent.Delete)),
+                        index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnTriggerType), nameof(EnTriggerType.Before), nameof(EnTriggerType.After)),
                         index =>
                         {
                             AssertCreateTable(
@@ -1022,6 +1025,24 @@
                                 modelChanges,
                                 index,
                                 nameof(DataAccess.Orm.Sql.Host.Migrations),
+                                typeof(FunctionView),
+                                new[]
+                                {
+                                    (nameof(FunctionView.PrimaryKey), "not null primary key"),
+                                    (nameof(FunctionView.Version), "not null"),
+                                    (nameof(FunctionView.Schema), "not null"),
+                                    (nameof(FunctionView.Function), "not null"),
+                                    (nameof(FunctionView.Definition), "not null")
+                                },
+                                Array.Empty<string>());
+                        },
+                        index =>
+                        {
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(DataAccess.Orm.Sql.Host.Migrations),
                                 typeof(SqlView),
                                 new[]
                                 {
@@ -1138,21 +1159,29 @@
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseColumn)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseColumnConstraint)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseEnumType)),
+                        index => AssertCreateView(modelChanges, index, nameof(DatabaseFunction)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseIndexColumn)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseSchema)),
+                        index => AssertCreateView(modelChanges, index, nameof(DatabaseTrigger)),
                         index => AssertCreateView(modelChanges, index, nameof(DatabaseView)),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericEndpoint.DataAccess.Sql.Deduplication), $"{nameof(IntegrationMessage)}_{nameof(IntegrationMessageHeader)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericEndpoint.EventSourcing), nameof(DatabaseDomainEvent), new[] { nameof(DatabaseDomainEvent.AggregateId), nameof(DatabaseDomainEvent.Index) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, false, null, nameof(GenericEndpoint.EventSourcing), nameof(DatabaseDomainEvent), new[] { nameof(DatabaseDomainEvent.DomainEvent) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, false, $@"""{nameof(DatabaseEntity.BooleanField)}""",  nameof(GenericHost) + nameof(Test), nameof(DatabaseEntity), new[] { nameof(DatabaseEntity.StringField) }, new[] { nameof(DatabaseEntity.IntField) }),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(AppliedMigration), new[] { nameof(AppliedMigration.Name) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseColumn), new[] { nameof(DatabaseColumn.Column), nameof(DatabaseColumn.Schema), nameof(DatabaseColumn.Table) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseEnumType), new[] { nameof(DatabaseView.Schema), nameof(DatabaseEnumType.Type), nameof(DatabaseEnumType.Value) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseFunction), new[] { nameof(DatabaseFunction.Function), nameof(DatabaseFunction.Schema) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseIndexColumn), new[] { nameof(DatabaseIndexColumn.Column), nameof(DatabaseIndexColumn.Index), nameof(DatabaseIndexColumn.Schema), nameof(DatabaseIndexColumn.Table) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseSchema), new[] { nameof(DatabaseSchema.Name) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseTrigger), new[] { nameof(DatabaseTrigger.Schema), nameof(DatabaseTrigger.Trigger) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseView), new[] { nameof(DatabaseView.Schema), nameof(DatabaseView.View) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(SqlView), new[] { nameof(SqlView.Schema), nameof(SqlView.View) }, Array.Empty<string>())
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(FunctionView), new[] { nameof(FunctionView.Function), nameof(FunctionView.Schema) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(SqlView), new[] { nameof(SqlView.Schema), nameof(SqlView.View) }, Array.Empty<string>()),
+                        index => AssertCreateFunction(modelProvider, modelChanges, index, nameof(GenericEndpoint.EventSourcing), nameof(AppendOnlyAttribute)),
+                        index => AssertCreateTrigger(modelProvider, modelChanges, index, nameof(GenericEndpoint.EventSourcing), $"{nameof(DatabaseDomainEvent)}_aotrg", nameof(AppendOnlyAttribute))
                     };
 
                     Assert.Equal(assertions.Length, modelChanges.Length);
@@ -1311,6 +1340,34 @@
                     Assert.True(includedColumns.OrderBy(column => column).SequenceEqual(indexInfo.IncludedColumns.Select(column => column.Name).OrderBy(column => column), StringComparer.OrdinalIgnoreCase));
                     Assert.Equal(unique, indexInfo.Unique);
                     Assert.Equal(predicate, indexInfo.Predicate);
+                }
+
+                static void AssertCreateFunction(
+                    IModelProvider modelProvider,
+                    IModelChange[] modelChanges,
+                    int index,
+                    string schema,
+                    string function)
+                {
+                    Assert.True(modelChanges[index] is CreateFunction);
+                    var createFunction = (CreateFunction)modelChanges[index];
+                    Assert.True(createFunction.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
+                    Assert.True(createFunction.Function.Equals(function, StringComparison.OrdinalIgnoreCase));
+                }
+
+                static void AssertCreateTrigger(
+                    IModelProvider modelProvider,
+                    IModelChange[] modelChanges,
+                    int index,
+                    string schema,
+                    string trigger,
+                    string function)
+                {
+                    Assert.True(modelChanges[index] is CreateTrigger);
+                    var createTrigger = (CreateTrigger)modelChanges[index];
+                    Assert.True(createTrigger.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
+                    Assert.True(createTrigger.Trigger.Equals(trigger, StringComparison.OrdinalIgnoreCase));
+                    Assert.True(createTrigger.Function.Equals(function, StringComparison.OrdinalIgnoreCase));
                 }
             }
         }

@@ -10,6 +10,8 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
     /// </summary>
     [Schema(nameof(EventSourcing))]
     [Index(nameof(AggregateId), nameof(Index), Unique = true)]
+    [Index(nameof(DomainEvent))]
+    [AppendOnly]
     public record DatabaseDomainEvent : BaseDatabaseEntity<Guid>
     {
         /// <summary> .cctor </summary>

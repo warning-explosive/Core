@@ -2,11 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
@@ -20,6 +21,7 @@
             _modelProvider = modelProvider;
         }
 
+        [SuppressMessage("Analysis", "CA1502", Justification = "complex infrastructural code")]
         public IOrderedEnumerable<IModelChange> Sort(IEnumerable<IModelChange> source)
         {
             var materialized = source.ToList();
@@ -98,6 +100,17 @@
                                     .OfType<CreateTable>()
                                     .Where(change => change.Schema.Equals(_modelProvider.SchemaName(dependency), StringComparison.OrdinalIgnoreCase)
                                                      && change.Table.Equals(_modelProvider.TableName(dependency), StringComparison.OrdinalIgnoreCase));
+                        case CreateFunction:
+                            return changes
+                                .OfType<CreateSchema>()
+                                .Cast<IModelChange>()
+                                .Concat(changes
+                                    .OfType<CreateTable>())
+                                .Concat(changes
+                                    .OfType<CreateView>());
+                        case CreateTrigger:
+                            return changes
+                                .OfType<CreateFunction>();
                         case DropIndex:
                         case DropTable:
                         case DropView:
@@ -105,6 +118,8 @@
                         case AlterColumn:
                         case DropEnumType:
                         case AlterEnumType:
+                        case DropFunction:
+                        case DropTrigger:
                             return Enumerable.Empty<IModelChange>();
                         default:
                             throw new NotSupportedException($"Not supported model change: {modelChange}");

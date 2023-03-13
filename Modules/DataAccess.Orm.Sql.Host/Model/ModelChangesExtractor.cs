@@ -5,9 +5,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Model
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Transaction;
 
     [Component(EnLifestyle.Singleton)]

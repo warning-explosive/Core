@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
-    using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
@@ -74,8 +73,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
         public static bool IsDatabaseArray(this Type type, out Type? itemType)
         {
-            if (typeof(IEnumerable).IsAssignableFrom(type)
-                && type != typeof(string))
+            if (type.IsCollection())
             {
                 itemType = type.IsArray() && type.HasElementType
                     ? type.GetElementType()

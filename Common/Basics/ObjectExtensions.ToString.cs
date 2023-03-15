@@ -31,36 +31,50 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="instance">Object instance</param>
         /// <param name="flags">BindingFlags</param>
-        /// <param name="blackList">Black list of properties</param>
         /// <returns>Property values of passed instance</returns>
-        public static string ShowProperties(this object instance, BindingFlags flags, params string[] blackList)
+        public static string Dump(this object instance, BindingFlags flags)
         {
-            var values = instance
-                .GetType()
-                .GetProperties(flags)
-                .Where(property => !blackList.Contains(property.Name))
-                .Select(property =>
+            return DumpValue(instance, flags, 0, new HashSet<object>()).ToString(Environment.NewLine);
+
+            static IEnumerable<string> DumpValue(
+                object? value,
+                BindingFlags flags,
+                int depth,
+                HashSet<object> visited)
+            {
+                if (value != null && value.GetType().IsCollection())
                 {
-                    var value = property.GetValue(instance);
+                    var enumerator = ((IEnumerable)value).GetEnumerator();
 
-                    if (value is IEnumerable enumerable)
+                    while (enumerator.MoveNext())
                     {
-                        var enumerator = enumerable.GetEnumerator();
-
-                        var buffer = new List<string>();
-
-                        while (enumerator.MoveNext())
+                        foreach (var str in DumpValue(enumerator.Current, flags, depth, visited))
                         {
-                            buffer.Add(enumerator.Current?.ToString() ?? "null");
+                            yield return str;
                         }
+                    }
+                }
+                else if (value != null && !value.GetType().IsPrimitive() && visited.Add(value))
+                {
+                    var properties = value.GetType().GetProperties(flags);
 
-                        return $"[{property.Name}] - [{buffer.ToString(", ")}]";
+                    foreach (var property in properties)
+                    {
+                        yield return $"{new string('\t', depth)}{property.Name}";
+
+                        foreach (var str in DumpValue(property.GetValue(value), flags, depth + 1, visited))
+                        {
+                            yield return str;
+                        }
                     }
 
-                    return $"[{property.Name}] - {value?.ToString() ?? "null"}";
-                });
-
-            return string.Join(Environment.NewLine, values);
+                    visited.Remove(value);
+                }
+                else
+                {
+                    yield return $"{new string('\t', depth)}{value?.ToString() ?? "null"}";
+                }
+            }
         }
     }
 }

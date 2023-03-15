@@ -63,7 +63,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             Assert.NotNull(settings);
 
-            Output.WriteLine(settings.ShowProperties(BindingFlags.Instance | BindingFlags.Public));
+            Output.WriteLine(settings.Dump(BindingFlags.Instance | BindingFlags.Public));
             Output.WriteLine(string.Empty);
 
             AssertPrimitives(settings);

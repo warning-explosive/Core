@@ -19,13 +19,16 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
     {
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IAsyncQueryProvider _queryProvider;
+        private readonly IModelProvider _modelProvider;
 
         public Repository(
             IDependencyContainer dependencyContainer,
-            IAsyncQueryProvider queryProvider)
+            IAsyncQueryProvider queryProvider,
+            IModelProvider modelProvider)
         {
             _dependencyContainer = dependencyContainer;
             _queryProvider = queryProvider;
+            _modelProvider = modelProvider;
         }
 
         public IQueryable<TEntity> All<TEntity>()
@@ -39,20 +42,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         }
 
         public Task<TEntity> Single<TEntity, TKey>(TKey key, CancellationToken token)
-            where TEntity : IUniqueIdentified
+            where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull
         {
+            var table = _modelProvider.Tables[typeof(TEntity)];
+
             return SingleByPrimaryKey<TEntity, TKey>(key)
-                .CachedExpression("E9FF5F3C-13C0-4269-9BAE-7064E8681EBE")
+                .CachedExpression($"{nameof(Single)}:{table.Schema}.{table.Name}:E9FF5F3C-13C0-4269-9BAE-7064E8681EBE")
                 .SingleAsync(token);
         }
 
         public Task<TEntity?> SingleOrDefault<TEntity, TKey>(TKey key, CancellationToken token)
-            where TEntity : IUniqueIdentified
+            where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull
         {
+            var table = _modelProvider.Tables[typeof(TEntity)];
+
             return SingleByPrimaryKey<TEntity, TKey>(key)
-                .CachedExpression("C73644BD-4C73-43CC-984D-462CB39DADA2")
+                .CachedExpression($"{nameof(SingleOrDefault)}:{table.Schema}.{table.Name}:C73644BD-4C73-43CC-984D-462CB39DADA2")
                 .SingleOrDefaultAsync(token);
         }
 

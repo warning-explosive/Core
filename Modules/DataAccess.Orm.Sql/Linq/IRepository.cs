@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         [SuppressMessage("Analysis", "CA1716", Justification = "desired name")]
         [SuppressMessage("Analysis", "CA1720", Justification = "desired name")]
         public Task<TEntity> Single<TEntity, TKey>(TKey key, CancellationToken token)
-            where TEntity : IUniqueIdentified
+            where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull;
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         /// <typeparam name="TKey">TKey type-argument</typeparam>
         /// <returns>Linq query</returns>
         public Task<TEntity?> SingleOrDefault<TEntity, TKey>(TKey key, CancellationToken token)
-            where TEntity : IUniqueIdentified
+            where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull;
 
         /// <summary>

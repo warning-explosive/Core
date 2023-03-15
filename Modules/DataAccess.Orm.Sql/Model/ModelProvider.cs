@@ -132,7 +132,7 @@
                     .Columns
                     .Select(column => column.Value)
                     .Where(column => column.IsEnum)
-                    .Select(column => new EnumTypeInfo(table.Schema, column.Type)))
+                    .Select(column => new EnumTypeInfo(table.Schema, column.Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)))))
                 .Distinct()
                 .ToList();
         }

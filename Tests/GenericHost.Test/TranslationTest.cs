@@ -98,7 +98,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     {
                         typeof(DatabaseDomainEvent),
                         typeof(DatabaseEntity),
-                        typeof(DatabaseArraysEntity),
+                        typeof(ComplexDatabaseEntity),
                         typeof(Blog),
                         typeof(Post),
                         typeof(DatabaseEntities.Relations.User),
@@ -152,7 +152,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var schema = nameof(GenericHost) + nameof(Test);
 
             var databaseEntity = DatabaseEntity.Generate();
-            var databaseArraysEntity = DatabaseArraysEntity.Generate();
 
             var aggregateId = Guid.NewGuid();
             var username = "SpaceEngineer";
@@ -171,6 +170,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var blog = new Blog(Guid.NewGuid(), "MilkyWay", posts);
             var post = new Post(Guid.NewGuid(), blog, user, DateTime.Now, "PostContent");
             posts.Add(post);
+
+            var message = new Command(42);
+
+            var complexDatabaseEntity = ComplexDatabaseEntity.Generate(message, blog);
+            var complexDatabaseEntityWithNulls = ComplexDatabaseEntity.GenerateWithNulls(message, blog);
 
             var token = CancellationToken.None;
 
@@ -1131,14 +1135,25 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - read\\write arrays",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseArraysEntity>()),
+                $"{nameof(DataAccess.Orm.PostgreSql)} - read\\write complex object (with relations, arrays, json, nullable columns) without null values",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseArraysEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseArraysEntity.EnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseArraysEntity.EnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseArraysEntity.NullableDateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseArraysEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseArraysEntity.StringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseArraysEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseArraysEntity)}"" a",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Json)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableJson)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableRelation)}_{nameof(complexDatabaseEntity.NullableRelation.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableString)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableStringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Relation)}_{nameof(complexDatabaseEntity.Relation.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.String)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.StringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(ComplexDatabaseEntity)}"" a",
                         Array.Empty<SqlCommandParameter>(),
                         log)),
-                new IDatabaseEntity[] { databaseArraysEntity }
+                new IDatabaseEntity[] { complexDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - read\\write complex object (with relations, arrays, json, nullable columns) with null values",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>()),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Json)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableJson)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableRelation)}_{nameof(complexDatabaseEntity.NullableRelation.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableString)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableStringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Relation)}_{nameof(complexDatabaseEntity.Relation.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.String)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.StringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(ComplexDatabaseEntity)}"" a",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { complexDatabaseEntityWithNulls }
             };
         }
 
@@ -1293,11 +1308,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 output.WriteLine("Dump:");
 
-                var dump = item.GetType().IsPrimitive()
-                    ? item.ToString() !
-                    : item.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty);
-
-                output.WriteLine(dump);
+                output.WriteLine(item.Dump(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
             }
         }
 

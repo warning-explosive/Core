@@ -9,11 +9,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.ObjectTransformers
     using CrossCuttingConcerns.ObjectBuilder;
 
     [Component(EnLifestyle.Singleton)]
-    internal class DbNullToValueObjectTransformer<TValue> : TypeConverter,
-                                                            IObjectTransformer<DBNull, TValue>,
-                                                            IResolvable<IObjectTransformer<DBNull, TValue>>
+    internal class DbNullObjectTransformer<TValue> : TypeConverter,
+                                                     IObjectTransformer<DBNull, TValue>,
+                                                     IResolvable<IObjectTransformer<DBNull, TValue>>
     {
-        static DbNullToValueObjectTransformer()
+        static DbNullObjectTransformer()
         {
             TypeDescriptor.AddAttributes(
                 typeof(DBNull),

@@ -86,9 +86,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             IDictionary<string, object?> values,
             CancellationToken token)
         {
-            var relationValues = ReplaceRelations(type, values);
+            var relationValues = InitializeRelations(type, values);
 
-            var multipleRelationValues = AddMultipleRelations(type, values);
+            var multipleRelationValues = InitializeMultipleRelations(type, values);
 
             object? built;
 
@@ -238,7 +238,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
 
                             if (column.Declared.IsJsonColumn())
                             {
-                                return _jsonSerializer.DeserializeObject((string)grp.Single().Value!, column.PropertyType);
+                                return grp.Single().Value is DBNull
+                                    ? null
+                                    : _jsonSerializer.DeserializeObject((string)grp.Single().Value!, column.PropertyType);
                             }
 
                             var innerValues = grp.ToDictionary(innerKey => innerKey.Key, innerValue => innerValue.Value);
@@ -282,7 +284,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             transaction.Store.Store(built);
         }
 
-        private IReadOnlyDictionary<ColumnInfo, object?> ReplaceRelations(
+        private IReadOnlyDictionary<ColumnInfo, object?> InitializeRelations(
             Type type,
             IDictionary<string, object?> values)
         {
@@ -310,7 +312,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         {
             foreach (var (column, primaryKey) in relationValues)
             {
-                if (primaryKey != null)
+                if (primaryKey != null && primaryKey is not DBNull)
                 {
                     var relation = await MaterializeRelation(transaction, column.Relation.Target, primaryKey, token).ConfigureAwait(false);
                     column.Relation.Property.Declared.SetValue(built, relation);
@@ -361,7 +363,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             return await task.ConfigureAwait(false);
         }
 
-        private IReadOnlyDictionary<ColumnInfo, object?> AddMultipleRelations(
+        private IReadOnlyDictionary<ColumnInfo, object?> InitializeMultipleRelations(
             Type type,
             IDictionary<string, object?> values)
         {

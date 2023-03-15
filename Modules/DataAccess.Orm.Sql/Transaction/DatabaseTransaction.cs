@@ -135,14 +135,14 @@
         }
 
         public Task<TEntity> Single<TEntity, TKey>(TKey key, CancellationToken token)
-            where TEntity : IUniqueIdentified
+            where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull
         {
             return _repository.Single<TEntity, TKey>(key, token);
         }
 
         public Task<TEntity?> SingleOrDefault<TEntity, TKey>(TKey key, CancellationToken token)
-            where TEntity : IUniqueIdentified
+            where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull
         {
             return _repository.SingleOrDefault<TEntity, TKey>(key, token);

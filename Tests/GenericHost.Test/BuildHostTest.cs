@@ -773,6 +773,7 @@
             var databaseEntities = new[]
             {
                 typeof(DatabaseEntity),
+                typeof(ComplexDatabaseEntity),
                 typeof(Community),
                 typeof(Participant),
                 typeof(Blog),
@@ -848,6 +849,7 @@
                         index => AssertCreateSchema(modelChanges, index, nameof(GenericHost) + nameof(Test)),
                         index => AssertCreateSchema(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations)),
                         index => AssertCreateEnumType(modelChanges, index, nameof(GenericHost) + nameof(Test), nameof(EnEnum), nameof(EnEnum.One), nameof(EnEnum.Two), nameof(EnEnum.Three)),
+                        index => AssertCreateEnumType(modelChanges, index, nameof(GenericHost) + nameof(Test), nameof(EnEnumFlags), nameof(EnEnumFlags.A), nameof(EnEnumFlags.B), nameof(EnEnumFlags.C)),
                         index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnColumnConstraintType), nameof(EnColumnConstraintType.PrimaryKey), nameof(EnColumnConstraintType.ForeignKey)),
                         index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnTriggerEvent), nameof(EnTriggerEvent.Insert), nameof(EnTriggerEvent.Update), nameof(EnTriggerEvent.Delete)),
                         index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnTriggerType), nameof(EnTriggerType.Before), nameof(EnTriggerType.After)),
@@ -1122,6 +1124,37 @@
                                     (nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Community)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
                                     (nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Participant)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade")
                                 });
+                        },
+                        index =>
+                        {
+                            AssertCreateTable(
+                                modelProvider,
+                                modelChanges,
+                                index,
+                                nameof(GenericHost) + nameof(Test),
+                                typeof(ComplexDatabaseEntity),
+                                new[]
+                                {
+                                    (nameof(ComplexDatabaseEntity.PrimaryKey), "not null primary key"),
+                                    (nameof(ComplexDatabaseEntity.Version), "not null"),
+                                    (nameof(ComplexDatabaseEntity.String), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableString), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.Enum), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableEnum), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.EnumFlags), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableEnumFlags), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.EnumArray), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableEnumArray), "not null"),
+                                    (nameof(ComplexDatabaseEntity.StringArray), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableStringArray), "not null"),
+                                    (nameof(ComplexDatabaseEntity.DateTimeArray), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableDateTimeArray), "not null"),
+                                    (nameof(ComplexDatabaseEntity.Json), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableJson), string.Empty),
+                                    ($"{nameof(ComplexDatabaseEntity.Relation)}_{nameof(ComplexDatabaseEntity.Relation.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete no action"),
+                                    ($"{nameof(ComplexDatabaseEntity.NullableRelation)}_{nameof(ComplexDatabaseEntity.NullableRelation.PrimaryKey)}", $@"references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete no action")
+                                },
+                                Array.Empty<string>());
                         },
                         index =>
                         {

@@ -11,13 +11,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.ObjectTransformers
     using Model;
 
     [Component(EnLifestyle.Singleton)]
-    internal class JsonToValueObjectTransformer<TValue> : IObjectTransformer<string, TValue>,
-                                                          IResolvable<IObjectTransformer<string, TValue>>
+    internal class JsonObjectTransformer<TValue> : IObjectTransformer<string, TValue>,
+                                                   IResolvable<IObjectTransformer<string, TValue>>
     {
         private readonly HashSet<Type> _jsonColumnTypes;
         private readonly IJsonSerializer _jsonSerializer;
 
-        public JsonToValueObjectTransformer(
+        public JsonObjectTransformer(
             IModelProvider modelProvider,
             IJsonSerializer jsonSerializer)
         {

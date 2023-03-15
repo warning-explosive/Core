@@ -1040,7 +1040,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                            .ConfigureAwait(false);
                     }
 
-                    output.WriteLine(userAuthenticationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
+                    output.WriteLine(userAuthenticationResult.Dump(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
 
                     Assert.Equal(username, userAuthenticationResult.Username);
                     Assert.Empty(userAuthenticationResult.Token);
@@ -1071,7 +1071,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                            .ConfigureAwait(false);
                     }
 
-                    output.WriteLine(userAuthenticationResult.ShowProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
+                    output.WriteLine(userAuthenticationResult.Dump(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
 
                     Assert.Equal(username, userAuthenticationResult.Username);
                     Assert.NotEmpty(userAuthenticationResult.Token);

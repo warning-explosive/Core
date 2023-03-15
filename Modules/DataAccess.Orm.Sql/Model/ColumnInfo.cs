@@ -20,6 +20,7 @@
 
         private string? _name;
         private ColumnProperty? _property;
+        private Type? _type;
         private string? _dataType;
         private bool? _isSupportedColumn;
         private bool? _isEnum;
@@ -70,7 +71,24 @@
             }
         }
 
-        public Type Type => Property.PropertyType;
+        public Type Type
+        {
+            get
+            {
+                _type ??= InitType(Property, Relation);
+                return _type;
+
+                static Type InitType(ColumnProperty property, Relation? relation)
+                {
+                    return relation != null
+                           && relation.Property.Declared.IsNullable()
+                           && !property.PropertyType.IsNullable()
+                           && property.PropertyType.IsValueType
+                        ? typeof(Nullable<>).MakeGenericType(property.PropertyType)
+                        : property.PropertyType;
+                }
+            }
+        }
 
         public string DataType
         {
@@ -222,7 +240,12 @@
                         yield return $@"references ""{_modelProvider.SchemaName(Relation.Target)}"".""{_modelProvider.TableName(Relation.Target)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete {onDelete}";
                     }
 
-                    if (!Property.Declared.IsNullable())
+                    // we suppose that arrays are non nullable columns
+                    var nullable = IsRelation
+                        ? Type.IsNullable()
+                        : Property.Declared.IsNullable() && !Property.PropertyType.IsArray();
+
+                    if (!nullable)
                     {
                         yield return "not null";
                     }

@@ -58,12 +58,6 @@
       <Compile Update="ObjectBuilder\GenericObjectBuilder.cs">
         <DependentUpon>ObjectBuilder.cs</DependentUpon>
       </Compile>
-      <Compile Update="ObjectBuilder\StringToCharArrayTransformer.cs">
-        <DependentUpon>IObjectTransformer.cs</DependentUpon>
-      </Compile>
-      <Compile Update="ObjectBuilder\CharArrayToStringTransformer.cs">
-        <DependentUpon>IObjectTransformer.cs</DependentUpon>
-      </Compile>
       <Compile Update="Json\ArrayNode.cs">
         <DependentUpon>NodeBase.cs</DependentUpon>
       </Compile>
@@ -99,6 +93,18 @@
       </Compile>
       <Compile Update="Settings\SettingsDirectoryProvider.cs">
         <DependentUpon>ISettingsProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\DateOnlyTypeConverter.cs">
+        <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\TypeNodeTypeConverter.cs">
+        <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\DbNullTypeConverter.cs">
+        <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ObjectBuilder\TimeOnlyTypeConverter.cs">
+        <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
       </Compile>
     </ItemGroup>
     <ItemGroup>

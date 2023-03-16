@@ -635,12 +635,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 return;
             }
 
-            var flatProjectionColumns = _modelProvider
+            var columns = _modelProvider
                 .Columns(projection.Type)
-                .Where(column => !column.IsMultipleRelation)
-                .OrderBy(column => column.Name);
+                .Values
+                .Where(column => !column.IsMultipleRelation);
 
-            foreach (var column in flatProjectionColumns)
+            foreach (var column in columns)
             {
                 _context.Apply(column.BuildExpression(parameter));
             }
@@ -700,7 +700,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     () => new ProjectionExpression(itemType),
                     () =>
                     {
-                        BuildJoinExpressionRecursive(_context, recursiveEnumerable, () => Visit(source));
+                        BuildJoinExpressionRecursive(_context, _modelProvider, recursiveEnumerable, () => Visit(source));
 
                         SelectAll(_context.Parent!);
                     });
@@ -720,6 +720,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             static void BuildJoinExpressionRecursive(
                 TranslationContext context,
+                IModelProvider modelProvider,
                 IRecursiveEnumerable<Relation> recursiveEnumerable,
                 Action? action)
             {
@@ -733,9 +734,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                                 () => new NamedSourceExpression(relation.Target, context),
                                 () => context.Apply(new QuerySourceExpression(relation.Target)));
 
-                            BuildJoinExpressionRecursive(context, recursiveEnumerable, action);
+                            BuildJoinExpressionRecursive(context, modelProvider, recursiveEnumerable, action);
 
-                            BuildJoinOnExpression(context, relation);
+                            BuildJoinOnExpression(context, modelProvider, relation);
                         });
                 }
                 else
@@ -743,22 +744,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     action?.Invoke();
                 }
 
-                static void BuildJoinOnExpression(TranslationContext context, Relation relation)
+                static void BuildJoinOnExpression(
+                    TranslationContext context,
+                    IModelProvider modelProvider,
+                    Relation relation)
                 {
+                    var targetPrimaryKeyColumn = modelProvider.Tables[relation.Target].Columns[nameof(IUniqueIdentified.PrimaryKey)];
+
                     context.Apply(new Expressions.BinaryExpression(
                         typeof(bool),
                         BinaryOperator.Equal,
                         new ColumnExpression(
-                            relation.Target.GetProperty(nameof(IUniqueIdentified.PrimaryKey)),
-                            typeof(Guid),
+                            relation.Target.Column(nameof(IUniqueIdentified.PrimaryKey)).Reflected,
+                            targetPrimaryKeyColumn.Type,
                             ExtractParametersVisitor.ExtractParameter(context.Outer!, relation.Target)),
                         new ColumnExpression(
-                            relation.Target.GetProperty(nameof(IUniqueIdentified.PrimaryKey)),
-                            typeof(Guid),
-                            new ColumnExpression(
-                                relation.Property.Reflected,
-                                relation.Target,
-                                ExtractParametersVisitor.ExtractParameter(context.Outer!, relation.Source)))));
+                            relation.Property.Reflected,
+                            targetPrimaryKeyColumn.Type,
+                            ExtractParametersVisitor.ExtractParameter(context.Outer!, relation.Source))));
                 }
             }
         }

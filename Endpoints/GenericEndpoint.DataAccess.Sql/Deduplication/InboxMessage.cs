@@ -15,19 +15,22 @@
         /// <summary> .cctor </summary>
         /// <param name="primaryKey">Primary key</param>
         /// <param name="message">Message</param>
-        /// <param name="endpointIdentity">EndpointIdentity</param>
+        /// <param name="endpointLogicalName">Endpoint logical name</param>
+        /// <param name="endpointInstanceName">Endpoint instance name</param>
         /// <param name="isError">IsError</param>
         /// <param name="handled">Handled</param>
         public InboxMessage(
             Guid primaryKey,
             IntegrationMessage message,
-            EndpointIdentity endpointIdentity,
+            string endpointLogicalName,
+            string endpointInstanceName,
             bool isError,
             bool handled)
             : base(primaryKey)
         {
             Message = message;
-            EndpointIdentity = endpointIdentity;
+            EndpointLogicalName = endpointLogicalName;
+            EndpointInstanceName = endpointInstanceName;
             IsError = isError;
             Handled = handled;
         }
@@ -39,9 +42,14 @@
         public IntegrationMessage Message { get; set; }
 
         /// <summary>
-        /// EndpointIdentity
+        /// Endpoint logical name
         /// </summary>
-        public EndpointIdentity EndpointIdentity { get; set; }
+        public string EndpointLogicalName { get; set; }
+
+        /// <summary>
+        /// Endpoint instance name
+        /// </summary>
+        public string EndpointInstanceName { get; set; }
 
         /// <summary>
         /// IsError

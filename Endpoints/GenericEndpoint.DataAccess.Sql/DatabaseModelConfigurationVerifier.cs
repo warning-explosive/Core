@@ -48,12 +48,6 @@
 
             VerifyDatabaseEntities(sqlViews, typeof(BaseSqlView<>), exceptions);
 
-            var inlinedObjects = _typeProvider
-                .OurTypes
-                .Where(type => type.IsInlinedObject() && type.IsConcreteType());
-
-            VerifyInlinedObjects(inlinedObjects, exceptions);
-
             if (exceptions.Any())
             {
                 throw new AggregateException(exceptions);
@@ -73,22 +67,27 @@
                 VerifySchemaAttribute(databaseEntity, exceptions);
                 VerifyMissingPropertySetter(databaseEntity, exceptions);
                 VerifyForeignKeys(_modelProvider, databaseEntity, exceptions);
+                VerifyColumnsNullability(_modelProvider, databaseEntity, exceptions);
+                VerifyArrays(databaseEntity, exceptions);
             }
 
-            static void VerifyForeignKeys(
-                IModelProvider modelProvider,
+            static void VerifyModifiers(
                 Type type,
                 ICollection<Exception> exceptions)
             {
-                var properties = modelProvider
-                    .Columns(type)
-                    .Where(column => column.IsRelation)
-                    .Select(column => column.Relation.Property.Declared)
-                    .Where(column => !column.HasAttribute<ForeignKeyAttribute>());
-
-                foreach (var property in properties)
+                if (!type.IsRecord())
                 {
-                    exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should be marked by {nameof(ForeignKeyAttribute)}"));
+                    exceptions.Add(new InvalidOperationException($"Type {type} should be defined as record"));
+                }
+            }
+
+            void VerifyConstructors(
+                Type type,
+                ICollection<Exception> exceptions)
+            {
+                if (!_constructorResolutionBehavior.TryGetConstructor(type, out _))
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {type} should have one public constructor"));
                 }
             }
 
@@ -100,6 +99,16 @@
                 if (!type.IsSubclassOfOpenGeneric(baseType))
                 {
                     exceptions.Add(new InvalidOperationException($"Type {type} should implement {typeof(BaseDatabaseEntity<>)}"));
+                }
+            }
+
+            static void VerifySchemaAttribute(
+                Type type,
+                ICollection<Exception> exceptions)
+            {
+                if (!type.HasAttribute<SchemaAttribute>())
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {type} should be marked by {typeof(SchemaAttribute).FullName}"));
                 }
             }
 
@@ -118,61 +127,56 @@
                 }
             }
 
-            static void VerifySchemaAttribute(
+            static void VerifyForeignKeys(
+                IModelProvider modelProvider,
                 Type type,
                 ICollection<Exception> exceptions)
             {
-                if (!type.HasAttribute<SchemaAttribute>())
-                {
-                    exceptions.Add(new InvalidOperationException($"Type {type} should be marked by {typeof(SchemaAttribute).FullName}"));
-                }
-            }
-        }
-
-        private void VerifyInlinedObjects(
-            IEnumerable<Type> inlinedObjects,
-            ICollection<Exception> exceptions)
-        {
-            foreach (var inlinedObject in inlinedObjects)
-            {
-                VerifyModifiers(inlinedObject, exceptions);
-                VerifyConstructors(inlinedObject, exceptions);
-                VerifyMissingPropertyInitializer(inlinedObject, exceptions);
-            }
-
-            static void VerifyMissingPropertyInitializer(
-                Type inlinedObject,
-                ICollection<Exception> exceptions)
-            {
-                var properties = inlinedObject
-                    .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
-                    .Where(property => !property.IsEqualityContract())
-                    .Where(property => !(property.HasInitializer() && property.SetIsAccessible()));
+                var properties = modelProvider
+                    .Columns(type)
+                    .Values
+                    .Where(column => column.IsRelation)
+                    .Select(column => column.Relation.Property.Declared)
+                    .Where(column => !column.HasAttribute<ForeignKeyAttribute>());
 
                 foreach (var property in properties)
                 {
-                    exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable"));
+                    exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should be marked by {nameof(ForeignKeyAttribute)}"));
                 }
             }
-        }
 
-        private static void VerifyModifiers(
-            Type type,
-            ICollection<Exception> exceptions)
-        {
-            if (!type.IsRecord())
+            static void VerifyColumnsNullability(
+                IModelProvider modelProvider,
+                Type type,
+                ICollection<Exception> exceptions)
             {
-                exceptions.Add(new InvalidOperationException($"Type {type} should be defined as record"));
+                var properties = modelProvider
+                    .Columns(type)
+                    .Values
+                    .Where(column => column.IsMultipleRelation)
+                    .Select(column => column.Relation.Property.Reflected)
+                    .Where(column => column.IsNullable());
+
+                foreach (var property in properties)
+                {
+                    exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} shouldn't be nullable"));
+                }
             }
-        }
 
-        private void VerifyConstructors(
-            Type type,
-            ICollection<Exception> exceptions)
-        {
-            if (!_constructorResolutionBehavior.TryGetConstructor(type, out _))
+            static void VerifyArrays(
+                Type type,
+                ICollection<Exception> exceptions)
             {
-                exceptions.Add(new InvalidOperationException($"Type {type} should have one public constructor"));
+                var properties = type
+                    .Columns()
+                    .Values
+                    .Select(column => column.Reflected)
+                    .Where(column => column.PropertyType.IsArray() && !column.PropertyType.HasElementType);
+
+                foreach (var property in properties)
+                {
+                    exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have element type"));
+                }
             }
         }
     }

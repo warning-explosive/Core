@@ -1,10 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection;
-    using Basics;
 
     /// <summary>
     /// ColumnExpression
@@ -41,56 +38,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Name
         /// </summary>
-        public string Name
-        {
-            get
-            {
-                return Flatten()
-                   .Reverse()
-                   .Select(expression => expression.Member.Name)
-                   .ToString("_");
-            }
-        }
+        public string Name => Member.Name;
 
         /// <summary>
         /// Source
         /// </summary>
         public ISqlExpression? Source { get; private set; }
-
-        /// <summary>
-        /// Gets flat collection of underneath expressions
-        /// </summary>
-        /// <returns>Flat collection</returns>
-        public IEnumerable<ISqlExpression> FlattenCompletely()
-        {
-            ISqlExpression? current = this;
-
-            while (current != null)
-            {
-                yield return current;
-
-                current = current is ColumnExpression columnExpression
-                    ? columnExpression.Source
-                    : current is RenameExpression renameExpression
-                        ? renameExpression.Source
-                        : null;
-            }
-        }
-
-        /// <summary>
-        /// Gets flat collection of underneath column expressions
-        /// </summary>
-        /// <returns>Flat collection</returns>
-        public IEnumerable<ColumnExpression> Flatten()
-        {
-            var current = this;
-
-            while (current != null)
-            {
-                yield return current;
-                current = current.Source as ColumnExpression;
-            }
-        }
 
         #region IApplicable
 

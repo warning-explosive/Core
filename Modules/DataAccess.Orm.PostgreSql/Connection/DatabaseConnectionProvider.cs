@@ -606,8 +606,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
                 string propertyName,
                 Type targetType)
             {
-                _getFieldValueMethod = reader.GetFieldType(ordinal).IsDatabaseArray(out var elementType)
-                                       && (elementType != null || targetType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance).PropertyType.IsDatabaseArray(out elementType))
+                var sourceType = reader.GetFieldType(ordinal);
+
+                _getFieldValueMethod = sourceType.IsArray()
+                                       && (sourceType.IsDatabaseArray(out var elementType) || targetType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance).PropertyType.IsDatabaseArray(out elementType))
                                        && elementType != null
                                        && elementType.IsNullable()
                     ? _getFieldValueGenericMethod.MakeGenericMethod(elementType.MakeArrayType())

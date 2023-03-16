@@ -55,6 +55,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         private static MethodInfo? _enumerableContains;
         private static FieldInfo? _stringEmpty;
         private static PropertyInfo? _stringLength;
+        private static MethodInfo? _enumHasFlag;
         private static MethodInfo? _like;
         private static MethodInfo? _isNull;
         private static MethodInfo? _isNotNull;
@@ -83,7 +84,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                     nameof(IRepository.All),
                     BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
                 {
-                    TypeArguments = new[] { typeof(IUniqueIdentified) }
+                    TypeArguments = new[] { typeof(IDatabaseEntity) }
                 }
                 .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Sql.Linq.IRepository.All()"));
         }
@@ -529,6 +530,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                                      ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.String.Length"));
         }
 
+        public static MethodInfo EnumHasFlag()
+        {
+            return _enumHasFlag ??= new MethodFinder(typeof(Enum),
+                    nameof(Enum.HasFlag),
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
+                {
+                    ArgumentTypes = new[] { typeof(Enum) }
+                }
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("System.Enum.HasFlag()"));
+        }
+
         public static MethodInfo Like()
         {
             return _like ??= new MethodFinder(typeof(SqlExpressionsExtensions),
@@ -537,7 +549,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 {
                     ArgumentTypes = new[] { typeof(string), typeof(string) }
                 }
-                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SqlExpressionsExtensions.Like()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Sql.Linq.SqlExpressionsExtensions.Like()"));
         }
 
         public static MethodInfo IsNull()
@@ -548,7 +560,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 {
                     ArgumentTypes = new[] { typeof(object) }
                 }
-                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SqlExpressionsExtensions.IsNull()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Sql.Linq.SqlExpressionsExtensions.IsNull()"));
         }
 
         public static MethodInfo IsNotNull()
@@ -559,7 +571,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 {
                     ArgumentTypes = new[] { typeof(object) }
                 }
-                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SqlExpressionsExtensions.IsNotNull()"));
+                .FindMethod() ?? throw new InvalidOperationException(CouldNotFindMethodFormat.Format("SpaceEngineers.Core.DataAccess.Orm.Sql.Linq.SqlExpressionsExtensions.IsNotNull()"));
         }
 
         public static MethodInfo Assign()

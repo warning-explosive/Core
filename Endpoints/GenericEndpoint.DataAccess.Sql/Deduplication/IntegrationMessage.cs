@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using Basics;
     using Contract.Abstractions;
     using Messaging.MessageHeaders;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
@@ -24,12 +25,12 @@
         public IntegrationMessage(
             Guid primaryKey,
             IIntegrationMessage payload,
-            SystemType reflectedType,
+            Type reflectedType,
             IReadOnlyCollection<IntegrationMessageHeader> headers)
             : base(primaryKey)
         {
             Payload = payload;
-            ReflectedType = reflectedType;
+            ReflectedType = (TypeNode)reflectedType;
             Headers = headers;
         }
 
@@ -56,7 +57,7 @@
         /// <summary>
         /// Reflected type
         /// </summary>
-        public SystemType ReflectedType { get; set; }
+        public string ReflectedType { get; set; }
 
         /// <summary>
         /// Headers

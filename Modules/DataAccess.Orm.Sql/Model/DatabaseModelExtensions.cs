@@ -11,10 +11,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
     internal static class DatabaseModelExtensions
     {
-        private static readonly Type MultipleRelation = typeof(List<>);
+        private const BindingFlags ReflectedColumnsFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty | BindingFlags.SetProperty;
+        private const BindingFlags DeclaredColumnsFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty | BindingFlags.SetProperty | BindingFlags.DeclaredOnly;
 
-        private static readonly ConcurrentDictionary<Type, ColumnProperty[]> ColumnsCache
-            = new ConcurrentDictionary<Type, ColumnProperty[]>();
+        private static readonly ConcurrentDictionary<Type, IReadOnlyDictionary<string, ColumnProperty>> ColumnsCache
+            = new ConcurrentDictionary<Type, IReadOnlyDictionary<string, ColumnProperty>>();
 
         public static bool IsSupportedColumn(this PropertyInfo property)
         {
@@ -44,7 +45,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
                        || type == TypeExtensions.FindType("System.Private.CoreLib System.DateOnly")
                        || type == TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly")
                        || type.IsDatabaseEntity()
-                       || type.IsInlinedObject()
                        || (type.IsDatabaseArray(out var elementType) && elementType != null);
             }
         }
@@ -52,11 +52,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
         public static bool IsDatabaseEntity(this Type type)
         {
             return typeof(IDatabaseEntity).IsAssignableFrom(type);
-        }
-
-        public static bool IsInlinedObject(this Type type)
-        {
-            return typeof(IInlinedObject).IsAssignableFrom(type);
         }
 
         public static bool IsSqlView(this Type type)
@@ -73,14 +68,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
         public static bool IsDatabaseArray(this Type type, out Type? itemType)
         {
-            if (type.IsCollection())
+            if (type.IsArray()
+                && type.HasElementType)
             {
-                itemType = type.IsArray() && type.HasElementType
-                    ? type.GetElementType()
-                    : type.ExtractGenericArgumentsAt(typeof(IEnumerable<>)).SingleOrDefault();
+                itemType = type.GetElementType() !;
 
-                return itemType == null ||
-                       (itemType != type && !itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)));
+                return !itemType.IsCollection()
+                       && !itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>));
             }
 
             itemType = null;
@@ -89,26 +83,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
         public static bool IsMultipleRelation(this Type type, [NotNullWhen(true)] out Type? itemType)
         {
-            itemType = type
-                .ExtractGenericArgumentsAt(typeof(IEnumerable<>))
-                .FirstOrDefault();
+            if (type.IsCollection()
+                && (type.GenericTypeDefinitionOrSelf() == typeof(ICollection<>)
+                    || type.GenericTypeDefinitionOrSelf() == typeof(IReadOnlyCollection<>)))
+            {
+                itemType = type.ExtractGenericArgumentAt(typeof(IEnumerable<>));
 
-            return itemType != null
-                   && itemType != type
-                   && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>));
-        }
+                return !itemType.IsCollection()
+                       && itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>));
+            }
 
-        public static Type GetMultipleRelationItemType(this Type type)
-        {
-            return IsMultipleRelation(type, out var itemType)
-                ? itemType
-                : throw new InvalidOperationException($"Type {type} doesn't represent multiple relation");
+            itemType = null;
+            return false;
         }
 
         public static Type ConstructMultipleRelationType(this Type itemType)
         {
             return itemType.IsConstructedOrNonGenericType()
-                ? MultipleRelation.MakeGenericType(itemType)
+                ? typeof(List<>).MakeGenericType(itemType)
                 : throw new InvalidOperationException($"Type {itemType} should be non-generic or fully closed generic type");
         }
 
@@ -166,9 +158,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             }
         }
 
-        public static ColumnProperty[] Columns(this Type type)
+        public static IReadOnlyDictionary<string, ColumnProperty> Columns(this Type type)
         {
-            return ColumnsCache.GetOrAdd(type, key => GetColumns(key).ToArray());
+            return ColumnsCache.GetOrAdd(type, static key => GetColumns(key).ToDictionary(it => it.Name, StringComparer.OrdinalIgnoreCase));
 
             static IEnumerable<ColumnProperty> GetColumns(Type type)
             {
@@ -183,15 +175,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             static IEnumerable<PropertyInfo> ReflectedColumns(Type type)
             {
                 return type
-                   .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty | BindingFlags.SetProperty)
-                   .Where(property => property.GetIsAccessible() && property.SetIsAccessible());
+                   .GetProperties(type.IsAnonymous() ? ReflectedColumnsFlags & ~BindingFlags.SetProperty : ReflectedColumnsFlags)
+                   .Where(property => property.GetIsAccessible() && (property.SetIsAccessible() || type.IsAnonymous()));
             }
 
             static IEnumerable<PropertyInfo> DeclaredColumns(Type type)
             {
                 return type
-                   .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty | BindingFlags.SetProperty | BindingFlags.DeclaredOnly)
-                   .Where(property => property.GetIsAccessible() && property.SetIsAccessible())
+                   .GetProperties(type.IsAnonymous() ? DeclaredColumnsFlags & ~BindingFlags.SetProperty : DeclaredColumnsFlags)
+                   .Where(property => property.GetIsAccessible() && (property.SetIsAccessible() || type.IsAnonymous()))
                    .Concat(BaseDeclaredColumns(type))
                    .Where(property => property.CanRead && (property.CanWrite || type.IsAnonymous()));
             }
@@ -206,8 +198,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 
         public static ColumnProperty Column(this Type type, string name)
         {
-            return Columns(type).SingleOrDefault(property => property.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
-                   ?? throw new InvalidOperationException($"Unable to find column {name} in table {type.FullName}");
+            return Columns(type).TryGetValue(name, out var column)
+                ? column
+                : throw new InvalidOperationException($"Unable to find column {name} in table {type.FullName}");
         }
     }
 }

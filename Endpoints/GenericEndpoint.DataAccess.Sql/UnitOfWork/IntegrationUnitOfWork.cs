@@ -118,8 +118,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
             return databaseContext
                .All<InboxMessage>()
                .Where(message => message.Message.PrimaryKey == context.Message.ReadRequiredHeader<Id>().Value
-                              && message.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
-                              && message.EndpointIdentity.InstanceName == endpointIdentity.InstanceName)
+                              && message.EndpointLogicalName == endpointIdentity.LogicalName
+                              && message.EndpointInstanceName == endpointIdentity.InstanceName)
                .CachedExpression("71E74566-4D9F-4767-9CC4-56F04EB76245")
                .SingleOrDefaultAsync(token);
         }
@@ -150,7 +150,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
             {
                 inbox = new InboxMessage(Guid.NewGuid(),
                     new Deduplication.IntegrationMessage(context.Message),
-                    endpointIdentity,
+                    endpointIdentity.LogicalName,
+                    endpointIdentity.InstanceName,
                     false,
                     true);
 
@@ -183,7 +184,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
 
             var outboxMessages = messages
                .Select(message => new Deduplication.IntegrationMessage(message))
-               .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity, message, false))
+               .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity.LogicalName, endpointIdentity.InstanceName, message, false))
                .ToArray();
 
             return outboxMessages.Any()

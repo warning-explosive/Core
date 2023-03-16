@@ -5,8 +5,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Basics;
     using CompositionRoot;
-    using Deduplication;
     using Settings;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
@@ -57,8 +57,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
                 var cutOff = DateTime.UtcNow - settings.OutboxDeliveryInterval;
 
                 return (await transaction
-                       .All<OutboxMessage>()
-                       .Where(outbox => outbox.EndpointIdentity.LogicalName == endpointIdentity.LogicalName
+                       .All<Deduplication.OutboxMessage>()
+                       .Where(outbox => outbox.EndpointLogicalName == endpointIdentity.LogicalName
                                      && !outbox.Sent
                                      && outbox.Timestamp <= cutOff)
                        .Select(outbox => outbox.Message)
@@ -69,14 +69,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
                    .ToList();
             }
 
-            static Messaging.IntegrationMessage BuildIntegrationMessage(IntegrationMessage message)
+            static Messaging.IntegrationMessage BuildIntegrationMessage(Deduplication.IntegrationMessage message)
             {
                 var headers = message
                     .Headers
                     .Select(header => header.Payload)
                     .ToDictionary(header => header.GetType());
 
-                return new Messaging.IntegrationMessage(message.Payload, message.ReflectedType, headers);
+                return new Messaging.IntegrationMessage(message.Payload, (TypeNode)message.ReflectedType, headers);
             }
         }
     }

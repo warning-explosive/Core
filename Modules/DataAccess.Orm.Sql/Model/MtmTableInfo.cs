@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
 {
     using System;
+    using System.Collections.Generic;
     using Basics;
 
     internal class MtmTableInfo : TableInfo,
@@ -11,14 +12,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             Type type,
             Type left,
             Type right,
+            IReadOnlyDictionary<string, ColumnInfo> columns,
             IModelProvider modelProvider)
-            : base(type, modelProvider)
+            : base(type, columns, modelProvider)
         {
             Left = left;
             Right = right;
         }
 
-        public override bool IsMtmTable { get; } = true;
+        public override bool IsMtmTable => true;
 
         public Type Left { get; }
 

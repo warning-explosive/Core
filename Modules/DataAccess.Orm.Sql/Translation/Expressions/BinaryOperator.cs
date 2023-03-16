@@ -113,6 +113,11 @@
         /// <summary>
         /// Concatenates json objects (left || right)
         /// </summary>
-        ConcatJsonObjects
+        ConcatJsonObjects,
+
+        /// <summary>
+        /// Intersects two arrays (left and right)
+        /// </summary>
+        ArrayIntersection
     }
 }

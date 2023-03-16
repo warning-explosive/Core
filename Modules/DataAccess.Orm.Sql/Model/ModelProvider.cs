@@ -22,7 +22,7 @@
         private readonly IColumnDataTypeProvider _columnDataTypeProvider;
         private readonly ISqlViewQueryProviderComposite _sqlViewQueryProvider;
 
-        private readonly ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>> _columnsCache;
+        private readonly ConcurrentDictionary<Type, ITableInfo> _projectionsCache;
         private readonly ConcurrentDictionary<Type, (Type Left, Type Right)> _mtmTablesCache;
 
         private IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>>? _tablesMap;
@@ -40,7 +40,7 @@
             _columnDataTypeProvider = columnDataTypeProvider;
             _sqlViewQueryProvider = sqlViewQueryProvider;
 
-            _columnsCache = new ConcurrentDictionary<Type, IReadOnlyCollection<ColumnInfo>>();
+            _projectionsCache = new ConcurrentDictionary<Type, ITableInfo>();
             _mtmTablesCache = new ConcurrentDictionary<Type, (Type Left, Type Right)>();
         }
 
@@ -71,28 +71,12 @@
             }
         }
 
-        public IEnumerable<ColumnInfo> Columns(Type type)
+        public IReadOnlyDictionary<string, ColumnInfo> Columns(Type type)
         {
-            return Tables.TryGetValue(type, out var info)
-                ? info.Columns.Values
-                : _columnsCache.GetOrAdd(type, ValueFactory);
-
-            IReadOnlyCollection<ColumnInfo> ValueFactory(Type table)
-            {
-                return new TableInfo(table, this)
-                    .Columns
-                    .Values
-                    .ToArray();
-            }
-        }
-
-        public IEnumerable<ColumnInfo> Columns(ITableInfo table)
-        {
-            return table
-                .Type
-                .Columns()
-                .SelectMany(property => GetColumns(table, property))
-                .ToList();
+            return (Tables.TryGetValue(type, out var table)
+                    ? table
+                    : _projectionsCache.GetOrAdd(type, static (entity, modelProvider) => modelProvider.GetTableInfo(entity), this))
+                .Columns;
         }
 
         public string TableName(Type type)
@@ -141,15 +125,13 @@
         {
             return _databaseTypeProvider
                 .DatabaseEntities()
-                .SelectMany(GetTableInfo)
+                .SelectMany(GetTableInfos)
                 .Distinct()
                 .ToDictionary(info => info.Type);
 
-            IEnumerable<ITableInfo> GetTableInfo(Type entity)
+            IEnumerable<ITableInfo> GetTableInfos(Type entity)
             {
-                ITableInfo info = entity.IsSqlView()
-                    ? new ViewInfo(entity, _sqlViewQueryProvider.GetQuery(entity), this)
-                    : new TableInfo(entity, this);
+                var info = GetTableInfo(entity);
 
                 yield return info;
 
@@ -157,7 +139,7 @@
                     .Columns
                     .Values
                     .Where(column => column.IsMultipleRelation)
-                    .Select(column => new MtmTableInfo(column.MultipleRelationTable!, column.Relation.Source, column.Relation.Target, this));
+                    .Select(column => GetTableInfo(column.MultipleRelationTable!));
 
                 foreach (var mtmTableInfo in mtmTableInfos)
                 {
@@ -183,26 +165,43 @@
                     StringComparer.OrdinalIgnoreCase);
         }
 
+        private ITableInfo GetTableInfo(Type entity)
+        {
+            var columns = new Dictionary<string, ColumnInfo>(StringComparer.OrdinalIgnoreCase);
+
+            ITableInfo info = entity.IsSqlView()
+                ? new ViewInfo(entity, _sqlViewQueryProvider.GetQuery(entity), columns, this)
+                : entity.IsMtmTable()
+                    ? new MtmTableInfo(entity, _mtmTablesCache[entity].Left, _mtmTablesCache[entity].Right, columns, this)
+                    : new TableInfo(entity, columns, this);
+
+            foreach (var column in entity
+                         .Columns()
+                         .Values
+                         .SelectMany(property => GetColumns(info, property))
+                         .OrderBy(column => column.Name))
+            {
+                columns[column.Name] = column;
+            }
+
+            return info;
+        }
+
         private IEnumerable<ColumnInfo> GetColumns(ITableInfo table, ColumnProperty property)
         {
-            if (!property.Declared.IsSupportedColumn())
+            if (!property.Declared.IsSupportedColumn() && !property.ReflectedType.IsAnonymous())
             {
                 throw new NotSupportedException($"Not supported column type: {property.Reflected} - {property.PropertyType}");
             }
 
             foreach (var chain in FlattenSpecialTypes(property))
             {
-                yield return new ColumnInfo(table, chain, this, _columnDataTypeProvider);
+                yield return new ColumnInfo(table, property, chain, this, _columnDataTypeProvider);
             }
         }
 
         private IEnumerable<ColumnProperty[]> FlattenSpecialTypes(ColumnProperty property)
         {
-            if (typeof(IInlinedObject).IsAssignableFrom(property.PropertyType))
-            {
-                return FlattenInlinedObject(property);
-            }
-
             if (property.PropertyType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
             {
                 return FlattenRelation(property);
@@ -222,24 +221,9 @@
             };
         }
 
-        private IEnumerable<ColumnProperty[]> FlattenInlinedObject(ColumnProperty property)
-        {
-            foreach (var inlined in property.PropertyType.Columns())
-            {
-                foreach (var subsequent in FlattenSpecialTypes(inlined))
-                {
-                    yield return new[] { property }
-                        .Concat(subsequent)
-                        .ToArray();
-                }
-            }
-        }
-
         private static IEnumerable<ColumnProperty[]> FlattenRelation(ColumnProperty property)
         {
-            var primaryKeyProperty = property
-                .PropertyType
-                .Column(nameof(IUniqueIdentified.PrimaryKey));
+            var primaryKeyProperty = property.PropertyType.Column(nameof(IUniqueIdentified.PrimaryKey));
 
             yield return new[]
             {

@@ -2,11 +2,11 @@
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using NpgsqlTypes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
 
     [Component(EnLifestyle.Singleton)]
@@ -100,7 +100,7 @@
                  * ~15-17 digits
                  * 8 bytes
                  */
-                dataType = NpgsqlDbType.Double.ToString();
+                dataType = "double precision";
                 return true;
             }
 
@@ -200,6 +200,7 @@
                  * 0001-01-01 to 9999-12-31
                  */
                 dataType = NpgsqlDbType.Date.ToString();
+                return true;
             }
 
             if (type == TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly"))
@@ -215,6 +216,7 @@
                  * 00:00:00 to 23:59:59.9999999
                  */
                 dataType = NpgsqlDbType.Time.ToString();
+                return true;
             }
 
             if (type.IsEnum)

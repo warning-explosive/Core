@@ -11,9 +11,7 @@
 
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, ITableInfo>> TablesMap { get; }
 
-        IEnumerable<ColumnInfo> Columns(Type type);
-
-        IEnumerable<ColumnInfo> Columns(ITableInfo table);
+        IReadOnlyDictionary<string, ColumnInfo> Columns(Type type);
 
         string TableName(Type type);
 

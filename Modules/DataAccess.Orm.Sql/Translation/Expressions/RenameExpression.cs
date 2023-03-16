@@ -43,18 +43,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// </summary>
         public ISqlExpression Source { get; private set; }
 
-        /// <summary>
-        /// Unwraps RenameExpression
-        /// </summary>
-        /// <param name="expression">Expression</param>
-        /// <returns>Unwrapped expression</returns>
-        public static ISqlExpression UnwrapRenames(ISqlExpression expression)
-        {
-            return expression is RenameExpression renameExpression
-                ? UnwrapRenames(renameExpression.Source)
-                : expression;
-        }
-
         #region IApplicable
 
         /// <inheritdoc />

@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using System.Linq.Expressions;
@@ -11,24 +12,40 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot;
 
+    [SuppressMessage("Analysis", "CA1031", Justification = "desired behavior")]
     [Component(EnLifestyle.Singleton)]
     internal class ObjectBuilder : IObjectBuilder,
                                    IResolvable<IObjectBuilder>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private static readonly ITypeDescriptorContext Context = new ObjectBuilderTypeDescriptorContext();
 
-        public ObjectBuilder(IDependencyContainer dependencyContainer)
+        static ObjectBuilder()
         {
-            _dependencyContainer = dependencyContainer;
+            TypeDescriptor.AddAttributes(
+                typeof(DBNull),
+                new TypeConverterAttribute(typeof(DbNullTypeConverter)));
+
+            TypeDescriptor.AddAttributes(
+                TypeExtensions.FindType("System.Private.CoreLib System.DateOnly"),
+                new TypeConverterAttribute(typeof(DateOnlyTypeConverter)));
+
+            TypeDescriptor.AddAttributes(
+                TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly"),
+                new TypeConverterAttribute(typeof(TimeOnlyTypeConverter)));
+
+            TypeDescriptor.AddAttributes(
+                typeof(Type),
+                new TypeConverterAttribute(typeof(TypeNodeTypeConverter)));
         }
 
         public object? Build(Type type, IDictionary<string, object?>? values = null)
         {
-            if (values?.Count == 1 && type.IsPrimitive())
+            if (values != null
+                && values.Count == 1
+                && TryConvertTo(type, values.Single().Value, out var value))
             {
-                return ConvertTo(values.Single().Value, type);
+                return value;
             }
 
             values = values?.ToDictionary(it => it.Key, it => it.Value, StringComparer.OrdinalIgnoreCase)
@@ -58,7 +75,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
 
                 if (values.Remove(cctorParameter.Name, out var argument))
                 {
-                    cctorArguments[i] = ConvertTo(argument, cctorParameter.ParameterType);
+                    cctorArguments[i] = ConvertTo(cctorParameter.ParameterType, argument);
                 }
                 else
                 {
@@ -89,7 +106,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
                 {
                     if (values.Remove(property.Name, out var value))
                     {
-                        property.SetValue(instance, ConvertTo(value, property.PropertyType));
+                        property.SetValue(instance, ConvertTo(property.PropertyType, value));
                     }
                 }
 
@@ -102,70 +119,106 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             }
         }
 
-        private object? ConvertTo(object? value, Type targetType)
+        private static object? ConvertTo(
+            Type type,
+            object? value)
+        {
+            return TryConvertTo(type, value, out var result)
+                ? result
+                : throw new InvalidOperationException($"Unable to convert value {value} from {value.GetType().FullName} to {type.FullName}");
+        }
+
+        private static bool TryConvertTo(
+            Type type,
+            object? value,
+            out object? result)
         {
             if (value == null)
             {
-                return null;
+                result = null;
+                return true;
             }
 
-            return ExecutionExtensions
-                .Try(Convert, (value, targetType))
-                .Catch<Exception>()
-                .Invoke(convertEx =>
+            if (TryMatch(type, value, out result)
+                || TryConvert(type, value, out result)
+                || TryCast(type, value, out result))
+            {
+                return true;
+            }
+
+            result = null;
+            return false;
+        }
+
+        private static bool TryMatch(
+            Type type,
+            object value,
+            out object? result)
+        {
+            if (value.IsInstanceOfType(type))
+            {
+                result = value;
+                return true;
+            }
+
+            result = null;
+            return false;
+        }
+
+        private static bool TryConvert(
+            Type type,
+            object value,
+            out object? result)
+        {
+            try
+            {
+                var fromConverter = TypeDescriptor.GetConverter(type);
+
+                if (fromConverter.CanConvertFrom(Context, value.GetType()))
                 {
-                    return ExecutionExtensions
-                        .Try(Cast, (value, targetType))
-                        .Catch<Exception>()
-                        .Invoke(castEx =>
-                        {
-                            return ExecutionExtensions
-                                .Try(Transform, (value, targetType))
-                                .Catch<Exception>()
-                                .Invoke(transformEx => throw new AggregateException($"Unable to convert value {value} from {value.GetType().FullName} to {targetType.FullName}", convertEx, castEx, transformEx));
-                        });
-                });
-        }
+                    result = fromConverter.ConvertFrom(Context, CultureInfo.InvariantCulture, value);
+                    return true;
+                }
 
-        private static object? Convert((object, Type) state)
-        {
-            var (value, targetType) = state;
+                var toConverter = TypeDescriptor.GetConverter(value.GetType());
 
-            var fromConverter = TypeDescriptor.GetConverter(targetType);
+                if (toConverter.CanConvertTo(Context, type))
+                {
+                    result = toConverter.ConvertTo(Context, CultureInfo.InvariantCulture, value, type);
+                    return true;
+                }
 
-            if (fromConverter.CanConvertFrom(value.GetType()))
+                result = Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch (Exception ex)
             {
-                return fromConverter.ConvertFrom(value);
+                _ = ex;
             }
 
-            var toConverter = TypeDescriptor.GetConverter(value.GetType());
+            result = null;
+            return false;
+        }
 
-            if (toConverter.CanConvertTo(targetType))
+        private static bool TryCast(
+            Type type,
+            object value,
+            out object? result)
+        {
+            try
             {
-                return toConverter.ConvertTo(value, targetType);
+                var constant = Expression.Constant(value);
+                var convert = Expression.ConvertChecked(constant, type);
+                result = Expression.Lambda(convert).Compile().DynamicInvoke();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _ = ex;
             }
 
-            return System.Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
-        }
-
-        private static object? Cast((object, Type) state)
-        {
-            var (value, targetType) = state;
-
-            var constant = Expression.Constant(value);
-            var convert = Expression.ConvertChecked(constant, targetType);
-            return Expression.Lambda(convert).Compile().DynamicInvoke();
-        }
-
-        private object? Transform((object, Type) state)
-        {
-            var (value, targetType) = state;
-
-            return _dependencyContainer
-                .ResolveGeneric(typeof(IObjectTransformer<,>), value.GetType(), targetType)
-                .CallMethod(nameof(IObjectTransformer<object, object>.Transform))
-                .WithArgument(value)
-                .Invoke();
+            result = null;
+            return false;
         }
     }
 }

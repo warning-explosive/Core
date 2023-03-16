@@ -1,11 +1,13 @@
 namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Model.Attributes;
     using GenericEndpoint.Contract.Abstractions;
     using Relations;
 
+    [SuppressMessage("Analysis", "SA1011", Justification = "space between square brackets and nullable symbol")]
     [Schema(nameof(GenericHost) + nameof(Test))]
     internal record ComplexDatabaseEntity : BaseDatabaseEntity<Guid>
     {
@@ -13,6 +15,36 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
             : base(primaryKey)
         {
         }
+
+        public double Number { get; set; }
+
+        public double? NullableNumber { get; set; }
+
+        public Guid Identifier { get; set; }
+
+        public Guid? NullableIdentifier { get; set; }
+
+        public bool Boolean { get; set; }
+
+        public bool? NullableBoolean { get; set; }
+
+        public DateTime DateTime { get; set; }
+
+        public DateTime? NullableDateTime { get; set; }
+
+        public TimeSpan TimeSpan { get; set; }
+
+        public TimeSpan? NullableTimeSpan { get; set; }
+
+        public DateOnly DateOnly { get; set; }
+
+        public DateOnly? NullableDateOnly { get; set; }
+
+        public TimeOnly TimeOnly { get; set; }
+
+        public TimeOnly? NullableTimeOnly { get; set; }
+
+        public byte[] ByteArray { get; set; } = default!;
 
         public string String { get; set; } = default!;
 
@@ -54,12 +86,27 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
         {
             return new ComplexDatabaseEntity(Guid.NewGuid())
             {
+                Number = 42,
+                NullableNumber = 42,
+                Identifier = Guid.NewGuid(),
+                NullableIdentifier = Guid.NewGuid(),
+                Boolean = true,
+                NullableBoolean = true,
+                DateTime = DateTime.Today,
+                NullableDateTime = DateTime.Today,
+                TimeSpan = TimeSpan.FromHours(3),
+                NullableTimeSpan = TimeSpan.FromHours(3),
+                DateOnly = DateOnly.FromDateTime(DateTime.Today),
+                NullableDateOnly = DateOnly.FromDateTime(DateTime.Today),
+                TimeOnly = TimeOnly.FromTimeSpan(TimeSpan.FromHours(3)),
+                NullableTimeOnly = TimeOnly.FromTimeSpan(TimeSpan.FromHours(3)),
+                ByteArray = new byte[] { 1, 2, 3 },
                 String = "SomeString",
                 NullableString = "SomeNullableString",
                 Enum = EnEnum.Three,
                 NullableEnum = EnEnum.Three,
-                EnumFlags = EnEnumFlags.A | EnEnumFlags.B | EnEnumFlags.C,
-                NullableEnumFlags = EnEnumFlags.A | EnEnumFlags.B | EnEnumFlags.C,
+                EnumFlags = EnEnumFlags.A | EnEnumFlags.B,
+                NullableEnumFlags = EnEnumFlags.A | EnEnumFlags.B,
                 EnumArray = new[] { EnEnum.One, EnEnum.Two, EnEnum.Three },
                 NullableEnumArray = new EnEnum?[] { EnEnum.One, EnEnum.Two, EnEnum.Three },
                 StringArray = new[] { "SomeString", "AnotherString" },
@@ -77,11 +124,26 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
         {
             return new ComplexDatabaseEntity(Guid.NewGuid())
             {
+                Number = 42,
+                NullableNumber = null,
+                Identifier = Guid.NewGuid(),
+                NullableIdentifier = null,
+                Boolean = true,
+                NullableBoolean = null,
+                DateTime = DateTime.Today,
+                NullableDateTime = null,
+                TimeSpan = TimeSpan.FromHours(3),
+                NullableTimeSpan = null,
+                DateOnly = DateOnly.FromDateTime(DateTime.Today),
+                NullableDateOnly = null,
+                TimeOnly = TimeOnly.FromTimeSpan(TimeSpan.FromHours(3)),
+                NullableTimeOnly = null,
+                ByteArray = new byte[] { 1, 2, 3 },
                 String = "SomeString",
                 NullableString = null,
                 Enum = EnEnum.Three,
                 NullableEnum = null,
-                EnumFlags = EnEnumFlags.A | EnEnumFlags.B | EnEnumFlags.C,
+                EnumFlags = EnEnumFlags.A | EnEnumFlags.B,
                 NullableEnumFlags = null,
                 EnumArray = new[] { EnEnum.One, EnEnum.Two, EnEnum.Three },
                 NullableEnumArray = new EnEnum?[] { EnEnum.One, null, EnEnum.Three },

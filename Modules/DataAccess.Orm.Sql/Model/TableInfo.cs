@@ -13,13 +13,14 @@
         private readonly IModelProvider _modelProvider;
 
         private IReadOnlyDictionary<string, IndexInfo>? _indexes;
-        private IReadOnlyDictionary<string, ColumnInfo>? _columns;
 
         public TableInfo(
             Type type,
+            IReadOnlyDictionary<string, ColumnInfo> columns,
             IModelProvider modelProvider)
         {
             Type = type;
+            Columns = columns;
 
             _modelProvider = modelProvider;
         }
@@ -30,25 +31,9 @@
 
         public Type Type { get; }
 
-        public virtual bool IsMtmTable { get; } = false;
+        public virtual bool IsMtmTable => false;
 
-        public IReadOnlyDictionary<string, ColumnInfo> Columns
-        {
-            get
-            {
-                _columns ??= InitColumns();
-
-                return _columns;
-
-                IReadOnlyDictionary<string, ColumnInfo> InitColumns()
-                {
-                    return _modelProvider
-                        .Columns(this)
-                        .OrderBy(column => column.Name)
-                        .ToDictionary(info => info.Name, StringComparer.OrdinalIgnoreCase);
-                }
-            }
-        }
+        public IReadOnlyDictionary<string, ColumnInfo> Columns { get; }
 
         public IReadOnlyDictionary<string, IndexInfo> Indexes
         {

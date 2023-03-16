@@ -171,6 +171,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var post = new Post(Guid.NewGuid(), blog, user, DateTime.Now, "PostContent");
             posts.Add(post);
 
+            var communities = new List<Community>();
+            var participants = new List<Participant>();
+            var community = new Community(Guid.NewGuid(), "AmazingCommunity", participants);
+            var participant = new Participant(Guid.NewGuid(), "RegularParticipant", communities);
+            communities.Add(community);
+            participants.Add(participant);
+
             var message = new Command(42);
 
             var complexDatabaseEntity = ComplexDatabaseEntity.Generate(message, blog);
@@ -178,6 +185,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var token = CancellationToken.None;
 
+            /*
+             * All
+             */
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - all",
@@ -191,15 +201,113 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - anonymous projections chain",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, it.IntField, it.BooleanField }).Select(it => new { it.StringField, it.IntField }).Select(it => new { it.IntField }).Select(it => it.IntField)),
+                $"{nameof(DataAccess.Orm.PostgreSql)} - read\\write complex object (with relations, arrays, json, nullable columns) without null values",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b) c) d",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Boolean)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.ByteArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateOnly)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Identifier)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Json)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableBoolean)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateOnly)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableIdentifier)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableJson)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableNumber)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableRelation)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableString)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableStringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableTimeOnly)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableTimeSpan)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Number)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Relation)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.String)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.StringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.TimeOnly)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.TimeSpan)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(ComplexDatabaseEntity)}"" a",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { complexDatabaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - read\\write complex object (with relations, arrays, json, nullable columns) with null values",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>()),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Boolean)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.ByteArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateOnly)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Identifier)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Json)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableBoolean)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateOnly)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableIdentifier)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableJson)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableNumber)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableRelation)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableString)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableStringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableTimeOnly)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableTimeSpan)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Number)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Relation)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.String)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.StringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.TimeOnly)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.TimeSpan)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(ComplexDatabaseEntity)}"" a",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { complexDatabaseEntityWithNulls }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - all mtm",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().AllMtm<Community, Participant, Guid, Guid>(container.Resolve<IModelProvider>(), it => it.Participants)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"",{Environment.NewLine}{'\t'}a.""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Community)}_{nameof(Participant)}"" a",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { community, participant }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - all mtm (reverse)",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().AllMtm<Participant, Community, Guid, Guid>(container.Resolve<IModelProvider>(), it => it.Communities)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"",{Environment.NewLine}{'\t'}a.""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Community)}_{nameof(Participant)}"" a",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { community, participant }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - all with circular mtm",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Community>()),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(Community.Name)}"",{Environment.NewLine}{'\t'}a.""{nameof(Community.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Community.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Community)}"" a",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { community, participant }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - all with circular mtm (reverse)",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Participant>()),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(Participant.Name)}"",{Environment.NewLine}{'\t'}a.""{nameof(Participant.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Participant.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Participant)}"" a",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { community, participant }
+            };
+
+            /*
+             * Unary expression
+             */
+
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - unary filter",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => !it.BooleanField || it.BooleanField)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}"" OR a.""{nameof(DatabaseEntity.BooleanField)}""",
                         Array.Empty<SqlCommandParameter>(),
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - unary projection to anonymous class",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { Negation = !it.BooleanField })),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}(NOT a.""{nameof(DatabaseEntity.BooleanField)}"") AS ""Negation""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - unary projection",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => !it.BooleanField)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+
+            /*
+             * Binary expression
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison !=",
@@ -288,6 +396,60 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
+
+            /*
+             * Ternary expression
+             */
+
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter after projection with renaming",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Filter""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter after projection",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.NullableStringField != null ? true : false)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary projection",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" ELSE @param_2 END{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", string.Empty, typeof(string)) },
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+
+            /*
+             * Filter expression
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - boolean property filter after anonymous projection",
@@ -310,6 +472,109 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - projection/filter chain",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField <= 42).Select(it => it.IntField)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}CASE WHEN @param_0 IS NULL THEN b.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE b.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END) c{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}"" > @param_2 AND c.""{nameof(DatabaseEntity.IntField)}"" <= @param_3) d",
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", 0, typeof(int)), new SqlCommandParameter("param_3", 42, typeof(int)) },
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+
+            /*
+             * Projection expression
+             */
+
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - coalesce projection",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.NullableStringField ?? string.Empty)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}COALESCE(a.""{nameof(DatabaseEntity.NullableStringField)}"", @param_0){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
+                        new[] { new SqlCommandParameter("param_0", string.Empty, typeof(string)) },
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection to anonymous type",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).Select(it => new { it.StringField }).Distinct()),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection to primitive type",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).Select(it => it.StringField).Distinct()),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection with join expression",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay").Select(it => it.User.Nickname).Distinct()),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(Post.User.Nickname)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}CASE WHEN @param_0 IS NULL THEN b.""{nameof(Blog.Theme)}"" IS NULL ELSE b.""{nameof(Blog.Theme)}"" = @param_1 END) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = c.""{nameof(Post.User)}""",
+                        new[] { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)) },
+                        log)),
+                new IDatabaseEntity[] { user, blog, post }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection with predicate",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, it.BooleanField }).Where(it => it.BooleanField).Distinct()),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+
+            /*
+             * Anonymous projections
+             */
+
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - anonymous projections chain",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, it.IntField, it.BooleanField }).Select(it => new { it.StringField, it.IntField }).Select(it => new { it.IntField }).Select(it => it.IntField)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b) c) d",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - change anonymous projection parameter name",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { Nsf = it.NullableStringField, Sf = it.StringField }).Where(it => it.Nsf != null)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Nsf"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"" AS ""Sf""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END",
+                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)) },
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+
+            /*
+             * Enums
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - enum property comparison",
@@ -367,70 +632,20 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - change anonymous projection parameter name",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { Nsf = it.NullableStringField, Sf = it.StringField }).Where(it => it.Nsf != null)),
+                $"{nameof(DataAccess.Orm.PostgreSql)} - enum.HasFlag()",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>().Select(it => it.EnumFlags.HasFlag(EnEnumFlags.B | EnEnumFlags.C))),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Nsf"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"" AS ""Sf""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END",
-                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)) },
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumFlags)}"" && @param_0{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(ComplexDatabaseEntity)}"" a",
+                        new[] { new SqlCommandParameter("param_0", EnEnumFlags.B | EnEnumFlags.C, typeof(EnEnumFlags)) },
                         log)),
-                new IDatabaseEntity[] { databaseEntity }
+                new IDatabaseEntity[] { complexDatabaseEntity }
             };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - coalesce projection",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.NullableStringField ?? string.Empty)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}COALESCE(a.""{nameof(DatabaseEntity.NullableStringField)}"", @param_0){Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        new[] { new SqlCommandParameter("param_0", string.Empty, typeof(string)) },
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection to anonymous type",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).Select(it => new { it.StringField }).Distinct()),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection to primitive type",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).Select(it => it.StringField).Distinct()),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntity.StringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"") b",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection with join expression",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay").Select(it => it.User.Nickname).Distinct()),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}d.""{nameof(Post.User.Nickname)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.Nickname)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Blog)}"" b{Environment.NewLine}{'\t'}JOIN{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}ON{Environment.NewLine}{'\t'}{'\t'}b.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}CASE WHEN @param_0 IS NULL THEN b.""{nameof(Blog.Theme)}"" IS NULL ELSE b.""{nameof(Blog.Theme)}"" = @param_1 END) c{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = c.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""",
-                        new[] { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)) },
-                        log)),
-                new IDatabaseEntity[] { user, blog, post }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection with predicate",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, it.BooleanField }).Where(it => it.BooleanField).Distinct()),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT DISTINCT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
+
+            /*
+             * one property projection
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - one property projection - bool",
@@ -477,83 +692,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in filter",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay" && it.User.Nickname == "SpaceEngineer")),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN c.""{nameof(Blog.Theme)}"" IS NULL ELSE c.""{nameof(Blog.Theme)}"" = @param_1 END AND CASE WHEN @param_2 IS NULL THEN b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" IS NULL ELSE b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" = @param_3 END",
-                        new[] { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)), new SqlCommandParameter("param_2", "SpaceEngineer", typeof(string)), new SqlCommandParameter("param_3", "SpaceEngineer", typeof(string)) },
-                        log)),
-                new IDatabaseEntity[] { user, blog, post }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection with filter as source",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.DateTime > DateTime.MinValue).Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"" > @param_0) b{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = b.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(Blog.PrimaryKey)}"" = b.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
-                        new[] { new SqlCommandParameter("param_0", DateTime.MinValue, typeof(DateTime)) },
-                        log)),
-                new IDatabaseEntity[] { user, blog, post }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { user, blog, post }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - order by join",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().OrderByDescending(it => it.Blog.Theme).ThenBy(it => it.User.Nickname)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.PrimaryKey)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}b.""{nameof(Post.User.PrimaryKey)}"" AS ""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(post.User)}_{nameof(post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(post.Blog)}_{nameof(post.Blog.PrimaryKey)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" DESC, b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" ASC",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { user, blog, post }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - order by then by",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).OrderBy(it => it.IntField).ThenByDescending(it => it.StringField)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC, a.""{nameof(DatabaseEntity.StringField)}"" DESC",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - order by",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).OrderBy(it => it.IntField)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - projection/filter chain",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField <= 42).Select(it => it.IntField)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}b.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}a.""{nameof(DatabaseEntity.IntField)}""{Environment.NewLine}{'\t'}{'\t'}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}{'\t'}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a) b{Environment.NewLine}{'\t'}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}{'\t'}CASE WHEN @param_0 IS NULL THEN b.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE b.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END) c{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}c.""{nameof(DatabaseEntity.IntField)}"" > @param_2 AND c.""{nameof(DatabaseEntity.IntField)}"" <= @param_3) d",
-                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", 0, typeof(int)), new SqlCommandParameter("param_3", 42, typeof(int)) },
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - property chain with translated member",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.StringField.Length)),
                 new Action<ICommand, ITestOutputHelper>(
@@ -563,6 +701,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
+
+            /*
+             * Scalar
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - all",
@@ -871,6 +1014,98 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
+
+            /*
+             * Relations
+             */
+
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in filter",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay" && it.User.Nickname == "SpaceEngineer")),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(Post.Blog)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.User)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(Post.User)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}""{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN c.""{nameof(Blog.Theme)}"" IS NULL ELSE c.""{nameof(Blog.Theme)}"" = @param_1 END AND CASE WHEN @param_2 IS NULL THEN b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" IS NULL ELSE b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" = @param_3 END",
+                        new[] { new SqlCommandParameter("param_0", "MilkyWay", typeof(string)), new SqlCommandParameter("param_1", "MilkyWay", typeof(string)), new SqlCommandParameter("param_2", "SpaceEngineer", typeof(string)), new SqlCommandParameter("param_3", "SpaceEngineer", typeof(string)) },
+                        log)),
+                new IDatabaseEntity[] { user, blog, post }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection with filter as source",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.DateTime > DateTime.MinValue).Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}d.""{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" d{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"" > @param_0) b{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = b.""{nameof(Post.User)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}d.""{nameof(Blog.PrimaryKey)}"" = b.""{nameof(Post.Blog)}""",
+                        new[] { new SqlCommandParameter("param_0", DateTime.MinValue, typeof(DateTime)) },
+                        log)),
+                new IDatabaseEntity[] { user, blog, post }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(Post.User)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}""",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { user, blog, post }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - select one-to-one relation",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.DateTime > DateTime.MinValue).Select(it => it.Blog)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"",{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"",{Environment.NewLine}{'\t'}c.""{nameof(Blog.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}(SELECT{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Blog)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.User)}"",{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.Version)}""{Environment.NewLine}{'\t'}FROM{Environment.NewLine}{'\t'}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}{'\t'}WHERE{Environment.NewLine}{'\t'}{'\t'}a.""{nameof(Post.DateTime)}"" > @param_0) b{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = b.""{nameof(Post.Blog)}""",
+                        new[] { new SqlCommandParameter("param_0", DateTime.MinValue, typeof(DateTime)) },
+                        log)),
+                new IDatabaseEntity[] { user, blog, post }
+            };
+
+            /*
+             * Order by
+             */
+
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - order by join",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().OrderByDescending(it => it.Blog.Theme).ThenBy(it => it.User.Nickname)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(Post.Blog)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.DateTime)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.Text)}"",{Environment.NewLine}{'\t'}a.""{nameof(Post.User)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(post.User)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(post.Blog)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}c.""{nameof(Blog.Theme)}"" DESC, b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" ASC",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { user, blog, post }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - order by then by",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).OrderBy(it => it.IntField).ThenByDescending(it => it.StringField)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC, a.""{nameof(DatabaseEntity.StringField)}"" DESC",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+            yield return new object[]
+            {
+                $"{nameof(DataAccess.Orm.PostgreSql)} - order by",
+                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).OrderBy(it => it.IntField)),
+                new Action<ICommand, ITestOutputHelper>(
+                    (query, log) => CheckSqlCommand(query,
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}ORDER BY{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"" ASC",
+                        Array.Empty<SqlCommandParameter>(),
+                        log)),
+                new IDatabaseEntity[] { databaseEntity }
+            };
+
+            /*
+             * Sub query
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - sub-query",
@@ -901,83 +1136,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter after projection with renaming",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"" AS ""Filter""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
-                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter after projection",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
-                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.NullableStringField != null ? true : false)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN @param_2 ELSE @param_3 END",
-                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", true, typeof(bool)), new SqlCommandParameter("param_3", false, typeof(bool)) },
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary projection",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}CASE WHEN CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" IS NOT NULL ELSE a.""{nameof(DatabaseEntity.NullableStringField)}"" != @param_1 END THEN a.""{nameof(DatabaseEntity.NullableStringField)}"" ELSE @param_2 END{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        new[] { new SqlCommandParameter("param_0", default(string), typeof(string)), new SqlCommandParameter("param_1", default(string), typeof(string)), new SqlCommandParameter("param_2", string.Empty, typeof(string)) },
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - unary filter",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => !it.BooleanField || it.BooleanField)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.BooleanField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.IntField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.NullableStringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.StringField)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}"" OR a.""{nameof(DatabaseEntity.BooleanField)}""",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - unary projection to anonymous class",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { Negation = !it.BooleanField })),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}(NOT a.""{nameof(DatabaseEntity.BooleanField)}"") AS ""Negation""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - unary projection",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => !it.BooleanField)),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}NOT a.""{nameof(DatabaseEntity.BooleanField)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntity)}"" a",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { databaseEntity }
-            };
+
+            /*
+             * Sql view
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - sql view translation after migration",
@@ -1000,6 +1163,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 Array.Empty<IDatabaseEntity>()
             };
+
+            /*
+             * Json
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - select json column",
@@ -1044,6 +1212,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { domainEvent }
             };
+
+            /*
+             * Insert
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - insert entity",
@@ -1072,11 +1245,16 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { user, blog, post }, EnInsertBehavior.Default).CachedExpression(Guid.NewGuid().ToString()).Invoke(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"INSERT INTO ""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" (""{nameof(DatabaseEntities.Relations.User.Nickname)}"", ""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"", ""{nameof(DatabaseEntities.Relations.User.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_0, @param_1, @param_2);{Environment.NewLine}INSERT INTO ""{schema}"".""{nameof(Blog)}"" (""{nameof(Blog.PrimaryKey)}"", ""{nameof(Blog.Theme)}"", ""{nameof(Blog.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_3, @param_4, @param_5);{Environment.NewLine}INSERT INTO ""{schema}"".""{nameof(Post)}"" (""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}"", ""{nameof(Post.DateTime)}"", ""{nameof(Post.PrimaryKey)}"", ""{nameof(Post.Text)}"", ""{nameof(Post.User)}_{nameof(Post.PrimaryKey)}"", ""{nameof(Post.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_6, @param_7, @param_8, @param_9, @param_10, @param_11);{Environment.NewLine}INSERT INTO ""{schema}"".""{nameof(Blog)}_{nameof(Post)}"" (""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"", ""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_12, @param_13)",
+                        $@"INSERT INTO ""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" (""{nameof(DatabaseEntities.Relations.User.Nickname)}"", ""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"", ""{nameof(DatabaseEntities.Relations.User.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_0, @param_1, @param_2);{Environment.NewLine}INSERT INTO ""{schema}"".""{nameof(Blog)}"" (""{nameof(Blog.PrimaryKey)}"", ""{nameof(Blog.Theme)}"", ""{nameof(Blog.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_3, @param_4, @param_5);{Environment.NewLine}INSERT INTO ""{schema}"".""{nameof(Post)}"" (""{nameof(Post.Blog)}"", ""{nameof(Post.DateTime)}"", ""{nameof(Post.PrimaryKey)}"", ""{nameof(Post.Text)}"", ""{nameof(Post.User)}"", ""{nameof(Post.Version)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_6, @param_7, @param_8, @param_9, @param_10, @param_11);{Environment.NewLine}INSERT INTO ""{schema}"".""{nameof(Blog)}_{nameof(Post)}"" (""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"", ""{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}""){Environment.NewLine}VALUES{Environment.NewLine}(@param_12, @param_13)",
                         new[] { new SqlCommandParameter("param_0", "SpaceEngineer", typeof(string)), new SqlCommandParameter("param_1", user.PrimaryKey, typeof(Guid)), new SqlCommandParameter("param_2", 0L, typeof(long)), new SqlCommandParameter("param_3", blog.PrimaryKey, typeof(Guid)), new SqlCommandParameter("param_4", blog.Theme, typeof(string)), new SqlCommandParameter("param_5", 0L, typeof(long)), new SqlCommandParameter("param_6", blog.PrimaryKey, typeof(Guid)), new SqlCommandParameter("param_7", post.DateTime, typeof(DateTime)), new SqlCommandParameter("param_8", post.PrimaryKey, typeof(Guid)), new SqlCommandParameter("param_9", post.Text, typeof(string)), new SqlCommandParameter("param_10", user.PrimaryKey, typeof(Guid)), new SqlCommandParameter("param_11", 0L, typeof(long)), new SqlCommandParameter("param_12", blog.PrimaryKey, typeof(Guid)), new SqlCommandParameter("param_13", post.PrimaryKey, typeof(Guid)) },
                         log)),
                 Array.Empty<IDatabaseEntity>()
             };
+
+            /*
+             * Delete
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - delete entity",
@@ -1099,6 +1277,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
+
+            /*
+             * Update
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - update entity with column reference",
@@ -1121,39 +1304,21 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         log)),
                 new IDatabaseEntity[] { databaseEntity }
             };
-            /*TODO: #backlog - test update/delete with join in predicate*/
+
+            /*
+             * Statistics
+             */
+
             yield return new object[]
             {
                 $"{nameof(DataAccess.Orm.PostgreSql)} - explain analyze",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Select(it => new { it.Blog.Theme, Author = it.User.Nickname }).CachedExpression(Guid.NewGuid().ToString()).Explain(true, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"EXPLAIN (ANALYZE, FORMAT json){Environment.NewLine}SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.Theme)}"" AS ""{nameof(Post.Blog)}_{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}""",
+                        $@"EXPLAIN (ANALYZE, FORMAT json){Environment.NewLine}SELECT{Environment.NewLine}{'\t'}c.""{nameof(Post.Blog.Theme)}"",{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.Nickname)}"" AS ""Author""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Blog)}"" c{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(DatabaseEntities.Relations.User)}"" b{Environment.NewLine}JOIN{Environment.NewLine}{'\t'}""{schema}"".""{nameof(Post)}"" a{Environment.NewLine}ON{Environment.NewLine}{'\t'}b.""{nameof(DatabaseEntities.Relations.User.PrimaryKey)}"" = a.""{nameof(Post.User)}""{Environment.NewLine}ON{Environment.NewLine}{'\t'}c.""{nameof(Blog.PrimaryKey)}"" = a.""{nameof(Post.Blog)}""",
                         Array.Empty<SqlCommandParameter>(),
                         log)),
                 new IDatabaseEntity[] { user, blog, post }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - read\\write complex object (with relations, arrays, json, nullable columns) without null values",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>()),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Json)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableJson)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableRelation)}_{nameof(complexDatabaseEntity.NullableRelation.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableString)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableStringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Relation)}_{nameof(complexDatabaseEntity.Relation.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.String)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.StringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(ComplexDatabaseEntity)}"" a",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { complexDatabaseEntity }
-            };
-            yield return new object[]
-            {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - read\\write complex object (with relations, arrays, json, nullable columns) with null values",
-                new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>()),
-                new Action<ICommand, ITestOutputHelper>(
-                    (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.DateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Enum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.EnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Json)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableDateTimeArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnum)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableEnumFlags)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableJson)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableRelation)}_{nameof(complexDatabaseEntity.NullableRelation.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableString)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.NullableStringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Relation)}_{nameof(complexDatabaseEntity.Relation.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.String)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.StringArray)}"",{Environment.NewLine}{'\t'}a.""{nameof(ComplexDatabaseEntity.Version)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{schema}"".""{nameof(ComplexDatabaseEntity)}"" a",
-                        Array.Empty<SqlCommandParameter>(),
-                        log)),
-                new IDatabaseEntity[] { complexDatabaseEntityWithNulls }
             };
         }
 

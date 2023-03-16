@@ -148,7 +148,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             if (Source is JoinExpression join)
             {
-                expression = ReplaceJoinExpressionsVisitor.Replace(expression, join, true);
+                expression = ReplaceJoinParameterExpressionsVisitor.Replace(expression, join);
             }
 
             if (expression is ParameterExpression)

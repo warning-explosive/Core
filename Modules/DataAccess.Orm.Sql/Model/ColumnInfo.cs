@@ -14,39 +14,36 @@
                                 IEquatable<ColumnInfo>,
                                 ISafelyEquatable<ColumnInfo>
     {
+        private readonly ColumnProperty _property;
         private readonly ColumnProperty[] _chain;
+
         private readonly IModelProvider _modelProvider;
         private readonly IColumnDataTypeProvider _columnDataTypeProvider;
 
-        private string? _name;
-        private ColumnProperty? _property;
         private Type? _type;
         private string? _dataType;
         private bool? _isSupportedColumn;
         private bool? _isEnum;
         private bool? _isJsonColumn;
         private Relation? _relation;
+        private bool? _isRelation;
         private bool? _isMultipleRelation;
-        private bool? _isInlinedObject;
+        private Type? _multipleRelationTable;
         private IReadOnlyCollection<string>? _constraints;
         private Func<ISqlExpression, ISqlExpression>? _sqlExpressionExtractor;
         private Func<object?, object?>? _valueExtractor;
-        private Func<object?, object?>? _relationValueExtractor;
         private MethodInfo? _mtmCctor;
 
         public ColumnInfo(
             ITableInfo table,
+            ColumnProperty property,
             ColumnProperty[] chain,
             IModelProvider modelProvider,
             IColumnDataTypeProvider columnDataTypeProvider)
         {
             Table = table;
 
-            if (!chain.Any())
-            {
-                throw new InvalidOperationException("Column chain should contain at least one property info");
-            }
-
+            _property = property;
             _chain = chain;
 
             _modelProvider = modelProvider;
@@ -55,37 +52,27 @@
 
         public ITableInfo Table { get; }
 
-        public string Name
-        {
-            get
-            {
-                _name ??= InitName();
-                return _name;
-
-                string InitName()
-                {
-                    return _chain
-                        .Select(property => property.Name)
-                        .ToString("_");
-                }
-            }
-        }
+        public string Name => _property.Name;
 
         public Type Type
         {
             get
             {
-                _type ??= InitType(Property, Relation);
-                return _type;
+                return _type ??= InitType(_chain, IsRelation, _property);
 
-                static Type InitType(ColumnProperty property, Relation? relation)
+                static Type InitType(
+                    ColumnProperty[] chain,
+                    bool isRelation,
+                    ColumnProperty property)
                 {
-                    return relation != null
-                           && relation.Property.Declared.IsNullable()
-                           && !property.PropertyType.IsNullable()
-                           && property.PropertyType.IsValueType
-                        ? typeof(Nullable<>).MakeGenericType(property.PropertyType)
-                        : property.PropertyType;
+                    var type = chain.Last().Declared.PropertyType;
+
+                    return isRelation
+                           && property.Declared.IsNullable()
+                           && !type.IsNullable()
+                           && type.IsValueType
+                        ? typeof(Nullable<>).MakeGenericType(type)
+                        : type;
                 }
             }
         }
@@ -94,8 +81,7 @@
         {
             get
             {
-                _dataType ??= _columnDataTypeProvider.GetColumnDataType(this);
-                return _dataType;
+                return _dataType ??= _columnDataTypeProvider.GetColumnDataType(this);
             }
         }
 
@@ -103,8 +89,7 @@
         {
             get
             {
-                _isSupportedColumn ??= Property.Declared.IsSupportedColumn();
-                return _isSupportedColumn.Value;
+                return _isSupportedColumn ??= _property.Declared.IsSupportedColumn();
             }
         }
 
@@ -112,8 +97,7 @@
         {
             get
             {
-                _isEnum ??= Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum;
-                return _isEnum.Value;
+                return _isEnum ??= Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum;
             }
         }
 
@@ -121,51 +105,45 @@
         {
             get
             {
-                _isJsonColumn ??= Property.Declared.IsJsonColumn();
-                return _isJsonColumn.Value;
+                return _isJsonColumn ??= _property.Declared.IsJsonColumn();
             }
         }
 
-        public uint? ColumnLength => Property.Declared.GetAttribute<ColumnLenghtAttribute>()?.Length;
+        public uint? ColumnLength => _property.Declared.GetAttribute<ColumnLenghtAttribute>()?.Length;
 
         public Relation? Relation
         {
             get
             {
-                _relation ??= InitRelation();
-                return _relation;
+                return _relation ??= InitRelation(_modelProvider, Table, _property);
 
-                Relation? InitRelation()
+                static Relation? InitRelation(
+                    IModelProvider modelProvider,
+                    ITableInfo table,
+                    ColumnProperty property)
                 {
-                    var oneToOne = _chain
-                        .Reverse()
-                        .FirstOrDefault(property => property.PropertyType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)));
-
-                    if (oneToOne != null)
+                    // one-to-one
+                    if (property.PropertyType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
                     {
-                        return new Relation(Table.Type, oneToOne.PropertyType, oneToOne, _modelProvider);
+                        return new Relation(table.Type, property.PropertyType, property, modelProvider);
                     }
 
-                    var oneToMany = _chain
-                        .Reverse()
-                        .SkipWhile(property => property.ReflectedType.IsMtmTable())
-                        .FirstOrDefault();
-
-                    if (oneToMany != null
-                        && oneToMany != Property)
+                    // one-to-one in mtm table (left/right property)
+                    if (table.IsMtmTable)
                     {
-                        return new Relation(Table.Type, oneToMany.PropertyType.GetMultipleRelationItemType(), oneToMany, _modelProvider);
-                    }
+                        var mtmTable = (MtmTableInfo)modelProvider.Tables[table.Type];
 
-                    if (Table.IsMtmTable)
-                    {
-                        var mtmTable = (MtmTableInfo)_modelProvider.Tables[Table.Type];
-
-                        var type = Property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase)
+                        var type = property.Name.Equals(nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), StringComparison.OrdinalIgnoreCase)
                             ? mtmTable.Left
                             : mtmTable.Right;
 
-                        return new Relation(Table.Type, type, Property, _modelProvider);
+                        return new Relation(table.Type, type, property, modelProvider);
+                    }
+
+                    // one-to-many
+                    if (property.PropertyType.IsMultipleRelation(out var itemType))
+                    {
+                        return new Relation(table.Type, itemType, property, modelProvider);
                     }
 
                     return default;
@@ -173,35 +151,45 @@
             }
         }
 
-        public bool IsRelation => Relation != null && !IsMultipleRelation;
+        public bool IsRelation
+        {
+            get
+            {
+                return _isRelation ??= InitIsRelation(Table, _property);
+
+                static bool InitIsRelation(ITableInfo table, ColumnProperty property)
+                {
+                    return (property.PropertyType.IsDatabaseEntity() || table.IsMtmTable)
+                           && !property.PropertyType.IsMultipleRelation(out _);
+                }
+            }
+        }
 
         public bool IsMultipleRelation
         {
             get
             {
-                _isMultipleRelation ??= InitIsMultipleRelation();
-                return _isMultipleRelation.Value;
+                return _isMultipleRelation ??= InitIsMultipleRelation(_property);
 
-                bool InitIsMultipleRelation()
+                static bool InitIsMultipleRelation(ColumnProperty property)
                 {
-                    return _chain.Any(property => property.PropertyType.IsMultipleRelation(out _));
+                    return property.PropertyType.IsMultipleRelation(out _);
                 }
             }
         }
 
         [NotNullIfNotNull(nameof(IsMultipleRelation))]
-        public Type? MultipleRelationTable => IsMultipleRelation ? Property.ReflectedType : null;
-
-        public bool IsInlinedObject
+        public Type? MultipleRelationTable
         {
             get
             {
-                _isInlinedObject ??= InitIsInlinedObject();
-                return _isInlinedObject.Value;
+                return IsMultipleRelation
+                    ? _multipleRelationTable ??= InitMultipleRelationTable(_chain)
+                    : null;
 
-                bool InitIsInlinedObject()
+                static Type InitMultipleRelationTable(ColumnProperty[] chain)
                 {
-                    return _chain.Any(property => typeof(IInlinedObject).IsAssignableFrom(property.PropertyType));
+                    return chain.Last().ReflectedType;
                 }
             }
         }
@@ -210,22 +198,25 @@
         {
             get
             {
-                _constraints ??= InitConstraints()
+                return _constraints ??= InitConstraints(_modelProvider, Name, _property, IsRelation, Relation)
                     .OrderBy(constraint => constraint)
                     .ToList();
 
-                return _constraints;
-
-                IEnumerable<string> InitConstraints()
+                static IEnumerable<string> InitConstraints(
+                    IModelProvider modelProvider,
+                    string name,
+                    ColumnProperty property,
+                    bool isRelation,
+                    Relation? relation)
                 {
-                    if (Name.Equals(nameof(IUniqueIdentified.PrimaryKey), StringComparison.OrdinalIgnoreCase))
+                    if (name.Equals(nameof(IUniqueIdentified.PrimaryKey), StringComparison.OrdinalIgnoreCase))
                     {
                         yield return "primary key";
                     }
 
-                    if (IsRelation)
+                    if (isRelation && relation != null)
                     {
-                        var onDeleteBehavior = Relation.Property.Declared.GetRequiredAttribute<ForeignKeyAttribute>().OnDeleteBehavior;
+                        var onDeleteBehavior = relation.Property.Declared.GetRequiredAttribute<ForeignKeyAttribute>().OnDeleteBehavior;
 
                         var onDelete = onDeleteBehavior switch
                         {
@@ -237,32 +228,14 @@
                             _ => throw new NotSupportedException(onDeleteBehavior.ToString())
                         };
 
-                        yield return $@"references ""{_modelProvider.SchemaName(Relation.Target)}"".""{_modelProvider.TableName(Relation.Target)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete {onDelete}";
+                        yield return $@"references ""{modelProvider.SchemaName(relation.Target)}"".""{modelProvider.TableName(relation.Target)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete {onDelete}";
                     }
 
                     // we suppose that arrays are non nullable columns
-                    var nullable = IsRelation
-                        ? Type.IsNullable()
-                        : Property.Declared.IsNullable() && !Property.PropertyType.IsArray();
-
-                    if (!nullable)
+                    if (!property.Declared.IsNullable() || property.PropertyType.IsArray())
                     {
                         yield return "not null";
                     }
-                }
-            }
-        }
-
-        private ColumnProperty Property
-        {
-            get
-            {
-                _property ??= InitProperty();
-                return _property;
-
-                ColumnProperty InitProperty()
-                {
-                    return _chain.Last();
                 }
             }
         }
@@ -281,7 +254,7 @@
 
         public override int GetHashCode()
         {
-            return _chain.Aggregate(Table.GetHashCode(), HashCode.Combine);
+            return _property.GetHashCode();
         }
 
         public override bool Equals(object? obj)
@@ -296,8 +269,7 @@
 
         public bool SafeEquals(ColumnInfo other)
         {
-            return Table.Equals(other.Table)
-                   && _chain.SequenceEqual(other._chain);
+            return _property.Equals(other._property);
         }
 
         #endregion
@@ -312,6 +284,11 @@
             if (parameter.Type != Table.Type)
             {
                 throw new InvalidOperationException($"Parameter expression should be constructed over {Table.Type.FullName} type instead of {parameter.Type.FullName}");
+            }
+
+            if (Relation != null)
+            {
+                return new ColumnExpression(Relation.Property.Reflected, Type, parameter);
             }
 
             _sqlExpressionExtractor ??= GetValueExtractor<ISqlExpression>(_chain, AggregateColumns);
@@ -340,9 +317,7 @@
         {
             if (IsRelation)
             {
-                _relationValueExtractor ??= GetValueExtractor<object?>(_chain.SkipLast(1), AggregateValue);
-
-                return _relationValueExtractor.Invoke(entity) as IUniqueIdentified;
+                return (IUniqueIdentified)_property.Reflected.GetValue(entity);
             }
 
             return null;
@@ -352,9 +327,7 @@
         {
             if (IsMultipleRelation)
             {
-                _relationValueExtractor ??= GetValueExtractor<object?>(_chain.SkipLast(1), AggregateValue);
-
-                return ((IEnumerable)_relationValueExtractor.Invoke(entity) !).AsEnumerable<IUniqueIdentified>();
+                return ((IEnumerable)_property.Reflected.GetValue(entity)).AsEnumerable<IUniqueIdentified>();
             }
 
             return Enumerable.Empty<IUniqueIdentified>();
@@ -371,7 +344,13 @@
 
             _mtmCctor ??= GetMtmCctor(MultipleRelationTable!);
 
-            return (IUniqueIdentified)_mtmCctor.Invoke(null, new[] { left.PrimaryKey, right.PrimaryKey });
+            var mtmTable = (MtmTableInfo)_modelProvider.Tables[MultipleRelationTable!];
+
+            var parameters = mtmTable.Left == Relation.Source && mtmTable.Right == Relation.Target
+                ? new[] { left.PrimaryKey, right.PrimaryKey }
+                : new[] { right.PrimaryKey, left.PrimaryKey };
+
+            return (IUniqueIdentified)_mtmCctor.Invoke(null, parameters);
 
             static MethodInfo GetMtmCctor(Type mtmTable)
             {

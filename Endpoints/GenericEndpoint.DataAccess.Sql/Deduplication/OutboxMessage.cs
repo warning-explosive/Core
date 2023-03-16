@@ -16,21 +16,24 @@
         /// <param name="primaryKey">Primary key</param>
         /// <param name="outboxId">OutboxId</param>
         /// <param name="timestamp">Timestamp</param>
-        /// <param name="endpointIdentity">EndpointIdentity</param>
+        /// <param name="endpointLogicalName">Endpoint logical name</param>
+        /// <param name="endpointInstanceName">Endpoint instance name</param>
         /// <param name="message">Message</param>
         /// <param name="sent">Sent</param>
         public OutboxMessage(
             Guid primaryKey,
             Guid outboxId,
             DateTime timestamp,
-            EndpointIdentity endpointIdentity,
+            string endpointLogicalName,
+            string endpointInstanceName,
             IntegrationMessage message,
             bool sent)
             : base(primaryKey)
         {
             OutboxId = outboxId;
             Timestamp = timestamp;
-            EndpointIdentity = endpointIdentity;
+            EndpointLogicalName = endpointLogicalName;
+            EndpointInstanceName = endpointInstanceName;
             Message = message;
             Sent = sent;
         }
@@ -46,9 +49,14 @@
         public DateTime Timestamp { get; set; }
 
         /// <summary>
-        /// EndpointIdentity
+        /// Endpoint logical name
         /// </summary>
-        public EndpointIdentity EndpointIdentity { get; set; }
+        public string EndpointLogicalName { get; set; }
+
+        /// <summary>
+        /// Endpoint instance name
+        /// </summary>
+        public string EndpointInstanceName { get; set; }
 
         /// <summary>
         /// Message

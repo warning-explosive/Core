@@ -1205,7 +1205,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 Assert.True(await transaction.All<OutboxMessage>().CachedExpression("D50AA461-3C90-42BA-AF90-FD0E059562BA").AnyAsync(token).ConfigureAwait(false));
                 Assert.True(await transaction.All<IntegrationMessage>().CachedExpression("C2F0D883-68FB-4887-B11E-54E2F835E552").AnyAsync(token).ConfigureAwait(false));
                 Assert.True(await transaction.All<IntegrationMessageHeader>().CachedExpression("CCAEB0A3-B95E-45D1-88FA-609B91F4737B").AnyAsync(token).ConfigureAwait(false));
-                Assert.True(await transaction.AllMtm<IntegrationMessage, IntegrationMessageHeader, Guid, Guid>(modelProvider, message => message.Headers).CachedExpression("04494178-C124-4BF1-8841-DEA3427A3E99").AnyAsync(token).ConfigureAwait(false));
+                Assert.True(await transaction.AllMtm<IntegrationMessage, IntegrationMessageHeader, Guid, Guid>(modelProvider, message => message.Headers).Cast<IUniqueIdentified>().CachedExpression("04494178-C124-4BF1-8841-DEA3427A3E99").AnyAsync(token).ConfigureAwait(false));
 
                 var rowsCount = await transaction.All<IntegrationMessage>().CachedExpression("37A34847-5A14-4D4E-928A-75683BBB1514").CountAsync(token).ConfigureAwait(false);
 
@@ -1235,7 +1235,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 Assert.False(await transaction.All<OutboxMessage>().CachedExpression("D50AA461-3C90-42BA-AF90-FD0E059562BA").AnyAsync(token).ConfigureAwait(false));
                 Assert.False(await transaction.All<IntegrationMessage>().CachedExpression("C2F0D883-68FB-4887-B11E-54E2F835E552").AnyAsync(token).ConfigureAwait(false));
                 Assert.False(await transaction.All<IntegrationMessageHeader>().CachedExpression("CCAEB0A3-B95E-45D1-88FA-609B91F4737B").AnyAsync(token).ConfigureAwait(false));
-                Assert.False(await transaction.AllMtm<IntegrationMessage, IntegrationMessageHeader, Guid, Guid>(modelProvider, message => message.Headers).CachedExpression("04494178-C124-4BF1-8841-DEA3427A3E99").AnyAsync(token).ConfigureAwait(false));
+                Assert.False(await transaction.AllMtm<IntegrationMessage, IntegrationMessageHeader, Guid, Guid>(modelProvider, message => message.Headers).Cast<IUniqueIdentified>().CachedExpression("04494178-C124-4BF1-8841-DEA3427A3E99").AnyAsync(token).ConfigureAwait(false));
             }
         }
     }

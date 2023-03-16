@@ -51,7 +51,7 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="obj">Object</param>
         /// <param name="type">Type</param>
         /// <returns>Object is an instance of specified type or not</returns>
-        public static bool IsInstanceOfType(this object obj, Type type)
+        public static bool IsInstanceOfType(this object? obj, Type type)
         {
             return type.IsInstanceOfType(obj);
         }

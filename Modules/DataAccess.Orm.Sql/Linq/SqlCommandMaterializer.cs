@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
@@ -92,22 +93,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
 
             object? built;
 
-            if (!type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
+            if (type.IsDatabaseEntity()
+                && TryGetValue(transaction, type, values[nameof(IUniqueIdentified.PrimaryKey)] !, out var stored))
             {
-                built = Build(type, values) !;
+                _objectBuilder.Fill(type, stored, ArrangeValues(type, values));
+                built = stored;
             }
             else
             {
-                if (TryGetValue(transaction, type, values[nameof(IUniqueIdentified.PrimaryKey)] !, out var stored))
-                {
-                    Fill(type, stored, values);
-                    built = stored;
-                }
-                else
-                {
-                    built = Build(type, values) !;
-                    Store(transaction, (IUniqueIdentified)built);
-                }
+                built = _objectBuilder.Build(type, ArrangeValues(type, values)) !;
+            }
+
+            if (built is IUniqueIdentified uniqueIdentified)
+            {
+                Store(transaction, uniqueIdentified);
             }
 
             await MaterializeRelations(transaction, built, relationValues, token).ConfigureAwait(false);
@@ -117,139 +116,133 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             return built;
         }
 
-        private void Fill(Type type, object instance, IDictionary<string, object?> rawValues)
-        {
-            _objectBuilder.Fill(type, instance, ArrangeValues(type, rawValues));
-        }
-
-        private object? Build(Type type, IDictionary<string, object?> rawValues)
-        {
-            var values = ArrangeValues(type, rawValues);
-
-            if (type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-                && values.Count == 1
-                && values.Single().Value == null)
-            {
-                return type.DefaultValue();
-            }
-
-            if (type.IsMultipleRelation(out _)
-                && values.Count == 1)
-            {
-                return values.Single().Value;
-            }
-
-            if (values.Count == 1
-                && values.Single() is var (arrayKey, arrayValue) && arrayValue is Array arrayValues)
-            {
-                var elementType = type.IsDatabaseArray(out var itemType)
-                    ? itemType ?? throw new InvalidOperationException($"Unable to determine array element type for {arrayKey}")
-                    : type;
-
-                var buffer = Array.CreateInstance(elementType, arrayValues.Length);
-
-                var enumerator = arrayValues.GetEnumerator();
-
-                for (var i = 0; enumerator.MoveNext(); i++)
-                {
-                    values[arrayKey] = enumerator.Current;
-                    buffer.SetValue(Build(elementType, values), i);
-                }
-
-                return type == elementType
-                       && elementType.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
-                    ? buffer.Cast<int>().Aggregate((prev, next) => prev + next)
-                    : buffer;
-            }
-
-            if (values.Count == 1
-                && values.Single() is var (jsonKey, jsonValue) && jsonValue is string json
-                && type != typeof(string)
-                && !type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
-                && !type.IsAnonymous()
-                && !type.IsDatabaseEntity()
-                && !type.IsInlinedObject())
-            {
-                return _jsonSerializer.DeserializeObject(json, type);
-            }
-
-            return _objectBuilder.Build(type, values);
-        }
-
         private IDictionary<string, object?> ArrangeValues(Type type, IDictionary<string, object?> values)
         {
-            if (type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
-                && values.Count == 1
-                && values.Single().Value == null)
+            {
+                if (values.Count == 1
+                    && values.Single() is var (key, value))
+                {
+                    if (TryBuildArray(type, key, value, _objectBuilder, out var built)
+                        || TryBuildEnumFlags(type, key, value, _objectBuilder, out built)
+                        || TryDeserializeJson(type, key, value, _jsonSerializer, out built))
+                    {
+                        values[key] = built;
+                    }
+
+                    return values;
+                }
+            }
+
+            if (type.IsPrimitive())
             {
                 return values;
             }
 
-            if (type.IsMultipleRelation(out _)
-                && values.Count == 1)
             {
+                foreach (var (key, value) in values)
+                {
+                    var property = type.Column(key);
+
+                    if (TryBuildArray(property.PropertyType, key, value, _objectBuilder, out var built)
+                        || TryBuildEnumFlags(property.PropertyType, key, value, _objectBuilder, out built)
+                        || TryDeserializeJson(property.PropertyType, key, value, _jsonSerializer, out built))
+                    {
+                        values[key] = built;
+                    }
+                }
+
                 return values;
             }
 
-            if (values.Count == 1
-                && values.Single() is var (arrayKey, arrayValue) && arrayValue is Array arrayValues)
+            static bool TryBuildArray(
+                Type type,
+                string key,
+                object? value,
+                IObjectBuilder objectBuilder,
+                out object? array)
             {
-                return values;
+                if (value is not null or DBNull
+                    && value.GetType().IsArray()
+                    && type.IsDatabaseArray(out var elementType)
+                    && elementType != null)
+                {
+                    var arrayValue = (Array)value;
+
+                    var buffer = Array.CreateInstance(elementType, arrayValue.Length);
+
+                    var enumerator = arrayValue.GetEnumerator();
+
+                    var localValues = new Dictionary<string, object?>();
+
+                    for (var i = 0; enumerator.MoveNext(); i++)
+                    {
+                        localValues[key] = enumerator.Current;
+
+                        buffer.SetValue(objectBuilder.Build(elementType, localValues), i);
+                    }
+
+                    array = buffer;
+                    return true;
+                }
+
+                array = null;
+                return false;
             }
 
-            if (values.Count == 1
-                && values.Single() is var (jsonKey, jsonValue) && jsonValue is string json
-                && type != typeof(string)
-                && !type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
-                && !type.IsAnonymous()
-                && !type.IsDatabaseEntity()
-                && !type.IsInlinedObject())
+            static bool TryBuildEnumFlags(
+                Type type,
+                string key,
+                object? value,
+                IObjectBuilder objectBuilder,
+                out object? enumFlags)
             {
-                return values;
+                if (value is not null or DBNull
+                    && value.GetType().IsArray()
+                    && type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum)
+                {
+                    var arrayValue = (Array)value;
+
+                    var enumerator = arrayValue.GetEnumerator();
+
+                    var localValues = new Dictionary<string, object?>();
+
+                    var enumFlagsValue = 0;
+
+                    while (enumerator.MoveNext())
+                    {
+                        localValues[key] = enumerator.Current;
+
+                        enumFlagsValue += (int)objectBuilder.Build(type, localValues) !;
+                    }
+
+                    enumFlags = enumFlagsValue;
+                    return true;
+                }
+
+                enumFlags = null;
+                return false;
             }
 
-            if (type.IsAnonymous())
+            static bool TryDeserializeJson(
+                Type type,
+                string key,
+                object? value,
+                IJsonSerializer jsonSerializer,
+                out object? deserializedJsonObject)
             {
-                values = values
-                   .ToDictionary(
-                        pair => pair.Key.Split("_", StringSplitOptions.RemoveEmptyEntries).Last(),
-                        pair => pair.Value,
-                        StringComparer.OrdinalIgnoreCase);
+                if (value is string json
+                    && type != typeof(string)
+                    && !type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
+                    && !type.IsAnonymous()
+                    && !type.IsDatabaseEntity())
+                {
+                    deserializedJsonObject = jsonSerializer.DeserializeObject(json, type);
+                    return true;
+                }
+
+                deserializedJsonObject = null;
+                return false;
             }
-            else if (!type.IsPrimitive())
-            {
-                values = values
-                   .GroupBy(pair =>
-                        {
-                            var parts = pair.Key.Split("_", StringSplitOptions.RemoveEmptyEntries);
-                            return parts.First();
-                        },
-                        pair =>
-                        {
-                            var parts = pair.Key.Split("_", StringSplitOptions.RemoveEmptyEntries);
-                            return parts.Length > 1
-                                ? new KeyValuePair<string, object?>(string.Join("_", parts.Skip(1)), pair.Value)
-                                : pair;
-                        })
-                   .ToDictionary(grp => grp.Key,
-                        grp =>
-                        {
-                            var column = type.Column(grp.Key);
-
-                            if (column.Declared.IsJsonColumn())
-                            {
-                                return grp.Single().Value is DBNull
-                                    ? null
-                                    : _jsonSerializer.DeserializeObject((string)grp.Single().Value!, column.PropertyType);
-                            }
-
-                            var innerValues = grp.ToDictionary(innerKey => innerKey.Key, innerValue => innerValue.Value);
-                            return Build(column.PropertyType, innerValues);
-                        },
-                        StringComparer.OrdinalIgnoreCase);
-            }
-
-            return values;
         }
 
         private bool TryGetValue(
@@ -290,6 +283,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         {
             return _modelProvider
                 .Columns(type)
+                .Values
                 .Where(column => column.IsRelation)
                 .ToDictionary(
                     column => column,
@@ -297,8 +291,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                     {
                         var value = values[column.Name];
 
-                        values.Remove(column.Name);
-                        values[column.Relation.Property.Name] = column.Relation.Target.DefaultValue();
+                        values[column.Name] = column.Relation.Target.DefaultValue();
 
                         return value;
                     });
@@ -312,15 +305,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         {
             foreach (var (column, primaryKey) in relationValues)
             {
-                if (primaryKey != null && primaryKey is not DBNull)
+                if (primaryKey is null or DBNull)
                 {
-                    var relation = await MaterializeRelation(transaction, column.Relation.Target, primaryKey, token).ConfigureAwait(false);
-                    column.Relation.Property.Declared.SetValue(built, relation);
+                    continue;
                 }
+
+                var relation = column.Table.IsMtmTable
+                    ? primaryKey
+                    : await MaterializeRelation(transaction, column.Relation.Target, primaryKey, token).ConfigureAwait(false);
+
+                column.Relation.Property.Declared.SetValue(built, relation);
             }
         }
 
-        private static Task<object?> MaterializeRelation(
+        private static async Task<object?> MaterializeRelation(
             IAdvancedDatabaseTransaction transaction,
             Type type,
             object primaryKey,
@@ -328,20 +326,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         {
             var keyType = type.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
 
-            var task = typeof(SqlCommandMaterializer)
+            return await typeof(SqlCommandMaterializer)
                 .CallMethod(nameof(MaterializeRelation))
                 .WithTypeArguments(type, keyType)
                 .WithArguments(transaction, primaryKey, token)
-                .Invoke<Task>();
-
-            return typeof(SqlCommandMaterializer)
-                .CallMethod(nameof(AsEntity))
-                .WithTypeArguments(type, keyType)
-                .WithArgument(task)
-                .Invoke<Task<object?>>();
+                .Invoke<Task<object?>>()
+                .ConfigureAwait(false);
         }
 
-        private static Task<TEntity?> MaterializeRelation<TEntity, TKey>(
+        private static async Task<object?> MaterializeRelation<TEntity, TKey>(
             IAdvancedDatabaseTransaction transaction,
             TKey primaryKey,
             CancellationToken token)
@@ -350,35 +343,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         {
             if (transaction.Store.TryGetValue<TEntity>(primaryKey, out var entity))
             {
-                return Task.FromResult<TEntity?>(entity);
+                return entity;
             }
 
-            return transaction.SingleOrDefault<TEntity, TKey>(primaryKey, token);
+            return await transaction
+                .SingleOrDefault<TEntity, TKey>(primaryKey, token)
+                .ConfigureAwait(false);
         }
 
-        private static async Task<object?> AsEntity<TEntity, TKey>(Task<TEntity?> task)
-            where TEntity : IDatabaseEntity<TKey>
-            where TKey : notnull
-        {
-            return await task.ConfigureAwait(false);
-        }
-
-        private IReadOnlyDictionary<ColumnInfo, object?> InitializeMultipleRelations(
+        private IReadOnlyDictionary<ColumnInfo, ICollection> InitializeMultipleRelations(
             Type type,
             IDictionary<string, object?> values)
         {
             return _modelProvider
                 .Columns(type)
+                .Values
                 .Where(column => column.IsMultipleRelation)
                 .ToDictionary(
                     column => column,
                     column =>
                     {
-                        var value = column.Relation.Property.PropertyType.IsNullable()
-                            ? column.Relation.Property.PropertyType.DefaultValue()
-                            : Activator.CreateInstance(column.Relation.Target.ConstructMultipleRelationType());
+                        var value = (ICollection)Activator.CreateInstance(column.Relation.Target.ConstructMultipleRelationType()) !;
 
-                        values[column.Relation.Property.Name] = value;
+                        values[column.Name] = value;
 
                         return value;
                     });
@@ -388,7 +375,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             IAdvancedDatabaseTransaction transaction,
             object? built,
             Type type,
-            IReadOnlyDictionary<ColumnInfo, object?> relationValues,
+            IReadOnlyDictionary<ColumnInfo, ICollection> relationValues,
             CancellationToken token)
         {
             if (!relationValues.Any())
@@ -413,18 +400,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
         private static async Task MaterializeMultipleRelations<TEntity, TKey>(
             IAdvancedDatabaseTransaction transaction,
             TEntity built,
-            IReadOnlyDictionary<ColumnInfo, object?> relationValues,
+            IReadOnlyDictionary<ColumnInfo, ICollection> relationValues,
             CancellationToken token)
             where TEntity : IDatabaseEntity<TKey>
             where TKey : notnull
         {
             foreach (var (column, collection) in relationValues)
             {
-                if (collection == null)
-                {
-                    continue;
-                }
-
                 var mtmType = column.MultipleRelationTable!;
                 var typeArguments = mtmType.ExtractGenericArguments(typeof(BaseMtmDatabaseEntity<,>));
                 var leftKeyType = typeArguments[0];
@@ -472,7 +454,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             var items = await transaction
                 .All<TRight>()
                 .Where(databaseEntity => subQuery.Contains(databaseEntity.PrimaryKey))
-                .CachedExpression("9B70C4F3-989A-4609-A2E8-F1E16E243B72")
+                .CachedExpression($"{typeof(TMtm).Name}:9B70C4F3-989A-4609-A2E8-F1E16E243B72")
                 .ToListAsync(token)
                 .ConfigureAwait(false);
 

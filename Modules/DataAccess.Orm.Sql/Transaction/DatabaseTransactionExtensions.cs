@@ -10,7 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
 
     internal static class DatabaseTransactionExtensions
     {
-        public static IQueryable<BaseMtmDatabaseEntity<TLeftKey, TRightKey>> AllMtm<TLeft, TRight, TLeftKey, TRightKey>(
+        public static IQueryable AllMtm<TLeft, TRight, TLeftKey, TRightKey>(
             this IDatabaseContext context,
             IModelProvider modelProvider,
             Expression<Func<TLeft, IEnumerable<TRight>>> columnAccessor)
@@ -23,13 +23,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction
 
             var table = modelProvider.Tables[typeof(TLeft)];
 
-            var mtmType = table.Columns[$"{columnName}_{nameof(BaseMtmDatabaseEntity<TLeftKey, TRightKey>.Left)}"].MultipleRelationTable!;
+            var mtmType = table.Columns[columnName].MultipleRelationTable!;
 
             return context
                 .CallMethod(nameof(IDatabaseContext.All))
                 .WithTypeArgument(mtmType)
-                .Invoke<IQueryable>()
-                .Cast<BaseMtmDatabaseEntity<TLeftKey, TRightKey>>();
+                .Invoke<IQueryable>();
         }
 
         private class ExtractMemberAccessExpressionVisitor : ExpressionVisitor

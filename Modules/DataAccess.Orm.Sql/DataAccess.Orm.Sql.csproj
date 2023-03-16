@@ -48,7 +48,7 @@
       <Compile Update="Translation\TranslationContext.cs">
         <DependentUpon>ExpressionTranslator.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\CompactExpressionVisitor.cs">
+      <Compile Update="Translation\ReplaceProjectionExpressionVisitor.cs">
         <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\StringEmptyUnknownExpressionTranslator.cs">
@@ -129,7 +129,7 @@
       <Compile Update="Translation\ExtractRelationsExpressionVisitor.cs">
         <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
       </Compile>
-      <Compile Update="Translation\ReplaceJoinExpressionsVisitor.cs">
+      <Compile Update="Translation\ReplaceJoinParameterExpressionsVisitor.cs">
         <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\ExtractParametersVisitor.cs">
@@ -342,9 +342,6 @@
       <Compile Update="Model\IDatabaseEntity.cs">
         <DependentUpon>IUniqueIdentified.cs</DependentUpon>
       </Compile>
-      <Compile Update="Model\SystemType.cs">
-        <DependentUpon>IInlinedObject.cs</DependentUpon>
-      </Compile>
       <Compile Update="Model\BaseSqlView.cs">
         <DependentUpon>ISqlView.cs</DependentUpon>
       </Compile>
@@ -385,6 +382,9 @@
         <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
       <Compile Update="Translation\AsJsonObjectUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\EnumHasFlagUnknownExpressionTranslator.cs">
         <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
       </Compile>
     </ItemGroup>

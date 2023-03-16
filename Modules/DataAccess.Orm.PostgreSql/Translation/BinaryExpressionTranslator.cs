@@ -45,7 +45,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                 [BinaryOperator.Multiply] = "*",
                 [BinaryOperator.Modulo] = "%",
                 [BinaryOperator.HasJsonAttribute] = "?",
-                [BinaryOperator.ConcatJsonObjects] = "||"
+                [BinaryOperator.ConcatJsonObjects] = "||",
+                [BinaryOperator.ArrayIntersection] = "&&"
             };
 
         public BinaryExpressionTranslator(ISqlExpressionTranslatorComposite translator)

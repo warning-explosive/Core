@@ -866,11 +866,11 @@
                                     (nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.PrimaryKey), "not null primary key"),
                                     (nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Version), "not null"),
                                     (nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Payload), "not null"),
-                                    ($"{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.ReflectedType)}_{nameof(SystemType.Type)}", "not null")
+                                    (nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.ReflectedType), "not null")
                                 },
                                 new[]
                                 {
-                                    $"{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Headers)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"
+                                    nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage.Headers)
                                 });
                         },
                         index =>
@@ -885,7 +885,7 @@
                                 {
                                     (nameof(IntegrationMessageHeader.PrimaryKey), "not null primary key"),
                                     (nameof(IntegrationMessageHeader.Version), "not null"),
-                                    ($"{nameof(IntegrationMessageHeader.Message)}_{nameof(IntegrationMessageHeader.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    (nameof(IntegrationMessageHeader.Message), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
                                     (nameof(IntegrationMessageHeader.Payload), "not null")
                                 },
                                 Array.Empty<string>());
@@ -925,7 +925,7 @@
                                 },
                                 new[]
                                 {
-                                    $"{nameof(Blog.Posts)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"
+                                    nameof(Blog.Posts)
                                 });
                         },
                         index =>
@@ -944,7 +944,7 @@
                                 },
                                 new[]
                                 {
-                                    $"{nameof(Community.Participants)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left)}"
+                                    nameof(Community.Participants)
                                 });
                         },
                         index =>
@@ -983,7 +983,7 @@
                                 },
                                 new[]
                                 {
-                                    $"{nameof(Participant.Communities)}_{nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right)}"
+                                    nameof(Participant.Communities)
                                 });
                         },
                         index =>
@@ -1068,9 +1068,9 @@
                                 {
                                     (nameof(InboxMessage.PrimaryKey), "not null primary key"),
                                     (nameof(InboxMessage.Version), "not null"),
-                                    ($"{nameof(InboxMessage.Message)}_{nameof(InboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
-                                    ($"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.LogicalName)}", "not null"),
-                                    ($"{nameof(InboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.InstanceName)}", "not null"),
+                                    (nameof(InboxMessage.Message), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    (nameof(InboxMessage.EndpointLogicalName), "not null"),
+                                    (nameof(InboxMessage.EndpointInstanceName), "not null"),
                                     (nameof(InboxMessage.IsError), "not null"),
                                     (nameof(InboxMessage.Handled), "not null")
                                 },
@@ -1104,9 +1104,9 @@
                                     (nameof(OutboxMessage.Version), "not null"),
                                     (nameof(OutboxMessage.OutboxId), "not null"),
                                     (nameof(OutboxMessage.Timestamp), "not null"),
-                                    ($"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.LogicalName)}", "not null"),
-                                    ($"{nameof(OutboxMessage.EndpointIdentity)}_{nameof(GenericEndpoint.DataAccess.Sql.Deduplication.EndpointIdentity.InstanceName)}", "not null"),
-                                    ($"{nameof(OutboxMessage.Message)}_{nameof(OutboxMessage.Message.PrimaryKey)}", $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    (nameof(OutboxMessage.EndpointLogicalName), "not null"),
+                                    (nameof(OutboxMessage.EndpointInstanceName), "not null"),
+                                    (nameof(OutboxMessage.Message), $@"not null references ""{nameof(GenericEndpoint.DataAccess.Sql.Deduplication)}"".""{nameof(IntegrationMessage)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
                                     (nameof(OutboxMessage.Sent), "not null")
                                 },
                                 Array.Empty<string>());
@@ -1137,6 +1137,21 @@
                                 {
                                     (nameof(ComplexDatabaseEntity.PrimaryKey), "not null primary key"),
                                     (nameof(ComplexDatabaseEntity.Version), "not null"),
+                                    (nameof(ComplexDatabaseEntity.Number), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableNumber), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.Identifier), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableIdentifier), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.Boolean), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableBoolean), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.DateTime), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableDateTime), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.TimeSpan), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableTimeSpan), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.DateOnly), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableDateOnly), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.TimeOnly), "not null"),
+                                    (nameof(ComplexDatabaseEntity.NullableTimeOnly), string.Empty),
+                                    (nameof(ComplexDatabaseEntity.ByteArray), "not null"),
                                     (nameof(ComplexDatabaseEntity.String), "not null"),
                                     (nameof(ComplexDatabaseEntity.NullableString), string.Empty),
                                     (nameof(ComplexDatabaseEntity.Enum), "not null"),
@@ -1151,8 +1166,8 @@
                                     (nameof(ComplexDatabaseEntity.NullableDateTimeArray), "not null"),
                                     (nameof(ComplexDatabaseEntity.Json), "not null"),
                                     (nameof(ComplexDatabaseEntity.NullableJson), string.Empty),
-                                    ($"{nameof(ComplexDatabaseEntity.Relation)}_{nameof(ComplexDatabaseEntity.Relation.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete no action"),
-                                    ($"{nameof(ComplexDatabaseEntity.NullableRelation)}_{nameof(ComplexDatabaseEntity.NullableRelation.PrimaryKey)}", $@"references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete no action")
+                                    (nameof(ComplexDatabaseEntity.Relation), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete no action"),
+                                    (nameof(ComplexDatabaseEntity.NullableRelation), $@"references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete no action")
                                 },
                                 Array.Empty<string>());
                         },
@@ -1170,8 +1185,8 @@
                                     (nameof(Post.Version), "not null"),
                                     (nameof(Post.DateTime), "not null"),
                                     (nameof(Post.Text), "not null"),
-                                    ($"{nameof(Post.Blog)}_{nameof(Post.Blog.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
-                                    ($"{nameof(Post.User)}_{nameof(Post.User.PrimaryKey)}", $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(User)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete restrict")
+                                    (nameof(Post.Blog), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(Blog)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete cascade"),
+                                    (nameof(Post.User), $@"not null references ""{nameof(GenericHost) + nameof(Test)}"".""{nameof(User)}"" (""{nameof(IUniqueIdentified.PrimaryKey)}"") on delete restrict")
                                 },
                                 Array.Empty<string>());
                         },

@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.ObjectTransformers
+namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
 {
     using System;
     using System.ComponentModel;

@@ -133,15 +133,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             if (Source is JoinExpression join)
             {
-                expression = ReplaceJoinExpressionsVisitor.Replace(expression, join, false);
+                expression = ReplaceJoinParameterExpressionsVisitor.Replace(expression, join);
             }
             else if (Source is ProjectionExpression projection)
             {
-                expression = CompactExpressionVisitor.Compact(expression, projection);
+                expression = ReplaceProjectionExpressionVisitor.Compact(expression, projection);
 
                 if (projection.Source is JoinExpression projectionJoin)
                 {
-                    expression = ReplaceJoinExpressionsVisitor.Replace(expression, projectionJoin, false);
+                    expression = ReplaceJoinParameterExpressionsVisitor.Replace(expression, projectionJoin);
                 }
             }
 

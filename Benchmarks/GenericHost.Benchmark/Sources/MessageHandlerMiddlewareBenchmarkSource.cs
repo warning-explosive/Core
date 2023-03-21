@@ -82,7 +82,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                     .BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            _host.StartAsync(_cts.Token).Wait();
+            _host.StartAsync(_cts.Token).Wait(_cts.Token);
 
             var transportDependencyContainer = _host.GetTransportDependencyContainer();
 
@@ -122,6 +122,26 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         }
 
         /// <summary>
+        /// GlobalCleanup
+        /// </summary>
+        [GlobalCleanup]
+        public void GlobalCleanup()
+        {
+            _host.StopAsync(_cts.Token).Wait();
+            _host.Dispose();
+            _cts.Dispose();
+        }
+
+        /// <summary>
+        /// IterationSetup
+        /// </summary>
+        [IterationSetup]
+        public void IterationSetup()
+        {
+            _ = _dependencyContainer;
+        }
+
+        /// <summary>
         /// IterationCleanup
         /// </summary>
         [IterationCleanup]
@@ -133,17 +153,6 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
             _ = headers.Remove(typeof(DeliveryTag));
             _ = headers.Remove(typeof(HandledBy));
             _ = headers.Remove(typeof(RejectReason));
-        }
-
-        /// <summary>
-        /// GlobalCleanup
-        /// </summary>
-        [GlobalCleanup]
-        public void GlobalCleanup()
-        {
-            _host.StopAsync(_cts.Token).Wait();
-            _host.Dispose();
-            _cts.Dispose();
         }
 
         /// <summary> RunCompositeMiddleware </summary>

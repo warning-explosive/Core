@@ -23,6 +23,57 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
         }
 
         [Fact(Timeout = 300_000)]
+        internal void DatabaseConnectionProviderBenchmark()
+        {
+            var summary = Benchmark.Run<DatabaseConnectionProviderBenchmarkSource>(Output.WriteLine);
+
+            var read = summary.MillisecondMeasure(
+                nameof(DatabaseConnectionProviderBenchmarkSource.Read),
+                Measure.Mean,
+                Output.WriteLine);
+
+            var insert = summary.MillisecondMeasure(
+                nameof(DatabaseConnectionProviderBenchmarkSource.Insert),
+                Measure.Mean,
+                Output.WriteLine);
+
+            var delete = summary.MillisecondMeasure(
+                nameof(DatabaseConnectionProviderBenchmarkSource.Delete),
+                Measure.Mean,
+                Output.WriteLine);
+
+            Assert.True(read < 10m);
+            Assert.True(insert < 10m);
+            Assert.True(delete < 10m);
+        }
+
+        [Fact(Timeout = 300_000)]
+        internal static async Task DatabaseConnectionProviderBenchmarkTest()
+        {
+            var source = new DatabaseConnectionProviderBenchmarkSource();
+
+            try
+            {
+                source.GlobalSetup();
+
+                for (var i = 0; i < 1000; i++)
+                {
+                    source.IterationSetup();
+
+                    await source.Read().ConfigureAwait(false);
+                    await source.Insert().ConfigureAwait(false);
+                    await source.Delete().ConfigureAwait(false);
+
+                    source.IterationCleanup();
+                }
+            }
+            finally
+            {
+                source.GlobalCleanup();
+            }
+        }
+
+        [Fact(Timeout = 300_000)]
         internal void MessageHandlerMiddlewareBenchmark()
         {
             var summary = Benchmark.Run<MessageHandlerMiddlewareBenchmarkSource>(Output.WriteLine);
@@ -76,6 +127,8 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
 
                 for (var i = 0; i < 1000; i++)
                 {
+                    source.IterationSetup();
+
                     await source.RunErrorHandlingMiddleware().ConfigureAwait(false);
                     await source.RunAuthorizationMiddleware().ConfigureAwait(false);
                     await source.RunUnitOfWorkMiddleware().ConfigureAwait(false);

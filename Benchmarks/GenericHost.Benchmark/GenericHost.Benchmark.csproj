@@ -62,5 +62,29 @@
       <Compile Update="Sources\Reply.cs">
         <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
       </Compile>
+      <Compile Update="Sources\ComplexDatabaseEntity.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\EnEnum.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\EnEnumFlags.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Participant.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Post.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\User.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Community.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Blog.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

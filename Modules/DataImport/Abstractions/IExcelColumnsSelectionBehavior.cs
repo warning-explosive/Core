@@ -2,13 +2,12 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
 {
     using System.Collections.Generic;
     using System.Data;
-    using AutoRegistration.Api.Abstractions;
     using DocumentFormat.OpenXml.Spreadsheet;
 
     /// <summary>
     /// Excel columns selection behavior
     /// </summary>
-    public interface IExcelColumnsSelectionBehavior : IResolvable
+    public interface IExcelColumnsSelectionBehavior
     {
         /// <summary>
         /// First row is header

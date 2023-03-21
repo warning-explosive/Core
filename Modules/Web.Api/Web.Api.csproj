@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <AssemblyName>SpaceEngineers.Core.Web.Api</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.Web.Api</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <Title>SpaceEngineers.Core.Web.Api</Title>
+        <Authors>SpaceEngineers</Authors>
+        <Company>SpaceEngineers</Company>
+        <PackageDescription>SpaceEngineers.Core.Web.Api</PackageDescription>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+        <Copyright>Copyright (c) 2019</Copyright>
+        <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TieredCompilation>true</TieredCompilation>
+        <DebugType>full</DebugType>
+        <Library />
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Containers\GenericDataContainer.cs">
+        <DependentUpon>IDataContainer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Containers\StringDataContainer.cs">
+        <DependentUpon>GenericDataContainer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Api\CollectionResponse.cs">
+        <DependentUpon>BaseResponse.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Api\EmptyResponse.cs">
+        <DependentUpon>BaseResponse.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Api\ScalarResponse.cs">
+        <DependentUpon>BaseResponse.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Api\BaseResponse.cs">
+        <DependentUpon>IResponse.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Containers\DateTimeDataContainer.cs">
+        <DependentUpon>GenericDataContainer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Containers\BooleanDataContainer.cs">
+        <DependentUpon>GenericDataContainer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Containers\NumericDataContainer.cs">
+        <DependentUpon>GenericDataContainer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Containers\DataContainersProvider.cs">
+        <DependentUpon>IDataContainersProvider.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Common\Basics\Basics.csproj" />
+      <ProjectReference Include="..\..\Common\AutoRegistration.Api\AutoRegistration.Api.csproj" />
+    </ItemGroup>
+</Project>

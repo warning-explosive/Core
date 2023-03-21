@@ -4,7 +4,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzer
     using AutoRegistration.Api.Abstractions;
 
     [Serializable]
-    internal class NotEmptyAttributesListSource : ICollectionResolvable<ITestCollectionResolvableService>
+    internal class NotEmptyAttributesListSource : ITestCollectionResolvableService, ICollectionResolvable<ITestCollectionResolvableService>
     {
     }
 }

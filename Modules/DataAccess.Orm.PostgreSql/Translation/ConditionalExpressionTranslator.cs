@@ -1,35 +1,42 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
-    using Linq.Abstractions;
-    using Linq.Expressions;
-    using Linq.Internals;
+    using Sql.Translation;
+    using Sql.Translation.Expressions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ConditionalExpressionTranslator : IExpressionTranslator<ConditionalExpression>
+    internal class ConditionalExpressionTranslator : ISqlExpressionTranslator<ConditionalExpression>,
+                                                     IResolvable<ISqlExpressionTranslator<ConditionalExpression>>,
+                                                     ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public ConditionalExpressionTranslator(IDependencyContainer dependencyContainer)
+        public ConditionalExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _dependencyContainer = dependencyContainer;
+            _translator = translator;
         }
 
-        public async Task<string> Translate(ConditionalExpression expression, int depth, CancellationToken token)
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is ConditionalExpression conditionalExpression
+                ? Translate(conditionalExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
+        }
+
+        public string Translate(ConditionalExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
             sb.Append("CASE WHEN ");
-            sb.Append(await expression.When.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+            sb.Append(_translator.Translate(expression.When, depth));
             sb.Append(" THEN ");
-            sb.Append(await expression.Then.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+            sb.Append(_translator.Translate(expression.Then, depth));
             sb.Append(" ELSE ");
-            sb.Append(await expression.Else.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+            sb.Append(_translator.Translate(expression.Else, depth));
             sb.Append(" END");
 
             return sb.ToString();

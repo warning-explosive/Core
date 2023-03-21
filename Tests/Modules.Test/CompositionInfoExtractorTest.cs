@@ -1,10 +1,10 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
+    using System;
     using System.Linq;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.CompositionInfo;
-    using CompositionRoot.Api.Abstractions.Container;
+    using CompositionRoot.CompositionInfo;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -17,21 +17,22 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public CompositionInfoExtractorTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public CompositionInfoExtractorTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CompositionRoot), nameof(Core.CompositionRoot.SimpleInjector)));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(
+                AssembliesExtensions.BuildName(
+                    nameof(SpaceEngineers),
+                    nameof(Core),
+                    nameof(CompositionRoot)));
 
             var options = new DependencyContainerOptions();
 
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         [Theory]
         [InlineData(false)]
@@ -40,14 +41,16 @@ namespace SpaceEngineers.Core.Modules.Test
         {
             using (DependencyContainer.OpenScope())
             {
-                var compositionInfo = DependencyContainer.Resolve<ICompositionInfoExtractor>()
-                                                         .GetCompositionInfo(mode)
-                                                         .ToArray();
+                var compositionInfo = DependencyContainer
+                   .Resolve<ICompositionInfoExtractor>()
+                   .GetCompositionInfo(mode)
+                   .ToArray();
 
-                Output.WriteLine($"Total: {compositionInfo.Length}\n");
+                Output.WriteLine($"Total: {compositionInfo.Length}{Environment.NewLine}");
 
-                Output.WriteLine(DependencyContainer.Resolve<ICompositionInfoInterpreter<string>>()
-                                                    .Visualize(compositionInfo));
+                Output.WriteLine(DependencyContainer
+                   .Resolve<ICompositionInfoInterpreter<string>>()
+                   .Visualize(compositionInfo));
             }
         }
     }

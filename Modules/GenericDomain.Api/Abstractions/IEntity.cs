@@ -4,12 +4,15 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
     using Basics;
 
     /// <summary>
-    /// Entity
+    /// IEntity
     /// </summary>
     public interface IEntity : IDomainObject,
-                               IUniqueIdentified,
                                IEquatable<IEntity>,
                                ISafelyEquatable<IEntity>
     {
+        /// <summary>
+        /// Identifier
+        /// </summary>
+        Guid Id { get; }
     }
 }

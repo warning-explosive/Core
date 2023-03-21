@@ -1,47 +1,51 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Linq;
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
-    using Linq.Abstractions;
-    using Linq.Expressions;
-    using Linq.Internals;
+    using Sql.Translation;
+    using Sql.Translation.Expressions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class MethodCallExpressionTranslator : IExpressionTranslator<MethodCallExpression>
+    internal class MethodCallExpressionTranslator : ISqlExpressionTranslator<MethodCallExpression>,
+                                                    IResolvable<ISqlExpressionTranslator<MethodCallExpression>>,
+                                                    ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public MethodCallExpressionTranslator(IDependencyContainer dependencyContainer)
+        public MethodCallExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _dependencyContainer = dependencyContainer;
+            _translator = translator;
         }
 
-        /// <inheritdoc />
-        public async Task<string> Translate(MethodCallExpression expression, int depth, CancellationToken token)
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is MethodCallExpression methodCallExpression
+                ? Translate(methodCallExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
+        }
+
+        public string Translate(MethodCallExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
             if (expression.Source != null)
             {
-                sb.Append(await expression.Source.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
-                sb.Append(".");
+                sb.Append(_translator.Translate(expression.Source, depth));
+                sb.Append('.');
             }
 
             sb.Append(expression.Name);
 
             sb.Append('(');
 
-            var arguments = await expression
+            var arguments = expression
                 .Arguments
-                .Select(argument => argument.Translate(_dependencyContainer, depth, token))
-                .WhenAll()
-                .ConfigureAwait(false);
+                .Select(argument => _translator.Translate(argument, depth));
 
             sb.Append(arguments.ToString(", "));
 

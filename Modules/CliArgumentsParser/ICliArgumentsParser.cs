@@ -1,11 +1,11 @@
 namespace SpaceEngineers.Core.CliArgumentsParser
 {
-    using AutoRegistration.Api.Abstractions;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Cli arguments parser service
     /// </summary>
-    public interface ICliArgumentsParser : IResolvable
+    public interface ICliArgumentsParser
     {
         /// <summary>
         /// Parse cli arguments in typed instance
@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
         /// <param name="arguments">Out typed cli args instance</param>
         /// <typeparam name="T">Cli args type-argument</typeparam>
         /// <returns>True - parse success / False - parse failure</returns>
-        bool TryParse<T>(string[] args, out T? arguments)
+        bool TryParse<T>(string[] args, [NotNullWhen(true)] out T? arguments)
             where T : class, new();
     }
 }

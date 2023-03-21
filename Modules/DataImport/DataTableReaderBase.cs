@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.DataImport
     using System.Data;
     using System.Globalization;
     using System.Linq;
-    using System.Threading.Tasks;
     using Abstractions;
     using Basics;
 
@@ -35,17 +34,11 @@ namespace SpaceEngineers.Core.DataImport
                     : null;
 
         /// <inheritdoc />
-        public abstract Task<TElement?> ReadRow(
+        public abstract TElement? ReadRow(
             DataRow row,
             int rowIndex,
             IReadOnlyDictionary<string, string> propertyToColumn,
             TTableMeta tableMeta);
-
-        /// <inheritdoc />
-        public virtual Task AfterTableRead()
-        {
-            return Task.CompletedTask;
-        }
 
         /// <summary>
         /// DataRow is empty (each column has no value)
@@ -89,6 +82,41 @@ namespace SpaceEngineers.Core.DataImport
         }
 
         /// <summary>
+        /// Read property value as nullable bool
+        /// </summary>
+        /// <param name="row">DataRow</param>
+        /// <param name="property">Property name</param>
+        /// <param name="propertyToColumn">Property to column caption map (PropertyInfo.Name -> DataTable.ColumnCaption)</param>
+        /// <returns>bool-value</returns>
+        protected bool? ReadBool(
+            DataRow row,
+            string property,
+            IReadOnlyDictionary<string, string> propertyToColumn)
+        {
+            var value = ReadString(row, property, propertyToColumn);
+
+            return ParseBool(value);
+        }
+
+        /// <summary>
+        /// Read property value as required bool
+        /// </summary>
+        /// <param name="row">DataRow</param>
+        /// <param name="property">Property name</param>
+        /// <param name="propertyToColumn">Property to column caption map (PropertyInfo.Name -> DataTable.ColumnCaption)</param>
+        /// <returns>bool-value</returns>
+        /// <exception cref="ArgumentException">Value is null or empty</exception>
+        protected bool ReadRequiredBool(
+            DataRow row,
+            string property,
+            IReadOnlyDictionary<string, string> propertyToColumn)
+        {
+            var value = ReadString(row, property, propertyToColumn);
+
+            return ParseRequiredBool(property, value);
+        }
+
+        /// <summary>
         /// Read property value as nullable string
         /// </summary>
         /// <param name="row">DataRow</param>
@@ -118,9 +146,7 @@ namespace SpaceEngineers.Core.DataImport
         {
             var value = ReadString(row, property, propertyToColumn);
 
-            return value != null && !value.IsNullOrEmpty()
-                ? value
-                : throw RequiredException(property, value);
+            return value ?? throw RequiredException(property, value);
         }
 
         /// <summary>
@@ -283,6 +309,37 @@ namespace SpaceEngineers.Core.DataImport
         }
 
         /// <summary>
+        /// Parse value to nullable bool
+        /// </summary>
+        /// <param name="value">value</param>
+        /// <returns>bool-value</returns>
+        protected bool? ParseBool(string? value)
+        {
+            if (value.IsNullOrEmpty())
+            {
+                return null;
+            }
+
+            return bool.Parse(value);
+        }
+
+        /// <summary>
+        /// Parse value to required bool
+        /// </summary>
+        /// <param name="property">Property name</param>
+        /// <param name="value">Value</param>
+        /// <returns>bool-value</returns>
+        protected bool ParseRequiredBool(string property, string? value)
+        {
+            if (value.IsNullOrEmpty())
+            {
+                throw RequiredException(property, value);
+            }
+
+            return bool.Parse(value);
+        }
+
+        /// <summary>
         /// Parse value to nullable enum
         /// </summary>
         /// <param name="value">value</param>
@@ -312,8 +369,7 @@ namespace SpaceEngineers.Core.DataImport
             string? value)
             where TEnum : struct, Enum
         {
-            return ParseEnum<TEnum>(value)
-                   ?? throw RequiredException(property, value);
+            return ParseEnum<TEnum>(value) ?? throw RequiredException(property, value);
         }
 
         /// <summary>
@@ -435,8 +491,7 @@ namespace SpaceEngineers.Core.DataImport
             Func<string?, IFormatProvider, T?> parser)
             where T : struct
         {
-            return Parse(value, formatters, parser)
-                   ?? throw RequiredException(property, value);
+            return Parse(value, formatters, parser) ?? throw RequiredException(property, value);
         }
 
         private static Exception RequiredException(string property, string? value)

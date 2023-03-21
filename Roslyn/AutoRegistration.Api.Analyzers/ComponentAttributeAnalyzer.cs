@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
     using Microsoft.CodeAnalysis.Diagnostics;
 
     /// <summary>
-    /// Component should be marked with ComponentAttribute
+    /// Component should be marked by ComponentAttribute
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ComponentAttributeAnalyzer : SyntaxAnalyzerBase
@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
         public override string Identifier { get; } = "CR1";
 
         /// <inheritdoc />
-        public override string Title { get; } = $"Component should be marked with {nameof(ComponentAttribute)}";
+        public override string Title { get; } = $"Component should be marked by {nameof(ComponentAttribute)}";
 
         /// <inheritdoc />
         public override string Message { get; } = "{0}";
@@ -93,9 +93,8 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
 
             var baseSymbols = baseTypes.Select(GetBaseTypeSymbol).ToArray();
 
-            var resolvable = context.Compilation.GetTypeByMetadataName(typeof(IResolvable).FullName);
+            var resolvable = context.Compilation.GetTypeByMetadataName(typeof(IResolvable<>).FullName);
             var collectionResolvable = context.Compilation.GetTypeByMetadataName(typeof(ICollectionResolvable<>).FullName);
-            var externalResolvable = context.Compilation.GetTypeByMetadataName(typeof(IExternalResolvable<>).FullName);
             var decorator = context.Compilation.GetTypeByMetadataName(typeof(IDecorator<>).FullName);
 
             bool IsDerivedFromService(INamedTypeSymbol symbol, INamedTypeSymbol service)
@@ -108,7 +107,6 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
                              .OfType<INamedTypeSymbol>()
                              .Any(symbol => (resolvable != null && IsDerivedFromService(symbol, resolvable))
                                          || (collectionResolvable != null && IsDerivedFromService(symbol, collectionResolvable))
-                                         || (externalResolvable != null && IsDerivedFromService(symbol, externalResolvable))
                                          || (decorator != null && IsDerivedFromService(symbol, decorator)));
 
             return isComponent;

@@ -18,20 +18,20 @@
         <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
         <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
         <RunAnalyzers>true</RunAnalyzers>
-        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <TieredCompilation>true</TieredCompilation>
+        <DebugType>full</DebugType>
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\Basics\Basics.csproj" />
+      <ProjectReference Include="..\..\Common\Basics\Basics.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
+      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
@@ -39,5 +39,31 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Abstractions\IEntity.cs">
+        <DependentUpon>IDomainObject.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\IAggregate.cs">
+        <DependentUpon>IEntity.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\IValueObject.cs">
+        <DependentUpon>IDomainObject.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\BaseEnumerationObject.cs">
+        <DependentUpon>IEnumerationObject.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\IEnumerationObject.cs">
+        <DependentUpon>IDomainObject.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\BaseAggregate.cs">
+        <DependentUpon>IAggregate.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\BaseEntity.cs">
+        <DependentUpon>IEntity.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Abstractions\DomainEventArgs.cs">
+        <DependentUpon>BaseAggregate.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

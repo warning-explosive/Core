@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Abstractions;
     using Analyzers.Api;
@@ -32,8 +33,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public Analysis(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public Analysis(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }
@@ -44,6 +45,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                   "SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzer",
                                   "SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzerExpected");
 
+        [SuppressMessage("Analysis", "xUnit1004", Justification = "#189")]
         [Fact]
         internal async Task AnalysisTest()
         {
@@ -60,7 +62,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             }
         }
 
-        [SuppressMessage("Analysis", "CA1506", Justification = "Reviewed")]
+        [SuppressMessage("Analysis", "CA1506", Justification = "application composition root")]
         private async Task TestSingleAnalyzer(SyntaxAnalyzerBase analyzer,
                                               CodeFixProvider? codeFix,
                                               IConventionalProvider conventionalProvider)
@@ -96,7 +98,9 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                           .SourceFiles(analyzer, "Expected")
                                           .ToDictionary(s => s.Name);
 
-                await foreach (var analyzedDocument in diagnostics)
+                await foreach (var analyzedDocument in diagnostics
+                                   .WithCancellation(CancellationToken.None)
+                                   .ConfigureAwait(false))
                 {
                     foreach (var diagnostic in analyzedDocument.ActualDiagnostics)
                     {

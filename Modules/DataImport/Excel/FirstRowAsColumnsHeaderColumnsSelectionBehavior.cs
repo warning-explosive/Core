@@ -5,30 +5,24 @@ namespace SpaceEngineers.Core.DataImport.Excel
     using System.Data;
     using System.Linq;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
     using DocumentFormat.OpenXml.Spreadsheet;
 
-    /// <summary>
-    /// First row as columns header columns selection behavior
-    /// </summary>
     [Component(EnLifestyle.Singleton)]
-    public class FirstRowAsColumnsHeaderColumnsSelectionBehavior : IExcelColumnsSelectionBehavior
+    internal class FirstRowAsColumnsHeaderColumnsSelectionBehavior : IExcelColumnsSelectionBehavior,
+                                                                     IResolvable<IExcelColumnsSelectionBehavior>
     {
         private readonly IExcelCellValueExtractor _cellValueExtractor;
 
-        /// <summary> .cctor </summary>
-        /// <param name="cellValueExtractor">IExcelCellValueExtractor</param>
         public FirstRowAsColumnsHeaderColumnsSelectionBehavior(IExcelCellValueExtractor cellValueExtractor)
         {
             _cellValueExtractor = cellValueExtractor;
         }
 
-        /// <inheritdoc />
         public bool FirstRowIsHeader { get; } = true;
 
-        /// <inheritdoc />
         public DataColumn[] ExtractColumns(
             IEnumerable<Row> rows,
             IReadOnlyDictionary<int, string> sharedStrings,
@@ -36,7 +30,7 @@ namespace SpaceEngineers.Core.DataImport.Excel
         {
             var headerRow = rows.Take(1).Single();
 
-            var headerRowIndex = headerRow.RowIndex.EnsureNotNull<uint>("Row should have index");
+            var headerRowIndex = headerRow.RowIndex?.Value ?? throw new InvalidOperationException("Row should have index");
 
             return headerRow
                 .Elements<Cell>()

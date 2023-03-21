@@ -28,8 +28,8 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public SolutionAnalysis(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public SolutionAnalysis(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }
@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                                   "SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzer",
                                   "SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzerExpected");
 
-        [SuppressMessage("Analysis", "xUnit1004", Justification = "appveyor")]
+        [SuppressMessage("Analysis", "xUnit1004", Justification = "#189")]
         [Fact]
         internal async Task SolutionAnalysisTest()
         {
@@ -66,7 +66,11 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                 await workspace.OpenSolutionAsync(SolutionExtensions.SolutionFile().FullName)
                                .ConfigureAwait(false);
 
-                await foreach (var analyzedDocument in workspace.CurrentSolution.CompileSolution(analyzers, IgnoredProjects, IgnoredSources, IgnoredNamespaces))
+                await foreach (var analyzedDocument in workspace
+                                   .CurrentSolution
+                                   .CompileSolution(analyzers, IgnoredProjects, IgnoredSources, IgnoredNamespaces)
+                                   .WithCancellation(CancellationToken.None)
+                                   .ConfigureAwait(false))
                 {
                     foreach (var diagnostic in analyzedDocument.ActualDiagnostics)
                     {

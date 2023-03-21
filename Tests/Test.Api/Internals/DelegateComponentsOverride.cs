@@ -1,7 +1,7 @@
 namespace SpaceEngineers.Core.Test.Api.Internals
 {
     using System;
-    using CompositionRoot.Api.Abstractions.Registration;
+    using CompositionRoot.Registration;
 
     internal class DelegateComponentsOverride : IComponentsOverride
     {

@@ -21,17 +21,59 @@ namespace SpaceEngineers.Core.Basics.Test
         {
         }
 
+        [Theory]
+        [InlineData(typeof(object), false)]
+        [InlineData(typeof(string), false)]
+        [InlineData(typeof(int), false)]
+        [InlineData(typeof(KeyValuePair<string, object>), false)]
+        [InlineData(typeof(TestRecord), true)]
+        internal void IsRecordTest(Type type, bool result)
+        {
+            Assert.Equal(result, type.IsRecord());
+        }
+
+        [Theory]
+        [InlineData(typeof(string))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.AsyncManualResetEvent))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<,>))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<string, string>))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<ICollection<string>, string>))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<Dictionary<string, ICollection<string>>, string>))]
+        [InlineData(typeof(SpaceEngineers.Core.Basics.Primitives.PriorityQueue<Dictionary<string, string[]>, string>))]
+        internal void FindTypeByFullNameTest(Type type)
+        {
+            var typeNode = TypeNode.FromType(type);
+
+            Output.WriteLine(typeNode.ToString());
+
+            typeNode = TypeNode.FromString(typeNode.ToString());
+
+            var builtType = TypeNode.ToType(typeNode);
+
+            Assert.Equal(type, builtType);
+        }
+
         [Fact]
         internal void OrderByDependencyCycleDependencyTest()
         {
-            var test = new[]
+            var test1 = new[]
                        {
                            typeof(OrderByDependencyTestData.CycleDependencyTest1),
                            typeof(OrderByDependencyTestData.CycleDependencyTest2),
                            typeof(OrderByDependencyTestData.CycleDependencyTest3)
                        };
 
-            Assert.Throws<InvalidOperationException>(() => test.OrderByDependencyAttribute().ToArray());
+            Assert.Throws<InvalidOperationException>(() => test1.OrderByDependencies().ToArray());
+
+            var test2 = new[]
+                       {
+                           typeof(OrderByDependencyTestData.CycleDependencyTest1),
+                           typeof(OrderByDependencyTestData.CycleDependencyTest2),
+                           typeof(OrderByDependencyTestData.CycleDependencyTest3),
+                           typeof(OrderByDependencyTestData.CycleDependencyTest4)
+                       };
+
+            Assert.Throws<InvalidOperationException>(() => test2.OrderByDependencies().ToArray());
         }
 
         [Fact]
@@ -41,37 +83,92 @@ namespace SpaceEngineers.Core.Basics.Test
             {
                 typeof(OrderByDependencyTestData.DependencyTest1),
                 typeof(OrderByDependencyTestData.DependencyTest2),
-                typeof(OrderByDependencyTestData.DependencyTest3)
+                typeof(OrderByDependencyTestData.DependencyTest3),
+                typeof(OrderByDependencyTestData.DependencyTest4)
             };
 
-            Assert.True(test1.Reverse().SequenceEqual(test1.OrderByDependencyAttribute()));
+            Assert.True(test1.Reverse().SequenceEqual(test1.OrderByDependencies()));
 
             var test2 = new[]
             {
-                typeof(OrderByDependencyTestData.GenericDependencyTest1<>),
-                typeof(OrderByDependencyTestData.GenericDependencyTest2<>),
-                typeof(OrderByDependencyTestData.GenericDependencyTest3<>)
+                typeof(OrderByDependencyTestData.DependencyTest1),
+                typeof(OrderByDependencyTestData.DependencyTest2),
+                typeof(OrderByDependencyTestData.DependencyTest3),
+                typeof(OrderByDependencyTestData.DependencyTest4)
             };
 
-            Assert.True(test2.Reverse().SequenceEqual(test2.OrderByDependencyAttribute()));
+            Assert.True(test2.Reverse().SequenceEqual(test2.OrderByDependencies()));
 
             var test3 = new[]
             {
-                typeof(OrderByDependencyTestData.GenericDependencyTest1<object>),
-                typeof(OrderByDependencyTestData.GenericDependencyTest2<string>),
-                typeof(OrderByDependencyTestData.GenericDependencyTest3<int>)
+                typeof(OrderByDependencyTestData.GenericDependencyTest1<>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest2<>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest3<>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest4<>)
             };
 
-            Assert.True(test3.Reverse().SequenceEqual(test3.OrderByDependencyAttribute()));
+            Assert.True(test3.Reverse().SequenceEqual(test3.OrderByDependencies()));
+
+            var test4 = new[]
+            {
+                typeof(OrderByDependencyTestData.GenericDependencyTest1<object>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest2<string>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest3<int>),
+                typeof(OrderByDependencyTestData.GenericDependencyTest4<bool>)
+            };
+
+            Assert.True(test4.Reverse().SequenceEqual(test4.OrderByDependencies()));
         }
 
         [Fact]
         internal void IsNullableTest()
         {
             Assert.False(typeof(bool).IsNullable());
-            Assert.False(typeof(object).IsNullable());
             Assert.True(typeof(bool?).IsNullable());
             Assert.True(typeof(Nullable<>).IsNullable());
+
+            Assert.False(typeof(string).IsNullable());
+            Assert.False(typeof(object).IsNullable());
+
+            var nullableString = (string?)string.Empty;
+            var nullableObject = (object?)string.Empty;
+
+            Assert.False(nullableString.GetType().IsNullable());
+            Assert.False(nullableObject.GetType().IsNullable());
+        }
+
+        [Fact]
+        internal void IsNullableMemberTest()
+        {
+            var notNullableValueField = typeof(ClassWithNullableMembers).GetField(nameof(ClassWithNullableMembers._notNullableValue));
+            var nullableValueField = typeof(ClassWithNullableMembers).GetField(nameof(ClassWithNullableMembers._nullableValue));
+            var notNullableReferenceField = typeof(ClassWithNullableMembers).GetField(nameof(ClassWithNullableMembers._notNullableReference));
+            var nullableReferenceField = typeof(ClassWithNullableMembers).GetField(nameof(ClassWithNullableMembers._nullableReference));
+
+            Assert.NotNull(notNullableValueField);
+            Assert.NotNull(nullableValueField);
+            Assert.NotNull(notNullableReferenceField);
+            Assert.NotNull(nullableReferenceField);
+
+            Assert.False(notNullableValueField!.IsNullable());
+            Assert.True(nullableValueField!.IsNullable());
+            Assert.False(notNullableReferenceField!.IsNullable());
+            Assert.True(nullableReferenceField!.IsNullable());
+
+            var notNullableValueProperty = typeof(ClassWithNullableMembers).GetProperty(nameof(ClassWithNullableMembers.NotNullableValue));
+            var nullableValueProperty = typeof(ClassWithNullableMembers).GetProperty(nameof(ClassWithNullableMembers.NullableValue));
+            var notNullableReferenceProperty = typeof(ClassWithNullableMembers).GetProperty(nameof(ClassWithNullableMembers.NotNullableReference));
+            var nullableReferenceProperty = typeof(ClassWithNullableMembers).GetProperty(nameof(ClassWithNullableMembers.NullableReference));
+
+            Assert.NotNull(notNullableValueProperty);
+            Assert.NotNull(nullableValueProperty);
+            Assert.NotNull(notNullableReferenceProperty);
+            Assert.NotNull(nullableReferenceProperty);
+
+            Assert.False(notNullableValueProperty!.IsNullable());
+            Assert.True(nullableValueProperty!.IsNullable());
+            Assert.False(notNullableReferenceProperty!.IsNullable());
+            Assert.True(nullableReferenceProperty!.IsNullable());
         }
 
         [Fact]
@@ -226,6 +323,42 @@ namespace SpaceEngineers.Core.Basics.Test
         private struct StructWithParameter
         {
             public StructWithParameter(object param) { }
+        }
+
+        [SuppressMessage("Analysis", "SA1401", Justification = "For test reasons")]
+        private class ClassWithNullableMembers
+        {
+            public bool _notNullableValue;
+
+            public bool? _nullableValue;
+
+            public object _notNullableReference = null!;
+
+            public object? _nullableReference;
+
+            public bool NotNullableValue
+            {
+                get => _notNullableValue;
+                set => _notNullableValue = value;
+            }
+
+            public bool? NullableValue
+            {
+                get => _nullableValue;
+                set => _nullableValue = value;
+            }
+
+            public object NotNullableReference
+            {
+                get => _notNullableReference;
+                set => _notNullableReference = value;
+            }
+
+            public object? NullableReference
+            {
+                get => _nullableReference;
+                set => _nullableReference = value;
+            }
         }
     }
 }

@@ -1,85 +1,97 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Collections.Generic;
-    using System.Linq.Expressions;
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
-    using Linq.Abstractions;
-    using Linq.Internals;
-    using BinaryExpression = Linq.Expressions.BinaryExpression;
-    using ConstantExpression = Linq.Expressions.ConstantExpression;
+    using Sql.Translation;
+    using Sql.Translation.Expressions;
+    using BinaryExpression = Sql.Translation.Expressions.BinaryExpression;
 
     [Component(EnLifestyle.Singleton)]
-    internal class BinaryExpressionTranslator : IExpressionTranslator<BinaryExpression>
+    internal class BinaryExpressionTranslator : ISqlExpressionTranslator<BinaryExpression>,
+                                                IResolvable<ISqlExpressionTranslator<BinaryExpression>>,
+                                                ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private static readonly IReadOnlyDictionary<ExpressionType, string> FunctionalOperators
-            = new Dictionary<ExpressionType, string>
+        private readonly ISqlExpressionTranslatorComposite _translator;
+
+        private static readonly IReadOnlyDictionary<BinaryOperator, string> FunctionalOperators
+            = new Dictionary<BinaryOperator, string>
             {
-                [ExpressionType.Coalesce] = "COALESCE"
+                [BinaryOperator.Coalesce] = "COALESCE"
             };
 
-        private static readonly IReadOnlyDictionary<ExpressionType, string> Operators
-            = new Dictionary<ExpressionType, string>
+        private static readonly IReadOnlyDictionary<BinaryOperator, string> Operators
+            = new Dictionary<BinaryOperator, string>
             {
-                [ExpressionType.Equal] = "=",
-                [ExpressionType.NotEqual] = "!=",
-                [ExpressionType.GreaterThanOrEqual] = ">=",
-                [ExpressionType.GreaterThan] = ">",
-                [ExpressionType.LessThan] = "<",
-                [ExpressionType.LessThanOrEqual] = "<=",
-                [ExpressionType.AndAlso] = "AND",
-                [ExpressionType.OrElse] = "OR",
-                [ExpressionType.ExclusiveOr] = "XOR"
+                [BinaryOperator.Assign] = "=",
+                [BinaryOperator.Equal] = "=",
+                [BinaryOperator.NotEqual] = "!=",
+                [BinaryOperator.Is] = "IS",
+                [BinaryOperator.IsNot] = "IS NOT",
+                [BinaryOperator.GreaterThanOrEqual] = ">=",
+                [BinaryOperator.GreaterThan] = ">",
+                [BinaryOperator.LessThan] = "<",
+                [BinaryOperator.LessThanOrEqual] = "<=",
+                [BinaryOperator.AndAlso] = "AND",
+                [BinaryOperator.OrElse] = "OR",
+                [BinaryOperator.ExclusiveOr] = "XOR",
+                [BinaryOperator.Like] = "LIKE",
+                [BinaryOperator.Add] = "+",
+                [BinaryOperator.Subtract] = "-",
+                [BinaryOperator.Divide] = "/",
+                [BinaryOperator.Multiply] = "*",
+                [BinaryOperator.Modulo] = "%",
+                [BinaryOperator.HasJsonAttribute] = "?",
+                [BinaryOperator.ConcatJsonObjects] = "||",
+                [BinaryOperator.ArrayIntersection] = "&&"
             };
 
-        private static readonly IReadOnlyDictionary<ExpressionType, string> AltOperators
-            = new Dictionary<ExpressionType, string>
-            {
-                [ExpressionType.Equal] = "IS",
-                [ExpressionType.NotEqual] = "IS NOT"
-            };
-
-        private readonly IDependencyContainer _dependencyContainer;
-
-        public BinaryExpressionTranslator(IDependencyContainer dependencyContainer)
+        public BinaryExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _dependencyContainer = dependencyContainer;
+            _translator = translator;
         }
 
-        public async Task<string> Translate(BinaryExpression expression, int depth, CancellationToken token)
+        public string Translate(ISqlExpression expression, int depth)
         {
-            if (FunctionalOperators.ContainsKey(expression.Operator))
-            {
-                var sb = new StringBuilder();
+            return expression is BinaryExpression binaryExpression
+                ? Translate(binaryExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
+        }
 
+        public string Translate(BinaryExpression expression, int depth)
+        {
+            var sb = new StringBuilder();
+
+            if (expression.Operator == BinaryOperator.Contains)
+            {
+                sb.Append(_translator.Translate(expression.Left, depth));
+                sb.Append(" = ANY");
+                sb.Append('(');
+                sb.Append(_translator.Translate(expression.Right, depth + 1));
+                sb.Append(')');
+            }
+            else if (FunctionalOperators.ContainsKey(expression.Operator))
+            {
                 sb.Append(FunctionalOperators[expression.Operator]);
                 sb.Append('(');
-                sb.Append(await expression.Left.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+                sb.Append(_translator.Translate(expression.Left, depth));
                 sb.Append(", ");
-                sb.Append(await expression.Right.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+                sb.Append(_translator.Translate(expression.Right, depth));
                 sb.Append(')');
-
-                return sb.ToString();
+            }
+            else
+            {
+                sb.Append(_translator.Translate(expression.Left, depth));
+                sb.Append(" ");
+                sb.Append(Operators[expression.Operator]);
+                sb.Append(" ");
+                sb.Append(_translator.Translate(expression.Right, depth + 1));
             }
 
-            var map = (IsNullConstant(expression.Left) || IsNullConstant(expression.Right))
-                      && AltOperators.ContainsKey(expression.Operator)
-                ? AltOperators
-                : Operators;
-
-            return string.Join(" ",
-                await expression.Left.Translate(_dependencyContainer, depth, token).ConfigureAwait(false),
-                map[expression.Operator],
-                await expression.Right.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
-        }
-
-        private static bool IsNullConstant(IIntermediateExpression expression)
-        {
-            return expression is ConstantExpression { Value: null };
+            return sb.ToString();
         }
     }
 }

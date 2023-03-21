@@ -1,0 +1,34 @@
+# BUILDPLATFORM = linux/arm64 | linux/amd64
+ARG BUILDPLATFORM=linux/arm64
+ARG DOT_NET_VERSION=7.0
+
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:${DOT_NET_VERSION}-alpine AS builder
+# TARGETARCH = arm64 | x64 | amd64
+ARG TARGETARCH
+RUN arch=$TARGETARCH \
+    && if [ "$TARGETARCH" = "amd64" ]; then arch="x64"; fi \
+    && echo $arch > /tmp/arch
+
+ENV NUGET_XMLDOC_MODE=none
+WORKDIR /build
+
+# separate restore layer
+COPY ["./*.csproj", "./*/*.csproj", "./*/*/*.csproj", "./*.sln", "./*.sh", "./*.config", "./"]
+RUN chmod +x restore_project_structure.sh
+RUN ["/bin/sh", "-c", "./restore_project_structure.sh"]
+# -r linux-$(cat /tmp/arch)
+RUN dotnet restore Tests/Test.WebApplication/Test.WebApplication.csproj --packages ./packages --no-cache -v:minimal
+
+# separate build layer
+COPY . .
+# -r linux-$(cat /tmp/arch)
+RUN dotnet build Tests/Test.WebApplication/Test.WebApplication.csproj -c Debug -o out --packages ./packages --no-cache -v:minimal
+
+FROM mcr.microsoft.com/dotnet/aspnet:${DOT_NET_VERSION}-alpine
+WORKDIR /app
+COPY --from=builder /build/out /app
+COPY --from=builder /build/Tests/Test.WebApplication/ComposeSettings /app/Settings
+COPY --from=builder /build/Tests/Test.WebApplication/Test.WebApplication.csproj /app/Test.WebApplication.csproj
+ENTRYPOINT ["dotnet", "SpaceEngineers.Core.Test.WebApplication.dll"]
+
+# docker buildx build --platform linux/amd64,linux/arm64 -f Dockerfile.webtest .

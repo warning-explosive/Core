@@ -26,9 +26,9 @@ namespace SpaceEngineers.Core.Basics.Test
         /// OnRootNodeChangedTestData
         /// </summary>
         /// <returns>TestData</returns>
-        public static IEnumerable<object> DeferredQueueTestData()
+        public static IEnumerable<object[]> DeferredQueueTestData()
         {
-            var emptyQueue = new DeferredQueue<Entry>(new BinaryHeap<HeapEntry<Entry, DateTime>>(EnOrderingKind.Asc), PrioritySelector);
+            var emptyQueue = new DeferredQueue<Entry>(new BinaryHeap<HeapEntry<Entry, DateTime>>(EnOrderingDirection.Asc), PrioritySelector);
 
             yield return new object[] { emptyQueue };
 
@@ -47,20 +47,20 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(queue.IsEmpty);
 
             var step = TimeSpan.FromMilliseconds(100);
-            var startFrom = DateTime.Now.Add(step);
+            var startFrom = DateTime.UtcNow.Add(step);
 
             queue.Enqueue(new Entry(0, startFrom));
             queue.Enqueue(new Entry(2, startFrom.Add(2 * step)));
             queue.Enqueue(new Entry(4, startFrom.Add(4 * step)));
 
             var entries = new List<Entry>();
-            var started = DateTime.Now;
+            var started = DateTime.UtcNow;
             Output.WriteLine($"Started at: {started:O}");
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
             {
                 var backgroundPublisher = Task.Run(async () =>
                     {
-                        var corrected = startFrom.Add(step / 2) - DateTime.Now;
+                        var corrected = startFrom.Add(step / 2) - DateTime.UtcNow;
 
                         await Task.Delay(corrected, cts.Token).ConfigureAwait(false);
                         queue.Enqueue(new Entry(1, startFrom.Add(1 * step)));
@@ -103,7 +103,7 @@ namespace SpaceEngineers.Core.Basics.Test
 
             Task Callback(Entry entry, CancellationToken token)
             {
-                entry.Actual = DateTime.Now;
+                entry.Actual = DateTime.UtcNow;
                 entries.Add(entry);
 
                 return Task.CompletedTask;
@@ -117,29 +117,29 @@ namespace SpaceEngineers.Core.Basics.Test
             Assert.True(queue.IsEmpty);
 
             var publishersCount = 10;
-            var count = 100;
-            var actualCount = 0;
-            var step = TimeSpan.FromMilliseconds(1);
-            var startFrom = DateTime.Now.Add(TimeSpan.FromMilliseconds(100));
+            var publicationsCount = 100;
 
-            var started = DateTime.Now;
+            var step = TimeSpan.FromMilliseconds(10);
+            var startFrom = DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(100));
+
+            var actualCount = 0;
+            var expectedCount = publishersCount * publicationsCount;
+
+            var started = DateTime.UtcNow;
 
             using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
             {
                 var token = cts.Token;
 
-                var deferredDeliveryOperation = queue.Run(Callback, token);
+                var deferredDeliveryOperation = queue.Run(Callback(cts), token);
+
                 var publishers = Enumerable.Range(0, publishersCount)
-                    .Select(i => Task.Run(() => StartPublishing(queue, count, startFrom.Add(i * step / publishersCount), step, token), token))
+                    .Select(i => Task.Run(() => StartPublishing(queue, publicationsCount, startFrom.Add(step * i), step, token), token))
                     .ToList();
-
-                await Task.WhenAll(publishers).ConfigureAwait(false);
-                await Task.Delay(TimeSpan.FromMilliseconds(100), token).ConfigureAwait(false);
-
-                cts.Cancel();
 
                 try
                 {
+                    await Task.WhenAll(publishers).ConfigureAwait(false);
                     await deferredDeliveryOperation.ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
@@ -147,31 +147,39 @@ namespace SpaceEngineers.Core.Basics.Test
                 }
             }
 
-            var finished = DateTime.Now;
+            var finished = DateTime.UtcNow;
             var duration = finished - started;
             Output.WriteLine(duration.ToString());
 
             Assert.True(queue.IsEmpty);
-            Assert.Equal(publishersCount * count, actualCount);
+            Assert.Equal(expectedCount, actualCount);
 
-            Task Callback(Entry entry, CancellationToken token)
+            Func<Entry, CancellationToken, Task> Callback(CancellationTokenSource cts)
             {
-                Interlocked.Increment(ref actualCount);
-                return Task.CompletedTask;
+                return (_, _) =>
+                {
+                    Interlocked.Increment(ref actualCount);
+
+                    if (expectedCount == actualCount)
+                    {
+                        cts.Cancel();
+                    }
+
+                    return Task.CompletedTask;
+                };
             }
-        }
 
-        private static async Task StartPublishing(
-            DeferredQueue<Entry> queue,
-            int count,
-            DateTime startFrom,
-            TimeSpan step,
-            CancellationToken token)
-        {
-            for (var i = 1; i <= count; i++)
+            static async Task StartPublishing(
+                IAsyncQueue<Entry> queue,
+                int publicationsCount,
+                DateTime startFrom,
+                TimeSpan step,
+                CancellationToken token)
             {
-                await Task.Delay(step, token).ConfigureAwait(false);
-                queue.Enqueue(new Entry(i, startFrom.Add(i * step)));
+                for (var i = 1; i <= publicationsCount; i++)
+                {
+                    await queue.Enqueue(new Entry(i, startFrom.Add(step * i)), token).ConfigureAwait(false);
+                }
             }
         }
 
@@ -195,13 +203,20 @@ namespace SpaceEngineers.Core.Basics.Test
 
             public DateTime Actual
             {
-                get => _actual.EnsureNotNull<DateTime>("Elapsed should be set");
+                get => _actual ?? throw new InvalidOperationException("Elapsed should be set");
                 set => _actual = value;
             }
 
-            public override string ToString()
+            #region IEquatable
+
+            public static bool operator ==(Entry? left, Entry? right)
             {
-                return $"[{Index}] - {Planned:O} - {_actual?.ToString("O") ?? "null"}";
+                return Equatable.Equals(left, right);
+            }
+
+            public static bool operator !=(Entry? left, Entry? right)
+            {
+                return !Equatable.Equals(left, right);
             }
 
             public override int GetHashCode()
@@ -224,6 +239,10 @@ namespace SpaceEngineers.Core.Basics.Test
                 return Index == other.Index;
             }
 
+            #endregion
+
+            #region IComparable
+
             public int SafeCompareTo(Entry other)
             {
                 return Index.CompareTo(other.Index);
@@ -237,6 +256,13 @@ namespace SpaceEngineers.Core.Basics.Test
             public int CompareTo(object? obj)
             {
                 return Comparable.CompareTo(this, obj);
+            }
+
+            #endregion
+
+            public override string ToString()
+            {
+                return $"[{Index}] - {Planned:O} - {_actual?.ToString("O") ?? "null"}";
             }
         }
     }

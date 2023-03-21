@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <AssemblyName>SpaceEngineers.Core.DataAccess.Orm.Sql.Host</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.DataAccess.Orm.Sql.Host</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <Title>SpaceEngineers.Core.DataAccess.Orm.Sql.Host</Title>
+        <Authors>SpaceEngineers</Authors>
+        <Company>SpaceEngineers</Company>
+        <PackageDescription>SpaceEngineers.Core.DataAccess.Orm.Sql.Host</PackageDescription>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+        <Copyright>Copyright (c) 2019</Copyright>
+        <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TieredCompilation>true</TieredCompilation>
+        <DebugType>full</DebugType>
+        <Library />
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+      <ProjectReference Include="..\DataAccess.Orm.Sql\DataAccess.Orm.Sql.csproj" />
+      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Model\EnColumnConstraintType.cs">
+        <DependentUpon>DatabaseColumnConstraint.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseIndexColumn.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseSchema.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseView.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseColumnConstraint.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseColumn.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\InitialMigration.cs">
+        <DependentUpon>ApplyDeltaMigration.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseModelBuilder.cs">
+        <DependentUpon>IDatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CodeModelBuilder.cs">
+        <DependentUpon>ICodeModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\AlterColumn.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateTable.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateView.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropColumn.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropIndex.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropTable.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropView.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateColumn.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateDatabase.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateIndex.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateSchema.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\TableNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ViewNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ColumnNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\SchemaNode.cs">
+        <DependentUpon>DatabaseNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\IndexNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ModelChangesSorter.cs">
+        <DependentUpon>IModelChangesSorter.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ModelChangesExtractor.cs">
+        <DependentUpon>IModelChangesExtractor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ModelComparator.cs">
+        <DependentUpon>IModelComparator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ModelChangeCommandBuilderComposite.cs">
+        <DependentUpon>IModelChangeCommandBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseEnumType.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\EnumTypeNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropEnumType.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateEnumType.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\AlterEnumType.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\BaseSqlMigration.cs">
+        <DependentUpon>IMigration.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\MigrationsExecutor.cs">
+        <DependentUpon>IMigrationsExecutor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\BaseAddSeedDataMigration.cs">
+        <DependentUpon>IMigration.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Migrations\ApplyDeltaMigration.cs">
+        <DependentUpon>IMigration.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\FunctionNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseFunction.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\TriggerNode.cs">
+        <DependentUpon>SchemaNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseTrigger.cs">
+        <DependentUpon>DatabaseModelBuilder.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\EnTriggerEvent.cs">
+        <DependentUpon>TriggerNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\EnTriggerType.cs">
+        <DependentUpon>TriggerNode.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateTrigger.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\CreateFunction.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropFunction.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DropTrigger.cs">
+        <DependentUpon>IModelChange.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+</Project>

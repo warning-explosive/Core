@@ -15,6 +15,6 @@ namespace SpaceEngineers.Core.DataImport.Abstractions
         /// </summary>
         /// <param name="specification">Data extractor specification</param>
         /// <returns>Extracted elements stream</returns>
-        IAsyncEnumerable<TElement> ExtractData(TSpec specification);
+        IEnumerable<TElement> ExtractData(TSpec specification);
     }
 }

@@ -4,12 +4,13 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using ManualRegistrations;
+    using CrossCuttingConcerns.Settings;
     using Microsoft.Build.Locator;
+    using Registrations;
     using Xunit.Abstractions;
 
     /// <summary>
@@ -41,18 +42,24 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        protected AnalysisBase(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        protected AnalysisBase(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
             output.WriteLine($"Used framework version: {Version}");
             output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory not found");
+
+            var settingsDirectory = projectFileDirectory.StepInto("Settings");
+
             var options = new DependencyContainerOptions()
                 .WithManualRegistrations(new AnalyzersManualRegistration())
+                .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(settingsDirectory)))
                 .WithExcludedNamespaces(IgnoredNamespaces.ToArray());
 
-            DependencyContainer = fixture.Container(options);
+            DependencyContainer = fixture.Container(output, options);
         }
 
         /// <summary>

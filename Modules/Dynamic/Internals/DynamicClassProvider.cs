@@ -7,25 +7,20 @@ namespace SpaceEngineers.Core.Dynamic.Internals
     using System.Reflection;
     using System.Reflection.Emit;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
 
-    /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
-    public class DynamicClassProvider : IDynamicClassProvider
+    internal class DynamicClassProvider : IDynamicClassProvider,
+                                          IResolvable<IDynamicClassProvider>
     {
-        private const string DynamicAssemblyName = "SpaceEngineers.Core.Basics.Dynamic";
-
         private const TypeAttributes DynamicClassTypeAttributes = TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed;
         private const MethodAttributes GetSetMethodAttributes = MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig;
 
-        private static readonly AssemblyName AssemblyName = new AssemblyName(DynamicAssemblyName);
-        private static readonly AssemblyBuilder AssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(AssemblyName, AssemblyBuilderAccess.Run);
-        private static readonly ModuleBuilder ModuleBuilder = AssemblyBuilder.DefineDynamicModule(DynamicAssemblyName);
+        private static readonly ConcurrentDictionary<string, ModuleBuilder> ModulesCache = new ConcurrentDictionary<string, ModuleBuilder>(StringComparer.OrdinalIgnoreCase);
+        private static readonly ConcurrentDictionary<DynamicClass, Type> TypesCache = new ConcurrentDictionary<DynamicClass, Type>();
 
-        private static readonly ConcurrentDictionary<DynamicClass, Type> Cache = new ConcurrentDictionary<DynamicClass, Type>();
-
-        /// <inheritdoc />
         public object CreateInstance(DynamicClass dynamicClass, IReadOnlyDictionary<DynamicProperty, object?> values)
         {
             var type = CreateType(dynamicClass);
@@ -48,16 +43,20 @@ namespace SpaceEngineers.Core.Dynamic.Internals
             }
         }
 
-        /// <inheritdoc />
         public Type CreateType(DynamicClass dynamicClass)
         {
-            return Cache.GetOrAdd(dynamicClass, Build);
+            lock (TypesCache)
+            {
+                return TypesCache.GetOrAdd(dynamicClass, BuildClass);
+            }
         }
 
-        private static Type Build(DynamicClass dynamicClass)
+        private static Type BuildClass(DynamicClass dynamicClass)
         {
-            var typeBuilder = ModuleBuilder.DefineType(
-                dynamicClass.Name,
+            var moduleBuilder = ModulesCache.GetOrAdd(dynamicClass.AssemblyName, BuildModule);
+
+            var typeBuilder = moduleBuilder.DefineType(
+                dynamicClass.ClassName,
                 DynamicClassTypeAttributes,
                 dynamicClass.BaseType,
                 dynamicClass.Interfaces.ToArray());
@@ -68,6 +67,12 @@ namespace SpaceEngineers.Core.Dynamic.Internals
             }
 
             return typeBuilder.CreateType();
+        }
+
+        private static ModuleBuilder BuildModule(string assemblyName)
+        {
+            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
+            return assemblyBuilder.DefineDynamicModule(assemblyName);
         }
 
         private static void DefineAutoProperty(TypeBuilder typeBuilder, DynamicProperty dynamicProperty)

@@ -36,17 +36,17 @@ namespace SpaceEngineers.Core.Basics.Test
                 array[i] = random.Next(0, count);
             }
 
-            yield return new object[] { new BinaryHeap<int>(array, EnOrderingKind.Asc), EnOrderingKind.Asc };
-            yield return new object[] { new BinaryHeap<int>(array, EnOrderingKind.Desc), EnOrderingKind.Desc };
+            yield return new object[] { new BinaryHeap<int>(array, EnOrderingDirection.Asc), EnOrderingDirection.Asc };
+            yield return new object[] { new BinaryHeap<int>(array, EnOrderingDirection.Desc), EnOrderingDirection.Desc };
         }
 
         [Theory]
         [MemberData(nameof(HeapTestData))]
-        internal void OrderingTest(IHeap<int> heap, EnOrderingKind orderingKind)
+        internal void OrderingTest(IHeap<int> heap, EnOrderingDirection orderingKind)
         {
             Output.WriteLine(heap.ToString());
 
-            var enumeratedArray = (orderingKind == EnOrderingKind.Asc
+            var enumeratedArray = (orderingKind == EnOrderingDirection.Asc
                     ? heap.OrderBy(it => it)
                     : heap.OrderByDescending(it => it))
                 .ToArray();
@@ -60,13 +60,13 @@ namespace SpaceEngineers.Core.Basics.Test
 
         [Theory]
         [MemberData(nameof(HeapTestData))]
-        internal void MultiThreadAccessTest(IHeap<int> heap, EnOrderingKind orderingKind)
+        internal void MultiThreadAccessTest(IHeap<int> heap, EnOrderingDirection orderingKind)
         {
             var count = heap.Count;
 
             Output.WriteLine(heap.ToString());
 
-            var enumeratedArray = (orderingKind == EnOrderingKind.Asc
+            var enumeratedArray = (orderingKind == EnOrderingDirection.Asc
                     ? heap.OrderBy(it => it)
                     : heap.OrderByDescending(it => it))
                 .ToArray();

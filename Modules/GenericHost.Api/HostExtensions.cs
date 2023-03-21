@@ -10,11 +10,6 @@ namespace SpaceEngineers.Core.GenericHost.Api
     public static class HostExtensions
     {
         /// <summary>
-        /// Transport injection key
-        /// </summary>
-        public const string TransportInjectionKey = "transport_injection";
-
-        /// <summary>
         /// Check multiple calls
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
@@ -33,7 +28,7 @@ namespace SpaceEngineers.Core.GenericHost.Api
 
             if (!added)
             {
-                throw new InvalidOperationException($"Method `{key}` should be used once in order to configure the same host instance");
+                throw new InvalidOperationException($"Method `{key}` should be used once so as to correctly configure the host instance");
             }
         }
     }

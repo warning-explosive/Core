@@ -18,28 +18,24 @@
         <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
         <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
         <RunAnalyzers>true</RunAnalyzers>
-        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <TieredCompilation>true</TieredCompilation>
+        <DebugType>full</DebugType>
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <Reference Include="Microsoft.Extensions.Hosting.Abstractions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
-        <HintPath>..\..\packages\microsoft.extensions.hosting.abstractions\5.0.0\lib\netstandard2.1\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
-      </Reference>
+      <ProjectReference Include="..\..\Common\Basics\Basics.csproj" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\Basics\Basics.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
+      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
       <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

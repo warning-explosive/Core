@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzerExpected
 {
     using System;
+    using AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
 
@@ -9,7 +10,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzerExpe
     /// </summary>
     [Serializable]
     /*<Analyzer Name="ComponentAttributeAnalyzer">[Component(EnLifestyle.ChooseLifestyle)]</Analyzer>*/
-    internal class FixWithLeadingTriviaAndAttributesSourceExpected : ITestService
+    internal class FixWithLeadingTriviaAndAttributesSourceExpected : ITestService, IResolvable<ITestService>
     {
     }
 }

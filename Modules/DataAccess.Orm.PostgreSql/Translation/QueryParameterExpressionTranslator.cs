@@ -1,18 +1,27 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Linq.Abstractions;
-    using Linq.Expressions;
+    using Sql.Translation;
+    using Sql.Translation.Expressions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class QueryParameterExpressionTranslator : IExpressionTranslator<QueryParameterExpression>
+    internal class QueryParameterExpressionTranslator : ISqlExpressionTranslator<QueryParameterExpression>,
+                                                        IResolvable<ISqlExpressionTranslator<QueryParameterExpression>>,
+                                                        ICollectionResolvable<ISqlExpressionTranslator>
     {
-        public Task<string> Translate(QueryParameterExpression expression, int depth, CancellationToken token)
+        public string Translate(ISqlExpression expression, int depth)
         {
-            return Task.FromResult($"@{expression.Name}");
+            return expression is QueryParameterExpression queryParameterExpression
+                ? Translate(queryParameterExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
+        }
+
+        public string Translate(QueryParameterExpression expression, int depth)
+        {
+            return $"@{expression.Name}";
         }
     }
 }

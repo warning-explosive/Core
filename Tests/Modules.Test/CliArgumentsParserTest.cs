@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using Basics;
     using CliArgumentsParser;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Xunit;
@@ -19,21 +18,18 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public CliArgumentsParserTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public CliArgumentsParserTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CliArgumentsParser)));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser)));
 
             var options = new DependencyContainerOptions();
 
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         #pragma warning disable xUnit2000 // Constants and literals should be the expected argument
 
@@ -382,9 +378,9 @@ namespace SpaceEngineers.Core.Modules.Test
         [Flags]
         private enum TestFlagsEnum
         {
-            Default,
-            Value1,
-            Value2
+            Default = 0,
+            Value1 = 1 << 0,
+            Value2 = 1 << 1
         }
 
         private class TestPoco
@@ -413,7 +409,7 @@ namespace SpaceEngineers.Core.Modules.Test
             /// <inheritdoc />
             public override string ToString()
             {
-                return this.ShowProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty);
+                return this.Dump(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty);
             }
         }
     }

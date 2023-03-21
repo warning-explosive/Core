@@ -49,21 +49,23 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
             /*
              * Mark NamespaceDeclarationSyntax by SyntaxAnnotation
              */
-            root = MarkNode(root,
-                            GetSyntax<NamespaceDeclarationSyntax>(root, diagnostic),
-                            syntaxAnnotation);
+            root = MarkNode(
+                root,
+                GetSyntax<NamespaceDeclarationSyntax>(root, diagnostic),
+                syntaxAnnotation);
 
             /*
              * Mark TypeDeclarationSyntax by SyntaxAnnotation
              */
-            root = MarkNode(root,
-                            GetSyntax<TypeDeclarationSyntax>(root, diagnostic),
-                            syntaxAnnotation);
+            root = MarkNode(
+                root,
+                GetSyntax<TypeDeclarationSyntax>(root, diagnostic),
+                syntaxAnnotation);
 
             /*
-             * AddUsingDirective
+             * InsertUsingDirective
              */
-            root = AddUsingDirective(root, FindMarked<NamespaceDeclarationSyntax>(root, syntaxAnnotation));
+            root = InsertUsingDirective(root, FindMarked<NamespaceDeclarationSyntax>(root, syntaxAnnotation));
 
             /*
              * InsertAttribute
@@ -73,9 +75,10 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
             /*
              * Register a code action that will invoke the fix
              */
-            var codeAction = CodeAction.Create(Title,
-                                               c => Task.FromResult(context.Document.WithSyntaxRoot(root).Project.Solution),
-                                               Title);
+            var codeAction = CodeAction.Create(
+                Title,
+                c => Task.FromResult(context.Document.WithSyntaxRoot(root).Project.Solution),
+                Title);
 
             context.RegisterCodeFix(codeAction, diagnostic);
         }
@@ -84,31 +87,34 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
             where TSyntax : SyntaxNode
         {
             return root
-                  .FindToken(diagnostic.Location.SourceSpan.Start)
-                  .Parent
-                  .AncestorsAndSelf()
-                  .OfType<TSyntax>()
-                  .First();
+                .FindToken(diagnostic.Location.SourceSpan.Start)
+                .Parent
+                .AncestorsAndSelf()
+                .OfType<TSyntax>()
+                .First();
         }
 
         private static TSyntax FindMarked<TSyntax>(SyntaxNode root, SyntaxAnnotation syntaxAnnotation)
             where TSyntax : SyntaxNode
         {
-            return root.DescendantNodes()
-                       .OfType<TSyntax>()
-                       .Single(n => n.HasAnnotation(syntaxAnnotation));
+            return root
+                .DescendantNodes()
+                .OfType<TSyntax>()
+                .Single(n => n.HasAnnotation(syntaxAnnotation));
         }
 
-        private static SyntaxNode MarkNode<TSyntax>(SyntaxNode root,
-                                                    TSyntax syntax,
-                                                    SyntaxAnnotation syntaxAnnotation)
+        private static SyntaxNode MarkNode<TSyntax>(
+            SyntaxNode root,
+            TSyntax syntax,
+            SyntaxAnnotation syntaxAnnotation)
             where TSyntax : SyntaxNode
         {
-            return root.ReplaceNode(syntax,
-                                    syntax.WithAdditionalAnnotations(syntaxAnnotation));
+            return root.ReplaceNode(
+                syntax,
+                syntax.WithAdditionalAnnotations(syntaxAnnotation));
         }
 
-        private static SyntaxNode AddUsingDirective(SyntaxNode root, NamespaceDeclarationSyntax namespaceDeclaration)
+        private static SyntaxNode InsertUsingDirective(SyntaxNode root, NamespaceDeclarationSyntax namespaceDeclaration)
         {
             var leadingTrivia = namespaceDeclaration.Usings.FirstOrDefault()?.GetLeadingTrivia();
             var repeat = 1;
@@ -120,33 +126,35 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
             }
 
             var trailingTrivia = SyntaxFactory.TriviaList(SyntaxFactory.CarriageReturnLineFeed);
-            var attributeDirective = GetUsingDirective(typeof(ComponentAttribute), leadingTrivia, trailingTrivia);
+            var attributeDirective = CreateUsingDirective(typeof(ComponentAttribute), leadingTrivia, trailingTrivia);
 
             trailingTrivia = SyntaxFactory.TriviaList(Enumerable.Repeat(SyntaxFactory.CarriageReturnLineFeed, repeat));
-            var enumerationDirective = GetUsingDirective(typeof(EnLifestyle), leadingTrivia, trailingTrivia);
+            var enumerationDirective = CreateUsingDirective(typeof(EnLifestyle), leadingTrivia, trailingTrivia);
 
-            return root.ReplaceNode(namespaceDeclaration,
-                                    namespaceDeclaration.AddUsings(attributeDirective, enumerationDirective));
+            return root.ReplaceNode(
+                namespaceDeclaration,
+                namespaceDeclaration.AddUsings(attributeDirective, enumerationDirective));
         }
 
-        private static UsingDirectiveSyntax GetUsingDirective(Type type,
-                                                              SyntaxTriviaList? leadingTrivia,
-                                                              SyntaxTriviaList? trailingTrivia)
+        private static UsingDirectiveSyntax CreateUsingDirective(
+            Type type,
+            SyntaxTriviaList? leadingTrivia,
+            SyntaxTriviaList? trailingTrivia)
         {
             return SyntaxFactory
-                  .UsingDirective(SyntaxFactory.IdentifierName(type.Namespace))
-                  .NormalizeWhitespace()
-                  .WithLeadingTrivia(leadingTrivia)
-                  .WithTrailingTrivia(trailingTrivia);
+                .UsingDirective(SyntaxFactory.IdentifierName(type.Namespace))
+                .WithLeadingTrivia(leadingTrivia)
+                .WithTrailingTrivia(trailingTrivia);
         }
 
         private static SyntaxNode InsertAttribute(SyntaxNode root, TypeDeclarationSyntax typeDeclaration)
         {
             var originalAttributesList = typeDeclaration.AttributeLists;
 
-            var memberAccess = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                    SyntaxFactory.IdentifierName(nameof(EnLifestyle)),
-                                                                    SyntaxFactory.IdentifierName(EnLifestyleValue));
+            var memberAccess = SyntaxFactory.MemberAccessExpression(
+                SyntaxKind.SimpleMemberAccessExpression,
+                SyntaxFactory.IdentifierName(nameof(EnLifestyle)),
+                SyntaxFactory.IdentifierName(EnLifestyleValue));
 
             var argument = SyntaxFactory.AttributeArgument(memberAccess);
 
@@ -154,16 +162,19 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
 
             var name = nameof(ComponentAttribute).Substring(0, nameof(ComponentAttribute).Length - nameof(Attribute).Length);
 
-            var attribute = SyntaxFactory.Attribute(SyntaxFactory.IdentifierName(name))
-                                         .WithArgumentList(SyntaxFactory.AttributeArgumentList(argumentList));
+            var attribute = SyntaxFactory
+                .Attribute(SyntaxFactory.IdentifierName(name))
+                .WithArgumentList(SyntaxFactory.AttributeArgumentList(argumentList));
 
-            var additionalAttribute = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(attribute))
-                                                   .NormalizeWhitespace()
-                                                   .WithTrailingTrivia(SyntaxFactory.EndOfLine(Environment.NewLine));
+            var additionalAttribute = SyntaxFactory
+                .AttributeList(SyntaxFactory.SingletonSeparatedList(attribute))
+                .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
 
             TypeDeclarationSyntax newTypeDeclaration;
-            var leadingWhitespaces = typeDeclaration.GetLeadingTrivia()
-                                                    .First(z => z.IsKind(SyntaxKind.WhitespaceTrivia));
+
+            var leadingWhitespaces = typeDeclaration
+                .GetLeadingTrivia()
+                .First(z => z.IsKind(SyntaxKind.WhitespaceTrivia));
 
             if (originalAttributesList.Any())
             {
@@ -181,8 +192,9 @@ namespace SpaceEngineers.Core.AutoRegistration.Api.Analyzers
 
             var extendedAttributeList = originalAttributesList.Add(additionalAttribute);
 
-            return root.ReplaceNode(typeDeclaration,
-                                    newTypeDeclaration.WithAttributeLists(extendedAttributeList));
+            return root.ReplaceNode(
+                typeDeclaration,
+                newTypeDeclaration.WithAttributeLists(extendedAttributeList));
         }
     }
 }

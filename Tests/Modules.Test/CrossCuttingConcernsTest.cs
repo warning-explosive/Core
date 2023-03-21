@@ -5,10 +5,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns.Api.Abstractions;
+    using CrossCuttingConcerns.ObjectBuilder;
+    using CrossCuttingConcerns.Settings;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -19,56 +19,58 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public CrossCuttingConcernsTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public CrossCuttingConcernsTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory not found");
 
-            var options = new DependencyContainerOptions();
+            var settingsDirectory = projectFileDirectory.StepInto("Settings");
 
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)));
+
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(settingsDirectory)));
+
+            DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         [Fact]
         internal void ObjectBuilderTest()
         {
-            Assert.NotNull(DependencyContainer.Resolve<IObjectBuilder<object>>().Build());
+            Assert.Equal(
+                "qwerty",
+                DependencyContainer.Resolve<IObjectBuilder<string>>().Build(new Dictionary<string, object?> { ["value"] = "qwerty" }));
 
-            var objectValues = new Dictionary<string, object> { ["value"] = new object() };
-            Assert.Throws<InvalidOperationException>(() => DependencyContainer.Resolve<IObjectBuilder<object>>().Build(objectValues));
+            Assert.Equal(
+                EnLifestyle.Scoped,
+                DependencyContainer.Resolve<IObjectBuilder<EnLifestyle>>().Build(new Dictionary<string, object?> { ["value"] = EnLifestyle.Scoped.ToString() }));
 
-            var str = "qwerty";
-            var stringValues = new Dictionary<string, object> { ["value"] = str };
-            Assert.Equal(str, DependencyContainer.Resolve<IObjectBuilder<string>>().Build(stringValues));
+            Assert.Equal(
+                Guid.Parse("50EA09BF-C8C1-494B-8D35-8B4C86A5A344"),
+                DependencyContainer.Resolve<IObjectBuilder<Guid>>().Build(new Dictionary<string, object?> { ["value"] = Guid.Parse("50EA09BF-C8C1-494B-8D35-8B4C86A5A344") }));
 
-            var enumValues = new Dictionary<string, object> { ["value"] = EnLifestyle.Scoped.ToString() };
-            Assert.Equal(EnLifestyle.Scoped, DependencyContainer.Resolve<IObjectBuilder<EnLifestyle>>().Build(enumValues));
+            Assert.Equal(
+                TypeExtensions.FindType("System.Private.CoreLib System.DateOnly"),
+                DependencyContainer.Resolve<IObjectBuilder<Type>>().Build(new Dictionary<string, object?> { ["value"] = "System.Private.CoreLib System.DateOnly" }));
 
-            var guid = Guid.NewGuid();
-            var guidValues = new Dictionary<string, object> { ["value"] = guid };
-            Assert.Equal(guid, DependencyContainer.Resolve<IObjectBuilder<Guid>>().Build(guidValues));
+            Assert.Equal(
+                "System.Private.CoreLib System.DateOnly",
+                DependencyContainer.Resolve<IObjectBuilder<string>>().Build(new Dictionary<string, object?> { ["value"] = TypeExtensions.FindType("System.Private.CoreLib System.DateOnly") }));
 
-            Assert.Equal(string.Empty, DependencyContainer.Resolve<IObjectBuilder<TestClass>>().Build().Value);
-            var testStructValues = new Dictionary<string, object> { [nameof(TestClass.Value)] = str };
-            Assert.Equal(str, DependencyContainer.Resolve<IObjectBuilder<TestClass>>().Build(testStructValues).Value);
+            Assert.Equal(
+                "qwerty",
+                DependencyContainer.Resolve<IObjectBuilder<TestClass>>().Build(new Dictionary<string, object?> { [nameof(TestClass.Value)] = "qwerty" }).Value);
         }
 
         private class TestClass
         {
-            public TestClass()
+            public TestClass(string value)
             {
-                Value = string.Empty;
-            }
-
-            public TestClass(char[] value)
-            {
-                Value = new string(value);
+                Value = value;
             }
 
             internal string Value { get; }

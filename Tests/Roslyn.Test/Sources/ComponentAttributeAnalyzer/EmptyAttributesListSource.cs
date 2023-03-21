@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Sources.ComponentAttributeAnalyzer
 {
-    internal class EmptyAttributesListSource : ITestService
+    using AutoRegistration.Api.Abstractions;
+
+    internal class EmptyAttributesListSource : ITestService, IResolvable<ITestService>
     {
     }
 }

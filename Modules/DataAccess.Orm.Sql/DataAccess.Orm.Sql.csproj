@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <AssemblyName>SpaceEngineers.Core.DataAccess.Orm.Sql</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.DataAccess.Orm.Sql</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <Title>SpaceEngineers.Core.DataAccess.Orm.Sql</Title>
+        <Authors>SpaceEngineers</Authors>
+        <Company>SpaceEngineers</Company>
+        <PackageDescription>SpaceEngineers.Core.DataAccess.Orm.Sql</PackageDescription>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+        <Copyright>Copyright (c) 2019</Copyright>
+        <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TieredCompilation>true</TieredCompilation>
+        <DebugType>full</DebugType>
+        <Library />
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
+        <ProjectReference Include="..\Dynamic\Dynamic.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Abstractions\ISqlViewQueryProvider.cs">
+        <DependentUpon>ISqlView.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\TranslationContext.cs">
+        <DependentUpon>ExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ReplaceProjectionExpressionVisitor.cs">
+        <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\StringEmptyUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\StringLengthUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\SqlExpressionVisitorBase.cs">
+        <DependentUpon>ISqlExpressionVisitor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\TranslationExpressionVisitor.cs">
+        <DependentUpon>ExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ContainsUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\BinaryOperator.cs">
+        <DependentUpon>BinaryExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\LikeUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\NamedSourceExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\FilterExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ProjectionExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ColumnExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\NewExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ConditionalExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\MethodCallExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ParameterExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\QueryParameterExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\QuerySourceExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\BinaryExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ModelProvider.cs">
+        <DependentUpon>IModelProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ColumnInfo.cs">
+        <DependentUpon>IModelInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\TableInfo.cs">
+        <DependentUpon>ITableInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ViewInfo.cs">
+        <DependentUpon>ITableInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\IndexInfo.cs">
+        <DependentUpon>IModelInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ITableInfo.cs">
+        <DependentUpon>IModelInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\JoinExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExtractRelationsExpressionVisitor.cs">
+        <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ReplaceJoinParameterExpressionsVisitor.cs">
+        <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExtractParametersVisitor.cs">
+        <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\RowsFetchLimitExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\SpecialExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ObjectEqualsUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ColumnProperty.cs">
+        <DependentUpon>ColumnInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\MtmTableInfo.cs">
+        <DependentUpon>TableInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\UnaryExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\UnaryOperator.cs">
+        <DependentUpon>UnaryExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\BinaryOperatorConversions.cs">
+        <DependentUpon>BinaryExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\UnaryOperatorConversions.cs">
+        <DependentUpon>UnaryExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\OrderByExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\OrderByExpressionExpression.cs">
+        <DependentUpon>OrderByExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\SqlExpressionTranslatorComposite.cs">
+        <DependentUpon>ISqlExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\LinqExpressionPreprocessorComposite.cs">
+        <DependentUpon>ILinqExpressionPreprocessor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\1_UnwrapScalarQueryableMethodsExpressionVisitor.cs">
+        <DependentUpon>LinqExpressionPreprocessorComposite.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\2_CollapseConstantsExpressionVisitor.cs">
+        <DependentUpon>LinqExpressionPreprocessorComposite.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\3_BinaryExpressionVisitor.cs">
+        <DependentUpon>LinqExpressionPreprocessorComposite.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\4_SubQueryExpressionVisitor.cs">
+        <DependentUpon>LinqExpressionPreprocessorComposite.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\TranslatedSqlExpression.cs">
+        <DependentUpon>SqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\IsNullUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\IsNotNullUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\SqlQueryParameter.cs">
+        <DependentUpon>SqlQuery.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\SqlCommandParameter.cs">
+        <DependentUpon>SqlCommand.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\EnumTypeInfo.cs">
+        <DependentUpon>IModelInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExtractExpressionCacheKeyExpressionVisitor.cs">
+        <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\AssignUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\SetExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\InsertExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\BatchExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ValuesExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\InsertCommandExpressionVisitor.cs">
+        <DependentUpon>LinqExtensions.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\DeleteExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\UpdateExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\DeleteCommandExpressionVisitor.cs">
+        <DependentUpon>LinqExtensions.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\UpdateCommandExpressionVisitor.cs">
+        <DependentUpon>LinqExtensions.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\ReplaceAssignExpressionVisitor.cs">
+        <DependentUpon>UpdateEntityChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExtractUpdateQueryRootExpressionVisitor.cs">
+        <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\CommandParameterExtractorContext.cs">
+        <DependentUpon>TranslationContext.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\RenameExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExtractDeleteQueryRootExpressionVisitor.cs">
+        <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\UpdateEntityChange.cs">
+        <DependentUpon>ITransactionalChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\CreateEntityChange.cs">
+        <DependentUpon>ITransactionalChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\DeleteEntityChange.cs">
+        <DependentUpon>ITransactionalChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\IDatabaseTransaction.cs">
+        <DependentUpon>IDatabaseContext.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\IAdvancedDatabaseTransaction.cs">
+        <DependentUpon>IDatabaseTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\DatabaseTransaction.cs">
+        <DependentUpon>IAdvancedDatabaseTransaction.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\TransactionalStore.cs">
+        <DependentUpon>ITransactionalStore.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Transaction\ModelChange.cs">
+        <DependentUpon>ITransactionalChange.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\QueryProvider.cs">
+        <DependentUpon>IAsyncQueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ISetUpdateQueryable.cs">
+        <DependentUpon>IUpdateQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IFilteredUpdateQueryable.cs">
+        <DependentUpon>ISetUpdateQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IFilteredDeleteQueryable.cs">
+        <DependentUpon>IDeleteQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IDeleteQueryable.cs">
+        <DependentUpon>ICustomQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IUpdateQueryable.cs">
+        <DependentUpon>ICustomQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\IInsertQueryable.cs">
+        <DependentUpon>ICustomQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ICachedQueryable.cs">
+        <DependentUpon>ICustomQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\Repository.cs">
+        <DependentUpon>IRepository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ICustomQueryable.cs">
+        <DependentUpon>Queryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\SqlCommandMaterializer.cs">
+        <DependentUpon>CommandMaterializerComposite.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExpressionTranslator.cs">
+        <DependentUpon>IExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ICachedInsertQueryable.cs">
+        <DependentUpon>IInsertQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ICachedDeleteQueryable.cs">
+        <DependentUpon>IFilteredDeleteQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ICachedUpdateQueryable.cs">
+        <DependentUpon>IFilteredUpdateQueryable.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\ExecutedExpressionEventArgs.cs">
+        <DependentUpon>QueryProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\CommandMaterializerComposite.cs">
+        <DependentUpon>ICommandMaterializer.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\SqlCommand.cs">
+        <DependentUpon>ICommand.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\DatabaseTypeProvider.cs">
+        <DependentUpon>IDatabaseTypeProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\BaseDatabaseEntity.cs">
+        <DependentUpon>IDatabaseEntity.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\BaseMtmDatabaseEntity.cs">
+        <DependentUpon>IUniqueIdentified.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\IDatabaseEntity.cs">
+        <DependentUpon>IUniqueIdentified.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\BaseSqlView.cs">
+        <DependentUpon>ISqlView.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ISqlView.cs">
+        <DependentUpon>IUniqueIdentified.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\ISqlViewQueryProvider.cs">
+        <DependentUpon>BaseSqlView.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Relation.cs">
+        <DependentUpon>ColumnInfo.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Model\Attributes\EnOnDeleteBehavior.cs">
+        <DependentUpon>ForeignKeyAttribute.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Linq\EnInsertBehavior.cs">
+        <DependentUpon>Repository.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ExplainExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\HasJsonAttributeUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\GetJsonAttributeUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\JsonAttributeExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\DatabaseJsonObjectValueUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ConcatJsonObjectsUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\ExcludeJsonAttributeUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\AsJsonObjectUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\EnumHasFlagUnknownExpressionTranslator.cs">
+        <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+</Project>

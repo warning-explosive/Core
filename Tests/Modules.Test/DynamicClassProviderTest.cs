@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Reflection;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Dynamic;
@@ -22,21 +21,18 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public DynamicClassProviderTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public DynamicClassProviderTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Dynamic)));
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Dynamic)));
 
             var options = new DependencyContainerOptions();
 
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         /// <summary> DynamicClass test data member </summary>
         /// <returns>Test data</returns>
@@ -67,7 +63,7 @@ namespace SpaceEngineers.Core.Modules.Test
 
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass()),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_1")),
                 emptyPropertyValues,
                 new Action<Type>(type =>
                 {
@@ -80,7 +76,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().InheritsFrom(typeof(TestBaseClass))),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_2").InheritsFrom(typeof(TestBaseClass))),
                 emptyPropertyValues,
                 new Action<Type>(type =>
                 {
@@ -93,7 +89,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().Implements(typeof(ITestInterface))),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_3").Implements(typeof(ITestInterface))),
                 emptyPropertyValues,
                 new Action<Type>(type =>
                 {
@@ -106,7 +102,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().HasProperties(propertyValues.Keys.ToArray())),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_4").HasProperties(propertyValues.Keys.ToArray())),
                 propertyValues,
                 new Action<Type>(type =>
                 {
@@ -139,7 +135,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
             yield return new object[]
             {
-                new Func<DynamicClass>(() => new DynamicClass().InheritsFrom(typeof(TestBaseClass)).Implements(typeof(ITestInterface)).HasProperties(propertyValues.Keys.ToArray())),
+                new Func<DynamicClass>(() => new DynamicClass($"{nameof(DynamicClassTestData)}_5").InheritsFrom(typeof(TestBaseClass)).Implements(typeof(ITestInterface)).HasProperties(propertyValues.Keys.ToArray())),
                 propertyValues,
                 new Action<Type>(type =>
                 {

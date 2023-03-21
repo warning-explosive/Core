@@ -1,71 +1,52 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Linq;
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot.Api.Abstractions.Container;
-    using Linq.Abstractions;
-    using Linq.Expressions;
-    using Linq.Internals;
+    using Sql.Translation;
+    using Sql.Translation.Expressions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ProjectionExpressionTranslator : IExpressionTranslator<ProjectionExpression>
+    internal class ProjectionExpressionTranslator : ISqlExpressionTranslator<ProjectionExpression>,
+                                                    IResolvable<ISqlExpressionTranslator<ProjectionExpression>>,
+                                                    ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public ProjectionExpressionTranslator(IDependencyContainer dependencyContainer)
+        public ProjectionExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _dependencyContainer = dependencyContainer;
+            _translator = translator;
         }
 
-        public async Task<string> Translate(ProjectionExpression expression, int depth, CancellationToken token)
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is ProjectionExpression projectionExpression
+                ? Translate(projectionExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
+        }
+
+        public string Translate(ProjectionExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
-            if (expression.IsDistinct)
-            {
-                sb.AppendLine("SELECT DISTINCT");
-            }
-            else
-            {
-                sb.AppendLine("SELECT");
-            }
+            sb.AppendLine(expression.IsDistinct ? "SELECT DISTINCT" : "SELECT");
 
-            var lastBindingIndex = expression.Bindings.Count - 1;
-
-            if (expression.Bindings.Any())
+            if (expression.Expressions.Any())
             {
-                var bindings = await expression
-                    .Bindings
-                    .Select(binding => binding.Translate(_dependencyContainer, depth, token))
-                    .WhenAll()
-                    .ConfigureAwait(false);
-
-                bindings.Each((binding, i) =>
-                {
-                    sb.Append(new string('\t', depth + 1));
-                    sb.Append(binding);
-                    var ending = i < lastBindingIndex
-                        ? ","
-                        : string.Empty;
-
-                    sb.AppendLine(ending);
-                });
-            }
-            else
-            {
-                sb.Append(new string('\t', depth + 1));
-                sb.AppendLine("*");
+                sb.AppendLine(expression
+                    .Expressions
+                    .Select(column => new string('\t', depth + 1) + _translator.Translate(column, depth))
+                    .ToString("," + Environment.NewLine));
             }
 
             sb.Append(new string('\t', depth));
             sb.AppendLine("FROM");
             sb.Append(new string('\t', depth + 1));
-            sb.Append($"{await expression.Source.Translate(_dependencyContainer, depth + 1, token).ConfigureAwait(false)}");
+            sb.Append(_translator.Translate(expression.Source, depth + 1));
 
             return sb.ToString();
         }

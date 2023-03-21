@@ -1,14 +1,13 @@
 namespace SpaceEngineers.Core.DataImport.Abstractions
 {
     using System.Collections.Generic;
-    using AutoRegistration.Api.Abstractions;
     using DocumentFormat.OpenXml.Spreadsheet;
     using Excel;
 
     /// <summary>
     /// Excel cell value extractor
     /// </summary>
-    public interface IExcelCellValueExtractor : IResolvable
+    public interface IExcelCellValueExtractor
     {
         /// <summary>
         /// Extract excel cell value

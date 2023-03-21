@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.Basics.Test
 {
     using System;
-    using System.Globalization;
     using Basics;
     using Xunit;
     using Xunit.Abstractions;
@@ -24,35 +23,33 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             Func<bool> func = () => throw TestExtensions.TrueException();
 
-            var emptyHandlerBlockResult = func.Try()
-                                              .Catch<TrueException>()
-                                              .Invoke();
+            var emptyHandlerBlockResult = ExecutionExtensions
+                .Try(func)
+                .Catch<TrueException>()
+                .Invoke(_ => default);
+
             Assert.False(emptyHandlerBlockResult);
 
-            emptyHandlerBlockResult = func.Try()
-                                          .Catch<TrueException>(ex => { })
-                                          .Invoke();
+            emptyHandlerBlockResult = ExecutionExtensions
+                .Try(func)
+                .Catch<TrueException>(_ => { })
+                .Invoke(_ => default);
+
             Assert.False(emptyHandlerBlockResult);
 
-            var result = func.Try()
-                             .Catch<TrueException>()
-                             .Invoke(ex => true);
+            var result = ExecutionExtensions
+                .Try(func)
+                .Catch<TrueException>()
+                .Invoke(_ => true);
+
             Assert.True(result);
 
-            void HandleNotCaught() => func.Try()
-                                          .Catch<FalseException>()
-                                          .Invoke(ex => true);
+            void HandleNotCaught() => ExecutionExtensions
+                .Try(func)
+                .Catch<FalseException>()
+                .Invoke(_ => true);
 
             Assert.Throws<TrueException>(HandleNotCaught);
-        }
-
-        [Fact]
-        internal void WrongNullableInferenceTest()
-        {
-            // TODO: #38 - Compiler Issue
-            object? x = null;
-            void Action() => Output.WriteLine(x.GetHashCode().ToString(CultureInfo.InvariantCulture));
-            Assert.Throws<NullReferenceException>(Action);
         }
 
         [Fact]
@@ -60,54 +57,57 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             // 1 - value type
             Func<bool> valueTypeFunction = () => true;
-            var result1 = valueTypeFunction.Try().Invoke();
+            var result1 = ExecutionExtensions.Try(valueTypeFunction).Invoke(_ => default);
             Assert.True(result1);
 
             // 2 - nullable value type
             Func<bool?> nullableValueTypeFunction = () => null;
-            var result2 = nullableValueTypeFunction.Try().Invoke();
+            var result2 = ExecutionExtensions.Try(nullableValueTypeFunction).Invoke(_ => default);
             Assert.Null(result2);
 
             // 3 - reference type
             Func<object> referenceFunction = () => new object();
-            var result3 = referenceFunction.Try().Invoke();
+            var result3 = ExecutionExtensions.Try(referenceFunction).Invoke(_ => new object());
             Assert.NotNull(result3);
 
             // nullable-reference type
             Func<object?> nullableReferenceFunction = () => null;
-            var result4 = nullableReferenceFunction.Try().Invoke();
+            var result4 = ExecutionExtensions.Try(nullableReferenceFunction).Invoke(_ => default);
             Assert.Null(result4);
         }
 
         [Fact]
         internal void HandledExceptionTest()
         {
-            Func<object> function = () => throw TestExtensions.FalseException();
+            Func<object?> function = () => throw TestExtensions.FalseException();
 
-            function.Try()
-                    .Catch<FalseException>()
-                    .Invoke();
+            ExecutionExtensions
+                .Try(function)
+                .Catch<FalseException>()
+                .Invoke(_ => default);
         }
 
         [Fact]
         internal void SeveralCatchBlocksTest()
         {
-            Func<object> function = () => throw TestExtensions.FalseException();
+            Func<object?> function = () => throw TestExtensions.FalseException();
 
-            function.Try()
-                    .Catch<TrueException>(ex => throw ex)
-                    .Catch<FalseException>()
-                    .Invoke();
+            ExecutionExtensions
+                .Try(function)
+                .Catch<TrueException>(ex => throw ex)
+                .Catch<FalseException>()
+                .Invoke(_ => default);
         }
 
         [Fact]
         internal void ThrowInCatchBlockTest()
         {
-            Func<object> function = () => throw TestExtensions.FalseException();
+            Func<object?> function = () => throw TestExtensions.FalseException();
 
-            void TestFunction() => function.Try()
-                                           .Catch<FalseException>(ex => throw TestExtensions.TrueException())
-                                           .Invoke();
+            void TestFunction() => ExecutionExtensions
+                .Try(function)
+                .Catch<FalseException>(_ => throw TestExtensions.TrueException())
+                .Invoke(_ => default);
 
             Assert.Throws<TrueException>(TestFunction);
         }
@@ -117,9 +117,10 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             Func<object> function = () => throw TestExtensions.FalseException();
 
-            void TestFunction() => function.Try()
-                                           .Catch<FalseException>()
-                                           .Invoke(ex => throw TestExtensions.TrueException());
+            void TestFunction() => ExecutionExtensions
+                .Try(function)
+                .Catch<FalseException>()
+                .Invoke(ex => throw TestExtensions.TrueException());
 
             Assert.Throws<TrueException>(TestFunction);
         }
@@ -127,12 +128,13 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void ThrowInFinallyBlockTest()
         {
-            Func<object> function = () => throw TestExtensions.FalseException();
+            Func<object?> function = () => throw TestExtensions.FalseException();
 
-            void TestFunction() => function.Try()
-                                           .Catch<FalseException>(ex => throw ex)
-                                           .Finally(() => throw TestExtensions.TrueException())
-                                           .Invoke();
+            void TestFunction() => ExecutionExtensions
+                .Try(function)
+                .Catch<FalseException>(ex => throw ex)
+                .Finally(() => throw TestExtensions.TrueException())
+                .Invoke(_ => default);
 
             Assert.Throws<TrueException>(TestFunction);
         }

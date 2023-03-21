@@ -1,0 +1,119 @@
+name: build-test-publish
+on:
+  push:
+    branches:
+      - master
+      - 'release-[0-9]+.[0-9]+.[0-9]+'
+      - 'hotfix-[0-9]+.[0-9]+.[0-9]+'
+      - 'support-[0-9]+.[0-9]+.[0-9]+'
+      - develop
+      - 'feature-[0-9]+'
+      - 'pull-request-[0-9]+'
+    paths-ignore:
+      - '**.md'
+env:
+  DOT_NET_VERSION: 7.0.x
+  GIT_VERSION_VERSION: 5.*
+  TEST_RESULTS_PATH: TEST_RESULTS
+  TEST_COVERAGE_PATH: TEST_COVERAGE
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15.1
+        env:
+          POSTGRES_PASSWORD: Password12!
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      rabbit_mq:
+        image: rabbitmq:3.11.9-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+    steps:
+    - name: Dump context
+      run: echo '${{ toJSON(github) }}'
+    - name: Setup git
+      run: git config --global core.autocrlf true
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Determine configuration
+      run: echo "${{ (github.ref_name == 'master' || github.ref_name == 'release-[0-9]+.[0-9]+.[0-9]+' || github.ref_name == 'hotfix-[0-9]+.[0-9]+.[0-9]+' || github.ref_name == 'support-[0-9]+.[0-9]+.[0-9]+') && 'CONFIGURATION=Release' || 'CONFIGURATION=Debug' }}" >> $GITHUB_ENV
+    - name: Setup .NET toolchain
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOT_NET_VERSION }}
+    - name: Install GitVersion
+      run: dotnet tool install --global GitVersion.Tool --version ${{ env.GIT_VERSION_VERSION }}
+    - name: Generate assembly version
+      run: dotnet-gitversion /l console /output buildserver /updateAssemblyInfo
+    - name: Dump environment variables
+      run: echo '${{ toJSON(env) }}'
+    - name: Restore nuget packages
+      run: dotnet restore --no-cache -v:minimal
+    - name: Build solution
+      run: dotnet build -c ${{ env.CONFIGURATION }} --no-restore -v:minimal
+    - name: Run tests
+      run: dotnet test "${{ github.event.repository.name }}.sln" -c "${{ env.CONFIGURATION }}" --no-restore --no-build -l:trx --results-directory "${{ env.TEST_RESULTS_PATH }}" -v:minimal /p:CollectCoverage=true /p:Exclude="[*.Test]*" /p:Exclude="[*.Benchmark]*" /p:SkipAutoProps=true /p:UseSourceLink=true /p:CoverletOutputFormat=\"json,opencover\" /p:CoverletOutput='../../${{ env.TEST_COVERAGE_PATH }}/' /p:MergeWith='../../${{ env.TEST_COVERAGE_PATH }}/coverage.json'
+    - name: Generate coverage report
+      if: ${{ success() || failure() }}
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.1.17
+      with:
+        reports: '${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml'
+        targetdir: '${{ env.TEST_COVERAGE_PATH }}'
+        reporttypes: 'Html;Badges'
+        verbosity: 'Info'
+        tag: '${{ env.GitVersion_FullSemVer }}'
+    - name: Upload coverage to Codecov
+      if: ${{ success() || failure() }}
+      uses: codecov/codecov-action@v3
+      with:
+        fail_ci_if_error: true
+        files: ./${{ env.TEST_COVERAGE_PATH }}/coverage.opencover.xml
+    - name: Upload test artifacts
+      if: ${{ success() || failure() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: ${{ env.TEST_RESULTS_PATH }}
+        if-no-files-found: error
+    - name: Pack solution
+      run: dotnet pack --no-build -p:version=${{ env.GitVersion_FullSemVer }} --property:PackageOutputPath=../../packages -v:minimal
+    - name: Add NuGet source
+      run: dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --name github --username ${{ github.repository_owner }} --password ${{ github.token }} --store-password-in-clear-text
+    - name: Publish nuget packages
+      run: dotnet nuget push packages/*.nupkg --source github --api-key ${{ github.token }} --skip-duplicate
+    - name: Upload nuget artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: built-packages
+        path: packages/*.nupkg
+        if-no-files-found: error
+#    - name: Login to GitHub Container Registry
+#      uses: docker/login-action@v2
+#      with:
+#        registry: ghcr.io
+#        username: ${{ github.repository_owner }}
+#        password: ${{ secrets.GITHUB_TOKEN }}
+#    - name: Set up QEMU
+#      uses: docker/setup-qemu-action@v2
+#    - name: Set up Docker Buildx
+#      uses: docker/setup-buildx-action@v2
+#    - name: Build image and push it to registry
+#      uses: docker/build-push-action@v3
+#      with:
+#        push: true
+#        file: ./Dockerfile.webtest
+#        context: .
+#        platforms: linux/amd64,linux/arm64
+#        tags: |
+#          ghcr.io/${{ github.repository_owner }}/core-web-test:latest
+#          ghcr.io/${{ github.repository_owner }}/core-web-test:${{ env.GitVersion_FullSemVer }}

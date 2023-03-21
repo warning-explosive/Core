@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
 {
     using System;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
     using Microsoft.CodeAnalysis.CodeFixes;
     using Microsoft.CodeAnalysis.Diagnostics;
     using ValueObjects;
@@ -10,7 +9,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Abstractions
     /// <summary>
     /// Verifies code fix results
     /// </summary>
-    public interface ICodeFixVerifier : IResolvable
+    public interface ICodeFixVerifier
     {
         /// <summary>
         /// Verify code fix results

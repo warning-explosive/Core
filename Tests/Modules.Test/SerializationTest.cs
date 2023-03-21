@@ -6,11 +6,10 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Linq;
     using Basics;
     using CompositionRoot;
-    using CompositionRoot.Api.Abstractions.Container;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
-    using CrossCuttingConcerns.Api.Abstractions;
     using CrossCuttingConcerns.Json;
+    using CrossCuttingConcerns.Settings;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -22,21 +21,24 @@ namespace SpaceEngineers.Core.Modules.Test
     {
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public SerializationTest(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public SerializationTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.CrossCuttingConcerns)));
+            var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
+                                       ?? throw new InvalidOperationException("Project directory not found");
 
-            var options = new DependencyContainerOptions();
+            var settingsDirectory = projectFileDirectory.StepInto("Settings");
 
-            DependencyContainer = fixture.BoundedAboveContainer(options, assembly);
+            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)));
+
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(settingsDirectory)));
+
+            DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
         }
 
-        /// <summary>
-        /// DependencyContainer
-        /// </summary>
-        protected IDependencyContainer DependencyContainer { get; }
+        private IDependencyContainer DependencyContainer { get; }
 
         [Fact]
         internal void ObjectTreeDeserializationTest()

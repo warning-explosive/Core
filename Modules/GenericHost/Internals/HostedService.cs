@@ -7,70 +7,122 @@ namespace SpaceEngineers.Core.GenericHost.Internals
     using System.Threading.Tasks;
     using Api.Abstractions;
     using Basics;
+    using Basics.Primitives;
+    using CompositionRoot;
+    using CompositionRoot.Exceptions;
+    using CrossCuttingConcerns.Logging;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
     internal class HostedService : IHostedService, IDisposable
     {
-        private readonly IEnumerable<IHostStartupAction> _startupActions;
-        private readonly IEnumerable<IHostBackgroundWorker> _backgroundWorkers;
+        private static readonly AsyncAutoResetEvent Sync = new AsyncAutoResetEvent(true);
+
+        private readonly IHostApplicationLifetime _hostApplicationLifetime;
+        private readonly IEnumerable<IDependencyContainer> _dependencyContainers;
+        private readonly IHostStartupActionsRegistry _hostStartupActionsRegistry;
 
         private CancellationTokenSource? _cts;
         private Task? _backgroundWorkersTask;
 
         public HostedService(
+            Guid identifier,
+            IHostApplicationLifetime hostApplicationLifetime,
             ILoggerFactory loggerFactory,
-            IEnumerable<IHostStartupAction> startupActions,
-            IEnumerable<IHostBackgroundWorker> backgroundWorkers)
+            IEnumerable<IDependencyContainer> dependencyContainers,
+            IHostStartupActionsRegistry hostStartupActionsRegistry)
         {
+            Identifier = identifier;
+
             Logger = loggerFactory.CreateLogger<HostedService>();
 
-            _startupActions = startupActions;
-            _backgroundWorkers = backgroundWorkers;
+            _hostApplicationLifetime = hostApplicationLifetime;
+            _dependencyContainers = dependencyContainers;
+            _hostStartupActionsRegistry = hostStartupActionsRegistry;
         }
 
-        private ILogger<HostedService> Logger { get; }
+        public Guid Identifier { get; }
 
-        private CancellationToken Token => _cts?.Token ?? CancellationToken.None;
+        private ILogger Logger { get; }
+
+        private CancellationToken Token => _cts.Token;
 
         public async Task StartAsync(CancellationToken token)
         {
+            await Sync
+               .WaitAsync(token)
+               .ConfigureAwait(false);
+
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
 
-            foreach (var action in _startupActions.OrderByDependencyAttribute(action => action.GetType()))
+            var startupActions = _dependencyContainers
+               .SelectMany(dependencyContainer => ExecutionExtensions
+                   .Try(container => container.ResolveCollection<IHostStartupAction>(), dependencyContainer)
+                   .Catch<ComponentResolutionException>()
+                   .Invoke(_ => Enumerable.Empty<IHostStartupAction>()));
+
+            foreach (var action in startupActions)
             {
-                await action.Run(Token).ConfigureAwait(false);
+                await action
+                    .Run(Token)
+                    .TryAsync()
+                    .Catch<Exception>(OnUnhandledException(Logger))
+                    .Invoke(Token)
+                    .ConfigureAwait(false);
+
+                _hostStartupActionsRegistry.Enroll(action);
             }
 
-            _backgroundWorkersTask = _backgroundWorkers
-                .Select(worker => worker.Run(Token))
-                .WhenAll();
+            _backgroundWorkersTask = _dependencyContainers
+               .SelectMany(dependencyContainer => ExecutionExtensions
+                   .Try(container => container.ResolveCollection<IHostBackgroundWorker>(), dependencyContainer)
+                   .Catch<ComponentResolutionException>()
+                   .Invoke(_ => Enumerable.Empty<IHostBackgroundWorker>()))
+               .Select(worker => worker
+                   .Run(Token)
+                   .TryAsync()
+                   .Catch<Exception>(OnUnhandledException(Logger))
+                   .Invoke(Token))
+               .WhenAll();
         }
 
         public async Task StopAsync(CancellationToken token)
         {
+            Logger.Information("Application is being shut down");
+
             if (_backgroundWorkersTask == null)
             {
-                // Stop called without start
+                _hostApplicationLifetime.StopApplication();
+
                 return;
             }
 
             try
             {
-                // Signal cancellation to the executing method
                 _cts.Cancel();
             }
-            finally
+            catch (ObjectDisposedException)
             {
-                // Wait until the task completes or the stop token triggers
-                await Task
-                    .WhenAny(_backgroundWorkersTask, Task.Delay(Timeout.InfiniteTimeSpan, token))
-                    .ConfigureAwait(false);
             }
+
+            try
+            {
+                await Task
+                   .WhenAny(_backgroundWorkersTask, Task.Delay(Timeout.InfiniteTimeSpan, token))
+                   .Unwrap()
+                   .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+
+            _hostApplicationLifetime.StopApplication();
         }
 
         public void Dispose()
         {
+            Logger.Information($"{nameof(HostedService)} is being disposed");
+
             try
             {
                 _cts?.Cancel();
@@ -81,8 +133,19 @@ namespace SpaceEngineers.Core.GenericHost.Internals
             }
             finally
             {
+                Sync.Set();
                 _cts?.Dispose();
             }
+        }
+
+        private Func<Exception, CancellationToken, Task> OnUnhandledException(ILogger logger)
+        {
+            return async (exception, token) =>
+            {
+                logger.Critical(exception, $"Hosted service {Identifier} unhandled exception");
+
+                await StopAsync(token).ConfigureAwait(false);
+            };
         }
     }
 }

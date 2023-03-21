@@ -1,9 +1,11 @@
 namespace SpaceEngineers.Core.Roslyn.Test.Implementations
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Xml.Linq;
     using Abstractions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -11,16 +13,14 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.Text;
 
-    /// <inheritdoc />
     [Component(EnLifestyle.Singleton)]
-    internal class AliasSourceTransformer : ISourceTransformer
+    internal class AliasSourceTransformer : ISourceTransformer,
+                                            ICollectionResolvable<ISourceTransformer>
     {
-        /// <summary> .cctor </summary>
         public AliasSourceTransformer()
         {
         }
 
-        /// <inheritdoc />
         public SourceText Transform(SourceText source)
         {
             while (TryGetReplacement(source, out var replacement))
@@ -43,16 +43,10 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             var replacements = ((SyntaxNodeOrToken)syntaxTree.GetRoot())
                 .Flatten(node => node.ChildNodesAndTokens())
                 .SelectMany(node => node.GetLeadingTrivia().Concat(node.GetTrailingTrivia()))
-                .Where(trivia => trivia.Kind() == SyntaxKind.MultiLineCommentTrivia)
-                .Select(trivia =>
-                {
-                    if (TryGetAlias(trivia.ToFullString(), out var content))
-                    {
-                        return (content, trivia.Span);
-                    }
-
-                    return default;
-                })
+                .Where(trivia => trivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
+                .Select(trivia => TryGetAlias(trivia.ToFullString(), out var content)
+                    ? (content, trivia.Span)
+                    : default)
                 .Where(pair => pair != default)
                 .ToList();
 
@@ -66,33 +60,30 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             return false;
         }
 
-        private static bool TryGetAlias(string comment, out string content)
+        private static bool TryGetAlias(string comment, [NotNullWhen(true)] out string? content)
         {
-            content = string.Empty;
+            content = ExecutionExtensions
+               .Try(GetAlias, comment)
+               .Catch<System.Xml.XmlException>()
+               .Invoke(_ => default);
 
-            try
+            return content != default;
+        }
+
+        private static string? GetAlias(string comment)
+        {
+            var element = XElement.Parse(comment.Trim('/').Trim('*').Trim());
+
+            if (element.Name != Conventions.Analyzer)
             {
-                var element = XElement.Parse(comment.Trim('/').Trim('*').Trim());
-
-                if (element.Name != Conventions.Analyzer)
-                {
-                    return false;
-                }
-
-                var analyzerName = element.Attribute(Conventions.NameAttribute)?.Value;
-
-                if (string.IsNullOrEmpty(analyzerName))
-                {
-                    return false;
-                }
-
-                content = element.Value;
-                return true;
+                return default;
             }
-            catch (System.Xml.XmlException)
-            {
-                return false;
-            }
+
+            var analyzerName = element.Attribute(Conventions.NameAttribute)?.Value;
+
+            return analyzerName.IsNullOrEmpty()
+                ? default
+                : element.Value;
         }
     }
 }

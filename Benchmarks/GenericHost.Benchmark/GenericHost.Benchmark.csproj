@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+        <AssemblyName>GenericHost.Benchmark</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericHost.Benchmark</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <Title>SpaceEngineers.Core.GenericHost.Benchmark</Title>
+        <Authors>SpaceEngineers</Authors>
+        <Company>SpaceEngineers</Company>
+        <PackageDescription>SpaceEngineers.Core.GenericHost.Benchmark</PackageDescription>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+        <Copyright>Copyright (c) 2019</Copyright>
+        <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TieredCompilation>true</TieredCompilation>
+        <DebugType>full</DebugType>
+        <GenerateProgramFile>false</GenerateProgramFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="xunit" Version="2.4.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Authorization.Host\GenericEndpoint.Authorization.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Host\GenericEndpoint.DataAccess.Sql.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
+      <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
+      <ProjectReference Include="..\Benchmark.Api\Benchmark.Api.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="Sources\Request.cs">
+        <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\RecreatePostgreSqlDatabaseHostStartupAction.cs">
+        <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Reply.cs">
+        <DependentUpon>MessageHandlerMiddlewareBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\ComplexDatabaseEntity.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\EnEnum.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\EnEnumFlags.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Participant.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Post.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\User.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Community.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Sources\Blog.cs">
+        <DependentUpon>DatabaseConnectionProviderBenchmarkSource.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+</Project>

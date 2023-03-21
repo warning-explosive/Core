@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.Modules.Benchmark
 {
     using Core.Benchmark.Api;
-    using Core.Test.Api;
-    using Core.Test.Api.ClassFixtures;
     using Sources;
+    using Test.Api;
+    using Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
 
@@ -15,13 +15,13 @@ namespace SpaceEngineers.Core.Modules.Benchmark
     {
         /// <summary> .cctor </summary>
         /// <param name="output">ITestOutputHelper</param>
-        /// <param name="fixture">ModulesTestFixture</param>
-        public Benchmarks(ITestOutputHelper output, ModulesTestFixture fixture)
+        /// <param name="fixture">TestFixture</param>
+        public Benchmarks(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
         }
 
-        [Fact]
+        [Fact(Timeout = 300_000)]
         internal void DeepCopyBenchmark()
         {
             var summary = Benchmark.Run<DeepCopyBenchmarkSource>(Output.WriteLine);
@@ -37,15 +37,13 @@ namespace SpaceEngineers.Core.Modules.Benchmark
                 Output.WriteLine);
 
             var multiplier = bySerialization / byReflection;
-
-            Output.WriteLine($"{nameof(bySerialization)}: {bySerialization}");
-            Output.WriteLine($"{nameof(byReflection)}: {byReflection}");
             Output.WriteLine($"{nameof(multiplier)}: {multiplier:N}");
 
-            Assert.True(multiplier >= 3m);
+            Assert.True(bySerialization <= 50_000m);
+            Assert.True(byReflection <= 50_000m);
         }
 
-        [Fact]
+        [Fact(Timeout = 300_000)]
         internal void AssembliesExtensionsBelowBenchmark()
         {
             var summary = Benchmark.Run<AssembliesExtensionsBelowBenchmarkSource>(Output.WriteLine);
@@ -58,17 +56,44 @@ namespace SpaceEngineers.Core.Modules.Benchmark
             Assert.True(measure <= 25m);
         }
 
-        [Fact]
+        [Fact(Timeout = 300_000)]
         internal void CompositionRootStartupBenchmark()
         {
             var summary = Benchmark.Run<CompositionRootStartupBenchmarkSource>(Output.WriteLine);
 
-            var measure = summary.MillisecondMeasure(
+            var createExactlyBounded = summary.MillisecondMeasure(
+                nameof(CompositionRootStartupBenchmarkSource.CreateExactlyBounded),
+                Measure.Mean,
+                Output.WriteLine);
+
+            Assert.True(createExactlyBounded <= 1000m);
+
+            var createBoundedAbove = summary.MillisecondMeasure(
                 nameof(CompositionRootStartupBenchmarkSource.CreateBoundedAbove),
                 Measure.Mean,
                 Output.WriteLine);
 
-            Assert.True(measure <= 1000m);
+            Assert.True(createBoundedAbove <= 1000m);
+        }
+
+        [Fact(Timeout = 300_000)]
+        internal void StreamCopyVersusStreamReadBenchmark()
+        {
+            var summary = Benchmark.Run<StreamCopyVersusStreamReadBenchmarkSource>(Output.WriteLine);
+
+            var copyTo = summary.MillisecondMeasure(
+                nameof(StreamCopyVersusStreamReadBenchmarkSource.CopyTo),
+                Measure.Mean,
+                Output.WriteLine);
+
+            Assert.True(copyTo <= 10m);
+
+            var read = summary.MillisecondMeasure(
+                nameof(StreamCopyVersusStreamReadBenchmarkSource.Read),
+                Measure.Mean,
+                Output.WriteLine);
+
+            Assert.True(read <= 10m);
         }
     }
 }

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>SpaceEngineers.Core.CompositionRoot</AssemblyName>
+    <RootNamespace>SpaceEngineers.Core.CompositionRoot</RootNamespace>
+    <IsPackable>true</IsPackable>
+    <Title>SpaceEngineers.Core.CompositionRoot</Title>
+    <Authors>SpaceEngineers</Authors>
+    <Company>SpaceEngineers</Company>
+    <PackageDescription>SpaceEngineers.Core.CompositionRoot</PackageDescription>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
+    <Copyright>Copyright (c) 2019</Copyright>
+    <CodeAnalysisRuleSet>..\..\ruleset.ruleset</CodeAnalysisRuleSet>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <RunAnalyzers>true</RunAnalyzers>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TieredCompilation>true</TieredCompilation>
+    <DebugType>full</DebugType>
+    <Library />
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="SimpleInjector" Version="5.4.1" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Basics\Basics.csproj" />
+    <ProjectReference Include="..\AutoRegistration.Api\AutoRegistration.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Verifiers\ManualRegistrationTypesMustBeRegistered.cs">
+      <DependentUpon>AttributesConfigurationVerifierBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Verifiers\UnregisteredTypesMustBeUnregistered.cs">
+      <DependentUpon>AttributesConfigurationVerifierBase.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Implementations\DependencyInfo.cs">
+      <DependentUpon>CompositionInfoExtractor.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainerOptions.cs">
+      <DependentUpon>DependencyContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="DependencyContainer.cs">
+      <DependentUpon>IDependencyContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="TypeProvider.cs">
+      <DependentUpon>ITypeProvider.cs</DependentUpon>
+    </Compile>
+    <Compile Update="GenericTypeProvider.cs">
+      <DependentUpon>IGenericTypeProvider.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CompositionInfo\CompositionInfoExtractor.cs">
+      <DependentUpon>ICompositionInfoExtractor.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CompositionInfo\CompositionInfoInterpreter.cs">
+      <DependentUpon>ICompositionInfoInterpreter.cs</DependentUpon>
+    </Compile>
+    <Compile Update="CompositionInfo\DependencyInfo.cs">
+      <DependentUpon>IDependencyInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\ServiceRegistrationInfo.cs">
+      <DependentUpon>IRegistrationInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\DelegateRegistrationInfo.cs">
+      <DependentUpon>IRegistrationInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\DecoratorRegistrationInfo.cs">
+      <DependentUpon>IRegistrationInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\InstanceRegistrationInfo.cs">
+      <DependentUpon>IRegistrationInfo.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Verifiers\InitializableServicesCannotBeInjected.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Verifiers\ContainerImplementationConfigurationVerifier.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Verifiers\AutoRegistrationInterfacesCombinationsVerifier.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Verifiers\AutoRegistrationAttributesCombinationsVerifier.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Verifiers\AttributesConfigurationVerifierBase.cs">
+      <DependentUpon>IConfigurationVerifier.cs</DependentUpon>
+    </Compile>
+    <Compile Update="TypeArgumentSelectionContext.cs">
+      <DependentUpon>IGenericTypeProvider.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\ManualRegistrationsContainer.cs">
+      <DependentUpon>IAdvancedManualRegistrationsContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\ComponentsOverrideContainer.cs">
+      <DependentUpon>IRegisterComponentsOverrideContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\AutoRegistrationsContainer.cs">
+      <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\AutoRegistrationServicesProvider.cs">
+      <DependentUpon>IAutoRegistrationServicesProvider.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\CompositeRegistrationsContainer.cs">
+      <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\IAdvancedManualRegistrationsContainer.cs">
+      <DependentUpon>IManualRegistrationsContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\DependencyContainerManualRegistration.cs">
+      <DependentUpon>IManualRegistration.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\RegistrationsContainerManualRegistration.cs">
+      <DependentUpon>IManualRegistration.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\TypeProviderManualRegistration.cs">
+      <DependentUpon>IManualRegistration.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\IManualRegistrationsContainer.cs">
+      <DependentUpon>IRegistrationsContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\IRegisterComponentsOverrideContainer.cs">
+      <DependentUpon>IComponentsOverrideContainer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Registration\ConstructorResolutionBehavior.cs">
+      <DependentUpon>IConstructorResolutionBehavior.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>

@@ -1,34 +1,41 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 {
+    using System;
     using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using CompositionRoot.Api.Abstractions.Container;
-    using Linq.Abstractions;
-    using Linq.Expressions;
-    using Linq.Internals;
+    using Sql.Translation;
+    using Sql.Translation.Expressions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class FilterExpressionTranslator : IExpressionTranslator<FilterExpression>
+    internal class FilterExpressionTranslator : ISqlExpressionTranslator<FilterExpression>,
+                                                IResolvable<ISqlExpressionTranslator<FilterExpression>>,
+                                                ICollectionResolvable<ISqlExpressionTranslator>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public FilterExpressionTranslator(IDependencyContainer dependencyContainer)
+        public FilterExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
-            _dependencyContainer = dependencyContainer;
+            _translator = translator;
         }
 
-        public async Task<string> Translate(FilterExpression expression, int depth, CancellationToken token)
+        public string Translate(ISqlExpression expression, int depth)
+        {
+            return expression is FilterExpression filterExpression
+                ? Translate(filterExpression, depth)
+                : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
+        }
+
+        public string Translate(FilterExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(await expression.Source.Translate(_dependencyContainer, depth, token).ConfigureAwait(false));
+            sb.AppendLine(_translator.Translate(expression.Source, depth));
             sb.Append(new string('\t', depth));
             sb.AppendLine("WHERE");
             sb.Append(new string('\t', depth + 1));
-            sb.Append($"{await expression.Expression.Translate(_dependencyContainer, depth, token).ConfigureAwait(false)}");
+            sb.Append(_translator.Translate(expression.Predicate, depth));
 
             return sb.ToString();
         }

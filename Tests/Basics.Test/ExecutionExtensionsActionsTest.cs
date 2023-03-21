@@ -23,26 +23,29 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             Action action = () => throw TestExtensions.TrueException();
 
-            action.Try().Catch<TrueException>().Invoke();
-            action.Try().Catch<TrueException>(ex => { }).Invoke();
+            ExecutionExtensions.Try(action).Catch<TrueException>().Invoke();
+            ExecutionExtensions.Try(action).Catch<TrueException>(ex => { }).Invoke();
 
-            void HandleCaught() => action
-                .Try()
-                .Catch<TrueException>()
-                .Invoke(ex => throw ex);
-            HandleCaught();
+            void HandleCaught() => ExecutionExtensions
+                .Try(action)
+                .Catch<TrueException>(ex => throw ex)
+                .Invoke();
 
-            void ThrowNotHandled() => action
-                .Try()
-                .Catch<FalseException>()
-                .Invoke(ex => throw ex);
-            Assert.Throws<TrueException>(ThrowNotHandled);
+            Assert.Throws<TrueException>(HandleCaught);
 
-            void ThrowNewNotHandled() => action
-                .Try()
-                .Catch<FalseException>()
-                .Invoke(ex => throw TestExtensions.FalseException());
-            Assert.Throws<FalseException>(ThrowNewNotHandled);
+            void Rethrow() => ExecutionExtensions
+                .Try(action)
+                .Catch<TrueException>(ex => throw TestExtensions.FalseException())
+                .Invoke();
+
+            Assert.Throws<FalseException>(Rethrow);
+
+            void Unhandled() => ExecutionExtensions
+                .Try(action)
+                .Catch<FalseException>(_ => throw TestExtensions.FalseException())
+                .Invoke();
+
+            Assert.Throws<TrueException>(Unhandled);
         }
 
         [Fact]
@@ -50,10 +53,11 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             Action action = () => { };
 
-            action.Try()
-                  .Catch<FalseException>()
-                  .Catch<TrueException>()
-                  .Invoke();
+            ExecutionExtensions
+                .Try(action)
+                .Catch<FalseException>()
+                .Catch<TrueException>()
+                .Invoke();
         }
 
         [Fact]
@@ -61,9 +65,10 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             Action action = () => throw FalseException();
 
-            action.Try()
-                  .Catch<FalseException>()
-                  .Invoke();
+            ExecutionExtensions
+                .Try(action)
+                .Catch<FalseException>()
+                .Invoke();
         }
 
         [Fact]
@@ -71,10 +76,11 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             Action action = () => throw FalseException();
 
-            action.Try()
-                  .Catch<TrueException>(ex => throw ex)
-                  .Catch<FalseException>()
-                  .Invoke();
+            ExecutionExtensions
+                .Try(action)
+                .Catch<TrueException>(ex => throw ex)
+                .Catch<FalseException>()
+                .Invoke();
         }
 
         [Fact]
@@ -82,22 +88,10 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             Action action = () => throw FalseException();
 
-            void TestAction() => action.Try()
-                                       .Catch<FalseException>(ex => throw TrueException())
-                                       .Invoke();
-
-            Assert.Throws<TrueException>(TestAction);
-        }
-
-        [Fact]
-        internal void ThrowInInvokeBlockTest()
-        {
-            Action action = () => throw FalseException();
-
-            void TestAction() => action
-                .Try()
-                .Catch<TrueException>()
-                .Invoke(ex => throw TrueException());
+            void TestAction() => ExecutionExtensions
+                .Try(action)
+                .Catch<FalseException>(ex => throw TrueException())
+                .Invoke();
 
             Assert.Throws<TrueException>(TestAction);
         }
@@ -107,10 +101,11 @@ namespace SpaceEngineers.Core.Basics.Test
         {
             Action action = () => throw FalseException();
 
-            void TestAction() => action.Try()
-                                       .Catch<FalseException>(ex => throw ex)
-                                       .Finally(() => throw TrueException())
-                                       .Invoke();
+            void TestAction() => ExecutionExtensions
+                .Try(action)
+                .Catch<FalseException>(ex => throw ex)
+                .Finally(() => throw TrueException())
+                .Invoke();
 
             Assert.Throws<TrueException>(TestAction);
         }

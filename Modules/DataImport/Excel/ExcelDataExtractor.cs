@@ -3,9 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
-    using System.IO;
     using System.Linq;
-    using System.Threading.Tasks;
     using Abstractions;
     using Basics;
     using DocumentFormat.OpenXml.Packaging;
@@ -33,21 +31,30 @@
         }
 
         /// <inheritdoc />
-        public IAsyncEnumerable<TElement> ExtractData(ExcelDataExtractorSpecification specification)
+        public IEnumerable<TElement> ExtractData(ExcelDataExtractorSpecification specification)
         {
-            using (var stream = File.OpenRead(specification.FileInfo.FullName))
-            using (var document = SpreadsheetDocument.Open(stream, false))
+            using (var document = SpreadsheetDocument.Open(specification.File, false))
             {
-                var worksheet = document
-                    .WorkbookPart
-                    .WorksheetParts
-                    .SingleOrDefault(part => part.Uri.OriginalString.EndsWith(specification.SheetName + ".xml", StringComparison.Ordinal))
-                    .EnsureNotNull($"Worksheet {specification.SheetName} not found")
-                    .Worksheet;
+                var sheets = document
+                                 .WorkbookPart
+                                 .Workbook
+                                 .Sheets
+                             ?? throw new InvalidOperationException("Workbook has no sheets");
+
+                var sheet = sheets
+                                .OfType<Sheet>()
+                                .SingleOrDefault(sheet => sheet.Name.Value.Equals(specification.SheetName, StringComparison.Ordinal))
+                            ?? throw new InvalidOperationException($"Worksheet {specification.SheetName} not found");
+
+                var worksheetPart = document
+                                        .WorkbookPart
+                                        .WorksheetParts
+                                        .SingleOrDefault(part => part.Uri.OriginalString.EndsWith(sheet.LocalName + sheet.SheetId + ".xml", StringComparison.Ordinal))
+                                    ?? throw new InvalidOperationException($"Worksheet {specification.SheetName} not found");
 
                 var sharedStrings = SharedStrings(document);
 
-                return ProcessWorksheet(worksheet, sharedStrings, specification);
+                return ProcessWorksheet(worksheetPart.Worksheet, sharedStrings, specification);
             }
         }
 
@@ -63,7 +70,7 @@
                    ?? new Dictionary<int, string>();
         }
 
-        private async IAsyncEnumerable<TElement> ProcessWorksheet(
+        private IEnumerable<TElement> ProcessWorksheet(
             Worksheet worksheet,
             IReadOnlyDictionary<int, string> sharedStrings,
             ExcelDataExtractorSpecification specification)
@@ -97,12 +104,10 @@
 
                 var propertyToColumn = MergeColumns(dataTable);
 
-                await foreach (var element in ReadTable(dataTable, propertyToColumn, specification.TableMetadata).ConfigureAwait(false))
+                foreach (var element in ReadTable(dataTable, propertyToColumn, specification.TableMetadata))
                 {
                     yield return element;
                 }
-
-                await _dataTableReader.AfterTableRead().ConfigureAwait(false);
             }
         }
 
@@ -111,7 +116,7 @@
             IReadOnlyDictionary<int, string> sharedStrings,
             DataTable dataTable)
         {
-            var rowIndex = row.RowIndex.EnsureNotNull<uint>("Row should have index");
+            var rowIndex = row.RowIndex?.Value ?? throw new InvalidOperationException("Row should have index");
 
             return row
                 .Elements<Cell>()
@@ -142,7 +147,7 @@
                     column => column.dataColumnName);
         }
 
-        private async IAsyncEnumerable<TElement> ReadTable(
+        private IEnumerable<TElement> ReadTable(
             DataTable dataTable,
             IReadOnlyDictionary<string, string> propertyToColumn,
             ExcelTableMetadata tableMetadata)
@@ -151,16 +156,30 @@
             {
                 var row = dataTable.Rows[i];
 
-                var element = await ExecutionExtensions
-                    .TryAsync(() => _dataTableReader.ReadRow(row, i, propertyToColumn, tableMetadata))
-                    .Catch<Exception>(ex => throw new InvalidOperationException($"Error in row {i}", ex))
-                    .Invoke()
-                    .ConfigureAwait(false);
+                var element = ExecutionExtensions
+                    .Try(ReadRow(_dataTableReader), (row, i, propertyToColumn, tableMetadata))
+                    .Catch<Exception>()
+                    .Invoke(RowError(i));
 
                 if (element != null)
                 {
                     yield return element;
                 }
+            }
+
+            static Func<(DataRow, int, IReadOnlyDictionary<string, string>, ExcelTableMetadata), TElement?> ReadRow(
+                IDataTableReader<TElement, ExcelTableMetadata> dataTableReader)
+            {
+                return state =>
+                {
+                    var (row, i, propertyToColumn, tableMetadata) = state;
+                    return dataTableReader.ReadRow(row, i, propertyToColumn, tableMetadata);
+                };
+            }
+
+            static Func<Exception, TElement?> RowError(int i)
+            {
+                return exception => throw new InvalidOperationException($"Error in row {i}", exception);
             }
         }
     }

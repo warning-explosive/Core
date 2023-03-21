@@ -2,9 +2,11 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using System.Text.RegularExpressions;
+    using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
@@ -19,7 +21,8 @@ namespace SpaceEngineers.Core.CliArgumentsParser
     ///     -param1 value1 --param2 /param3:'Test-:-work' /param4=happy -param5 '--=nice=--'
     /// </summary>
     [Component(EnLifestyle.Singleton)]
-    internal class CliArgumentsParserImpl : ICliArgumentsParser
+    internal class CliArgumentsParserImpl : ICliArgumentsParser,
+                                            IResolvable<ICliArgumentsParser>
     {
         private static readonly Regex RegexCliParser = new Regex(@"(?!-{1,2}|/)(?<name>\w+)(?:[=:]?|\s+)(?<value>[^-\s""][^""]*?|""[^""]*"")?(?=\s+[-/]|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -33,19 +36,23 @@ namespace SpaceEngineers.Core.CliArgumentsParser
         {
             var argsDictionary = Init(args);
 
+            var properties = typeof(T)
+               .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty)
+               .Where(property => property.SetIsAccessible());
+
             var joined = argsDictionary
-               .Join(typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty),
+               .Join(properties,
                      cli => cli.Key.ToUpperInvariant(),
-                     pd => pd.Name.ToUpperInvariant(),
-                     (cli, pd) => new { Info = pd, CliValue = cli.Value });
+                     property => property.Name.ToUpperInvariant(),
+                     (cli, property) => new { PropertyInfo = property, CliValue = cli.Value });
 
             var instance = Activator.CreateInstance<T>();
 
-            foreach (var j in joined)
+            foreach (var pair in joined)
             {
-                if (TryGetValue(j.Info.PropertyType, j.CliValue, out var value))
+                if (TryGetValue(pair.PropertyInfo.PropertyType, pair.CliValue, out var value))
                 {
-                    j.Info.SetValue(instance, value);
+                    pair.PropertyInfo.SetValue(instance, value);
                 }
             }
 
@@ -53,21 +60,15 @@ namespace SpaceEngineers.Core.CliArgumentsParser
         }
 
         /// <inheritdoc />
-        public bool TryParse<T>(string[] args, out T? arguments)
+        public bool TryParse<T>(string[] args, [NotNullWhen(true)] out T? arguments)
             where T : class, new()
         {
-            arguments = default;
+            arguments = ExecutionExtensions
+               .Try(a => (T?)Parse<T>(a), args)
+               .Catch<ArgumentException>()
+               .Invoke(_ => default);
 
-            try
-            {
-                arguments = Parse<T>(args);
-            }
-            catch (ArgumentException)
-            {
-                return false;
-            }
-
-            return true;
+            return arguments != default;
         }
 
         private static Dictionary<string, string?> Init(string[] args)
@@ -82,7 +83,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
                 var splitedArgument = RegexCliParser
                                      .Split(argument)
-                                     .Where(z => !string.IsNullOrEmpty(z))
+                                     .Where(z => !z.IsNullOrEmpty())
                                      .ToArray();
 
                 if (splitedArgument.Length < 1 || splitedArgument.Length > 2)
@@ -118,14 +119,14 @@ namespace SpaceEngineers.Core.CliArgumentsParser
                                               z.Key,
                                               z.Value
                                           })
-                         .Where(z => !string.IsNullOrEmpty(z))
+                         .Where(z => !z.IsNullOrEmpty())
                          .OrderByDescending(z => z?.Length)
                          .ToArray();
 
             var splited = cliArguments
                          .Split(entries, StringSplitOptions.RemoveEmptyEntries)
                          .Select(z => FinishChecker.Replace(z, string.Empty))
-                         .Where(z => !string.IsNullOrEmpty(z))
+                         .Where(z => !z.IsNullOrEmpty())
                          .ToArray();
 
             if (splited.Any())
@@ -150,7 +151,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             // Nullable<bool>
             if (type == typeof(bool) || type == typeof(bool?))
             {
-                if (string.IsNullOrEmpty(strValue))
+                if (strValue.IsNullOrEmpty())
                 {
                     typedValue = true;
                 }
@@ -163,15 +164,13 @@ namespace SpaceEngineers.Core.CliArgumentsParser
             // enum,
             // Nullable<enum>
             // enum flags
-            var enumType = type.IsNullable()
-                               ? type.GetGenericArguments()[0]
-                               : type;
+            var enumType = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
             if (enumType.IsEnum)
             {
                 var flagsValues = strValue.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).ToArray();
 
-                if (enumType.IsDefined(typeof(FlagsAttribute), false) && flagsValues.Length > 1)
+                if (enumType.IsEnumFlags() && flagsValues.Length > 1)
                 {
                     if (TryParseEnum(enumType, string.Join(", ", flagsValues), out var result))
                     {

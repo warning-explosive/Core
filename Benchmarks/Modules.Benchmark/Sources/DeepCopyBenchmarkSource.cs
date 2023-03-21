@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.Modules.Benchmark.Sources
 {
+    using System;
     using Basics;
     using Basics.Test.DeepCopy;
     using BenchmarkDotNet.Attributes;
@@ -13,7 +14,7 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
     {
         private TestReferenceWithoutSystemTypes? _original;
 
-        private TestReferenceWithoutSystemTypes Original => _original.EnsureNotNull(nameof(_original));
+        private TestReferenceWithoutSystemTypes Original => _original ?? throw new InvalidOperationException(nameof(_original));
 
         /// <summary>
         /// GlobalSetup

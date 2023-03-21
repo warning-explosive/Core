@@ -37,6 +37,9 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// <inheritdoc />
         public IReadOnlyCollection<IDomainEvent> Events => _events;
 
+        /// <inheritdoc />
+        public long Version => _index;
+
         /// <summary>
         /// Populates domain event and maintains internal state
         /// </summary>

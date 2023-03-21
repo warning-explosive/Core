@@ -11,6 +11,11 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// Domain events
         /// </summary>
         IReadOnlyCollection<IDomainEvent> Events { get; }
+
+        /// <summary>
+        /// Version
+        /// </summary>
+        long Version { get; }
     }
 
     /// <summary>

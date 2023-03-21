@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
 {
-    using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -44,7 +43,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.DomainEventHandlers
             }
 
             var user = await _eventStore
-               .GetAggregate<User>(userDatabaseEntity.PrimaryKey, DateTime.UtcNow, token)
+               .GetAggregate<User>(userDatabaseEntity.PrimaryKey, token)
                .ConfigureAwait(false);
 
             if (user == null)

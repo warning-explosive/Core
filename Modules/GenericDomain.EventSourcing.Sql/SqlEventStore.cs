@@ -1,8 +1,11 @@
 namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Linq.Expressions;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
@@ -16,6 +19,9 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
     internal class SqlEventStore : IEventStore,
                                    IResolvable<IEventStore>
     {
+        private static readonly ConcurrentDictionary<Type, ConstructorInfo> Cctors
+            = new ConcurrentDictionary<Type, ConstructorInfo>();
+
         private readonly IDatabaseContext _databaseContext;
 
         public SqlEventStore(IDatabaseContext databaseContext)
@@ -23,40 +29,30 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
             _databaseContext = databaseContext;
         }
 
-        public async Task<TAggregate?> GetAggregate<TAggregate>(
+        public Task<TAggregate?> GetAggregate<TAggregate>(
             Guid aggregateId,
-            DateTime timestamp,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
         {
-            var domainEvents = await GetEvents<TAggregate>(aggregateId, timestamp, token).ConfigureAwait(false);
-
-            return domainEvents.Any()
-                ? (TAggregate)typeof(TAggregate)
-                   .GetConstructor(new[] { typeof(IDomainEvent<TAggregate>[]) })
-                  !.Invoke(new object[] { domainEvents })
-                : default;
+            return GetAggregate<TAggregate>(aggregateId, _ => true, $"{nameof(GetAggregate)}:0A2D86C0-55C6-4AB6-A3C3-467363367DBC", token);
         }
 
-        public async Task<IReadOnlyCollection<IDomainEvent<TAggregate>>> GetEvents<TAggregate>(
+        public Task<TAggregate?> GetAggregate<TAggregate>(
+            Guid aggregateId,
+            long version,
+            CancellationToken token)
+            where TAggregate : class, IAggregate<TAggregate>
+        {
+            return GetAggregate<TAggregate>(aggregateId, domainEvent => domainEvent.Index <= version, $"{nameof(GetAggregate)}ByVersion:0A2D86C0-55C6-4AB6-A3C3-467363367DBC", token);
+        }
+
+        public Task<TAggregate?> GetAggregate<TAggregate>(
             Guid aggregateId,
             DateTime timestamp,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>
         {
-            var databaseDomainEvents = await _databaseContext
-               .All<DatabaseDomainEvent>()
-               .Where(domainEvent => domainEvent.AggregateId == aggregateId
-                                  && domainEvent.Timestamp <= timestamp)
-               .OrderBy(domainEvent => domainEvent.Index)
-               .CachedExpression("29F74146-749E-454E-8F47-62A213DD44DA")
-               .ToListAsync(token)
-               .ConfigureAwait(false);
-
-            return databaseDomainEvents
-               .Select(domainEvent => domainEvent.DomainEvent)
-               .Cast<IDomainEvent<TAggregate>>()
-               .ToArray();
+            return GetAggregate<TAggregate>(aggregateId, domainEvent => domainEvent.Timestamp <= timestamp, $"{nameof(GetAggregate)}ByTimestamp:0A2D86C0-55C6-4AB6-A3C3-467363367DBC", token);
         }
 
         public Task Append(
@@ -65,7 +61,7 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
         {
             return _databaseContext
                 .Insert(new[] { BuildDatabaseDomainEvent(args) }, EnInsertBehavior.Default)
-                .CachedExpression("FA2B0061-73A6-4CCA-B4D3-84D77357555A")
+                .CachedExpression($"{nameof(Append)}DomainEvents:1:EC3B8AAD-265E-46F9-A088-ABE5178FAEA5")
                 .Invoke(token);
         }
 
@@ -75,7 +71,7 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
         {
             return _databaseContext
                 .Insert(args.Select(BuildDatabaseDomainEvent).ToArray(), EnInsertBehavior.Default)
-                .CachedExpression($"{nameof(Append)}DomainEvents:{args.Count}")
+                .CachedExpression($"{nameof(Append)}DomainEvents:{args.Count}:EC3B8AAD-265E-46F9-A088-ABE5178FAEA5")
                 .Invoke(token);
         }
 
@@ -87,6 +83,44 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing.Sql
                 args.Index,
                 args.Timestamp,
                 args.DomainEvent);
+        }
+
+        private async Task<TAggregate?> GetAggregate<TAggregate>(
+            Guid aggregateId,
+            Expression<Func<DatabaseDomainEvent, bool>> versionPredicate,
+            string cacheKey,
+            CancellationToken token)
+            where TAggregate : class, IAggregate<TAggregate>
+        {
+            var domainEvents = await GetEvents<TAggregate>(aggregateId, versionPredicate, cacheKey, token).ConfigureAwait(false);
+
+            return domainEvents.Any()
+                ? (TAggregate)Cctors
+                    .GetOrAdd(typeof(TAggregate), static type => type.GetConstructor(new[] { typeof(IDomainEvent<TAggregate>[]) }))
+                    .Invoke(new object[] { domainEvents })
+                : default;
+        }
+
+        private async Task<IReadOnlyCollection<IDomainEvent<TAggregate>>> GetEvents<TAggregate>(
+            Guid aggregateId,
+            Expression<Func<DatabaseDomainEvent, bool>> versionPredicate,
+            string cacheKey,
+            CancellationToken token)
+            where TAggregate : class, IAggregate<TAggregate>
+        {
+            var databaseDomainEvents = await _databaseContext
+                .All<DatabaseDomainEvent>()
+                .Where(domainEvent => domainEvent.AggregateId == aggregateId)
+                .Where(versionPredicate)
+                .OrderBy(domainEvent => domainEvent.Index)
+                .CachedExpression(cacheKey)
+                .ToListAsync(token)
+                .ConfigureAwait(false);
+
+            return databaseDomainEvents
+                .Select(domainEvent => domainEvent.DomainEvent)
+                .Cast<IDomainEvent<TAggregate>>()
+                .ToArray();
         }
     }
 }

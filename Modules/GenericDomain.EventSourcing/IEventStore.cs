@@ -14,16 +14,28 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing
     public interface IEventStore
     {
         /// <summary>
-        /// Gets aggregate by it's identifier and version timestamp
+        /// Gets latest aggregate by it's identifier
         /// </summary>
         /// <param name="aggregateId">Aggregate identifier</param>
-        /// <param name="timestamp">Timestamp</param>
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
         Task<TAggregate?> GetAggregate<TAggregate>(
             Guid aggregateId,
-            DateTime timestamp,
+            CancellationToken token)
+            where TAggregate : class, IAggregate<TAggregate>;
+
+        /// <summary>
+        /// Gets aggregate by it's identifier and version
+        /// </summary>
+        /// <param name="aggregateId">Aggregate identifier</param>
+        /// <param name="version">Aggregate's version</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
+        /// <returns>Ongoing operation</returns>
+        Task<TAggregate?> GetAggregate<TAggregate>(
+            Guid aggregateId,
+            long version,
             CancellationToken token)
             where TAggregate : class, IAggregate<TAggregate>;
 
@@ -31,11 +43,11 @@ namespace SpaceEngineers.Core.GenericDomain.EventSourcing
         /// Gets aggregate by it's identifier and version timestamp
         /// </summary>
         /// <param name="aggregateId">Aggregate identifier</param>
-        /// <param name="timestamp">Timestamp</param>
+        /// <param name="timestamp">Aggregate's version timestamp</param>
         /// <param name="token">Cancellation token</param>
         /// <typeparam name="TAggregate">TAggregate type-argument</typeparam>
         /// <returns>Ongoing operation</returns>
-        Task<IReadOnlyCollection<IDomainEvent<TAggregate>>> GetEvents<TAggregate>(
+        Task<TAggregate?> GetAggregate<TAggregate>(
             Guid aggregateId,
             DateTime timestamp,
             CancellationToken token)

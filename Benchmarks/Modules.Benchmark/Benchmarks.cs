@@ -26,12 +26,12 @@ namespace SpaceEngineers.Core.Modules.Benchmark
         {
             var summary = Benchmark.Run<DeepCopyBenchmarkSource>(Output.WriteLine);
 
-            var bySerialization = summary.NanosecondMeasure(
+            var bySerialization = summary.MillisecondMeasure(
                 nameof(DeepCopyBenchmarkSource.DeepCopyBySerialization),
                 Measure.Mean,
                 Output.WriteLine);
 
-            var byReflection = summary.NanosecondMeasure(
+            var byReflection = summary.MillisecondMeasure(
                 nameof(DeepCopyBenchmarkSource.DeepCopyByReflection),
                 Measure.Mean,
                 Output.WriteLine);
@@ -39,8 +39,8 @@ namespace SpaceEngineers.Core.Modules.Benchmark
             var multiplier = bySerialization / byReflection;
             Output.WriteLine($"{nameof(multiplier)}: {multiplier:N}");
 
-            Assert.True(bySerialization <= 50_000m);
-            Assert.True(byReflection <= 50_000m);
+            Assert.True(bySerialization <= 100m);
+            Assert.True(byReflection <= 50m);
         }
 
         [Fact(Timeout = 300_000)]

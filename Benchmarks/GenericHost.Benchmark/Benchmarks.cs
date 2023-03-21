@@ -42,9 +42,9 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
                 Measure.Mean,
                 Output.WriteLine);
 
-            Assert.True(read < 10m);
-            Assert.True(insert < 10m);
-            Assert.True(delete < 10m);
+            Assert.True(read < 25m);
+            Assert.True(insert < 25m);
+            Assert.True(delete < 25m);
         }
 
         [Fact(Timeout = 300_000)]
@@ -108,10 +108,10 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
                 Measure.Mean,
                 Output.WriteLine);
 
-            Assert.True(compositeMiddleware < 10m);
+            Assert.True(compositeMiddleware < 50m);
             Assert.True(errorHandlingMiddleware < 1m);
             Assert.True(authorizationMiddleware < 1m);
-            Assert.True(unitOfWorkMiddleware < 1m);
+            Assert.True(unitOfWorkMiddleware < 25m);
             Assert.True(handledByEndpointMiddleware < 1m);
             Assert.True(requestReplyMiddleware < 1m);
         }

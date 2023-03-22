@@ -72,9 +72,6 @@
       <Compile Update="MessageHeaders\User.cs">
         <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
       </Compile>
-      <Compile Update="MessageHeaders\ObjectHeader.cs">
-        <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
-      </Compile>
       <Compile Update="MessageHeaders\HandledBy.cs">
         <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
       </Compile>
@@ -95,6 +92,9 @@
       </Compile>
       <Compile Update="MessageInitiatorProvider.cs">
         <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="MessageHeaders\ReflectedType.cs">
+        <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

@@ -20,12 +20,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         public Exception Value { get; }
 
         /// <inheritdoc />
-        object IIntegrationMessageHeader.Value => Value;
+        public string StringValue => Value.Message;
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{nameof(RejectReason)}] - [{Value.Message}]";
+            return $"[{nameof(RejectReason)}:{StringValue}]";
         }
     }
 }

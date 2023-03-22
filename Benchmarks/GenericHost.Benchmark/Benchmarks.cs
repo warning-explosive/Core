@@ -83,6 +83,11 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
                 Measure.Mean,
                 Output.WriteLine);
 
+            var tracingMiddleware = summary.MillisecondMeasure(
+                nameof(MessageHandlerMiddlewareBenchmarkSource.RunTracingMiddleware),
+                Measure.Mean,
+                Output.WriteLine);
+
             var errorHandlingMiddleware = summary.MillisecondMeasure(
                 nameof(MessageHandlerMiddlewareBenchmarkSource.RunErrorHandlingMiddleware),
                 Measure.Mean,
@@ -109,6 +114,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
                 Output.WriteLine);
 
             Assert.True(compositeMiddleware < 50m);
+            Assert.True(tracingMiddleware < 1m);
             Assert.True(errorHandlingMiddleware < 1m);
             Assert.True(authorizationMiddleware < 1m);
             Assert.True(unitOfWorkMiddleware < 25m);
@@ -129,6 +135,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark
                 {
                     source.IterationSetup();
 
+                    await source.RunTracingMiddleware().ConfigureAwait(false);
                     await source.RunErrorHandlingMiddleware().ConfigureAwait(false);
                     await source.RunAuthorizationMiddleware().ConfigureAwait(false);
                     await source.RunUnitOfWorkMiddleware().ConfigureAwait(false);

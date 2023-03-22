@@ -23,13 +23,8 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         public IHostBuilder CreateHostBuilder()
         {
             return Host
-               .CreateDefaultBuilder()
-               .ConfigureLogging(context =>
-               {
-                   context
-                       .AddConsole()
-                       .SetMinimumLevel(LogLevel.Trace);
-               });
+                .CreateDefaultBuilder()
+                .ConfigureLogging(context => context.AddConsole().SetMinimumLevel(LogLevel.Trace));
         }
 
         /// <inheritdoc />

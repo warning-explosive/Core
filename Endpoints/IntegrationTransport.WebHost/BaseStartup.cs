@@ -48,8 +48,14 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
         {
             ConfigureAspNetCoreServices(serviceCollection, _configuration);
 
+            var context = new HostBuilderContext(_hostBuilder.Properties)
+            {
+                HostingEnvironment = _context.HostingEnvironment,
+                Configuration = _context.Configuration
+            };
+
             HostExtensions.InitializeIntegrationTransport(
-                new HostBuilderContext(_hostBuilder.Properties) { HostingEnvironment = _context.HostingEnvironment, Configuration = _context.Configuration },
+                context,
                 _hostBuilder,
                 WithSimpleInjector(_optionsFactory, serviceCollection),
                 _logicalName)(serviceCollection);

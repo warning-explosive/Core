@@ -121,18 +121,19 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     };
 
                     var host = hostBuilder
-                       .UseIntegrationTransport((_, builder) => builder
-                           .WithInMemoryIntegrationTransport(hostBuilder)
-                           .BuildOptions())
-                       .UseEndpoint(TestIdentity.Endpoint10,
+                        .UseIntegrationTransport((_, builder) => builder
+                            .WithInMemoryIntegrationTransport(hostBuilder)
+                            .BuildOptions())
+                        .UseEndpoint(TestIdentity.Endpoint10,
+                            TestIdentity.Endpoint1Assembly,
                             (_, builder) => builder
-                               .WithPostgreSqlDataAccess(options => options
-                                   .ExecuteMigrations())
-                               .ModifyContainerOptions(options => options
-                                   .WithAdditionalOurTypes(additionalOurTypes)
-                                   .WithManualRegistrations(manualRegistrations))
-                               .BuildOptions())
-                       .BuildHost(settingsDirectory);
+                                .WithPostgreSqlDataAccess(options => options
+                                    .ExecuteMigrations())
+                                .ModifyContainerOptions(options => options
+                                    .WithAdditionalOurTypes(additionalOurTypes)
+                                    .WithManualRegistrations(manualRegistrations))
+                                .BuildOptions())
+                        .BuildHost(settingsDirectory);
 
                     var awaiter = host.WaitUntilTransportIsNotRunning(cts.Token);
 

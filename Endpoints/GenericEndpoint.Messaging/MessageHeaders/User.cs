@@ -18,12 +18,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         public string Value { get; }
 
         /// <inheritdoc />
-        object IIntegrationMessageHeader.Value => Value;
+        public string StringValue => Value;
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{nameof(User)}] - [{Value}]";
+            return $"[{nameof(User)}:{StringValue}]";
         }
     }
 }

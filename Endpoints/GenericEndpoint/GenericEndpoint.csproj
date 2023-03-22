@@ -32,6 +32,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="OpenTelemetry.Api" Version="1.4.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -88,6 +89,12 @@
       <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
     </Compile>
     <Compile Update="Pipeline\4_RequestReplyMiddleware.cs">
+      <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\TracingErrorHandler.cs">
+      <DependentUpon>IErrorHandler.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Pipeline\0_TracingMiddleware.cs">
       <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
     </Compile>
   </ItemGroup>

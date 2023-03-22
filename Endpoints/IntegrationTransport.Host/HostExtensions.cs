@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 {
     using System;
     using System.Linq;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
@@ -110,13 +111,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         {
             hostBuilder.CheckMultipleCalls(nameof(UseIntegrationTransport));
 
-            var endpointIdentity = new EndpointIdentity(
-                logicalName.IsNullOrWhiteSpace() ? Identity.LogicalName : logicalName,
-                Guid.NewGuid().ToString());
+            var endpointIdentity = new EndpointIdentity(logicalName.IsNullOrWhiteSpace() ? Identity.LogicalName : logicalName);
 
-            hostBuilder.ApplyOptions(endpointIdentity);
+            hostBuilder.CheckDuplicates(endpointIdentity);
 
-            var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
+            var assembly = Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly");
+
+            var builder = ConfigureBuilder(hostBuilder, endpointIdentity, assembly);
 
             var options = optionsFactory(context, builder);
 
@@ -147,7 +148,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 
         private static ITransportEndpointBuilder ConfigureBuilder(
             IHostBuilder hostBuilder,
-            EndpointIdentity endpointIdentity)
+            EndpointIdentity endpointIdentity,
+            Assembly assembly)
         {
             var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(
@@ -157,45 +159,50 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 
             var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
-
-            var integrationMessageTypes = AssembliesExtensions
-               .AllOurAssembliesFromCurrentDomain()
-               .SelectMany(assembly => assembly.GetTypes())
-               .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
-                           && !type.IsMessageContractAbstraction())
-               .ToArray();
-
-            var aggregates = TypeExtensions.TryFindType("SpaceEngineers.Core.GenericDomain.Api SpaceEngineers.Core.GenericDomain.Api.Abstractions.IAggregate", out var aggregateType)
-                    ? AssembliesExtensions
-                       .AllOurAssembliesFromCurrentDomain()
-                       .SelectMany(assembly => assembly.GetTypes())
-                       .Where(type => aggregateType.IsAssignableFrom(type))
-                       .ToArray()
-                    : Array.Empty<Type>();
-
-            var domainEvents = TypeExtensions.TryFindType("SpaceEngineers.Core.GenericDomain.Api SpaceEngineers.Core.GenericDomain.Api.Abstractions.IDomainEvent", out var domainEventType)
-                    ? AssembliesExtensions
-                       .AllOurAssembliesFromCurrentDomain()
-                       .SelectMany(assembly => assembly.GetTypes())
-                       .Where(type => domainEventType.IsAssignableFrom(type))
-                       .ToArray()
-                    : Array.Empty<Type>();
+            var telemetry = hostBuilder.SetupTelemetry(endpointIdentity, assembly);
 
             return (ITransportEndpointBuilder)new TransportEndpointBuilder(endpointIdentity)
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
                .ModifyContainerOptions(options => options
-                   .WithAdditionalOurTypes(integrationMessageTypes)
-                   .WithAdditionalOurTypes(aggregates)
-                   .WithAdditionalOurTypes(domainEvents)
+                   .WithAdditionalOurTypes(GetIntegrationTypes())
                    .WithManualRegistrations(
                        new GenericEndpointIdentityManualRegistration(endpointIdentity),
                        new SettingsProviderManualRegistration(settingsDirectoryProvider),
                        new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
+                       new TelemetryManualRegistration(telemetry),
                        new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
                        new GenericEndpointHostStartupActionManualRegistration(),
                        new IntegrationTransportHostBackgroundWorkerManualRegistration())
                    .WithOverrides(new IntegrationTransportOverride())
                    .WithManualVerification(true));
+        }
+
+        private static Type[] GetIntegrationTypes()
+        {
+            var integrationMessageTypes = AssembliesExtensions
+                .AllOurAssembliesFromCurrentDomain()
+                .SelectMany(assembly => assembly.GetTypes())
+                .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
+                               && !type.IsMessageContractAbstraction());
+
+            var aggregates = TypeExtensions.TryFindType("SpaceEngineers.Core.GenericDomain.Api SpaceEngineers.Core.GenericDomain.Api.Abstractions.IAggregate", out var aggregateType)
+                ? AssembliesExtensions
+                    .AllOurAssembliesFromCurrentDomain()
+                    .SelectMany(assembly => assembly.GetTypes())
+                    .Where(type => aggregateType.IsAssignableFrom(type))
+                : Enumerable.Empty<Type>();
+
+            var domainEvents = TypeExtensions.TryFindType("SpaceEngineers.Core.GenericDomain.Api SpaceEngineers.Core.GenericDomain.Api.Abstractions.IDomainEvent", out var domainEventType)
+                ? AssembliesExtensions
+                    .AllOurAssembliesFromCurrentDomain()
+                    .SelectMany(assembly => assembly.GetTypes())
+                    .Where(type => domainEventType.IsAssignableFrom(type))
+                : Enumerable.Empty<Type>();
+
+            return integrationMessageTypes
+                .Concat(aggregates)
+                .Concat(domainEvents)
+                .ToArray();
         }
     }
 }

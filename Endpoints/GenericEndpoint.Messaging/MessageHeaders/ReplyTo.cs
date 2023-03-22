@@ -20,12 +20,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         public EndpointIdentity Value { get; }
 
         /// <inheritdoc />
-        object IIntegrationMessageHeader.Value => Value;
+        public string StringValue => Value.ToString();
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{nameof(ReplyTo)}] - [{Value}]";
+            return $"[{nameof(ReplyTo)}:{StringValue}]";
         }
     }
 }

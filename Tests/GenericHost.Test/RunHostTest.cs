@@ -120,12 +120,13 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Fixture.CreateHostBuilder())
-               .UseEndpoint(TestIdentity.Endpoint10,
+                .UseEndpoint(TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(additionalOurTypes))
-                       .BuildOptions())
-               .BuildHost(settingsDirectory);
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
+                .BuildHost(settingsDirectory);
 
             await RunTestHost(Output, host, RequestReplyTestInternal(settingsDirectory), timeout).ConfigureAwait(false);
 
@@ -196,12 +197,13 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Fixture.CreateHostBuilder())
-               .UseEndpoint(TestIdentity.Endpoint10,
+                .UseEndpoint(TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(additionalOurTypes))
-                       .BuildOptions())
-               .BuildHost(settingsDirectory);
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
+                .BuildHost(settingsDirectory);
 
             await RunTestHost(Output, host, RpcRequestTestInternal(settingsDirectory), timeout).ConfigureAwait(false);
 
@@ -269,12 +271,13 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Fixture.CreateHostBuilder())
-               .UseEndpoint(TestIdentity.Endpoint10,
+                .UseEndpoint(TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(additionalOurTypes))
-                       .BuildOptions())
-               .BuildHost(settingsDirectory);
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
+                .BuildHost(settingsDirectory);
 
             await RunTestHost(Output, host, ContravariantMessageHandlerTestInternal(settingsDirectory), timeout).ConfigureAwait(false);
 
@@ -343,13 +346,15 @@
             var additionalOurTypes = messageTypes.Concat(messageHandlerTypes).ToArray();
 
             var host = useTransport(Fixture.CreateHostBuilder())
-               .UseEndpoint(TestIdentity.Endpoint10,
+                .UseEndpoint(TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithOverrides(Fixture.DelegateOverride(container => container.Override<IRetryPolicy, TestRetryPolicy>(EnLifestyle.Singleton))))
-                       .BuildOptions())
-               .BuildHost(settingsDirectory);
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes)
+                            .WithOverrides(Fixture.DelegateOverride(container => container
+                                .Override<IRetryPolicy, TestRetryPolicy>(EnLifestyle.Singleton))))
+                        .BuildOptions())
+                .BuildHost(settingsDirectory);
 
             await RunTestHost(Output, host, ThrowingMessageHandlerTestInternal(settingsDirectory), timeout).ConfigureAwait(false);
 
@@ -460,17 +465,19 @@
             var endpoint2AdditionalOurTypes = endpoint2MessageTypes.Concat(endpoint2MessageHandlerTypes).ToArray();
 
             var host = useTransport(Fixture.CreateHostBuilder())
-               .UseEndpoint(TestIdentity.Endpoint10,
+                .UseEndpoint(TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
-                       .BuildOptions())
-               .UseEndpoint(TestIdentity.Endpoint20,
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
+                        .BuildOptions())
+                .UseEndpoint(TestIdentity.Endpoint20,
+                    TestIdentity.Endpoint2Assembly,
                     (_, builder) => builder
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
-                       .BuildOptions())
-               .BuildHost(settingsDirectory);
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
+                        .BuildOptions())
+                .BuildHost(settingsDirectory);
 
             await RunTestHost(Output, host, EventSubscriptionBetweenEndpointsTestInternal(settingsDirectory), timeout).ConfigureAwait(false);
 
@@ -517,8 +524,11 @@
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var host = useTransport(Fixture.CreateHostBuilder())
-               .UseEndpoint(TestIdentity.Endpoint10, (_, builder) => builder.BuildOptions())
-               .BuildHost(settingsDirectory);
+                .UseEndpoint(
+                    TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
+                    (_, builder) => builder.BuildOptions())
+                .BuildHost(settingsDirectory);
 
             await RunTestHost(Output, host, StartStopTestInternal(settingsDirectory), timeout).ConfigureAwait(false);
 

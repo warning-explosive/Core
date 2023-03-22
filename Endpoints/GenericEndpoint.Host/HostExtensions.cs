@@ -2,16 +2,22 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.Metrics;
     using System.Linq;
+    using System.Reflection;
     using Basics;
     using Builder;
     using CompositionRoot;
     using CompositionRoot.Registration;
     using Contract;
+    using Endpoint;
     using GenericHost;
     using IntegrationTransport.Api.Abstractions;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using OpenTelemetry.Metrics;
+    using OpenTelemetry.Resources;
+    using OpenTelemetry.Trace;
     using Registrations;
 
     /// <summary>
@@ -90,18 +96,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="endpointIdentity">Endpoint identity</param>
+        /// <param name="assembly">Endpoint assembly (composition root or executable)</param>
         /// <param name="optionsFactory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseEndpoint(
             this IHostBuilder hostBuilder,
             EndpointIdentity endpointIdentity,
+            Assembly assembly,
             Func<HostBuilderContext, IEndpointBuilder, EndpointOptions> optionsFactory)
         {
-            hostBuilder.ApplyOptions(endpointIdentity);
+            hostBuilder.CheckDuplicates(endpointIdentity);
 
             return hostBuilder.ConfigureServices((context, serviceCollection) =>
             {
-                var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
+                var builder = ConfigureBuilder(hostBuilder, endpointIdentity, assembly);
 
                 var options = optionsFactory(context, builder);
 
@@ -111,28 +119,65 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             });
         }
 
-        internal static void ApplyOptions(this IHostBuilder hostBuilder, EndpointIdentity endpointIdentity)
+        internal static void CheckDuplicates(this IHostBuilder hostBuilder, EndpointIdentity endpointIdentity)
         {
             if (!hostBuilder.Properties.TryGetValue(nameof(EndpointIdentity), out var value)
-             || value is not ICollection<EndpointIdentity> identities)
+                || value is not Dictionary<string, EndpointIdentity> endpointIdentities)
             {
-                hostBuilder.Properties[nameof(EndpointIdentity)] = new List<EndpointIdentity> { endpointIdentity };
-                return;
+                endpointIdentities = new Dictionary<string, EndpointIdentity>(StringComparer.OrdinalIgnoreCase);
+                hostBuilder.Properties[nameof(EndpointIdentity)] = endpointIdentities;
             }
 
-            var duplicates = identities
-                .Concat(new[] { endpointIdentity })
-                .GroupBy(identity => identity.LogicalName)
-                .Where(grp => grp.Count() > 1)
-                .Select(grp => grp.Key.ToString())
-                .ToList();
-
-            if (duplicates.Any())
+            if (!endpointIdentities.TryAdd(endpointIdentity.LogicalName, endpointIdentity))
             {
-                throw new InvalidOperationException(EndpointDuplicatesWasFound.Format(string.Join(", ", duplicates)));
+                throw new InvalidOperationException(EndpointDuplicatesWasFound.Format(endpointIdentity.LogicalName));
             }
+        }
 
-            identities.Add(endpointIdentity);
+        internal static ITelemetry SetupTelemetry(
+            this IHostBuilder hostBuilder,
+            EndpointIdentity endpointIdentity,
+            Assembly assembly)
+        {
+            var serviceName = endpointIdentity.LogicalName;
+
+            var version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version
+                          ?? assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
+                          ?? assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                          ?? "1.0.0.0";
+
+            var resourceBuilder = ResourceBuilder
+                .CreateDefault()
+                .AddService(
+                    serviceVersion: version,
+                    serviceName: endpointIdentity.LogicalName,
+                    serviceInstanceId: endpointIdentity.InstanceName,
+                    autoGenerateServiceInstanceId: false);
+
+            var tracerProvider = OpenTelemetry.Sdk
+                .CreateTracerProviderBuilder()
+                .SetResourceBuilder(resourceBuilder)
+                .AddSource(serviceName)
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddOtlpExporter()
+                .Build();
+
+            var meterProvider = OpenTelemetry.Sdk
+                .CreateMeterProviderBuilder()
+                .SetResourceBuilder(resourceBuilder)
+                .AddMeter(serviceName)
+                .AddRuntimeInstrumentation()
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddOtlpExporter()
+                .Build();
+
+            return new Telemetry(
+                tracerProvider!,
+                tracerProvider.GetTracer(serviceName, version),
+                meterProvider!,
+                new Meter(serviceName, version));
         }
 
         private static IDependencyContainer BuildDependencyContainer(EndpointOptions options)
@@ -142,13 +187,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                 options.AboveAssemblies.ToArray());
         }
 
-        private static IEndpointBuilder ConfigureBuilder(IHostBuilder hostBuilder, EndpointIdentity endpointIdentity)
+        private static IEndpointBuilder ConfigureBuilder(
+            IHostBuilder hostBuilder,
+            EndpointIdentity endpointIdentity,
+            Assembly assembly)
         {
-            var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)));
+            var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
+                AssembliesExtensions.BuildName(
+                    nameof(SpaceEngineers),
+                    nameof(Core),
+                    nameof(CrossCuttingConcerns)));
 
             var integrationTransportInjection = hostBuilder.GetIntegrationTransportInjection();
             var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
+            var telemetry = hostBuilder.SetupTelemetry(endpointIdentity, assembly);
 
             return new EndpointBuilder(endpointIdentity)
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
@@ -158,6 +211,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                        new GenericEndpointIdentityManualRegistration(endpointIdentity),
                        new SettingsProviderManualRegistration(settingsDirectoryProvider),
                        new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
+                       new TelemetryManualRegistration(telemetry),
                        new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
                        new GenericEndpointHostStartupActionManualRegistration())
                    .WithManualVerification(true));

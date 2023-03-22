@@ -3,29 +3,29 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
     using System;
 
     /// <summary>
-    /// ConversationId
+    /// ReflectedType
     /// </summary>
-    public class ConversationId : IIntegrationMessageHeader
+    public class ReflectedType : IIntegrationMessageHeader
     {
         /// <summary> .cctor </summary>
-        /// <param name="value">Conversation id</param>
-        public ConversationId(Guid value)
+        /// <param name="value">Reflected type</param>
+        public ReflectedType(Type value)
         {
             Value = value;
         }
 
         /// <summary>
-        /// Value
+        /// Reflected type
         /// </summary>
-        public Guid Value { get; }
+        public Type Value { get; }
 
         /// <inheritdoc />
-        public string StringValue => Value.ToString();
+        public string StringValue => Value.FullName!;
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{nameof(ConversationId)}:{StringValue}]";
+            return $"[{nameof(ReflectedType)}:{StringValue}]";
         }
     }
 }

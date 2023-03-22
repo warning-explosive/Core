@@ -197,9 +197,11 @@
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder.BuildOptions())
                 .UseEndpoint(
                     TestIdentity.Endpoint20,
+                    TestIdentity.Endpoint2Assembly,
                     (_, builder) => builder.BuildOptions())
                 .BuildHost(settingsDirectory);
 
@@ -244,16 +246,17 @@
                .ToArray();
 
             var host = useTransport(Fixture.CreateHostBuilder())
-               .UseEndpoint(TestIdentity.Endpoint10,
+                .UseEndpoint(TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
                     (context, builder) => builder
-                       .WithPostgreSqlDataAccess(options => options
-                           .ExecuteMigrations())
-                       .WithSqlEventSourcing()
-                       .WithAuthorization(context.Configuration)
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(additionalOurTypes))
-                       .BuildOptions())
-               .BuildHost(settingsDirectory);
+                        .WithPostgreSqlDataAccess(options => options
+                            .ExecuteMigrations())
+                        .WithSqlEventSourcing()
+                        .WithAuthorization(context.Configuration)
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
+                .BuildHost(settingsDirectory);
 
             using (host)
             {
@@ -366,6 +369,7 @@
 
                     var expectedPipeline = new[]
                     {
+                        typeof(TracingMiddleware),
                         typeof(ErrorHandlingMiddleware),
                         typeof(AuthorizationMiddleware),
                         typeof(UnitOfWorkMiddleware),
@@ -477,7 +481,8 @@
                     var expectedErrorHandlers = new[]
                     {
                         typeof(RpcRequestErrorHandler),
-                        typeof(RetryErrorHandler)
+                        typeof(RetryErrorHandler),
+                        typeof(TracingErrorHandler)
                     };
 
                     var actualErrorHandlers = endpointDependencyContainer
@@ -547,6 +552,7 @@
 
                     var expectedPipeline = new[]
                     {
+                        typeof(TracingMiddleware),
                         typeof(ErrorHandlingMiddleware),
                         typeof(UnitOfWorkMiddleware),
                         typeof(HandledByEndpointMiddleware),
@@ -650,7 +656,8 @@
                     var expectedErrorHandlers = new[]
                     {
                         typeof(RpcRequestErrorHandler),
-                        typeof(RetryErrorHandler)
+                        typeof(RetryErrorHandler),
+                        typeof(TracingErrorHandler)
                     };
 
                     var actualErrorHandlers = transportDependencyContainer
@@ -715,6 +722,7 @@
 
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(startupActions))
@@ -791,13 +799,14 @@
                 .ToArray();
 
             var host = useTransport(Fixture.CreateHostBuilder())
-               .UseEndpoint(TestIdentity.Endpoint10,
+                .UseEndpoint(TestIdentity.Endpoint10,
+                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
-                       .ModifyContainerOptions(options => options
-                           .WithAdditionalOurTypes(additionalOurTypes)
-                           .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostStartupAction)))
-                       .BuildOptions())
-               .BuildHost(settingsDirectory);
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes)
+                            .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostStartupAction)))
+                        .BuildOptions())
+                .BuildHost(settingsDirectory);
 
             using (host)
             using (var cts = new CancellationTokenSource(timeout))

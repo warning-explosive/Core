@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
@@ -40,6 +41,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         private Func<IAdvancedIntegrationContext, CancellationToken, Task>? _messageHandler;
         private IDependencyContainer? _dependencyContainer;
         private IMessageHandlerMiddlewareComposite? _messageHandlerMiddleware;
+        private IMessageHandlerMiddleware? _tracingMiddleware;
         private IMessageHandlerMiddleware? _errorHandlingMiddleware;
         private IMessageHandlerMiddleware? _authorizationMiddleware;
         private IMessageHandlerMiddleware? _unitOfWorkMiddleware;
@@ -71,7 +73,8 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                     .WithAuthorization(context.Configuration)
                     .BuildOptions())
                 .UseEndpoint(
-                    new EndpointIdentity(nameof(MessageHandlerMiddlewareBenchmarkSource), Guid.NewGuid().ToString()),
+                    new EndpointIdentity(nameof(MessageHandlerMiddlewareBenchmarkSource)),
+                    Assembly.GetEntryAssembly() !,
                     (context, builder) => builder
                     .WithPostgreSqlDataAccess(options => options
                         .ExecuteMigrations())
@@ -114,6 +117,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
 
             var middlewares = _dependencyContainer.ResolveCollection<IMessageHandlerMiddleware>().ToList();
 
+            _tracingMiddleware = middlewares.Single(middleware => middleware.GetType() == typeof(TracingMiddleware));
             _errorHandlingMiddleware = middlewares.Single(middleware => middleware.GetType() == typeof(ErrorHandlingMiddleware));
             _authorizationMiddleware = middlewares.Single(middleware => middleware.GetType() == typeof(AuthorizationMiddleware));
             _unitOfWorkMiddleware = middlewares.Single(middleware => middleware.GetType() == typeof(UnitOfWorkMiddleware));
@@ -165,6 +169,21 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                 var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_request!);
 
                 await _messageHandlerMiddleware
+                    .Handle(exclusiveContext, _messageHandler!, _cts.Token)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        /// <summary> RunTracingMiddleware </summary>
+        /// <returns>Ongoing operation</returns>
+        [Benchmark(Description = nameof(RunTracingMiddleware))]
+        public async Task RunTracingMiddleware()
+        {
+            await using (_dependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+            {
+                var exclusiveContext = _dependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(_request!);
+
+                await _tracingMiddleware
                     .Handle(exclusiveContext, _messageHandler!, _cts.Token)
                     .ConfigureAwait(false);
             }

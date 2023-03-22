@@ -14,6 +14,8 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Migrations;
+    using OpenTelemetry.Logs;
+    using OpenTelemetry.Resources;
     using Registrations;
     using StartupActions;
     using Web.Api.Host;
@@ -62,6 +64,19 @@ namespace SpaceEngineers.Core.Test.WebApplication
             return Host
                .CreateDefaultBuilder(args)
                .ConfigureLogging(context => context.AddConsole().SetMinimumLevel(LogLevel.Trace))
+               .ConfigureLogging(builder => builder
+                   .AddOpenTelemetry(options =>
+                   {
+                       options.SetResourceBuilder(ResourceBuilder
+                           .CreateDefault()
+                           .AddService("web_test"));
+
+                       options.IncludeScopes = false;
+                       options.IncludeFormattedMessage = true;
+                       options.ParseStateValues = false;
+
+                       options.AddOtlpExporter();
+                   }))
                .UseIntegrationTransport(hostBuilder =>
                     context => new WebApplicationStartup(
                         context,

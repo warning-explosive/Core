@@ -1,5 +1,7 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 {
+    using System.Globalization;
+
     /// <summary>
     /// Retry counter
     /// </summary>
@@ -18,12 +20,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         public int Value { get; }
 
         /// <inheritdoc />
-        object IIntegrationMessageHeader.Value => Value;
+        public string StringValue => Value.ToString(CultureInfo.InvariantCulture);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{nameof(RetryCounter)}] - [{Value}]";
+            return $"[{nameof(RetryCounter)}:{StringValue}]";
         }
     }
 }

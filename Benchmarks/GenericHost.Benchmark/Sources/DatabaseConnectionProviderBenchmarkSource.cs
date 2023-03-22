@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
@@ -75,7 +76,8 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                     .WithInMemoryIntegrationTransport(hostBuilder)
                     .BuildOptions())
                 .UseEndpoint(
-                    new EndpointIdentity(nameof(DatabaseConnectionProviderBenchmarkSource), Guid.NewGuid().ToString()),
+                    new EndpointIdentity(nameof(DatabaseConnectionProviderBenchmarkSource)),
+                    Assembly.GetEntryAssembly() !,
                     (_, builder) => builder
                     .WithPostgreSqlDataAccess(options => options
                         .ExecuteMigrations())

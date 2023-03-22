@@ -15,22 +15,21 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
     {
         /// <summary> .cctor </summary>
         /// <param name="logicalName">Endpoint logical name</param>
-        /// <param name="instanceName">Endpoint instance name</param>
-        public EndpointIdentity(string logicalName, string instanceName)
+        public EndpointIdentity(string logicalName)
         {
             LogicalName = logicalName;
-            InstanceName = instanceName;
+            InstanceName = Guid.NewGuid().ToString();
         }
 
         /// <summary>
         /// Endpoint logical name
         /// </summary>
-        public string LogicalName { get; }
+        public string LogicalName { get; init; }
 
         /// <summary>
         /// Endpoint instance name
         /// </summary>
-        public string InstanceName { get; }
+        public string InstanceName { get; init; }
 
         #region IEquatable
 
@@ -86,7 +85,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{LogicalName} - {InstanceName}";
+            return $"{LogicalName}:{InstanceName}";
         }
     }
 }

@@ -22,12 +22,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization
         public string Value { get; }
 
         /// <inheritdoc />
-        object IIntegrationMessageHeader.Value => Value;
+        public string StringValue => Value;
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{nameof(Authorization)}] - [{Value}]";
+            return $"[{nameof(Authorization)}:{StringValue}]";
         }
     }
 }

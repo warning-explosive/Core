@@ -8,12 +8,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
+    using Basics.Attributes;
     using Messaging.MessageHeaders;
 
     /// <summary>
     /// ErrorHandlingMiddleware
     /// </summary>
     [Component(EnLifestyle.Singleton)]
+    [After(typeof(TracingMiddleware))]
     public class ErrorHandlingMiddleware : IMessageHandlerMiddleware,
                                            ICollectionResolvable<IMessageHandlerMiddleware>
     {
@@ -27,16 +29,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         }
 
         /// <inheritdoc />
-        public async Task Handle(
+        public Task Handle(
             IAdvancedIntegrationContext context,
             Func<IAdvancedIntegrationContext, CancellationToken, Task> next,
             CancellationToken token)
         {
-            await next(context, token)
-               .TryAsync()
-               .Catch<Exception>(OnError(context))
-               .Invoke(token)
-               .ConfigureAwait(false);
+            return next(context, token)
+                .TryAsync()
+                .Catch<Exception>(OnError(context))
+                .Invoke(token);
         }
 
         private Func<Exception, CancellationToken, Task> OnError(

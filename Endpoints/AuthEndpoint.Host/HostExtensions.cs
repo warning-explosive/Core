@@ -32,7 +32,8 @@ namespace SpaceEngineers.Core.AuthEndpoint.Host
             };
 
             return hostBuilder.UseEndpoint(
-                new EndpointIdentity(Identity.LogicalName, Guid.NewGuid().ToString()),
+                new EndpointIdentity(Identity.LogicalName),
+                Identity.Assembly,
                 (context, endpointBuilder) => optionsFactory(endpointBuilder
                     .WithEndpointPluginAssemblies(assemblies)
                     .WithAuthorization(context.Configuration)));

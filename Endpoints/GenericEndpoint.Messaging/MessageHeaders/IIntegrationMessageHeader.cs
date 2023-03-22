@@ -6,8 +6,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
     public interface IIntegrationMessageHeader
     {
         /// <summary>
-        /// Value
+        /// String value
         /// </summary>
-        object Value { get; }
+        string StringValue { get; }
     }
 }

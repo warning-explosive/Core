@@ -21,12 +21,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         public DateTime Value { get; }
 
         /// <inheritdoc />
-        object IIntegrationMessageHeader.Value => Value;
+        public string StringValue => Value.ToString("O");
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{nameof(DeferredUntil)}] - [{Value}]";
+            return $"[{nameof(DeferredUntil)}:{StringValue}]";
         }
     }
 }

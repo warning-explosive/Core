@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 {
+    using System.Globalization;
     using GenericEndpoint.Messaging.MessageHeaders;
 
     /// <summary>
@@ -20,12 +21,12 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         public ulong Value { get; }
 
         /// <inheritdoc />
-        object IIntegrationMessageHeader.Value => Value;
+        public string StringValue => Value.ToString(CultureInfo.InvariantCulture);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"[{nameof(DeliveryTag)}] - [{Value}]";
+            return $"[{nameof(DeliveryTag)}:{StringValue}]";
         }
     }
 }

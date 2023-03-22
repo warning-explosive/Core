@@ -44,6 +44,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                 headers[typeof(Id)] = new Id(Guid.NewGuid());
             }
 
+            if (!headers.ContainsKey(typeof(ReflectedType)))
+            {
+                headers[typeof(ReflectedType)] = new ReflectedType(reflectedType);
+            }
+
             _headers = headers;
         }
 
@@ -185,13 +190,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
         /// <inheritdoc />
         public override string ToString()
         {
-            var headers = new List<IIntegrationMessageHeader>(Headers.Values)
-            {
-                new ObjectHeader(nameof(ReflectedType), ReflectedType.Name),
-                new ObjectHeader(nameof(Payload), Payload)
-            };
-
-            return FormatHeaders(headers);
+            return Headers
+                .Select(header => header.Value.ToString())
+                .ToString(" ");
         }
 
         /// <summary>
@@ -278,14 +279,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
             where THeader : IIntegrationMessageHeader
         {
             _headers[header.GetType()] = header;
-        }
-
-        private static string FormatHeaders<THeader>(IEnumerable<THeader> headers)
-            where THeader : IIntegrationMessageHeader
-        {
-            return headers
-                .Select(header => $"[{(header as ObjectHeader)?.Name ?? header.GetType().Name}, {header.Value}]")
-                .ToString(" ");
         }
     }
 }

@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.IntegrationTransport.Host
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Metrics;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -13,6 +15,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using CompositionRoot;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.Endpoint;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
     using GenericEndpoint.Host.Registrations;
@@ -20,6 +23,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using GenericHost.Api;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using OpenTelemetry.Metrics;
+    using OpenTelemetry.Resources;
+    using OpenTelemetry.Trace;
     using Overrides;
     using Registrations;
 
@@ -159,7 +165,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 
             var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
-            var telemetry = hostBuilder.SetupTelemetry(endpointIdentity, assembly);
+            var telemetry = SetupTelemetry(endpointIdentity, assembly);
 
             return (ITransportEndpointBuilder)new TransportEndpointBuilder(endpointIdentity)
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
@@ -203,6 +209,52 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                 .Concat(aggregates)
                 .Concat(domainEvents)
                 .ToArray();
+        }
+
+        [SuppressMessage("Analysis", "CA2000", Justification = "Meter will be disposed in outer scope by dependency container")]
+        private static ITelemetry SetupTelemetry(
+            EndpointIdentity endpointIdentity,
+            Assembly assembly)
+        {
+            var serviceName = endpointIdentity.LogicalName;
+
+            var version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version
+                          ?? assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
+                          ?? assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                          ?? "1.0.0.0";
+
+            var resourceBuilder = ResourceBuilder
+                .CreateDefault()
+                .AddService(
+                    serviceVersion: version,
+                    serviceName: endpointIdentity.LogicalName,
+                    serviceInstanceId: endpointIdentity.InstanceName,
+                    autoGenerateServiceInstanceId: false);
+
+            var tracerProvider = OpenTelemetry.Sdk
+                .CreateTracerProviderBuilder()
+                .SetResourceBuilder(resourceBuilder)
+                .AddSource(serviceName)
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddOtlpExporter()
+                .Build();
+
+            var meterProvider = OpenTelemetry.Sdk
+                .CreateMeterProviderBuilder()
+                .SetResourceBuilder(resourceBuilder)
+                .AddMeter(serviceName)
+                .AddRuntimeInstrumentation()
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddOtlpExporter()
+                .Build();
+
+            return new Telemetry(
+                tracerProvider!,
+                tracerProvider.GetTracer(serviceName, version),
+                meterProvider!,
+                new Meter(serviceName, version));
         }
     }
 }

@@ -134,52 +134,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             }
         }
 
-        internal static ITelemetry SetupTelemetry(
-            this IHostBuilder hostBuilder,
-            EndpointIdentity endpointIdentity,
-            Assembly assembly)
-        {
-            var serviceName = endpointIdentity.LogicalName;
-
-            var version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version
-                          ?? assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
-                          ?? assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                          ?? "1.0.0.0";
-
-            var resourceBuilder = ResourceBuilder
-                .CreateDefault()
-                .AddService(
-                    serviceVersion: version,
-                    serviceName: endpointIdentity.LogicalName,
-                    serviceInstanceId: endpointIdentity.InstanceName,
-                    autoGenerateServiceInstanceId: false);
-
-            var tracerProvider = OpenTelemetry.Sdk
-                .CreateTracerProviderBuilder()
-                .SetResourceBuilder(resourceBuilder)
-                .AddSource(serviceName)
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddOtlpExporter()
-                .Build();
-
-            var meterProvider = OpenTelemetry.Sdk
-                .CreateMeterProviderBuilder()
-                .SetResourceBuilder(resourceBuilder)
-                .AddMeter(serviceName)
-                .AddRuntimeInstrumentation()
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddOtlpExporter()
-                .Build();
-
-            return new Telemetry(
-                tracerProvider!,
-                tracerProvider.GetTracer(serviceName, version),
-                meterProvider!,
-                new Meter(serviceName, version));
-        }
-
         private static IDependencyContainer BuildDependencyContainer(EndpointOptions options)
         {
             return DependencyContainer.CreateBoundedAbove(
@@ -201,7 +155,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             var integrationTransportInjection = hostBuilder.GetIntegrationTransportInjection();
             var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
-            var telemetry = hostBuilder.SetupTelemetry(endpointIdentity, assembly);
+            var telemetry = SetupTelemetry(endpointIdentity, assembly);
 
             return new EndpointBuilder(endpointIdentity)
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
@@ -226,6 +180,46 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             }
 
             throw new InvalidOperationException(RequireUseTransportCall.Format(RequireTransportInjection));
+        }
+
+        private static ITelemetry SetupTelemetry(
+            EndpointIdentity endpointIdentity,
+            Assembly assembly)
+        {
+            var serviceName = endpointIdentity.LogicalName;
+
+            var version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version
+                          ?? assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
+                          ?? assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                          ?? "1.0.0.0";
+
+            var resourceBuilder = ResourceBuilder
+                .CreateDefault()
+                .AddService(
+                    serviceVersion: version,
+                    serviceName: endpointIdentity.LogicalName,
+                    serviceInstanceId: endpointIdentity.InstanceName,
+                    autoGenerateServiceInstanceId: false);
+
+            var tracerProvider = OpenTelemetry.Sdk
+                .CreateTracerProviderBuilder()
+                .SetResourceBuilder(resourceBuilder)
+                .AddSource(serviceName)
+                .AddOtlpExporter()
+                .Build();
+
+            var meterProvider = OpenTelemetry.Sdk
+                .CreateMeterProviderBuilder()
+                .SetResourceBuilder(resourceBuilder)
+                .AddMeter(serviceName)
+                .AddOtlpExporter()
+                .Build();
+
+            return new Telemetry(
+                tracerProvider!,
+                tracerProvider.GetTracer(serviceName, version),
+                meterProvider!,
+                new Meter(serviceName, version));
         }
     }
 }

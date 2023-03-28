@@ -689,6 +689,7 @@
 
                 var expectedUserScopeProviders = new[]
                 {
+                    typeof(TraceContextPropagationProvider),
                     typeof(ConversationIdProvider),
                     typeof(MessageInitiatorProvider),
                     typeof(MessageOriginProvider),

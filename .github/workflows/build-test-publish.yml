@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15.1
+        image: postgres:15.1-alpine
         env:
           POSTGRES_PASSWORD: Password12!
         options: >-
@@ -32,7 +32,7 @@ jobs:
         ports:
           - 5432:5432
       rabbit_mq:
-        image: rabbitmq:3.11.9-management
+        image: rabbitmq:3.11.11-management-alpine
         ports:
           - 5672:5672
           - 15672:15672

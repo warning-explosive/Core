@@ -157,7 +157,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
 
                 await databaseContext
                    .Insert(new[] { inbox }, EnInsertBehavior.DoNothing)
-                   .CachedExpression("98696B21-1D0D-416B-9A39-AFA6AFB16A0A")
+                   .CachedExpression($"{nameof(PersistInbox)}:{inbox.Message.Headers.Count}")
                    .Invoke(token)
                    .ConfigureAwait(false);
             }

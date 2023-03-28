@@ -1,44 +1,47 @@
 version: '3'
 services:
+
+  # PostgreSql
   postgres:
     image: postgres:15.1-alpine
+    container_name: postgres
     restart: unless-stopped
     environment:
       - POSTGRES_PASSWORD=Password12!
     ports:
       - '5432:5432'
+
+  # RabbitMQ
   rabbit:
     image: rabbitmq:3.11.11-management-alpine
+    container_name: rabbit
     restart: unless-stopped
     ports:
       - '15672:15672'
       - '5672:5672'
+
+  # Jaeger
   jaeger:
     image: jaegertracing/all-in-one:1.43.0
-    environment:
-      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
-      - COLLECTOR_OTLP_ENABLED=true
+    container_name: jaeger
+    restart: unless-stopped
     ports:
-      - 6831:6831/udp # accept jaeger.thrift over Thrift-compact protocol
-      - 6832:6832/udp # accept jaeger.thrift over Thrift-binary protocol
-      - 5778:5778 # serve configs (sampling, etc.)
-      - 16686:16686 # serve frontend
-      - 4317:4317 # accept OpenTelemetry Protocol (OTLP) over gRPC, if enabled
-      - 4318:4318 # accept OpenTelemetry Protocol (OTLP) over HTTP, if enabled
-      - 14250:14250 # accept model.proto
-      - 14268:14268 # accept jaeger.thrift directly from clients
-      - 14269:14269 # ???
-      - 9411:9411 # Zipkin compatible endpoint (optional)
-  web-app:
+      - '5778:5778'   # serve configs (sampling, etc.)
+      - '16686:16686' # serve frontend
+      - '14250:14250' # accept model.proto
+
+  # OpenTelemetry collector
+  otel-collector:
+    image: otel/opentelemetry-collector:0.74.0
+    container_name: otel-collector
+    command: [ --config=/etc/otel-collector-config.yaml ]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - '13133:13133' # health_check extension
+      - '4317:4317'   # OTLP gRPC receiver
+      - '4318:4318'   # OTLP http receiver
     depends_on:
       - postgres
       - rabbit
       - jaeger
-    build:
-      dockerfile: Dockerfile.webtest
-      context: .
-    restart: unless-stopped
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-    ports:
-      - '5000:80'

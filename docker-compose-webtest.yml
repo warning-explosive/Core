@@ -5,43 +5,156 @@ services:
   postgres:
     image: postgres:15.1-alpine
     container_name: postgres
-    restart: unless-stopped
+    command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
+    volumes:
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/postgres-init.sql
     environment:
       - POSTGRES_PASSWORD=Password12!
     ports:
       - '5432:5432'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready", "-d", "postgres", "-U", "postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # Postgres exporter
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.12.0
+    container_name: postgres-exporter
+    command:
+      - --config.file=/etc/postgres-exporter/postgres-exporter.yaml
+      - --extend.query-path=/etc/postgres-exporter/postgres-exporter-queries.yaml
+    volumes:
+      - ./postgres-exporter.yaml:/etc/postgres-exporter/postgres-exporter.yaml
+      - ./postgres-exporter-queries.yaml:/etc/postgres-exporter/postgres-exporter-queries.yaml
+    environment:
+      - DATA_SOURCE_URI=postgres:5432?sslmode=disable
+      - DATA_SOURCE_USER=postgres
+      - DATA_SOURCE_PASS=Password12!
+    ports:
+      - '9187'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # RabbitMQ
   rabbit:
-    image: rabbitmq:3.11.11-management-alpine
+    image: rabbitmq:3.11.11-alpine
     container_name: rabbit
-    restart: unless-stopped
+    volumes:
+      - ./rabbitmq-enabled-plugins:/etc/rabbitmq/enabled_plugins
     ports:
       - '15672:15672'
       - '5672:5672'
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # Prometheus
+  prometheus:
+    image: quay.io/prometheus/prometheus:v2.43.0
+    container_name: prometheus
+    command:
+      - --web.console.templates=/etc/prometheus/consoles
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --storage.tsdb.retention.time=1h
+      - --config.file=/etc/prometheus/prometheus-config.yaml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+      - --web.route-prefix=/
+      - --enable-feature=exemplar-storage
+      - --enable-feature=remote-write-receiver
+    volumes:
+      - ./prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # OpenTelemetry collector
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.74.0
+    container_name: otel-collector
+    command:
+      - --config=/etc/otel-collector-config.yaml
+      - --feature-gates=service.connectors
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - '4317:4317'   # OTLP gRPC receiver
+      - '4318:4318'   # OTLP http receiver
+      - "9464"        # Prometheus exporter
+      - "8888"        # metrics endpoint
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # Jaeger
   jaeger:
     image: jaegertracing/all-in-one:1.43.0
     container_name: jaeger
-    restart: unless-stopped
-    ports:
-      - '5778:5778'   # serve configs (sampling, etc.)
-      - '16686:16686' # serve frontend
-      - '14250:14250' # accept model.proto
-
-  # OpenTelemetry collector
-  otel-collector:
-    image: otel/opentelemetry-collector:0.74.0
-    container_name: otel-collector
-    command: [ --config=/etc/otel-collector-config.yaml ]
+    command:
+      - "--memory.max-traces"
+      - "1000"
+      - "--query.base-path"
+      - "/jaeger/ui"
+      - "--query.ui-config"
+      - "/etc/jaeger/jaeger-ui.json"
     volumes:
-      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - "./jaeger-ui.json:/etc/jaeger/jaeger-ui.json"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - METRICS_STORAGE_TYPE=prometheus
+      - PROMETHEUS_SERVER_URL=http://prometheus:9090
+      - PROMETHEUS_TLS_Enabled=false
     ports:
-      - '13133:13133' # health_check extension
-      - '4317:4317'   # OTLP gRPC receiver
-      - '4318:4318'   # OTLP http receiver
+      - '4317'        # accept OpenTelemetry Protocol (OTLP) over gRPC
+      - '4318'        # accept OpenTelemetry Protocol (OTLP) over HTTP
+      - '14268'       # accept jaeger.thrift directly from clients over HTTP
+      - '14269'       # admin HTTP server and metrics
+      - '16686:16686' # UI
+    restart: unless-stopped
     depends_on:
-      - postgres
-      - rabbit
-      - jaeger
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  ## Test web-app
+  #web-app:
+  #  depends_on:
+  #    - postgres
+  #    - rabbit
+  #    - jaeger
+  #  build:
+  #    dockerfile: Dockerfile.webtest
+  #    context: .
+  #  restart: unless-stopped
+  #  environment:
+  #    - ASPNETCORE_ENVIRONMENT=Development
+  #  ports:
+  #    - '5000:80'

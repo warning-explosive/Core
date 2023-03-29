@@ -1,0 +1,12 @@
+global:
+  evaluation_interval: 1m # How frequently to evaluate rules.
+  scrape_interval: 5s # How frequently to scrape targets by default.
+  scrape_timeout: 5s # How long until a scrape request times out.
+scrape_configs:
+  - job_name: metrics
+    static_configs:
+      - targets:
+          - 'otel-collector:9464'    # open-telemetry metrics exporter
+          - 'otel-collector:8888'    # open-telemetry own metrics
+          - 'postgres-exporter:9187' # postgres metrics exporter
+          - 'jaeger:14269'           # jaeger metrics exporter

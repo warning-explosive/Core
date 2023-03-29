@@ -1,7 +1,3 @@
-extensions:
-  memory_ballast:
-    size_mib: 512
-
 receivers:
   otlp:
     protocols:
@@ -10,21 +6,55 @@ receivers:
 
 processors:
   batch:
-  memory_limiter:
-    limit_mib: 1024
-    spike_limit_mib: 512
-    check_interval: 5s
+  metricstransform/insert:
+    transforms:
+      - include: calls
+        match_type: strict
+        action: insert
+        new_name: calls_total
+        operations:
+        - action: update_label
+          label: span.name
+          new_label: operation
+      - include: duration
+        match_type: strict
+        action: insert
+        new_name: latency
+        operations:
+          - action: update_label
+            label: span.name
+            new_label: operation
 
 exporters:
-  jaeger:
-    endpoint: "jaeger:14250"
+  otlp:
+    endpoint: "jaeger:4317"
     tls:
       insecure: true
+  prometheus:
+    endpoint: "otel-collector:9464"
+    resource_to_telemetry_conversion:
+      enabled: true
+    enable_open_metrics: true
+
+connectors:
+  spanmetrics:
+    histogram:
+      explicit:
+        buckets: [100us, 1ms, 2ms, 6ms, 10ms, 100ms, 250ms]
+    dimensions:
+      - name: http.method
+        default: GET
+      - name: http.status_code
+    dimensions_cache_size: 1000
+    aggregation_temporality: "AGGREGATION_TEMPORALITY_CUMULATIVE"
 
 service:
-  extensions: [memory_ballast]
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [jaeger]
+      processors: [batch]
+      exporters: [otlp, spanmetrics]
+    metrics:
+      receivers: [otlp, spanmetrics]
+      processors: [metricstransform/insert]
+      exporters: [prometheus]

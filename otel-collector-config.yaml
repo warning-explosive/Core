@@ -47,14 +47,22 @@ connectors:
       - name: http.status_code
     dimensions_cache_size: 1000
     aggregation_temporality: "AGGREGATION_TEMPORALITY_CUMULATIVE"
+  servicegraph:
+    latency_histogram_buckets: [1, 2, 3, 4, 5]
+    dimensions:
+      - dimension-1
+      - dimension-2
+    store:
+      ttl: 1s
+      max_items: 10
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp, spanmetrics]
+      exporters: [otlp, spanmetrics, servicegraph]
     metrics:
-      receivers: [otlp, spanmetrics]
+      receivers: [otlp, spanmetrics, servicegraph]
       processors: [metricstransform/insert]
       exporters: [prometheus]

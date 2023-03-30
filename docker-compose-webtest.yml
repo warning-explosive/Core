@@ -7,7 +7,7 @@ services:
     container_name: postgres
     command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
     volumes:
-      - ./postgres-init.sql:/docker-entrypoint-initdb.d/postgres-init.sql
+      - ./docker-compose/postgres/postgres-init.sql:/docker-entrypoint-initdb.d/postgres-init.sql
     environment:
       - POSTGRES_PASSWORD=Password12!
     ports:
@@ -21,7 +21,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   # Postgres exporter
   postgres-exporter:
@@ -31,8 +31,8 @@ services:
       - --config.file=/etc/postgres-exporter/postgres-exporter.yaml
       - --extend.query-path=/etc/postgres-exporter/postgres-exporter-queries.yaml
     volumes:
-      - ./postgres-exporter.yaml:/etc/postgres-exporter/postgres-exporter.yaml
-      - ./postgres-exporter-queries.yaml:/etc/postgres-exporter/postgres-exporter-queries.yaml
+      - ./docker-compose/postgres/postgres-exporter.yaml:/etc/postgres-exporter/postgres-exporter.yaml
+      - ./docker-compose/postgres/postgres-exporter-queries.yaml:/etc/postgres-exporter/postgres-exporter-queries.yaml
     environment:
       - DATA_SOURCE_URI=postgres:5432?sslmode=disable
       - DATA_SOURCE_USER=postgres
@@ -46,14 +46,14 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   # RabbitMQ
   rabbit:
     image: rabbitmq:3.11.11-alpine
     container_name: rabbit
     volumes:
-      - ./rabbitmq-enabled-plugins:/etc/rabbitmq/enabled_plugins
+      - ./docker-compose/rabbitmq/rabbitmq-enabled-plugins:/etc/rabbitmq/enabled_plugins
     ports:
       - '15672:15672'
       - '5672:5672'
@@ -66,7 +66,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   # Prometheus
   prometheus:
@@ -83,14 +83,14 @@ services:
       - --enable-feature=exemplar-storage
       - --enable-feature=remote-write-receiver
     volumes:
-      - ./prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml
+      - ./docker-compose/prometheus/prometheus-config.yaml:/etc/prometheus/prometheus-config.yaml
     ports:
       - "9090:9090"
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   # OpenTelemetry collector
   otel-collector:
@@ -100,7 +100,7 @@ services:
       - --config=/etc/otel-collector-config.yaml
       - --feature-gates=service.connectors
     volumes:
-      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+      - ./docker-compose/open-telemetry/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
       - '4317:4317'   # OTLP gRPC receiver
       - '4318:4318'   # OTLP http receiver
@@ -110,7 +110,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
 
   # Jaeger
   jaeger:
@@ -124,7 +124,7 @@ services:
       - "--query.ui-config"
       - "/etc/jaeger/jaeger-ui.json"
     volumes:
-      - "./jaeger-ui.json:/etc/jaeger/jaeger-ui.json"
+      - ./docker-compose/jaeger/jaeger-ui.json:/etc/jaeger/jaeger-ui.json
     environment:
       - COLLECTOR_OTLP_ENABLED=true
       - METRICS_STORAGE_TYPE=prometheus
@@ -142,7 +142,24 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 256M
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:9.4.1
+    container_name: grafana
+    volumes:
+      - ./docker-compose/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./docker-compose/grafana/provisioning/:/etc/grafana/provisioning/
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   ## Test web-app
   #web-app:

@@ -21,8 +21,8 @@
       }
     ]
   },
-  "description": "Spanmetrics way of application view.",
-  "editable": true,
+  "description": "Spanmetrics way of application view",
+  "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "links": [],
@@ -101,7 +101,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -226,7 +226,7 @@
         "showUnfilled": true,
         "text": {}
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -304,7 +304,7 @@
         "showUnfilled": true,
         "text": {}
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -364,7 +364,9 @@
           },
           "custom": {
             "align": "auto",
-            "displayMode": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
             "inspect": false
           },
           "decimals": 2,
@@ -392,8 +394,11 @@
             },
             "properties": [
               {
-                "id": "custom.displayMode",
-                "value": "lcd-gauge"
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "lcd",
+                  "type": "gauge"
+                }
               },
               {
                 "id": "color",
@@ -410,8 +415,11 @@
             },
             "properties": [
               {
-                "id": "custom.displayMode",
-                "value": "lcd-gauge"
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "lcd",
+                  "type": "gauge"
+                }
               },
               {
                 "id": "color",
@@ -452,8 +460,7 @@
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": null
+                "id": "custom.width"
               }
             ]
           }
@@ -469,6 +476,7 @@
       "interval": "5m",
       "options": {
         "footer": {
+          "countRows": false,
           "fields": "",
           "reducer": [
             "sum"
@@ -478,7 +486,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -684,7 +692,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -800,7 +808,7 @@
         },
         "showUnfilled": true
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -866,8 +874,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -926,9 +933,12 @@
     }
   ],
   "refresh": "5m",
-  "schemaVersion": 37,
+  "revision": 1,
+  "schemaVersion": 38,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "opentelemetry"
+  ],
   "templating": {
     "list": [
       {

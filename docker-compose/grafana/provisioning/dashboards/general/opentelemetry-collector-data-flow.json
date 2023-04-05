@@ -22,10 +22,9 @@
     ]
   },
   "description": "otelcol metrics dashboard",
-  "editable": true,
+  "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 6,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -91,7 +90,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -156,7 +155,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -221,7 +220,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -260,7 +259,7 @@
         "content": "## Opentelemetry Collector Data Ingress/Egress\n\n`service_version:` ${service_version}\n\n`opentelemetry collector:` contrib\n\n",
         "mode": "markdown"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "type": "text"
     },
     {
@@ -341,7 +340,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": false
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -486,7 +485,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -546,7 +545,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -614,7 +613,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -673,7 +672,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -739,7 +738,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -805,7 +804,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -865,7 +864,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -925,7 +924,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -991,7 +990,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.4.1",
       "targets": [
         {
           "datasource": {
@@ -1041,8 +1040,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "light-blue",
-                "value": null
+                "color": "light-blue"
               },
               {
                 "color": "semi-dark-red",
@@ -1240,8 +1238,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
-                "value": null
+                "color": "text"
               }
             ]
           },
@@ -1303,8 +1300,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
-                "value": null
+                "color": "text"
               }
             ]
           }
@@ -1362,8 +1358,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "#EAB839",
@@ -1430,8 +1425,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
-                "value": null
+                "color": "text"
               }
             ]
           }
@@ -1493,8 +1487,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
-                "value": null
+                "color": "text"
               }
             ]
           },
@@ -1559,8 +1552,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
-                "value": null
+                "color": "text"
               }
             ]
           },
@@ -1622,8 +1614,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
-                "value": null
+                "color": "text"
               }
             ]
           }
@@ -1682,8 +1673,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
-                "value": null
+                "color": "text"
               }
             ]
           }
@@ -1745,8 +1735,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
-                "value": null
+                "color": "text"
               }
             ]
           },
@@ -1825,8 +1814,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "light-blue",
-                "value": null
+                "color": "light-blue"
               },
               {
                 "color": "semi-dark-red",
@@ -1954,8 +1942,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2023,8 +2010,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2176,18 +2162,21 @@
       "type": "text"
     }
   ],
-  "refresh": false,
-  "schemaVersion": 37,
+  "refresh": "",
+  "revision": 1,
+  "schemaVersion": 38,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "opentelemetry"
+  ],
   "templating": {
     "list": [
       {
         "allValue": ".*",
         "current": {
           "selected": false,
-          "text": "0.70.0",
-          "value": "0.70.0"
+          "text": "0.74.0",
+          "value": "0.74.0"
         },
         "datasource": {
           "type": "prometheus",
@@ -2218,8 +2207,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Opentelemetry Collector Data Flow",
+  "title": "OpenTelemetry Collector Data Flow",
   "uid": "rl5_tea4k",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }

@@ -13,3 +13,4 @@ scrape_configs:
           - 'otel-collector:8888'    # open-telemetry own metrics
           - 'postgres-exporter:9187' # postgres metrics exporter
           - 'jaeger:14269'           # jaeger metrics exporter
+          - 'rabbit:15692'           # rabbit mq metrics exporter

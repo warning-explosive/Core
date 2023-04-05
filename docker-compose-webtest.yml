@@ -57,6 +57,7 @@ services:
     ports:
       - '15672:15672'
       - '5672:5672'
+      - '15692'
     healthcheck:
       test: rabbitmq-diagnostics check_port_connectivity
       interval: 5s

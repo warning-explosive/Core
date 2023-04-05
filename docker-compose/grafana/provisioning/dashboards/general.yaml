@@ -7,4 +7,12 @@ providers:
     disableDeletion: false
     editable: true
     options:
-      path: /etc/grafana/provisioning/dashboards/general
+      path: /etc/grafana/provisioning/dashboards/opentelemetry
+  - name: 'RabbitMQ'
+    orgId: 1
+    folder: 'RabbitMQ'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/rabbitmq

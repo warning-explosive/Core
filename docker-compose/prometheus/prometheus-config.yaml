@@ -10,7 +10,8 @@ scrape_configs:
     static_configs:
       - targets:
           - 'otel-collector:9464'    # open-telemetry metrics exporter
-          - 'otel-collector:8888'    # open-telemetry own metrics
+          - 'otel-collector:8888'    # open-telemetry own metrics exporter
           - 'postgres-exporter:9187' # postgres metrics exporter
           - 'jaeger:14269'           # jaeger metrics exporter
           - 'rabbit:15692'           # rabbit mq metrics exporter
+          - 'prometheus:9090'        # prometheus own metrics exporter

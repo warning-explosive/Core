@@ -71,7 +71,7 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 4,
+                "h": 6,
                 "w": 24,
                 "x": 0,
                 "y": 1
@@ -79,12 +79,12 @@
             "id": 4,
             "options": {
                 "colorMode": "value",
-                "graphMode": "none",
+                "graphMode": "area",
                 "justifyMode": "center",
                 "orientation": "vertical",
                 "reduceOptions": {
                     "calcs": [
-                        "last"
+                        "lastNotNull"
                     ],
                     "fields": "",
                     "values": false
@@ -98,7 +98,7 @@
                         "type": "prometheus",
                         "uid": "metrics"
                     },
-                    "editorMode": "builder",
+                    "editorMode": "code",
                     "expr": "up",
                     "legendFormat": "{{instance}}",
                     "range": true,
@@ -151,10 +151,10 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 5,
+                "h": 6,
                 "w": 7,
                 "x": 0,
-                "y": 5
+                "y": 7
             },
             "id": 10,
             "options": {
@@ -164,7 +164,7 @@
                 "orientation": "auto",
                 "reduceOptions": {
                     "calcs": [
-                        "last"
+                        "lastNotNull"
                     ],
                     "fields": "",
                     "values": false
@@ -228,10 +228,10 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 5,
+                "h": 6,
                 "w": 17,
                 "x": 7,
-                "y": 5
+                "y": 7
             },
             "id": 8,
             "options": {
@@ -241,7 +241,7 @@
                 "orientation": "auto",
                 "reduceOptions": {
                     "calcs": [
-                        "last"
+                        "lastNotNull"
                     ],
                     "fields": "",
                     "values": false
@@ -283,99 +283,19 @@
                 "type": "prometheus",
                 "uid": "metrics"
             },
-            "description": "Scrape duration",
             "fieldConfig": {
                 "defaults": {
                     "color": {
                         "mode": "thresholds"
                     },
-                    "mappings": [],
-                    "max": 100,
-                    "thresholds": {
-                        "mode": "percentage",
-                        "steps": [
-                            {
-                                "color": "blue",
-                                "value": null
-                            },
-                            {
-                                "color": "green",
-                                "value": 25
-                            },
-                            {
-                                "color": "yellow",
-                                "value": 50
-                            },
-                            {
-                                "color": "#EF843C",
-                                "value": 75
-                            },
-                            {
-                                "color": "#E24D42",
-                                "value": 90
-                            }
-                        ]
-                    },
-                    "unit": "ms"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 15,
-                "w": 7,
-                "x": 0,
-                "y": 10
-            },
-            "id": 5,
-            "options": {
-                "displayMode": "gradient",
-                "minVizHeight": 10,
-                "minVizWidth": 0,
-                "orientation": "horizontal",
-                "reduceOptions": {
-                    "calcs": [
-                        "last"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "showUnfilled": true
-            },
-            "pluginVersion": "9.4.1",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "metrics"
-                    },
-                    "editorMode": "code",
-                    "exemplar": false,
-                    "expr": "scrape_duration_seconds * 1000",
-                    "format": "time_series",
-                    "hide": false,
-                    "instant": false,
-                    "legendFormat": "{{instance}}",
-                    "range": true,
-                    "refId": "A"
-                }
-            ],
-            "title": "Scrape duration",
-            "transparent": true,
-            "type": "bargauge"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "metrics"
-            },
-            "description": "Time passed from the last scrape",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "auto"
+                        },
+                        "inspect": false
                     },
                     "mappings": [],
-                    "max": 15,
                     "thresholds": {
                         "mode": "percentage",
                         "steps": [
@@ -401,31 +321,138 @@
                             }
                         ]
                     },
-                    "unit": "s"
+                    "unit": "none"
                 },
-                "overrides": []
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Scrape Duration"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "s"
+                            },
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "mode": "gradient",
+                                    "type": "gauge"
+                                }
+                            },
+                            {
+                                "id": "max",
+                                "value": 0.05
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Scrape Time"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "s"
+                            },
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "mode": "gradient",
+                                    "type": "gauge"
+                                }
+                            },
+                            {
+                                "id": "max",
+                                "value": 15
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "CPU Time"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "s"
+                            },
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "mode": "gradient",
+                                    "type": "gauge"
+                                }
+                            },
+                            {
+                                "id": "max",
+                                "value": 0.05
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Memory"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "decbytes"
+                            },
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "mode": "gradient",
+                                    "type": "gauge"
+                                }
+                            },
+                            {
+                                "id": "max",
+                                "value": 536870912
+                            }
+                        ]
+                    }
+                ]
             },
             "gridPos": {
-                "h": 5,
-                "w": 17,
-                "x": 7,
-                "y": 10
+                "h": 12,
+                "w": 24,
+                "x": 0,
+                "y": 13
             },
-            "id": 6,
+            "id": 16,
             "options": {
-                "orientation": "vertical",
-                "reduceOptions": {
-                    "calcs": [
-                        "last"
-                    ],
+                "footer": {
+                    "countRows": false,
                     "fields": "",
-                    "values": false
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
                 },
-                "showThresholdLabels": false,
-                "showThresholdMarkers": false
+                "showHeader": true,
+                "sortBy": []
             },
             "pluginVersion": "9.4.1",
             "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "scrape_duration_seconds",
+                    "format": "table",
+                    "instant": true,
+                    "legendFormat": "__auto",
+                    "range": false,
+                    "refId": "Scrape Duration"
+                },
                 {
                     "datasource": {
                         "type": "prometheus",
@@ -434,172 +461,85 @@
                     "editorMode": "code",
                     "exemplar": false,
                     "expr": "time() - timestamp(scrape_duration_seconds)",
-                    "format": "time_series",
+                    "format": "table",
                     "hide": false,
-                    "instant": false,
-                    "legendFormat": "{{instance}}",
-                    "range": true,
-                    "refId": "A"
-                }
-            ],
-            "title": "Last scrape",
-            "transparent": true,
-            "type": "gauge"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "metrics"
-            },
-            "description": "Average user and system CPU time spent",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "mappings": [],
-                    "max": 50,
-                    "thresholds": {
-                        "mode": "percentage",
-                        "steps": [
-                            {
-                                "color": "blue",
-                                "value": null
-                            },
-                            {
-                                "color": "green",
-                                "value": 25
-                            },
-                            {
-                                "color": "yellow",
-                                "value": 50
-                            },
-                            {
-                                "color": "orange",
-                                "value": 75
-                            },
-                            {
-                                "color": "red",
-                                "value": 90
-                            }
-                        ]
-                    },
-                    "unit": "ms"
+                    "instant": true,
+                    "legendFormat": "__auto",
+                    "range": false,
+                    "refId": "Scrape Time"
                 },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 5,
-                "w": 17,
-                "x": 7,
-                "y": 15
-            },
-            "id": 12,
-            "options": {
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "last"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "showThresholdLabels": false,
-                "showThresholdMarkers": false
-            },
-            "pluginVersion": "9.4.1",
-            "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "metrics"
                     },
                     "editorMode": "code",
-                    "expr": "rate(process_cpu_seconds_total[5m]) * 1000",
-                    "legendFormat": "{{instance}}",
-                    "range": true,
-                    "refId": "A"
-                }
-            ],
-            "title": "Average CPU time",
-            "transparent": true,
-            "type": "gauge"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "metrics"
-            },
-            "description": "Process resident memory",
-            "fieldConfig": {
-                "defaults": {
-                    "mappings": [],
-                    "max": 512,
-                    "thresholds": {
-                        "mode": "percentage",
-                        "steps": [
-                            {
-                                "color": "blue",
-                                "value": null
-                            },
-                            {
-                                "color": "green",
-                                "value": 25
-                            },
-                            {
-                                "color": "yellow",
-                                "value": 50
-                            },
-                            {
-                                "color": "orange",
-                                "value": 75
-                            },
-                            {
-                                "color": "red",
-                                "value": 90
-                            }
-                        ]
-                    },
-                    "unit": "decmbytes"
+                    "exemplar": false,
+                    "expr": "rate(process_cpu_seconds_total[$__range])",
+                    "format": "table",
+                    "hide": false,
+                    "instant": true,
+                    "legendFormat": "__auto",
+                    "range": false,
+                    "refId": "CPU Time"
                 },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 5,
-                "w": 17,
-                "x": 7,
-                "y": 20
-            },
-            "id": 14,
-            "options": {
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "last"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "showThresholdLabels": false,
-                "showThresholdMarkers": false
-            },
-            "pluginVersion": "9.4.1",
-            "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "metrics"
                     },
                     "editorMode": "code",
-                    "expr": "process_resident_memory_bytes / 1024 / 1024",
-                    "legendFormat": "{{instance}}",
-                    "range": true,
-                    "refId": "A"
+                    "exemplar": false,
+                    "expr": "process_resident_memory_bytes",
+                    "format": "table",
+                    "hide": false,
+                    "instant": true,
+                    "legendFormat": "__auto",
+                    "range": false,
+                    "refId": "Memory"
                 }
             ],
-            "title": "Process resident memory",
+            "title": "Panel Title",
+            "transformations": [
+                {
+                    "id": "joinByField",
+                    "options": {
+                        "byField": "instance",
+                        "mode": "outer"
+                    }
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "Time 1": true,
+                            "Time 2": true,
+                            "Time 3": true,
+                            "Time 4": true,
+                            "__name__": true,
+                            "__name__ 2": true,
+                            "job": true,
+                            "job 1": true,
+                            "job 2": true,
+                            "job 3": true,
+                            "job 4": true
+                        },
+                        "indexByName": {},
+                        "renameByName": {
+                            "Time 2": "",
+                            "Value": "Scrape Duration",
+                            "Value #CPU Time": "CPU Time",
+                            "Value #Memory": "Memory",
+                            "Value #Scrape Duration": "Scrape Duration",
+                            "Value #Scrape Time": "Scrape Time",
+                            "instance": "Instance"
+                        }
+                    }
+                }
+            ],
             "transparent": true,
-            "type": "gauge"
+            "type": "table"
         }
     ],
     "refresh": "",
@@ -620,6 +560,6 @@
     "timezone": "",
     "title": "Prometheus overview",
     "uid": "8EVzyFLVz",
-    "version": 7,
+    "version": 2,
     "weekStart": ""
 }

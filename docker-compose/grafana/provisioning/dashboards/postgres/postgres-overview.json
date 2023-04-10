@@ -1,0 +1,1925 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 35,
+            "panels": [],
+            "title": "Server",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "text",
+                        "mode": "fixed"
+                    },
+                    "decimals": 1,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 3,
+                "x": 0,
+                "y": 1
+            },
+            "id": 31,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "9.4.1",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_settings_value{server=~\"$Server\",name=\"server_version\"}",
+                    "legendFormat": "Server version",
+                    "range": true,
+                    "refId": "Server version"
+                }
+            ],
+            "title": "Server version",
+            "transformations": [
+                {
+                    "id": "configFromData",
+                    "options": {
+                        "applyTo": {
+                            "id": "byName",
+                            "options": "Time"
+                        },
+                        "configRefId": "Minor",
+                        "mappings": [
+                            {
+                                "fieldName": "{instance=\"postgres-exporter:9187\", job=\"metrics\", server=\"postgres:5432\"}",
+                                "handlerKey": "field.value"
+                            },
+                            {
+                                "fieldName": "Time",
+                                "handlerKey": "field.label"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "transparent": true,
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "text",
+                        "mode": "fixed"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 3,
+                "y": 1
+            },
+            "id": 4,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "9.4.1",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "time() - pg_postmaster_start_time_seconds{server=~\"$Server\"}",
+                    "legendFormat": "Up-time",
+                    "range": true,
+                    "refId": "Up-time"
+                }
+            ],
+            "title": "Up-time",
+            "transparent": true,
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 1
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 2
+                            },
+                            {
+                                "color": "orange",
+                                "value": 3
+                            },
+                            {
+                                "color": "red",
+                                "value": 5
+                            }
+                        ]
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 6,
+                "y": 1
+            },
+            "id": 2,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "9.4.1",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_replication_lag{server=~\"$Server\"}",
+                    "legendFormat": "Replication lag",
+                    "range": true,
+                    "refId": "Replication lag"
+                }
+            ],
+            "title": "Replication lag",
+            "transparent": true,
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "description": "Memory used inside container",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "decbytes"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 7,
+                "x": 9,
+                "y": 1
+            },
+            "id": 18,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": false
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"MemTotal\"}",
+                    "hide": false,
+                    "legendFormat": "MemTotal",
+                    "range": true,
+                    "refId": "MemTotal"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"MemAvailable\"}",
+                    "hide": false,
+                    "legendFormat": "MemAvailable",
+                    "range": true,
+                    "refId": "MemAvailable"
+                }
+            ],
+            "title": "Used memory",
+            "transformations": [
+                {
+                    "id": "calculateField",
+                    "options": {
+                        "binary": {
+                            "left": "MemTotal",
+                            "operator": "-",
+                            "reducer": "sum",
+                            "right": "MemAvailable"
+                        },
+                        "mode": "binary",
+                        "reduce": {
+                            "reducer": "sum"
+                        },
+                        "replaceFields": true
+                    }
+                }
+            ],
+            "transparent": true,
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "Bps"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 8,
+                "x": 16,
+                "y": 1
+            },
+            "id": 14,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "9.4.1",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "rate(pg_diskstats_bytes_read{server=~\"$Server\"}[$__rate_interval])",
+                    "hide": false,
+                    "legendFormat": "Read",
+                    "range": true,
+                    "refId": "Read"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "rate(pg_diskstats_bytes_written{server=~\"$Server\"}[$__rate_interval])",
+                    "hide": false,
+                    "legendFormat": "Write",
+                    "range": true,
+                    "refId": "Write"
+                }
+            ],
+            "title": "Disk I/O",
+            "transparent": true,
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 0.25
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 0.5
+                            },
+                            {
+                                "color": "orange",
+                                "value": 0.75
+                            },
+                            {
+                                "color": "red",
+                                "value": 0.9
+                            }
+                        ]
+                    },
+                    "unit": "percentunit"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 3,
+                "y": 6
+            },
+            "id": 16,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "9.4.1",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_loadavg_five{server=~\"$Server\"}",
+                    "hide": false,
+                    "legendFormat": "CPU utilization",
+                    "range": true,
+                    "refId": "CPU utilization"
+                }
+            ],
+            "title": "CPU utilization",
+            "transparent": true,
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 0.25
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 0.5
+                            },
+                            {
+                                "color": "orange",
+                                "value": 0.75
+                            },
+                            {
+                                "color": "red",
+                                "value": 0.9
+                            }
+                        ]
+                    },
+                    "unit": "percentunit"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 6,
+                "y": 6
+            },
+            "id": 20,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "9.4.1",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "rate(pg_diskstats_weighted_time_spent_doing_io{server=~\"$Server\"}[$__rate_interval])",
+                    "hide": false,
+                    "legendFormat": "Disk utilization",
+                    "range": true,
+                    "refId": "Disk utilization"
+                }
+            ],
+            "title": "Disk utilization",
+            "transparent": true,
+            "type": "stat"
+        },
+        {
+            "collapsed": true,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 11
+            },
+            "id": 37,
+            "panels": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "description": "",
+                    "fieldConfig": {
+                        "defaults": {
+                            "color": {
+                                "mode": "thresholds"
+                            },
+                            "mappings": [],
+                            "thresholds": {
+                                "mode": "absolute",
+                                "steps": [
+                                    {
+                                        "color": "blue"
+                                    },
+                                    {
+                                        "color": "green",
+                                        "value": 25
+                                    },
+                                    {
+                                        "color": "yellow",
+                                        "value": 50
+                                    },
+                                    {
+                                        "color": "orange",
+                                        "value": 75
+                                    },
+                                    {
+                                        "color": "red",
+                                        "value": 90
+                                    }
+                                ]
+                            },
+                            "unit": "short"
+                        },
+                        "overrides": []
+                    },
+                    "gridPos": {
+                        "h": 5,
+                        "w": 6,
+                        "x": 0,
+                        "y": 12
+                    },
+                    "id": 8,
+                    "options": {
+                        "colorMode": "value",
+                        "graphMode": "area",
+                        "justifyMode": "center",
+                        "orientation": "auto",
+                        "reduceOptions": {
+                            "calcs": [
+                                "lastNotNull"
+                            ],
+                            "fields": "",
+                            "values": false
+                        },
+                        "textMode": "auto"
+                    },
+                    "pluginVersion": "9.4.1",
+                    "targets": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "sum by (database)(pg_connection_state_count{server=~\"$Server\",database=~\"$Database\"})",
+                            "format": "time_series",
+                            "hide": false,
+                            "instant": false,
+                            "legendFormat": "Total",
+                            "range": true,
+                            "refId": "Total"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "sum by (database)(pg_connection_state_count{server=~\"$Server\",database=~\"$Database\",state=\"active\"})",
+                            "format": "time_series",
+                            "hide": false,
+                            "instant": false,
+                            "legendFormat": "Active",
+                            "range": true,
+                            "refId": "Active"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "sum by (database)(pg_connection_state_count{server=~\"$Server\",database=~\"$Database\",state=\"idle\"})",
+                            "format": "time_series",
+                            "hide": false,
+                            "instant": false,
+                            "legendFormat": "Idle",
+                            "range": true,
+                            "refId": "Idle"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "sum by (database)(pg_connection_state_count{server=~\"$Server\",database=~\"$Database\",state!~\"active|idle\"})",
+                            "format": "time_series",
+                            "hide": false,
+                            "instant": false,
+                            "legendFormat": "Other",
+                            "range": true,
+                            "refId": "Other"
+                        }
+                    ],
+                    "title": "Connections",
+                    "transformations": [],
+                    "transparent": true,
+                    "type": "stat"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "fieldConfig": {
+                        "defaults": {
+                            "color": {
+                                "mode": "thresholds"
+                            },
+                            "mappings": [],
+                            "thresholds": {
+                                "mode": "absolute",
+                                "steps": [
+                                    {
+                                        "color": "green"
+                                    }
+                                ]
+                            },
+                            "unit": "percentunit"
+                        },
+                        "overrides": []
+                    },
+                    "gridPos": {
+                        "h": 5,
+                        "w": 3,
+                        "x": 6,
+                        "y": 12
+                    },
+                    "id": 24,
+                    "options": {
+                        "colorMode": "value",
+                        "graphMode": "area",
+                        "justifyMode": "auto",
+                        "orientation": "auto",
+                        "reduceOptions": {
+                            "calcs": [
+                                "lastNotNull"
+                            ],
+                            "fields": "",
+                            "values": false
+                        },
+                        "textMode": "auto"
+                    },
+                    "pluginVersion": "9.4.1",
+                    "targets": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "expr": "rate(pg_stat_database_blks_hit{server=~\"$Server\",database=~\"$Database\"}[$__rate_interval])\n/ (rate(pg_stat_database_blks_hit{server=~\"$Server\",database=~\"$Database\"}[$__rate_interval])\n   + rate(pg_stat_database_blks_read{server=~\"$Server\",database=~\"$Database\"}[$__rate_interval]))",
+                            "legendFormat": "Buffer cache hits ratio",
+                            "range": true,
+                            "refId": "Buffer cache hits ratio"
+                        }
+                    ],
+                    "title": "Buffer cache hits ratio",
+                    "transformations": [],
+                    "transparent": true,
+                    "type": "stat"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "fieldConfig": {
+                        "defaults": {
+                            "color": {
+                                "mode": "thresholds"
+                            },
+                            "decimals": 0,
+                            "mappings": [],
+                            "thresholds": {
+                                "mode": "absolute",
+                                "steps": [
+                                    {
+                                        "color": "green"
+                                    }
+                                ]
+                            },
+                            "unit": "short"
+                        },
+                        "overrides": []
+                    },
+                    "gridPos": {
+                        "h": 5,
+                        "w": 15,
+                        "x": 9,
+                        "y": 12
+                    },
+                    "id": 26,
+                    "options": {
+                        "colorMode": "value",
+                        "graphMode": "area",
+                        "justifyMode": "center",
+                        "orientation": "auto",
+                        "reduceOptions": {
+                            "calcs": [
+                                "lastNotNull"
+                            ],
+                            "fields": "",
+                            "values": false
+                        },
+                        "textMode": "auto"
+                    },
+                    "pluginVersion": "9.4.1",
+                    "targets": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "expr": "increase(pg_stat_database_tup_returned{server=~\"$Server\",database=~\"$Database\"}[$__range])\n+ increase(pg_stat_database_tup_fetched{server=~\"$Server\",database=~\"$Database\"}[$__range])\n+ increase(pg_stat_database_tup_inserted{server=~\"$Server\",database=~\"$Database\"}[$__range])\n+ increase(pg_stat_database_tup_updated{server=~\"$Server\",database=~\"$Database\"}[$__range])\n+ increase(pg_stat_database_tup_deleted{server=~\"$Server\",database=~\"$Database\"}[$__range])",
+                            "legendFormat": "Total",
+                            "range": true,
+                            "refId": "Total"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "expr": "increase(pg_stat_database_tup_returned{server=~\"$Server\",database=~\"$Database\"}[$__range])\n+ increase(pg_stat_database_tup_fetched{server=~\"$Server\",database=~\"$Database\"}[$__range])",
+                            "hide": false,
+                            "legendFormat": "Read",
+                            "range": true,
+                            "refId": "Read"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "expr": "+ increase(pg_stat_database_tup_inserted{server=~\"$Server\",database=~\"$Database\"}[$__range])",
+                            "hide": false,
+                            "legendFormat": "Inserted",
+                            "range": true,
+                            "refId": "Inserted"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "expr": "increase(pg_stat_database_tup_updated{server=~\"$Server\",database=~\"$Database\"}[$__range])",
+                            "hide": false,
+                            "legendFormat": "Updated",
+                            "range": true,
+                            "refId": "Updated"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "expr": "increase(pg_stat_database_tup_deleted{server=~\"$Server\",database=~\"$Database\"}[$__range])",
+                            "hide": false,
+                            "legendFormat": "Deleted",
+                            "range": true,
+                            "refId": "Deleted"
+                        }
+                    ],
+                    "title": "Affected rows",
+                    "transparent": true,
+                    "type": "stat"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "description": "Total amount of deadlocks within specified range",
+                    "fieldConfig": {
+                        "defaults": {
+                            "color": {
+                                "mode": "thresholds"
+                            },
+                            "mappings": [],
+                            "thresholds": {
+                                "mode": "absolute",
+                                "steps": [
+                                    {
+                                        "color": "green"
+                                    },
+                                    {
+                                        "color": "red",
+                                        "value": 1
+                                    }
+                                ]
+                            }
+                        },
+                        "overrides": []
+                    },
+                    "gridPos": {
+                        "h": 5,
+                        "w": 3,
+                        "x": 0,
+                        "y": 17
+                    },
+                    "id": 12,
+                    "options": {
+                        "colorMode": "value",
+                        "graphMode": "area",
+                        "justifyMode": "auto",
+                        "orientation": "auto",
+                        "reduceOptions": {
+                            "calcs": [
+                                "lastNotNull"
+                            ],
+                            "fields": "",
+                            "values": false
+                        },
+                        "textMode": "auto"
+                    },
+                    "pluginVersion": "9.4.1",
+                    "targets": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "expr": "sum by (datname)(increase(pg_stat_database_deadlocks{server=~\"$Server\",database=~\"$Database\"}[$__range]))",
+                            "hide": false,
+                            "legendFormat": "Deadlocks",
+                            "range": true,
+                            "refId": "Deadlocks"
+                        }
+                    ],
+                    "title": "Deadlocks",
+                    "transparent": true,
+                    "type": "stat"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "description": "Detailed information about actually locked statements",
+                    "fieldConfig": {
+                        "defaults": {
+                            "color": {
+                                "mode": "thresholds"
+                            },
+                            "custom": {
+                                "align": "auto",
+                                "cellOptions": {
+                                    "type": "auto"
+                                },
+                                "inspect": false
+                            },
+                            "mappings": [],
+                            "thresholds": {
+                                "mode": "absolute",
+                                "steps": [
+                                    {
+                                        "color": "red"
+                                    }
+                                ]
+                            },
+                            "unit": "none"
+                        },
+                        "overrides": [
+                            {
+                                "matcher": {
+                                    "id": "byName",
+                                    "options": "Value"
+                                },
+                                "properties": [
+                                    {
+                                        "id": "unit",
+                                        "value": "s"
+                                    },
+                                    {
+                                        "id": "custom.cellOptions",
+                                        "value": {
+                                            "type": "color-text"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "gridPos": {
+                        "h": 5,
+                        "w": 21,
+                        "x": 3,
+                        "y": 17
+                    },
+                    "id": 10,
+                    "options": {
+                        "footer": {
+                            "countRows": false,
+                            "fields": "",
+                            "reducer": [
+                                "sum"
+                            ],
+                            "show": false
+                        },
+                        "showHeader": true
+                    },
+                    "pluginVersion": "9.4.1",
+                    "targets": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "time() - pg_locks_blocked_time{server=~\"$Server\",database=~\"$Database\"}",
+                            "format": "table",
+                            "instant": true,
+                            "legendFormat": "__auto",
+                            "range": false,
+                            "refId": "A"
+                        }
+                    ],
+                    "title": "Locks",
+                    "transformations": [
+                        {
+                            "id": "organize",
+                            "options": {
+                                "excludeByName": {
+                                    "Time": true,
+                                    "blocked_application": false,
+                                    "blocked_pid": false,
+                                    "blocked_user": false,
+                                    "blocking_application": false,
+                                    "blocking_user": false,
+                                    "instance": true,
+                                    "job": true,
+                                    "server": true
+                                },
+                                "indexByName": {},
+                                "renameByName": {
+                                    "Value": "Lock time",
+                                    "blocked_application": ""
+                                }
+                            }
+                        }
+                    ],
+                    "transparent": true,
+                    "type": "table"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "description": "select\n    r.rolname as username,\n    d.datname as database,\n    s.query,\n    p.plan\nfrom pg_stat_statements s, pg_store_plans p, pg_roles r, pg_database d\nwhere s.queryid = p.queryid\n  and s.userid = r.oid\n  and s.dbid = d.oid\n  and s.queryid = _queryid_",
+                    "fieldConfig": {
+                        "defaults": {
+                            "color": {
+                                "mode": "thresholds"
+                            },
+                            "custom": {
+                                "align": "auto",
+                                "cellOptions": {
+                                    "mode": "gradient",
+                                    "type": "gauge"
+                                },
+                                "inspect": false
+                            },
+                            "mappings": [],
+                            "max": 1,
+                            "thresholds": {
+                                "mode": "percentage",
+                                "steps": [
+                                    {
+                                        "color": "blue"
+                                    },
+                                    {
+                                        "color": "green",
+                                        "value": 25
+                                    },
+                                    {
+                                        "color": "yellow",
+                                        "value": 50
+                                    },
+                                    {
+                                        "color": "orange",
+                                        "value": 75
+                                    },
+                                    {
+                                        "color": "red",
+                                        "value": 90
+                                    }
+                                ]
+                            },
+                            "unit": "s"
+                        },
+                        "overrides": [
+                            {
+                                "matcher": {
+                                    "id": "byName",
+                                    "options": "Query id"
+                                },
+                                "properties": [
+                                    {
+                                        "id": "custom.cellOptions",
+                                        "value": {
+                                            "type": "auto"
+                                        }
+                                    },
+                                    {
+                                        "id": "unit",
+                                        "value": "none"
+                                    }
+                                ]
+                            },
+                            {
+                                "matcher": {
+                                    "id": "byName",
+                                    "options": "Affected rows"
+                                },
+                                "properties": [
+                                    {
+                                        "id": "custom.cellOptions",
+                                        "value": {
+                                            "type": "auto"
+                                        }
+                                    },
+                                    {
+                                        "id": "unit",
+                                        "value": "short"
+                                    },
+                                    {
+                                        "id": "decimals",
+                                        "value": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "matcher": {
+                                    "id": "byName",
+                                    "options": "Calls"
+                                },
+                                "properties": [
+                                    {
+                                        "id": "custom.cellOptions",
+                                        "value": {
+                                            "type": "auto"
+                                        }
+                                    },
+                                    {
+                                        "id": "unit",
+                                        "value": "short"
+                                    },
+                                    {
+                                        "id": "decimals",
+                                        "value": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "matcher": {
+                                    "id": "byName",
+                                    "options": "Plans"
+                                },
+                                "properties": [
+                                    {
+                                        "id": "custom.cellOptions",
+                                        "value": {
+                                            "type": "auto"
+                                        }
+                                    },
+                                    {
+                                        "id": "unit",
+                                        "value": "short"
+                                    },
+                                    {
+                                        "id": "decimals",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "gridPos": {
+                        "h": 7,
+                        "w": 24,
+                        "x": 0,
+                        "y": 22
+                    },
+                    "id": 6,
+                    "options": {
+                        "footer": {
+                            "countRows": false,
+                            "fields": "",
+                            "reducer": [
+                                "sum"
+                            ],
+                            "show": false
+                        },
+                        "showHeader": true,
+                        "sortBy": [
+                            {
+                                "desc": true,
+                                "displayName": "Mean exec time"
+                            }
+                        ]
+                    },
+                    "pluginVersion": "9.4.1",
+                    "targets": [
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "sum by (queryid)(increase(pg_statements_rows{server=~\"$Server\",database=~\"$Database\"}[$__range]))",
+                            "format": "table",
+                            "instant": true,
+                            "legendFormat": "Affected Rows",
+                            "range": false,
+                            "refId": "Affected Rows"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "sum by (queryid)(increase(pg_statements_calls{server=~\"$Server\",database=~\"$Database\"}[$__range]))",
+                            "format": "table",
+                            "hide": false,
+                            "instant": true,
+                            "legendFormat": "Calls",
+                            "range": false,
+                            "refId": "Calls"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "avg by (queryid)(increase(pg_statements_plans{server=~\"$Server\",database=~\"$Database\"}[$__range]))",
+                            "format": "table",
+                            "hide": false,
+                            "instant": true,
+                            "legendFormat": "Plans",
+                            "range": false,
+                            "refId": "Plans"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "avg by (queryid)(pg_statements_mean_exec_time{server=~\"$Server\",database=~\"$Database\"})",
+                            "format": "table",
+                            "hide": false,
+                            "instant": true,
+                            "legendFormat": "Mean execution time",
+                            "range": false,
+                            "refId": "Mean execution time"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "avg by (queryid)(pg_statements_max_exec_time{server=~\"$Server\",database=~\"$Database\"})",
+                            "format": "table",
+                            "hide": false,
+                            "instant": true,
+                            "legendFormat": "Max execution time",
+                            "range": false,
+                            "refId": "Max execution time"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "avg by (queryid)(pg_statements_mean_plan_time{server=~\"$Server\",database=~\"$Database\"})",
+                            "format": "table",
+                            "hide": false,
+                            "instant": true,
+                            "legendFormat": "Mean plan time",
+                            "range": false,
+                            "refId": "Mean plan time"
+                        },
+                        {
+                            "datasource": {
+                                "type": "prometheus",
+                                "uid": "metrics"
+                            },
+                            "editorMode": "code",
+                            "exemplar": false,
+                            "expr": "avg by (queryid)(pg_statements_max_plan_time{server=~\"$Server\",database=~\"$Database\"})",
+                            "format": "table",
+                            "hide": false,
+                            "instant": true,
+                            "legendFormat": "Max plan time",
+                            "range": false,
+                            "refId": "Max plan time"
+                        }
+                    ],
+                    "title": "Statements",
+                    "transformations": [
+                        {
+                            "id": "joinByField",
+                            "options": {
+                                "byField": "queryid",
+                                "mode": "inner"
+                            }
+                        },
+                        {
+                            "id": "organize",
+                            "options": {
+                                "excludeByName": {
+                                    "Time 1": true,
+                                    "Time 2": true,
+                                    "Time 3": true,
+                                    "Time 4": true,
+                                    "Time 5": true,
+                                    "Time 6": true,
+                                    "Time 7": true
+                                },
+                                "indexByName": {},
+                                "renameByName": {
+                                    "Time 3": "",
+                                    "Value #Affected Rows": "Affected rows",
+                                    "Value #Calls": "Calls",
+                                    "Value #Calls Rate": "Calls",
+                                    "Value #Max execution time": "Max exec time",
+                                    "Value #Max plan time": "Max plan time",
+                                    "Value #Mean execution time": "Mean exec time",
+                                    "Value #Mean plan time": "Mean plan time",
+                                    "Value #Plans": "Plans",
+                                    "Value #Plans Rate": "Plans",
+                                    "queryid": "Query id"
+                                }
+                            }
+                        },
+                        {
+                            "id": "sortBy",
+                            "options": {
+                                "fields": {},
+                                "sort": [
+                                    {
+                                        "desc": true,
+                                        "field": "Calls"
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "transparent": true,
+                    "type": "table"
+                }
+            ],
+            "title": "Database",
+            "type": "row"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 12
+            },
+            "id": 39,
+            "panels": [],
+            "title": "Schema",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "cellOptions": {
+                            "type": "auto"
+                        },
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "percentage",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 25
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 50
+                            },
+                            {
+                                "color": "orange",
+                                "value": 75
+                            },
+                            {
+                                "color": "red",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "decbytes"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Value #Rows"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "short"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Cache hits ratio"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "percentunit"
+                            },
+                            {
+                                "id": "custom.cellOptions",
+                                "value": {
+                                    "mode": "gradient",
+                                    "type": "gauge"
+                                }
+                            },
+                            {
+                                "id": "max",
+                                "value": 1
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 11,
+                "w": 24,
+                "x": 0,
+                "y": 13
+            },
+            "id": 33,
+            "options": {
+                "footer": {
+                    "countRows": false,
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": true,
+                        "displayName": "Rows"
+                    }
+                ]
+            },
+            "pluginVersion": "9.4.1",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "pg_tables_rows{server=~\"$Server\",database=~\"$Database\",schema=~\"$Schema\"}",
+                    "format": "table",
+                    "hide": false,
+                    "instant": true,
+                    "legendFormat": "Rows",
+                    "range": false,
+                    "refId": "Rows"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "pg_tables_table_bytes{server=~\"$Server\",database=~\"$Database\",schema=~\"$Schema\"}",
+                    "format": "table",
+                    "hide": false,
+                    "instant": true,
+                    "legendFormat": "Table size",
+                    "range": false,
+                    "refId": "Table size"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "pg_tables_index_bytes{server=~\"$Server\",database=~\"$Database\",schema=~\"$Schema\"}",
+                    "format": "table",
+                    "hide": false,
+                    "instant": true,
+                    "legendFormat": "Index size",
+                    "range": false,
+                    "refId": "Index size"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "rate(pg_tables_read_from_disk{server=~\"$Server\",database=~\"$Database\",schema=~\"$Schema\"}[$__rate_interval])",
+                    "format": "table",
+                    "hide": false,
+                    "instant": true,
+                    "legendFormat": "Disk hits",
+                    "range": false,
+                    "refId": "Disk hits"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "rate(pg_tables_read_from_cache{server=~\"$Server\",database=~\"$Database\",schema=~\"$Schema\"}[$__rate_interval])",
+                    "format": "table",
+                    "hide": false,
+                    "instant": true,
+                    "legendFormat": "Cache hits",
+                    "range": false,
+                    "refId": "Cache hits"
+                }
+            ],
+            "title": "Objects",
+            "transformations": [
+                {
+                    "id": "joinByField",
+                    "options": {
+                        "byField": "object",
+                        "mode": "inner"
+                    }
+                },
+                {
+                    "id": "calculateField",
+                    "options": {
+                        "alias": "Total hits",
+                        "binary": {
+                            "left": "Value #Cache hits",
+                            "reducer": "sum",
+                            "right": "Value #Disk hits"
+                        },
+                        "mode": "binary",
+                        "reduce": {
+                            "include": [
+                                "Value #Cache hits",
+                                "Value #Disk hits"
+                            ],
+                            "reducer": "sum"
+                        },
+                        "replaceFields": false
+                    }
+                },
+                {
+                    "id": "calculateField",
+                    "options": {
+                        "alias": "Cache hits ratio",
+                        "binary": {
+                            "left": "Value #Cache hits",
+                            "operator": "/",
+                            "reducer": "sum",
+                            "right": "Total hits"
+                        },
+                        "mode": "binary",
+                        "reduce": {
+                            "include": [
+                                "Total hits"
+                            ],
+                            "reducer": "sum"
+                        }
+                    }
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time 1": true,
+                            "Time 2": true,
+                            "Time 3": true,
+                            "Time 4": true,
+                            "Time 5": true,
+                            "Total hits": true,
+                            "Value #Cache hits": true,
+                            "Value #Disk hits": true,
+                            "__name__ 1": true,
+                            "__name__ 2": true,
+                            "__name__ 3": true,
+                            "database 1": true,
+                            "database 2": true,
+                            "database 3": true,
+                            "database 4": true,
+                            "database 5": true,
+                            "instance 1": true,
+                            "instance 2": true,
+                            "instance 3": true,
+                            "instance 4": true,
+                            "instance 5": true,
+                            "job 1": true,
+                            "job 2": true,
+                            "job 3": true,
+                            "job 4": true,
+                            "job 5": true,
+                            "schema 1": true,
+                            "schema 2": true,
+                            "schema 3": true,
+                            "schema 4": true,
+                            "schema 5": true,
+                            "server 1": true,
+                            "server 2": true,
+                            "server 3": true,
+                            "server 4": true,
+                            "server 5": true
+                        },
+                        "indexByName": {
+                            "Time 1": 2,
+                            "Time 2": 8,
+                            "Time 3": 15,
+                            "Time 4": 22,
+                            "Time 5": 28,
+                            "Value #Cache hits": 33,
+                            "Value #Disk hits": 27,
+                            "Value #Index size": 21,
+                            "Value #Rows": 7,
+                            "Value #Table size": 14,
+                            "__name__ 1": 3,
+                            "__name__ 2": 9,
+                            "__name__ 3": 16,
+                            "instance 1": 4,
+                            "instance 2": 10,
+                            "instance 3": 17,
+                            "instance 4": 23,
+                            "instance 5": 29,
+                            "job 1": 5,
+                            "job 2": 11,
+                            "job 3": 18,
+                            "job 4": 24,
+                            "job 5": 30,
+                            "object": 1,
+                            "schema 1": 0,
+                            "schema 2": 12,
+                            "schema 3": 19,
+                            "schema 4": 25,
+                            "schema 5": 31,
+                            "server 1": 6,
+                            "server 2": 13,
+                            "server 3": 20,
+                            "server 4": 26,
+                            "server 5": 32
+                        },
+                        "renameByName": {
+                            "Cache hits ratio": "Cache hits ratio",
+                            "Time 4": "",
+                            "Value #Index size": "Index size",
+                            "Value #Rows": "Rows",
+                            "Value #Table size": "Table size",
+                            "object": "Object",
+                            "schema 1": ""
+                        }
+                    }
+                },
+                {
+                    "id": "sortBy",
+                    "options": {
+                        "fields": {},
+                        "sort": [
+                            {
+                                "desc": true,
+                                "field": "Rows"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "transparent": true,
+            "type": "table"
+        }
+    ],
+    "refresh": "",
+    "revision": 1,
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "postgresql"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": false,
+                    "text": "postgres:5432",
+                    "value": "postgres:5432"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "metrics"
+                },
+                "definition": "label_values(pg_settings_value, server)",
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "Server",
+                "options": [],
+                "query": {
+                    "query": "label_values(pg_settings_value, server)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "WebApplication",
+                    "value": "WebApplication"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "metrics"
+                },
+                "definition": "label_values(pg_statements_rows{server=~\"$Server\"}, database)",
+                "description": "",
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "Database",
+                "options": [],
+                "query": {
+                    "query": "label_values(pg_statements_rows{server=~\"$Server\"}, database)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "Migrations",
+                    "value": "Migrations"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "metrics"
+                },
+                "definition": "label_values(pg_tables_rows{server=~\"$Server\",database=~\"$Database\"}, schema)",
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "Schema",
+                "options": [],
+                "query": {
+                    "query": "label_values(pg_tables_rows{server=~\"$Server\",database=~\"$Database\"}, schema)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Postgres overview",
+    "uid": "wtfdbULVk",
+    "version": 4,
+    "weekStart": ""
+}

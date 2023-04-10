@@ -14,6 +14,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
         /// <summary> .cctor </summary>
         public SqlDatabaseSettings()
         {
+            ApplicationName = "Voyager-1";
+
             Host = "localhost";
             Port = 5432;
             Database = "AndromedaDatabase";
@@ -24,6 +26,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Settings
             IsolationLevel = IsolationLevel.Snapshot;
             ConnectionPoolSize = 100;
         }
+
+        /// <summary>
+        /// Application name
+        /// </summary>
+        public string ApplicationName { get; init; }
 
         /// <summary>
         /// Host

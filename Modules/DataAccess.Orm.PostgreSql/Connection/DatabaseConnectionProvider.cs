@@ -71,6 +71,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Connection
 
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
+                ApplicationName = _sqlDatabaseSettings.ApplicationName,
                 Host = _sqlDatabaseSettings.Host,
                 Port = _sqlDatabaseSettings.Port,
                 Database = _sqlDatabaseSettings.Database,

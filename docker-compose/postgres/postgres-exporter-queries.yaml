@@ -1,311 +1,413 @@
-pg_replication:
-    query: |
-        SELECT
-          CASE
-            WHEN NOT pg_is_in_recovery() THEN 0
-            ELSE GREATEST(0, EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp())))
-          END AS lag
-    master: true
-    metrics:
-        - lag:
-              usage: "GAUGE"
-              description: "Replication lag behind master in seconds"
+# SERVER
+pg_settings:
+  query: |
+    SELECT
+      name,
+      setting as value
+    from pg_settings
+    where name = 'server_version'
+  master: true
+  metrics:
+    - name:
+        usage: "LABEL"
+        description: "Settings name"
+    - value:
+        usage: "GAUGE"
+        description: "Settings value"
 
 pg_postmaster:
-    query: |
-        SELECT
-          pg_postmaster_start_time as start_time_seconds
-        from pg_postmaster_start_time()
-    master: true
-    metrics:
-        - start_time_seconds:
-              usage: "GAUGE"
-              description: "Time at which postmaster started"
+  query: |
+    SELECT
+      pg_postmaster_start_time as start_time_seconds
+    from pg_postmaster_start_time()
+  master: true
+  metrics:
+    - start_time_seconds:
+        usage: "GAUGE"
+        description: "Time at which postmaster started"
 
-pg_stat_user_tables:
-    query: |
-        SELECT
-          current_database() datname,
-          schemaname,
-          relname,
-          seq_scan,
-          seq_tup_read,
-          idx_scan,
-          idx_tup_fetch,
-          n_tup_ins,
-          n_tup_upd,
-          n_tup_del,
-          n_tup_hot_upd,
-          n_live_tup,
-          n_dead_tup,
-          n_mod_since_analyze,
-          COALESCE(last_vacuum, '1970-01-01Z') as last_vacuum,
-          COALESCE(last_autovacuum, '1970-01-01Z') as last_autovacuum,
-          COALESCE(last_analyze, '1970-01-01Z') as last_analyze,
-          COALESCE(last_autoanalyze, '1970-01-01Z') as last_autoanalyze,
-          vacuum_count,
-          autovacuum_count,
-          analyze_count,
-          autoanalyze_count
-        FROM
-          pg_stat_user_tables
-    metrics:
-        - datname:
-              usage: "LABEL"
-              description: "Name of current database"
-        - schemaname:
-              usage: "LABEL"
-              description: "Name of the schema that this table is in"
-        - relname:
-              usage: "LABEL"
-              description: "Name of this table"
-        - seq_scan:
-              usage: "COUNTER"
-              description: "Number of sequential scans initiated on this table"
-        - seq_tup_read:
-              usage: "COUNTER"
-              description: "Number of live rows fetched by sequential scans"
-        - idx_scan:
-              usage: "COUNTER"
-              description: "Number of index scans initiated on this table"
-        - idx_tup_fetch:
-              usage: "COUNTER"
-              description: "Number of live rows fetched by index scans"
-        - n_tup_ins:
-              usage: "COUNTER"
-              description: "Number of rows inserted"
-        - n_tup_upd:
-              usage: "COUNTER"
-              description: "Number of rows updated"
-        - n_tup_del:
-              usage: "COUNTER"
-              description: "Number of rows deleted"
-        - n_tup_hot_upd:
-              usage: "COUNTER"
-              description: "Number of rows HOT updated (i.e., with no separate index update required)"
-        - n_live_tup:
-              usage: "GAUGE"
-              description: "Estimated number of live rows"
-        - n_dead_tup:
-              usage: "GAUGE"
-              description: "Estimated number of dead rows"
-        - n_mod_since_analyze:
-              usage: "GAUGE"
-              description: "Estimated number of rows changed since last analyze"
-        - last_vacuum:
-              usage: "GAUGE"
-              description: "Last time at which this table was manually vacuumed (not counting VACUUM FULL)"
-        - last_autovacuum:
-              usage: "GAUGE"
-              description: "Last time at which this table was vacuumed by the autovacuum daemon"
-        - last_analyze:
-              usage: "GAUGE"
-              description: "Last time at which this table was manually analyzed"
-        - last_autoanalyze:
-              usage: "GAUGE"
-              description: "Last time at which this table was analyzed by the autovacuum daemon"
-        - vacuum_count:
-              usage: "COUNTER"
-              description: "Number of times this table has been manually vacuumed (not counting VACUUM FULL)"
-        - autovacuum_count:
-              usage: "COUNTER"
-              description: "Number of times this table has been vacuumed by the autovacuum daemon"
-        - analyze_count:
-              usage: "COUNTER"
-              description: "Number of times this table has been manually analyzed"
-        - autoanalyze_count:
-              usage: "COUNTER"
-              description: "Number of times this table has been analyzed by the autovacuum daemon"
+pg_replication:
+  query: |
+    SELECT
+      CASE
+        WHEN NOT pg_is_in_recovery() THEN 0
+        ELSE GREATEST(0, EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp())))
+      END AS lag
+  master: true
+  metrics:
+    - lag:
+        usage: "GAUGE"
+        description: "Replication lag behind master in seconds"
 
-pg_statio_user_tables:
-    query: |
-        SELECT
-          current_database() datname,
-          schemaname,
-          relname,
-          heap_blks_read,
-          heap_blks_hit,
-          idx_blks_read,
-          idx_blks_hit,
-          toast_blks_read,
-          toast_blks_hit,
-          tidx_blks_read,
-          tidx_blks_hit
-        FROM pg_statio_user_tables;
-    metrics:
-        - datname:
-              usage: "LABEL"
-              description: "Name of current database"
-        - schemaname:
-              usage: "LABEL"
-              description: "Name of the schema that this table is in"
-        - relname:
-              usage: "LABEL"
-              description: "Name of this table"
-        - heap_blks_read:
-              usage: "COUNTER"
-              description: "Number of disk blocks read from this table"
-        - heap_blks_hit:
-              usage: "COUNTER"
-              description: "Number of buffer hits in this table"
-        - idx_blks_read:
-              usage: "COUNTER"
-              description: "Number of disk blocks read from all indexes on this table"
-        - idx_blks_hit:
-              usage: "COUNTER"
-              description: "Number of buffer hits in all indexes on this table"
-        - toast_blks_read:
-              usage: "COUNTER"
-              description: "Number of disk blocks read from this table's TOAST table (if any)"
-        - toast_blks_hit:
-              usage: "COUNTER"
-              description: "Number of buffer hits in this table's TOAST table (if any)"
-        - tidx_blks_read:
-              usage: "COUNTER"
-              description: "Number of disk blocks read from this table's TOAST table indexes (if any)"
-        - tidx_blks_hit:
-              usage: "COUNTER"
-              description: "Number of buffer hits in this table's TOAST table indexes (if any)"
+pg_diskstats:
+  query: |
+    select
+      device_name,
+      weighted_time_spent_doing_io_ms / 1000 as weighted_time_spent_doing_io,
+      time_spent_doing_io_ms / 1000 as time_spent_doing_io,
+      time_spent_writing_ms / 1000 as time_spent_writing,
+      time_spent_reading_ms / 1000 as time_spent_reading,
+      sectors_read * 512 as bytes_read,
+      sectors_written * 512 as bytes_written
+    from diskstats
+    where device_name = 'vda'
+  master: true
+  metrics:
+    - device_name:
+        usage: "LABEL"
+        description: "Device name"
+    - time_spent_doing_io:
+        usage: "COUNTER"
+        description: "time_spent_doing_io"
+    - time_spent_writing:
+        usage: "COUNTER"
+        description: "time_spent_writing"
+    - time_spent_reading:
+        usage: "COUNTER"
+        description: "time_spent_reading"
+    - sectors_read:
+        usage: "COUNTER"
+        description: "sectors_read"
+    - sectors_written:
+        usage: "COUNTER"
+        description: "sectors_written"
 
-# WARNING: This set of metrics can be very expensive on a busy server as every unique query executed will create an additional time series
-pg_stat_statements:
-    query: |
-        SELECT
-          t2.rolname,
-          t3.datname,
-          queryid,
-          calls,
-          total_exec_time / 1000     as total_time_seconds,
-          min_exec_time / 1000       as min_time_seconds,
-          max_exec_time / 1000       as max_time_seconds,
-          mean_exec_time / 1000      as mean_time_seconds,
-          stddev_exec_time / 1000    as stddev_time_seconds,
-          rows,
-          shared_blks_hit,
-          shared_blks_read,
-          shared_blks_dirtied,
-          shared_blks_written,
-          local_blks_hit,
-          local_blks_read,
-          local_blks_dirtied,
-          local_blks_written,
-          temp_blks_read,
-          temp_blks_written,
-          blk_read_time / 1000  as blk_read_time_seconds,
-          blk_write_time / 1000 as blk_write_time_seconds
-        FROM pg_stat_statements t1
-        JOIN pg_roles t2 ON (t1.userid = t2.oid)
-        JOIN pg_database t3 ON (t1.dbid = t3.oid)
-        WHERE t2.rolname != 'rdsadmin'
-    master: true
-    metrics:
-        - rolname:
-              usage: "LABEL"
-              description: "Name of user"
-        - datname:
-              usage: "LABEL"
-              description: "Name of database"
-        - queryid:
-              usage: "LABEL"
-              description: "Query ID"
-        - calls:
-              usage: "COUNTER"
-              description: "Number of times executed"
-        - total_time_seconds:
-              usage: "COUNTER"
-              description: "Total time spent in the statement, in milliseconds"
-        - min_time_seconds:
-              usage: "GAUGE"
-              description: "Minimum time spent in the statement, in milliseconds"
-        - max_time_seconds:
-              usage: "GAUGE"
-              description: "Maximum time spent in the statement, in milliseconds"
-        - mean_time_seconds:
-              usage: "GAUGE"
-              description: "Mean time spent in the statement, in milliseconds"
-        - stddev_time_seconds:
-              usage: "GAUGE"
-              description: "Population standard deviation of time spent in the statement, in milliseconds"
-        - rows:
-              usage: "COUNTER"
-              description: "Total number of rows retrieved or affected by the statement"
-        - shared_blks_hit:
-              usage: "COUNTER"
-              description: "Total number of shared block cache hits by the statement"
-        - shared_blks_read:
-              usage: "COUNTER"
-              description: "Total number of shared blocks read by the statement"
-        - shared_blks_dirtied:
-              usage: "COUNTER"
-              description: "Total number of shared blocks dirtied by the statement"
-        - shared_blks_written:
-              usage: "COUNTER"
-              description: "Total number of shared blocks written by the statement"
-        - local_blks_hit:
-              usage: "COUNTER"
-              description: "Total number of local block cache hits by the statement"
-        - local_blks_read:
-              usage: "COUNTER"
-              description: "Total number of local blocks read by the statement"
-        - local_blks_dirtied:
-              usage: "COUNTER"
-              description: "Total number of local blocks dirtied by the statement"
-        - local_blks_written:
-              usage: "COUNTER"
-              description: "Total number of local blocks written by the statement"
-        - temp_blks_read:
-              usage: "COUNTER"
-              description: "Total number of temp blocks read by the statement"
-        - temp_blks_written:
-              usage: "COUNTER"
-              description: "Total number of temp blocks written by the statement"
-        - blk_read_time_seconds:
-              usage: "COUNTER"
-              description: "Total time the statement spent reading blocks, in milliseconds (if track_io_timing is enabled, otherwise zero)"
-        - blk_write_time_seconds:
-              usage: "COUNTER"
-              description: "Total time the statement spent writing blocks, in milliseconds (if track_io_timing is enabled, otherwise zero)"
+pg_loadavg:
+  query: |
+    select
+      one,
+      five,
+      fifteen
+    from loadavg
+  master: true
+  metrics:
+    - one:
+        usage: "GAUGE"
+        description: "one"
+    - five:
+        usage: "GAUGE"
+        description: "five"
+    - fifteen:
+        usage: "GAUGE"
+        description: "fifteen"
 
-pg_process_idle:
-    query: |
-        WITH
-          metrics AS (
-            SELECT
-              application_name,
-              SUM(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - state_change))::bigint)::float AS process_idle_seconds_sum,
-              COUNT(*) AS process_idle_seconds_count
-            FROM pg_stat_activity
-            WHERE state = 'idle'
-            GROUP BY application_name
-          ),
-          buckets AS (
-            SELECT
-              application_name,
-              le,
-              SUM(
-                CASE WHEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - state_change)) <= le
-                  THEN 1
-                  ELSE 0
-                END
-              )::bigint AS bucket
-            FROM
-              pg_stat_activity,
-              UNNEST(ARRAY[1, 2, 5, 15, 30, 60, 90, 120, 300]) AS le
-            GROUP BY application_name, le
-            ORDER BY application_name, le
-          )
-        SELECT
-          application_name,
-          process_idle_seconds_sum as seconds_sum,
-          process_idle_seconds_count as seconds_count,
-          ARRAY_AGG(le) AS seconds,
-          ARRAY_AGG(bucket) AS seconds_bucket
-        FROM metrics JOIN buckets USING (application_name)
-        GROUP BY 1, 2, 3
-    metrics:
-        - application_name:
-              usage: "LABEL"
-              description: "Application Name"
-        - seconds:
-              usage: "HISTOGRAM"
-              description: "Idle time of server processes"
+pg_meminfo:
+  query: |
+    select
+      stat as measure,
+      substring(trim(both ' ' from value) from '\d+')::numeric * 1024 as value
+    from meminfo
+  master: true
+  metrics:
+    - measure:
+        usage: "LABEL"
+        description: "Meminfo measure name"
+    - value:
+        usage: "GAUGE"
+        description: "Meminfo measure value"
+
+# DATABASE
+
+pg_connection_state:
+  query: |
+    select
+      datname as database,
+      state,
+      count(*) as count
+    from pg_stat_activity a
+    where state is not null and datname is not null
+    group by datname, state
+  master: true
+  metrics:
+    - database:
+        usage: "LABEL"
+        description: "Database name"
+    - state:
+        usage: "LABEL"
+        description: "Connection state"
+    - connection_opened:
+        usage: "GAUGE"
+        description: "Time at which the server process opened connection"
+
+pg_locks:
+  query: |
+    select
+      blocked_locks.pid                                 as blocked_pid,
+      blocked_activity.usename                          as blocked_user,
+      blocked_activity.query                            as blocked_statement,
+      blocked_activity.application_name                 as blocked_application,
+      blocked_locks.mode                                as blocked_mode,
+      date_part('epoch', blocked_activity.query_start)  as blocked_time,
+      blocked_locks.relation::regclass                  as blocked_relation,
+    
+      blocking_locks.pid                                as blocking_pid,
+      blocking_activity.usename                         as blocking_user,
+      blocking_activity.query                           as current_statement_in_blocking_process,
+      blocking_activity.application_name                as blocking_application,
+      date_part('epoch', blocking_activity.query_start) as blocking_time,
+      blocking_locks.mode                               as blocking_mode,
+      blocking_locks.relation::regclass                 as blocking_relation
+    
+      from pg_catalog.pg_locks blocked_locks
+    
+      join pg_catalog.pg_stat_activity blocked_activity
+        on blocked_activity.pid = blocked_locks.pid
+    
+      join pg_catalog.pg_locks blocking_locks
+        on blocking_locks.locktype = blocked_locks.locktype
+       and blocking_locks.database is not distinct from blocked_locks.database
+       and blocking_locks.relation is not distinct from blocked_locks.relation
+       and blocking_locks.page is not distinct from blocked_locks.page
+       and blocking_locks.tuple is not distinct from blocked_locks.tuple
+       and blocking_locks.virtualxid is not distinct from blocked_locks.virtualxid
+       and blocking_locks.transactionid is not distinct from blocked_locks.transactionid
+       and blocking_locks.classid is not distinct from blocked_locks.classid
+       and blocking_locks.objid is not distinct from blocked_locks.objid
+       and blocking_locks.objsubid is not distinct from blocked_locks.objsubid
+       and blocking_locks.pid != blocked_locks.pid
+    
+      join pg_catalog.pg_stat_activity blocking_activity
+        on blocking_activity.pid = blocking_locks.pid
+    
+      where not blocked_locks.granted
+  master: true
+  metrics:
+    - blocked_pid:
+        usage: "LABEL"
+        description: "Process identifier of the blocked process"
+    - blocked_user:
+        usage: "LABEL"
+        description: "User whose operation was blocked"
+    - blocked_application:
+        usage: "LABEL"
+        description: "Application name which is awaiting for the blocked operation resolution"
+    - blocked_mode:
+        usage: "LABEL"
+        description: "Lock mode of the blocked statement"
+    - blocked_relation:
+        usage: "LABEL"
+        description: "Blocked database object"
+    - blocking_pid:
+        usage: "LABEL"
+        description: "Process identifier of the blocking process"
+    - blocking_user:
+        usage: "LABEL"
+        description: "User whose operation causes the lock"
+    - blocking_application:
+        usage: "LABEL"
+        description: "Application name which causes the lock"
+    - blocking_mode:
+        usage: "LABEL"
+        description: "Lock mode of the blocking statement"
+    - blocking_relation:
+        usage: "LABEL"
+        description: "Blocking database object"
+    - blocked_time:
+        usage: "GAUGE"
+        description: "Time at which the blocked statement execution was started"
+    - blocking_time:
+        usage: "GAUGE"
+        description: "Time at which the blocking statement execution was started"
+
+pg_stat_database:
+  query: |
+    select
+      datname as database,
+      blks_read,
+      blks_hit,
+      blk_read_time,
+      blk_write_time,
+      tup_returned,
+      tup_fetched,
+      tup_inserted,
+      tup_updated,
+      tup_deleted,
+      active_time / 1000 as active_time,
+      deadlocks
+    from pg_stat_database
+    where datname is not null
+  master: true
+  metrics:
+    - database:
+        usage: "LABEL"
+        description: "Database name"
+    - blks_read:
+        usage: "COUNTER"
+        description: "Number of disk blocks read in this database"   
+    - blks_hit:
+        usage: "COUNTER"
+        description: "Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the PostgreSQL buffer cache, not the operating system's file system cache)"
+    - blk_read_time:
+        usage: "COUNTER"
+        description: "Time spent reading data file blocks by backends in this database"
+    - blk_write_time:
+        usage: "COUNTER"
+        description: "Time spent writing data file blocks by backends in this database"
+    - tup_returned:
+        usage: "COUNTER"
+        description: "Number of live rows fetched by sequential scans and index entries returned by index scans in this database"
+    - tup_fetched:
+        usage: "COUNTER"
+        description: "Number of live rows fetched by index scans in this database"
+    - tup_inserted:
+        usage: "COUNTER"
+        description: "Number of rows inserted by queries in this database"
+    - tup_updated:
+        usage: "COUNTER"
+        description: "Number of rows updated by queries in this database"
+    - tup_deleted:
+        usage: "COUNTER"
+        description: "Number of rows deleted by queries in this database"
+    - deadlocks:
+        usage: "COUNTER"
+        description: "Number of deadlocks detected in this database"    
+    - active_time:
+        usage: "COUNTER"
+        description: "Time spent executing SQL statements in this database"
+
+pg_statements:
+  query: |
+    select
+      queryid                       as queryid,
+      datname                       as database,
+      sum(calls)                    as calls,
+      sum(rows)                     as rows,
+      sum(total_exec_time) / 1000   as total_exec_time,
+      avg(min_exec_time) / 1000     as min_exec_time,
+      avg(max_exec_time) / 1000     as max_exec_time,
+      avg(mean_exec_time) / 1000    as mean_exec_time,
+      avg(stddev_exec_time) / 1000  as stddev_exec_time,
+      sum(plans)                    as plans,
+      sum(total_plan_time) / 1000   as total_plan_time,
+      avg(min_plan_time) / 1000     as min_plan_time,
+      avg(max_plan_time) / 1000     as max_plan_time,
+      avg(mean_plan_time) / 1000    as mean_plan_time,
+      avg(stddev_plan_time) / 1000  as stddev_plan_time,
+      sum(blk_read_time) / 1000     as blk_read_time,
+      sum(blk_write_time) / 1000    as blk_write_time,
+      sum(wal_records)              as wal_records,
+      sum(wal_fpi)                  as wal_fpi,
+      sum(wal_bytes)                as wal_bytes
+    from pg_stat_statements t1
+    join pg_roles t2 on (t1.userid = t2.oid)
+    join pg_database t3 on (t1.dbid = t3.oid)
+    where datname != 'postgres'
+    group by queryid, datname
+  master: true
+  metrics:
+    - queryid:
+        usage: "LABEL"
+        description: "Query identifier"
+    - database:
+        usage: "LABEL"
+        description: "Name of the database"
+    - calls:
+        usage: "COUNTER"
+        description: "Number of times executed"
+    - rows:
+        usage: "COUNTER"
+        description: "Total number of rows retrieved or affected by the all statements"
+    - total_exec_time:
+        usage: "COUNTER"
+        description: "Total time spent in the statements"
+    - min_exec_time:
+        usage: "GAUGE"
+        description: "Minimum time spent in the statements"
+    - max_exec_time:
+        usage: "GAUGE"
+        description: "Maximum time spent in the statements"
+    - mean_exec_time:
+        usage: "GAUGE"
+        description: "Mean time spent in the statements"
+    - stddev_exec_time:
+        usage: "GAUGE"
+        description: "Population standard deviation of time spent in the statements"
+    - plans:
+        usage: "COUNTER"
+        description: "Number of times the statement was planned"
+    - total_plan_time:
+        usage: "GAUGE"
+        description: "Total time spent planning the statement"
+    - min_plan_time:
+        usage: "GAUGE"
+        description: "Minimum time spent planning the statement,"
+    - max_plan_time:
+        usage: "GAUGE"
+        description: "Maximum time spent planning the statement"
+    - mean_plan_time:
+        usage: "GAUGE"
+        description: "Mean time spent planning the statement"
+    - stddev_plan_time:
+        usage: "GAUGE"
+        description: "Population standard deviation of time spent planning the statement"
+    - blk_read_time:
+        usage: "COUNTER"
+        description: "Total time the statement spent reading data file blocks"
+    - blk_write_time:
+        usage: "COUNTER"
+        description: "Total time the statement spent writing data file blocks"
+    - wal_records:
+        usage: "COUNTER"
+        description: "Total number of WAL records generated by the statement"
+    - wal_records:
+        usage: "COUNTER"
+        description: "Total number of WAL full page images generated by the statement"
+    - wal_records:
+        usage: "COUNTER"
+        description: "Total amount of WAL generated by the statement in bytes"
+
+# SCHEMA
+
+pg_tables:
+  query: |
+    select
+      s.catalog_name as database,
+      n.nspname as schema,
+      c.relname as object,
+      c.reltuples as rows,
+      coalesce(pg_total_relation_size(c.oid), 0)
+          - coalesce(pg_indexes_size(c.oid), 0)
+          - coalesce(pg_total_relation_size(c.reltoastrelid), 0) as table_bytes,
+      coalesce(pg_total_relation_size(c.oid), 0) as total_bytes,
+      coalesce(pg_indexes_size(c.oid), 0) as index_bytes,
+      coalesce(pg_total_relation_size(c.reltoastrelid), 0) as toast_bytes,
+      (coalesce(heap_blks_read, 0) + coalesce(idx_blks_read, 0) + coalesce(toast_blks_read, 0) + coalesce(tidx_blks_read, 0)) as read_from_disk,
+      (coalesce(heap_blks_hit, 0) + coalesce(idx_blks_hit, 0) + coalesce(toast_blks_hit, 0) + coalesce(tidx_blks_hit, 0)) as read_from_cache
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    join information_schema.schemata s on n.nspname = s.schema_name
+    left join pg_statio_all_tables ts on n.nspname = ts.schemaname and c.relname = ts.relname
+    where c.relkind in ('r', 'v', 'm', 'f', 'p')
+      and s.catalog_name != 'postgres'
+      and n.nspname not in ('information_schema', 'public') and n.nspname not like 'pg_%'
+  metrics:
+    - database:
+        usage: "LABEL"
+        description: "Database name"
+    - schema:
+        usage: "LABEL"
+        description: "Schema name"
+    - object:
+        usage: "LABEL"
+        description: "Object name (table or view)"
+    - rows:
+        usage: "GAUGE"
+        description: "Estimate rows count"
+    - table_bytes:
+        usage: "GAUGE"
+        description: "Table size"
+    - total_bytes:
+        usage: "GAUGE"
+        description: "Total object size"
+    - index_bytes:
+        usage: "GAUGE"
+        description: "Index size"
+    - toast_bytes:
+        usage: "GAUGE"
+        description: "Toast size"
+    - read_from_disk:
+        usage: "COUNTER"
+        description: "Total blocks read from disk"
+    - read_from_cache:
+        usage: "COUNTER"
+        description: "Total blocks read from cache"

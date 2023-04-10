@@ -3,10 +3,14 @@ services:
 
   # PostgreSql
   postgres:
-    image: postgres:15.1-alpine
+    build:
+      # https://www.datasentinel.io/documentation/features/execution-plans.html
+      dockerfile: ./docker-compose/postgres/Dockerfile.postgres
+      context: .
     container_name: postgres
-    command: postgres -c shared_preload_libraries=pg_stat_statements -c pg_stat_statements.track=all -c max_connections=200
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     volumes:
+      - ./docker-compose/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./docker-compose/postgres/postgres-init.sql:/docker-entrypoint-initdb.d/postgres-init.sql
     environment:
       - POSTGRES_PASSWORD=Password12!
@@ -30,6 +34,9 @@ services:
     command:
       - --config.file=/etc/postgres-exporter/postgres-exporter.yaml
       - --extend.query-path=/etc/postgres-exporter/postgres-exporter-queries.yaml
+      - --auto-discover-databases
+      - --disable-settings-metrics
+      - --disable-default-metrics
     volumes:
       - ./docker-compose/postgres/postgres-exporter.yaml:/etc/postgres-exporter/postgres-exporter.yaml
       - ./docker-compose/postgres/postgres-exporter-queries.yaml:/etc/postgres-exporter/postgres-exporter-queries.yaml

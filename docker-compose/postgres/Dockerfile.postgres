@@ -1,0 +1,19 @@
+# https://github.com/ossc-db/pg_store_plans/issues/27
+ARG POSTGRES_VERSION=14.6
+
+FROM postgres:${POSTGRES_VERSION}-alpine AS builder
+ARG PG_STORE_PLANS_VERSION=1.6.1
+RUN apk --no-cache add ca-certificates curl make clang clang-dev musl-dev git gcc libpq-dev llvm
+RUN set -ex \
+    && cd /usr/src/ \
+    && curl -sSL -O https://github.com/ossc-db/pg_store_plans/archive/refs/tags/${PG_STORE_PLANS_VERSION}.tar.gz \
+    && tar xvf ${PG_STORE_PLANS_VERSION}.tar.gz \
+    && rm -rf ${PG_STORE_PLANS_VERSION}.tar.gz \
+    && cd pg_store_plans-${PG_STORE_PLANS_VERSION} \
+    && make USE_PGXS=1 \
+    && make USE_PGXS=1 install
+
+FROM postgres:${POSTGRES_VERSION}-alpine
+COPY --from=builder /usr/local/share/postgresql /usr/local/share/postgresql
+COPY --from=builder /usr/local/lib/postgresql /usr/local/lib/postgresql
+CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]

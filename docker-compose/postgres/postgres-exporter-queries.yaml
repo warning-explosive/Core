@@ -106,6 +106,22 @@ pg_meminfo:
         usage: "GAUGE"
         description: "Meminfo measure value"
 
+pg_status:
+  query: |
+    select
+      stat as measure,
+      substring(trim(both ' ' from value) from '\d+')::numeric * 1024 as "value"
+    from status
+    where stat = 'VmSize'
+  master: true
+  metrics:
+    - measure:
+        usage: "LABEL"
+        description: "Meminfo measure name"
+    - value:
+        usage: "GAUGE"
+        description: "Meminfo measure value"
+
 # DATABASE
 
 pg_connection_state:

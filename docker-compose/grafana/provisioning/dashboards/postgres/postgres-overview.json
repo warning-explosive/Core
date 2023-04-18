@@ -21,7 +21,7 @@
             }
         ]
     },
-    "editable": true,
+    "editable": false,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
     "links": [],
@@ -67,7 +67,7 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 10,
+                "h": 5,
                 "w": 3,
                 "x": 0,
                 "y": 1
@@ -132,71 +132,7 @@
                 "type": "prometheus",
                 "uid": "metrics"
             },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "fixedColor": "text",
-                        "mode": "fixed"
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    },
-                    "unit": "s"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 5,
-                "w": 3,
-                "x": 3,
-                "y": 1
-            },
-            "id": 4,
-            "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "center",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto"
-            },
-            "pluginVersion": "9.4.1",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "metrics"
-                    },
-                    "editorMode": "code",
-                    "expr": "time() - pg_postmaster_start_time_seconds{server=~\"$Server\"}",
-                    "legendFormat": "Up-time",
-                    "range": true,
-                    "refId": "Up-time"
-                }
-            ],
-            "title": "Up-time",
-            "transparent": true,
-            "type": "stat"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "metrics"
-            },
-            "description": "",
+            "description": "/proc/loadavg - one",
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -212,33 +148,33 @@
                             },
                             {
                                 "color": "green",
-                                "value": 1
+                                "value": 0.25
                             },
                             {
                                 "color": "yellow",
-                                "value": 2
+                                "value": 0.5
                             },
                             {
                                 "color": "orange",
-                                "value": 3
+                                "value": 0.75
                             },
                             {
                                 "color": "red",
-                                "value": 5
+                                "value": 0.9
                             }
                         ]
                     },
-                    "unit": "s"
+                    "unit": "percentunit"
                 },
                 "overrides": []
             },
             "gridPos": {
                 "h": 5,
                 "w": 3,
-                "x": 6,
+                "x": 3,
                 "y": 1
             },
-            "id": 2,
+            "id": 16,
             "options": {
                 "colorMode": "value",
                 "graphMode": "area",
@@ -261,13 +197,14 @@
                         "uid": "metrics"
                     },
                     "editorMode": "code",
-                    "expr": "pg_replication_lag{server=~\"$Server\"}",
-                    "legendFormat": "Replication lag",
+                    "expr": "pg_loadavg_one{server=~\"$Server\"}",
+                    "hide": false,
+                    "legendFormat": "CPU utilization",
                     "range": true,
-                    "refId": "Replication lag"
+                    "refId": "CPU utilization"
                 }
             ],
-            "title": "Replication lag",
+            "title": "CPU utilization",
             "transparent": true,
             "type": "stat"
         },
@@ -276,7 +213,88 @@
                 "type": "prometheus",
                 "uid": "metrics"
             },
-            "description": "Memory used inside container",
+            "description": "/proc/diskstats - weighted_time_spent_doing_io",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 0.25
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 0.5
+                            },
+                            {
+                                "color": "orange",
+                                "value": 0.75
+                            },
+                            {
+                                "color": "red",
+                                "value": 0.9
+                            }
+                        ]
+                    },
+                    "unit": "percentunit"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 6,
+                "y": 1
+            },
+            "id": 20,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "9.4.1",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "rate(pg_diskstats_weighted_time_spent_doing_io{server=~\"$Server\"}[$__rate_interval])",
+                    "hide": false,
+                    "legendFormat": "Disk utilization",
+                    "range": true,
+                    "refId": "Disk utilization"
+                }
+            ],
+            "title": "Disk utilization",
+            "transparent": true,
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "description": "htop memory usage: green - used memory; blue - buffered memory; yellow - cached memory",
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -289,7 +307,7 @@
                         "axisPlacement": "auto",
                         "barAlignment": 0,
                         "drawStyle": "line",
-                        "fillOpacity": 0,
+                        "fillOpacity": 50,
                         "gradientMode": "none",
                         "hideFrom": {
                             "legend": false,
@@ -306,7 +324,7 @@
                         "spanNulls": false,
                         "stacking": {
                             "group": "A",
-                            "mode": "none"
+                            "mode": "normal"
                         },
                         "thresholdsStyle": {
                             "mode": "off"
@@ -324,7 +342,53 @@
                     },
                     "unit": "decbytes"
                 },
-                "overrides": []
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Green"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "green",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Blue"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "blue",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Yellow"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "yellow",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
             },
             "gridPos": {
                 "h": 10,
@@ -338,13 +402,14 @@
                     "calcs": [],
                     "displayMode": "list",
                     "placement": "bottom",
-                    "showLegend": false
+                    "showLegend": true
                 },
                 "tooltip": {
-                    "mode": "single",
+                    "mode": "multi",
                     "sort": "none"
                 }
             },
+            "pluginVersion": "9.4.1",
             "targets": [
                 {
                     "datasource": {
@@ -364,29 +429,223 @@
                         "uid": "metrics"
                     },
                     "editorMode": "code",
-                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"MemAvailable\"}",
+                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"MemFree\"}",
                     "hide": false,
-                    "legendFormat": "MemAvailable",
+                    "legendFormat": "MemFree",
                     "range": true,
-                    "refId": "MemAvailable"
+                    "refId": "MemFree"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"Buffers\"}",
+                    "hide": false,
+                    "legendFormat": "Buffers",
+                    "range": true,
+                    "refId": "Buffers"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"Cached\"}",
+                    "hide": false,
+                    "legendFormat": "Cached",
+                    "range": true,
+                    "refId": "Cached"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"SwapTotal\"}",
+                    "format": "time_series",
+                    "hide": false,
+                    "instant": false,
+                    "legendFormat": "SwapTotal",
+                    "range": true,
+                    "refId": "SwapTotal"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "exemplar": false,
+                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"SwapFree\"}",
+                    "format": "time_series",
+                    "hide": false,
+                    "instant": false,
+                    "legendFormat": "SwapFree",
+                    "range": true,
+                    "refId": "SwapFree"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"SReclaimable\"}",
+                    "hide": false,
+                    "legendFormat": "SReclaimable",
+                    "range": true,
+                    "refId": "SReclaimable"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_meminfo_value{server=~\"$Server\",measure=\"Shmem\"}",
+                    "hide": false,
+                    "legendFormat": "Shmem",
+                    "range": true,
+                    "refId": "Shmem"
                 }
             ],
-            "title": "Used memory",
+            "title": "htop memory",
             "transformations": [
                 {
                     "id": "calculateField",
                     "options": {
+                        "alias": "TotalUsedMemory",
                         "binary": {
                             "left": "MemTotal",
                             "operator": "-",
                             "reducer": "sum",
-                            "right": "MemAvailable"
+                            "right": "MemFree"
                         },
                         "mode": "binary",
                         "reduce": {
                             "reducer": "sum"
+                        }
+                    }
+                },
+                {
+                    "id": "calculateField",
+                    "options": {
+                        "alias": "Swap",
+                        "binary": {
+                            "left": "SwapTotal",
+                            "operator": "-",
+                            "reducer": "sum",
+                            "right": "SwapFree"
                         },
-                        "replaceFields": true
+                        "mode": "binary",
+                        "reduce": {
+                            "reducer": "sum"
+                        }
+                    }
+                },
+                {
+                    "id": "calculateField",
+                    "options": {
+                        "alias": "CachedPlusSReclaimable",
+                        "binary": {
+                            "left": "Cached",
+                            "reducer": "sum",
+                            "right": "SReclaimable"
+                        },
+                        "mode": "binary",
+                        "reduce": {
+                            "reducer": "sum"
+                        }
+                    }
+                },
+                {
+                    "id": "calculateField",
+                    "options": {
+                        "alias": "Yellow",
+                        "binary": {
+                            "left": "CachedPlusSReclaimable",
+                            "operator": "-",
+                            "reducer": "sum",
+                            "right": "Shmem"
+                        },
+                        "mode": "binary",
+                        "reduce": {
+                            "reducer": "sum"
+                        }
+                    }
+                },
+                {
+                    "id": "calculateField",
+                    "options": {
+                        "alias": "BuffersPlusCached",
+                        "binary": {
+                            "left": "Buffers",
+                            "reducer": "sum",
+                            "right": "Cached"
+                        },
+                        "mode": "binary",
+                        "reduce": {
+                            "reducer": "sum"
+                        }
+                    }
+                },
+                {
+                    "id": "calculateField",
+                    "options": {
+                        "alias": "Green",
+                        "binary": {
+                            "left": "TotalUsedMemory",
+                            "operator": "-",
+                            "reducer": "sum",
+                            "right": "BuffersPlusCached"
+                        },
+                        "mode": "binary",
+                        "reduce": {
+                            "reducer": "sum"
+                        }
+                    }
+                },
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "BuffersPlusCached": true,
+                            "Cached": true,
+                            "CachedPlusSReclaimable": true,
+                            "MemFree": true,
+                            "MemTotal": true,
+                            "SReclaimable": true,
+                            "Shmem": true,
+                            "Swap": true,
+                            "SwapFree": true,
+                            "SwapTotal": true,
+                            "TotalUsedMemory": true
+                        },
+                        "indexByName": {
+                            "Buffers": 13,
+                            "BuffersPlusCached": 11,
+                            "Cached": 3,
+                            "CachedPlusSReclaimable": 10,
+                            "Green": 12,
+                            "MemFree": 2,
+                            "MemTotal": 1,
+                            "SReclaimable": 6,
+                            "Shmem": 7,
+                            "Swap": 9,
+                            "SwapFree": 5,
+                            "SwapTotal": 4,
+                            "Time": 0,
+                            "TotalUsedMemory": 8,
+                            "Yellow": 14
+                        },
+                        "renameByName": {
+                            "Buffers": "Blue"
+                        }
                     }
                 }
             ],
@@ -398,6 +657,7 @@
                 "type": "prometheus",
                 "uid": "metrics"
             },
+            "description": "/proc/diskstats - serctors read/written",
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -505,49 +765,34 @@
             "fieldConfig": {
                 "defaults": {
                     "color": {
-                        "mode": "thresholds"
+                        "fixedColor": "text",
+                        "mode": "fixed"
                     },
                     "mappings": [],
                     "thresholds": {
                         "mode": "absolute",
                         "steps": [
                             {
-                                "color": "blue",
-                                "value": null
-                            },
-                            {
                                 "color": "green",
-                                "value": 0.25
-                            },
-                            {
-                                "color": "yellow",
-                                "value": 0.5
-                            },
-                            {
-                                "color": "orange",
-                                "value": 0.75
-                            },
-                            {
-                                "color": "red",
-                                "value": 0.9
+                                "value": null
                             }
                         ]
                     },
-                    "unit": "percentunit"
+                    "unit": "s"
                 },
                 "overrides": []
             },
             "gridPos": {
                 "h": 5,
                 "w": 3,
-                "x": 3,
+                "x": 0,
                 "y": 6
             },
-            "id": 16,
+            "id": 4,
             "options": {
                 "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
+                "graphMode": "none",
+                "justifyMode": "center",
                 "orientation": "auto",
                 "reduceOptions": {
                     "calcs": [
@@ -566,14 +811,13 @@
                         "uid": "metrics"
                     },
                     "editorMode": "code",
-                    "expr": "pg_loadavg_five{server=~\"$Server\"}",
-                    "hide": false,
-                    "legendFormat": "CPU utilization",
+                    "expr": "time() - pg_postmaster_start_time_seconds{server=~\"$Server\"}",
+                    "legendFormat": "Up-time",
                     "range": true,
-                    "refId": "CPU utilization"
+                    "refId": "Up-time"
                 }
             ],
-            "title": "CPU utilization",
+            "title": "Up-time",
             "transparent": true,
             "type": "stat"
         },
@@ -582,6 +826,7 @@
                 "type": "prometheus",
                 "uid": "metrics"
             },
+            "description": "",
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -597,33 +842,33 @@
                             },
                             {
                                 "color": "green",
-                                "value": 0.25
+                                "value": 1
                             },
                             {
                                 "color": "yellow",
-                                "value": 0.5
+                                "value": 2
                             },
                             {
                                 "color": "orange",
-                                "value": 0.75
+                                "value": 3
                             },
                             {
                                 "color": "red",
-                                "value": 0.9
+                                "value": 5
                             }
                         ]
                     },
-                    "unit": "percentunit"
+                    "unit": "s"
                 },
                 "overrides": []
             },
             "gridPos": {
                 "h": 5,
                 "w": 3,
-                "x": 6,
+                "x": 3,
                 "y": 6
             },
-            "id": 20,
+            "id": 2,
             "options": {
                 "colorMode": "value",
                 "graphMode": "area",
@@ -646,16 +891,93 @@
                         "uid": "metrics"
                     },
                     "editorMode": "code",
-                    "expr": "rate(pg_diskstats_weighted_time_spent_doing_io{server=~\"$Server\"}[$__rate_interval])",
-                    "hide": false,
-                    "legendFormat": "Disk utilization",
+                    "expr": "pg_replication_lag{server=~\"$Server\"}",
+                    "legendFormat": "Replication lag",
                     "range": true,
-                    "refId": "Disk utilization"
+                    "refId": "Replication lag"
                 }
             ],
-            "title": "Disk utilization",
+            "title": "Replication lag",
             "transparent": true,
             "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "metrics"
+            },
+            "description": "/proc/{pid}/status - VmSize",
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 1,
+                    "mappings": [],
+                    "max": 268435456,
+                    "thresholds": {
+                        "mode": "percentage",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 25
+                            },
+                            {
+                                "color": "orange",
+                                "value": 75
+                            },
+                            {
+                                "color": "red",
+                                "value": 90
+                            },
+                            {
+                                "color": "#EAB839",
+                                "value": 100
+                            }
+                        ]
+                    },
+                    "unit": "decbytes"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 3,
+                "x": 6,
+                "y": 6
+            },
+            "id": 40,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": false
+            },
+            "pluginVersion": "9.4.1",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "metrics"
+                    },
+                    "editorMode": "code",
+                    "expr": "pg_status_value{server=~\"$Server\",measure=\"VmSize\"}",
+                    "hide": false,
+                    "legendFormat": "VmSize",
+                    "range": true,
+                    "refId": "VmSize"
+                }
+            ],
+            "title": "Virtual memory size",
+            "transparent": true,
+            "type": "gauge"
         },
         {
             "collapsed": true,
@@ -1887,8 +2209,8 @@
             {
                 "current": {
                     "selected": false,
-                    "text": "Migrations",
-                    "value": "Migrations"
+                    "text": "Deduplication",
+                    "value": "Deduplication"
                 },
                 "datasource": {
                     "type": "prometheus",
@@ -1920,6 +2242,6 @@
     "timezone": "",
     "title": "Postgres overview",
     "uid": "wtfdbULVk",
-    "version": 4,
+    "version": 2,
     "weekStart": ""
 }

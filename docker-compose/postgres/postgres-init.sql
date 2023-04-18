@@ -45,3 +45,8 @@ create foreign table diskstats
      time_spent_flushing numeric)
     server fileserver
     options (program 'cat /proc/diskstats | sed -re ''s/^[[:blank:]]+|[[:blank:]]+$//g'' -e ''s/[[:blank:]]+/ /g''', format 'csv', delimiter ' ');
+    
+create foreign table status
+    (stat text, value text)
+    server fileserver
+    options (program 'ps aux | grep ''postgres -c config_file=/etc/postgresql/postgresql.conf'' | awk ''{print "/proc/"$1"/status"}'' | head -1 | xargs cat', format 'csv', delimiter ':');

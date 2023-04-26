@@ -54,6 +54,10 @@ namespace SpaceEngineers.Core.Modules.Test
                 DependencyContainer.Resolve<IObjectBuilder<Guid>>().Build(new Dictionary<string, object?> { ["value"] = Guid.Parse("50EA09BF-C8C1-494B-8D35-8B4C86A5A344") }));
 
             Assert.Equal(
+                TypeNode.FromType(TypeExtensions.FindType("System.Private.CoreLib System.DateOnly")),
+                DependencyContainer.Resolve<IObjectBuilder<TypeNode>>().Build(new Dictionary<string, object?> { ["value"] = "System.Private.CoreLib System.DateOnly" }));
+
+            Assert.Equal(
                 TypeExtensions.FindType("System.Private.CoreLib System.DateOnly"),
                 DependencyContainer.Resolve<IObjectBuilder<Type>>().Build(new Dictionary<string, object?> { ["value"] = "System.Private.CoreLib System.DateOnly" }));
 

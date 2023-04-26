@@ -9,16 +9,16 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal sealed class TypeNodeJsonConverter : JsonConverter<TypeNode>,
-                                                  IResolvable<TypeNodeJsonConverter>,
-                                                  ICollectionResolvable<JsonConverter>
+    internal sealed class SystemTypeNodeJsonConverter : JsonConverter<Type>,
+                                                        IResolvable<SystemTypeNodeJsonConverter>,
+                                                        ICollectionResolvable<JsonConverter>
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(TypeNode);
+            return objectType == typeof(Type);
         }
 
-        public override TypeNode? Read(
+        public override Type? Read(
             ref Utf8JsonReader reader,
             Type typeToConvert,
             JsonSerializerOptions options)
@@ -26,16 +26,16 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
             var str = reader.GetString();
 
             return str != null
-                ? TypeNode.FromString(str)
+                ? TypeNode.ToType(TypeNode.FromString(str))
                 : null;
         }
 
         public override void Write(
             Utf8JsonWriter writer,
-            TypeNode value,
+            Type value,
             JsonSerializerOptions options)
         {
-            writer.WriteStringValue(value.ToString());
+            writer.WriteStringValue(TypeNode.FromType(value).ToString());
         }
     }
 }

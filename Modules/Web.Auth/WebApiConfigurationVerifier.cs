@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.Web.Auth
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.Routing;
     using AllowAnonymousAttribute = Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute;
+    using TypeExtensions = Basics.TypeExtensions;
 
     [Component(EnLifestyle.Singleton)]
     internal class WebApiConfigurationVerifier : IConfigurationVerifier,
@@ -36,9 +37,8 @@ namespace SpaceEngineers.Core.Web.Auth
         {
             var exceptions = new List<Exception>();
 
-            var controllers = AssembliesExtensions
-                .AllAssembliesFromCurrentDomain()
-                .SelectMany(assembly => assembly.GetTypes())
+            var controllers = TypeExtensions
+                .AllTypes()
                 .Where(type => typeof(ControllerBase).IsAssignableFrom(type) && type.IsConcreteType())
                 .ToList();
 

@@ -4,7 +4,6 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -73,10 +72,8 @@ namespace SpaceEngineers.Core.Basics
 
         private static IReadOnlyDictionary<Type, IReadOnlyCollection<Type>> InitializeBeforeAfterAttributesMap()
         {
-            return AssembliesExtensions
-                .AllAssembliesFromCurrentDomain()
-                .Where(assembly => !assembly.IsDynamic)
-                .SelectMany(GetTypes)
+            return TypeExtensions
+                .AllTypes()
                 .Select(type =>
                 {
                     var attribute = type.GetCustomAttribute<BeforeAttribute>();
@@ -86,15 +83,6 @@ namespace SpaceEngineers.Core.Basics
                 .SelectMany(pair => pair.attribute.Types.Select(before => (before, pair.type)))
                 .GroupBy(pair => pair.before, pair => pair.type)
                 .ToDictionary(grp => grp.Key, grp => grp.ToList() as IReadOnlyCollection<Type>);
-
-            static IEnumerable<Type> GetTypes(Assembly assembly)
-            {
-                return ExecutionExtensions
-                    .Try<IEnumerable<Type>>(assembly.GetTypes)
-                    .Catch<ReflectionTypeLoadException>()
-                    .Catch<FileNotFoundException>()
-                    .Invoke(_ => Enumerable.Empty<Type>());
-            }
         }
     }
 }

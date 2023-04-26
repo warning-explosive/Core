@@ -9,7 +9,8 @@ namespace SpaceEngineers.Core.Basics
     /// <summary>
     /// TypeNode
     /// </summary>
-    public class TypeNode
+    public class TypeNode : IEquatable<TypeNode>,
+                            ISafelyEquatable<TypeNode>
     {
         private TypeNode(Type type)
         {
@@ -82,6 +83,56 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="type">Type</param>
         /// <returns>TypeNode</returns>
         public static implicit operator TypeNode(Type type) => FromType(type);
+
+        #region IEquatable
+
+        /// <summary>
+        /// operator ==
+        /// </summary>
+        /// <param name="left">Left TypeNode</param>
+        /// <param name="right">Right TypeNode</param>
+        /// <returns>equals</returns>
+        public static bool operator ==(TypeNode? left, TypeNode? right)
+        {
+            return Equatable.Equals(left, right);
+        }
+
+        /// <summary>
+        /// operator !=
+        /// </summary>
+        /// <param name="left">Left TypeNode</param>
+        /// <param name="right">Right TypeNode</param>
+        /// <returns>not equals</returns>
+        public static bool operator !=(TypeNode? left, TypeNode? right)
+        {
+            return !Equatable.Equals(left, right);
+        }
+
+        /// <inheritdoc />
+        public bool SafeEquals(TypeNode other)
+        {
+            return ToString().Equals(other.ToString(), StringComparison.Ordinal);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(TypeNode? other)
+        {
+            return Equatable.Equals(this, other);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            return Equatable.Equals(this, obj);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode(StringComparison.Ordinal);
+        }
+
+        #endregion
 
         /// <inheritdoc />
         public override string ToString()

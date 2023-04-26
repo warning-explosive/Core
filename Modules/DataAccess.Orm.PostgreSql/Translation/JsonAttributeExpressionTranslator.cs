@@ -5,6 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using Sql.Translation;
     using Sql.Translation.Expressions;
 
@@ -13,6 +14,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
                                                        IResolvable<ISqlExpressionTranslator<JsonAttributeExpression>>,
                                                        ICollectionResolvable<ISqlExpressionTranslator>
     {
+        private const string ExcludeJsonMetadataKeys = "CASE WHEN SUBSTRING(LTRIM({0}::text), 1, 1) = '{{' THEN {0} - array(SELECT * from jsonb_object_keys({0}) WHERE jsonb_object_keys like '$%') ELSE {0} END";
+
         private readonly ISqlExpressionTranslatorComposite _translator;
 
         public JsonAttributeExpressionTranslator(ISqlExpressionTranslatorComposite translator)
@@ -36,7 +39,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             sb.Append(_translator.Translate(expression.Accessor, depth));
             sb.Append(']');
 
-            return sb.ToString();
+            return ExcludeJsonMetadataKeys.Format(sb.ToString());
         }
     }
 }

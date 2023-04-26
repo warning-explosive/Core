@@ -32,7 +32,7 @@
         <ProjectReference Include="..\Dynamic\Dynamic.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.1">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -386,6 +386,9 @@
       </Compile>
       <Compile Update="Translation\EnumHasFlagUnknownExpressionTranslator.cs">
         <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Translation\Expressions\ParenthesesExpression.cs">
+        <DependentUpon>ISqlExpression.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                     IApplicable<QuerySourceExpression>,
                                     IApplicable<QueryParameterExpression>,
                                     IApplicable<ParameterExpression>,
+                                    IApplicable<ParenthesesExpression>,
                                     IApplicable<BinaryExpression>,
                                     IApplicable<UnaryExpression>,
                                     IApplicable<ConditionalExpression>,
@@ -55,6 +56,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, ParameterExpression expression)
+        {
+            ApplyPredicate(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ParenthesesExpression expression)
         {
             ApplyPredicate(expression);
         }

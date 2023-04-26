@@ -35,10 +35,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             ILogger logger,
             CancellationToken token)
         {
-            using (var client = new RestClient())
+            var options = new RestClientOptions
             {
-                client.Authenticator = new HttpBasicAuthenticator(rabbitMqSettings.User, rabbitMqSettings.Password);
+                Authenticator = new HttpBasicAuthenticator(rabbitMqSettings.User, rabbitMqSettings.Password)
+            };
 
+            using (var client = new RestClient(options))
+            {
                 HashSet<string>? virtualHosts = null;
 
                 foreach (var host in rabbitMqSettings.Hosts)
@@ -165,10 +168,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Extensions
             ILogger logger,
             CancellationToken token)
         {
-            using (var client = new RestClient())
+            var options = new RestClientOptions
             {
-                client.Authenticator = new HttpBasicAuthenticator(rabbitMqSettings.User, rabbitMqSettings.Password);
+                Authenticator = new HttpBasicAuthenticator(rabbitMqSettings.User, rabbitMqSettings.Password)
+            };
 
+            using (var client = new RestClient(options))
+            {
                 HashSet<string>? queues = null;
 
                 foreach (var host in rabbitMqSettings.Hosts)

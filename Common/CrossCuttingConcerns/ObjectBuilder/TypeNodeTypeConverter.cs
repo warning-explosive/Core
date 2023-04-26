@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             Type destinationType)
         {
             return value is Type type
-                ? (string)(TypeNode)type
+                ? TypeNode.FromType(type).ToString()
                 : throw new InvalidOperationException($"{nameof(TypeNodeTypeConverter)} support only {typeof(Type)} values");
         }
 
@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.ObjectBuilder
             object value)
         {
             return value is string str
-                ? (Type)(TypeNode)str
+                ? TypeNode.ToType(TypeNode.FromString(str))
                 : throw new InvalidOperationException($"{nameof(TypeNodeTypeConverter)} support only {typeof(string)} values");
         }
     }

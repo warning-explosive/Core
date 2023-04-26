@@ -11,6 +11,7 @@ namespace SpaceEngineers.Core.Basics
     {
         private readonly Lazy<IReadOnlyCollection<Type>> _dependencies;
         private readonly Lazy<IReadOnlyCollection<Type>> _baseTypes;
+        private readonly Lazy<IReadOnlyCollection<Type>> _derivedTypes;
         private readonly Lazy<IReadOnlyCollection<Type>> _genericTypeDefinitions;
         private readonly Lazy<IReadOnlyCollection<Type>> _declaredInterfaces;
         private readonly Lazy<IReadOnlyCollection<Type>> _genericInterfaceDefinitions;
@@ -22,6 +23,7 @@ namespace SpaceEngineers.Core.Basics
 
             _dependencies = new Lazy<IReadOnlyCollection<Type>>(() => TypeInfoStorage.ExtractDependencies(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
             _baseTypes = new Lazy<IReadOnlyCollection<Type>>(() => ExtractBaseTypes(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
+            _derivedTypes = new Lazy<IReadOnlyCollection<Type>>(() => ExtractDerivedTypes(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
             _genericTypeDefinitions = new Lazy<IReadOnlyCollection<Type>>(() => ExtractGenericTypeDefinitions(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
             _declaredInterfaces = new Lazy<IReadOnlyCollection<Type>>(() => ExtractDeclaredInterfaces(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
             _genericInterfaceDefinitions = new Lazy<IReadOnlyCollection<Type>>(() => ExtractGenericInterfaceDefinitions(type).ToList(), LazyThreadSafetyMode.ExecutionAndPublication);
@@ -33,6 +35,8 @@ namespace SpaceEngineers.Core.Basics
         public IReadOnlyCollection<Type> Dependencies => _dependencies.Value;
 
         public IReadOnlyCollection<Type> BaseTypes => _baseTypes.Value;
+
+        public IReadOnlyCollection<Type> DerivedTypes => _derivedTypes.Value;
 
         public IReadOnlyCollection<Type> GenericTypeDefinitions => _genericTypeDefinitions.Value;
 
@@ -52,6 +56,13 @@ namespace SpaceEngineers.Core.Basics
 
                 currentType = currentType.BaseType;
             }
+        }
+
+        private static IEnumerable<Type> ExtractDerivedTypes(Type type)
+        {
+            return TypeExtensions
+                .AllTypes()
+                .Where(type.IsAssignableFrom);
         }
 
         private static IEnumerable<Type> ExtractGenericTypeDefinitions(Type type)
@@ -107,8 +118,9 @@ namespace SpaceEngineers.Core.Basics
 
         private static IEnumerable<Attribute> ExtractAttributes(Type type)
         {
-            return type.GetCustomAttributes(true)
-                       .OfType<Attribute>();
+            return type
+                .GetCustomAttributes(true)
+                .OfType<Attribute>();
         }
     }
 }

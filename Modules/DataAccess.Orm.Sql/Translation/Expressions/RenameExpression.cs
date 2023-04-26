@@ -8,6 +8,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     public class RenameExpression : ITypedSqlExpression,
                                     IApplicable<ColumnExpression>,
                                     IApplicable<JsonAttributeExpression>,
+                                    IApplicable<ParenthesesExpression>,
                                     IApplicable<BinaryExpression>,
                                     IApplicable<UnaryExpression>,
                                     IApplicable<ConditionalExpression>
@@ -53,6 +54,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         /// <inheritdoc />
         public void Apply(TranslationContext context, JsonAttributeExpression expression)
+        {
+            ApplySource(expression);
+        }
+
+        /// <inheritdoc />
+        public void Apply(TranslationContext context, ParenthesesExpression expression)
         {
             ApplySource(expression);
         }

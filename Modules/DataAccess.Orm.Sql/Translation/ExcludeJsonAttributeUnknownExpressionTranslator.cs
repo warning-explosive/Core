@@ -23,8 +23,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 && methodCallExpression.Method.GenericMethodDefinitionOrSelf() == LinqMethods.ExcludeJsonAttribute())
             {
                 context.WithinScope(
-                    new BinaryExpression(typeof(void), BinaryOperator.Subtract),
-                    () => visitor.Visit(methodCallExpression.Arguments));
+                    new ParenthesesExpression(),
+                    () => context.WithinScope(
+                        new BinaryExpression(typeof(void), BinaryOperator.Subtract),
+                        () => visitor.Visit(methodCallExpression.Arguments)));
 
                 return true;
             }

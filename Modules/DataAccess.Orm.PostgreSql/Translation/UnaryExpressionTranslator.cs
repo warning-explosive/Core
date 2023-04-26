@@ -39,7 +39,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             var sb = new StringBuilder();
 
             sb.Append(Operators[expression.Operator]);
-            sb.Append(" ");
+            sb.Append(' ');
             sb.Append(_translator.Translate(expression.Source, depth));
 
             return sb.ToString();

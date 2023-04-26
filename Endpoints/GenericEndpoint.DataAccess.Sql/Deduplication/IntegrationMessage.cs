@@ -30,7 +30,7 @@
             : base(primaryKey)
         {
             Payload = payload;
-            ReflectedType = (TypeNode)reflectedType;
+            ReflectedType = TypeNode.FromType(reflectedType);
             Headers = headers;
         }
 

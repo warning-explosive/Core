@@ -50,7 +50,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
 
             sb.Append(CultureInfo.InvariantCulture, $@"INSERT INTO ""{table.Schema}"".""{table.Name}"" ");
 
-            sb.Append("(");
+            sb.Append('(');
 
             sb.Append(table
                 .Columns

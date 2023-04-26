@@ -76,7 +76,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
                     .Select(header => header.Payload)
                     .ToDictionary(header => header.GetType());
 
-                return new Messaging.IntegrationMessage(message.Payload, (TypeNode)message.ReflectedType, headers);
+                return new Messaging.IntegrationMessage(message.Payload, TypeNode.FromString(message.ReflectedType), headers);
             }
         }
     }

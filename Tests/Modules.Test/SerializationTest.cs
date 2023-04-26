@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
-    using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
+    using System.Text.Json.Nodes;
     using Basics;
     using CompositionRoot;
     using Core.Test.Api;
@@ -41,6 +41,43 @@ namespace SpaceEngineers.Core.Modules.Test
         private IDependencyContainer DependencyContainer { get; }
 
         [Fact]
+        internal void TypeSerializationTest()
+        {
+            var serializer = DependencyContainer.Resolve<IJsonSerializer>();
+
+            var serialized = serializer.SerializeObject(typeof(object), typeof(Type));
+            Output.WriteLine(serialized);
+            Assert.Equal(typeof(object), serializer.DeserializeObject<Type>(serialized));
+
+            serialized = serializer.SerializeObject(TypeNode.FromType(typeof(object)), typeof(TypeNode));
+            Output.WriteLine(serialized);
+            Assert.Equal(typeof(object), TypeNode.ToType(serializer.DeserializeObject<TypeNode>(serialized)));
+        }
+
+        [Fact]
+        internal void PolymorphicSerializationTest()
+        {
+            var str = "qwerty";
+            object obj = str;
+
+            var payload = new
+            {
+                Str = str,
+                Obj = obj
+            };
+
+            var serializer = DependencyContainer.Resolve<IJsonSerializer>();
+
+            var serialized = serializer.SerializeObject(payload, payload.GetType());
+            Output.WriteLine(serialized);
+            var deserialized = serializer.DeserializeObject(serialized, payload.GetType());
+
+            Assert.NotNull(deserialized);
+            Assert.NotNull(deserialized.GetPropertyValue("Str"));
+            Assert.NotNull(deserialized.GetPropertyValue("Obj"));
+        }
+
+        [Fact]
         internal void ObjectTreeDeserializationTest()
         {
             var serialized = @"{
@@ -73,35 +110,32 @@ namespace SpaceEngineers.Core.Modules.Test
         ]
 }}";
 
+            var culture = CultureInfo.GetCultureInfo("en-US");
             var serializer = DependencyContainer.Resolve<IJsonSerializer>();
 
-            var node = serializer.DeserializeObject<IObjectTreeNode>(serialized);
+            var node = serializer.DeserializeObject<object>(serialized) as JsonObject;
             Assert.NotNull(node);
 
-            var tree = node.ExtractTree() as IDictionary<string, object?>;
-            Assert.NotNull(tree);
-            Assert.Contains("candles", tree);
-
-            var candles = tree["candles"] as IDictionary<string, object?>;
+            Assert.True(node.ContainsKey("candles"));
+            var candles = node["candles"] as JsonObject;
             Assert.NotNull(candles);
-            Assert.Contains("data", candles);
 
-            var rows = candles["data"] as ICollection<object?>;
+            Assert.True(candles.ContainsKey("data"));
+            var rows = candles["data"] as JsonArray;
             Assert.NotNull(rows);
             Assert.Equal(13, rows.Count);
 
-            var row = rows.Last() as ICollection<object?>;
+            var row = rows.Last() as JsonArray;
             Assert.NotNull(row);
             Assert.Equal(8, row.Count);
 
-            var number = row.First() as double?;
+            var number = (row.First() as JsonValue)?.ToString();
             Assert.NotNull(number);
-            Assert.Equal(82.74, number);
+            Assert.Equal(82.74, double.Parse(number, culture));
 
-            var strDate = row.Last() as string;
+            var strDate = (row.Last() as JsonValue)?.ToString();
             Assert.NotNull(strDate);
-            var date = Convert.ToDateTime(strDate, CultureInfo.GetCultureInfo("en-US"));
-            Assert.Equal(new DateTime(2020, 09, 16, 21, 59, 59), date);
+            Assert.Equal(new DateTime(2020, 09, 16, 21, 59, 59), Convert.ToDateTime(strDate, culture));
         }
     }
 }

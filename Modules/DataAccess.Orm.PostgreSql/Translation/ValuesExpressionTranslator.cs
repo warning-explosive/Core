@@ -33,14 +33,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
         {
             var sb = new StringBuilder();
 
-            sb.Append("(");
+            sb.Append('(');
 
             sb.Append(expression
                 .Values
                 .Select(value => _translator.Translate(value, depth))
                 .ToString(", "));
 
-            sb.Append(")");
+            sb.Append(')');
 
             return sb.ToString();
         }

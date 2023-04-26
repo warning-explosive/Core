@@ -48,7 +48,7 @@ namespace SpaceEngineers.Core.Basics.Test
 
             typeNode = TypeNode.FromString(typeNode.ToString());
 
-            var builtType = TypeNode.ToType(typeNode);
+            Type builtType = typeNode;
 
             Assert.Equal(type, builtType);
         }

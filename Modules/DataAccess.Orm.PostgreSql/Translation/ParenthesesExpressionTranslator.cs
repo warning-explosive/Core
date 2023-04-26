@@ -9,40 +9,31 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
     using Sql.Translation.Expressions;
 
     [Component(EnLifestyle.Singleton)]
-    internal class ExplainExpressionTranslator : ISqlExpressionTranslator<ExplainExpression>,
-                                                 IResolvable<ISqlExpressionTranslator<ExplainExpression>>,
-                                                 ICollectionResolvable<ISqlExpressionTranslator>
+    internal class ParenthesesExpressionTranslator : ISqlExpressionTranslator<ParenthesesExpression>,
+                                                     IResolvable<ISqlExpressionTranslator<ParenthesesExpression>>,
+                                                     ICollectionResolvable<ISqlExpressionTranslator>
     {
         private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public ExplainExpressionTranslator(ISqlExpressionTranslatorComposite translator)
+        public ParenthesesExpressionTranslator(ISqlExpressionTranslatorComposite translator)
         {
             _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
         {
-            return expression is ExplainExpression explainExpression
-                ? Translate(explainExpression, depth)
+            return expression is ParenthesesExpression parenthesesExpression
+                ? Translate(parenthesesExpression, depth)
                 : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
-        public string Translate(ExplainExpression expression, int depth)
+        public string Translate(ParenthesesExpression expression, int depth)
         {
             var sb = new StringBuilder();
 
-            sb.Append("EXPLAIN ");
             sb.Append('(');
-
-            if (expression.Analyze)
-            {
-                sb.Append("ANALYZE, ");
-            }
-
-            sb.Append("FORMAT json");
-            sb.AppendLine(")");
-
             sb.Append(_translator.Translate(expression.Source, depth));
+            sb.Append(')');
 
             return sb.ToString();
         }

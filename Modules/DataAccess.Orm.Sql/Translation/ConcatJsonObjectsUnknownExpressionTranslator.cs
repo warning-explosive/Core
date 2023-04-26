@@ -23,8 +23,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 && methodCallExpression.Method.GenericMethodDefinitionOrSelf() == LinqMethods.ConcatJsonObjects())
             {
                 context.WithinScope(
-                    new BinaryExpression(typeof(void), BinaryOperator.ConcatJsonObjects),
-                    () => visitor.Visit(methodCallExpression.Arguments));
+                    new ParenthesesExpression(),
+                    () => context.WithinScope(
+                        new BinaryExpression(typeof(void), BinaryOperator.ConcatJsonObjects),
+                        () => visitor.Visit(methodCallExpression.Arguments)));
 
                 return true;
             }

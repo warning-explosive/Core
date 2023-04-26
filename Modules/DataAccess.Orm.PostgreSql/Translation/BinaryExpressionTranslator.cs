@@ -85,9 +85,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.PostgreSql.Translation
             else
             {
                 sb.Append(_translator.Translate(expression.Left, depth));
-                sb.Append(" ");
+                sb.Append(' ');
                 sb.Append(Operators[expression.Operator]);
-                sb.Append(" ");
+                sb.Append(' ');
                 sb.Append(_translator.Translate(expression.Right, depth + 1));
             }
 

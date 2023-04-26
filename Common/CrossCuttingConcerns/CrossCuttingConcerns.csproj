@@ -46,32 +46,8 @@
       <Compile Update="Internals\CharArrayToStringTransformer.cs">
         <DependentUpon>ObjectBuilder.cs</DependentUpon>
       </Compile>
-      <Compile Update="Json\ObjectTreeJsonEnumerator.cs">
-        <DependentUpon>EnumerableObjectTreeReader.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Json\SecureSerializationBinder.cs">
-        <DependentUpon>JsonSerializerImpl.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Json\DefaultObjectTreeValueReader.cs">
-        <DependentUpon>IObjectTreeValueReader.cs</DependentUpon>
-      </Compile>
       <Compile Update="ObjectBuilder\GenericObjectBuilder.cs">
         <DependentUpon>ObjectBuilder.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Json\ArrayNode.cs">
-        <DependentUpon>NodeBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Json\NodeBase.cs">
-        <DependentUpon>IObjectTreeNode.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Json\ObjectNode.cs">
-        <DependentUpon>NodeBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Json\RootNode.cs">
-        <DependentUpon>NodeBase.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Json\ValueNode.cs">
-        <DependentUpon>NodeBase.cs</DependentUpon>
       </Compile>
       <Compile Update="StringFormatter\StringFormatter.cs">
         <DependentUpon>IStringFormatter.cs</DependentUpon>
@@ -82,7 +58,7 @@
       <Compile Update="StringFormatter\DateTimeStringFormatter.cs">
         <DependentUpon>StringFormatter.cs</DependentUpon>
       </Compile>
-      <Compile Update="Json\JsonSerializerImpl.cs">
+      <Compile Update="Json\JsonSerializer.cs">
         <DependentUpon>IJsonSerializer.cs</DependentUpon>
       </Compile>
       <Compile Update="ObjectBuilder\ObjectBuilder.cs">
@@ -106,16 +82,18 @@
       <Compile Update="ObjectBuilder\TimeOnlyTypeConverter.cs">
         <DependentUpon>GenericObjectBuilder.cs</DependentUpon>
       </Compile>
+      <Compile Update="Json\PolymorphicJsonTypeInfoResolver.cs">
+        <DependentUpon>JsonSerializer.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     <ItemGroup>
-      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.0">
+      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.1">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
       <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

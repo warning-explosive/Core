@@ -22,8 +22,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 && methodCallExpression.Method.GenericMethodDefinitionOrSelf() == LinqMethods.GetJsonAttribute())
             {
                 context.WithinScope(
-                    new JsonAttributeExpression(expression.Type),
-                    () => visitor.Visit(methodCallExpression.Arguments));
+                    new ParenthesesExpression(),
+                    () => context.WithinScope(
+                        new JsonAttributeExpression(expression.Type),
+                        () => visitor.Visit(methodCallExpression.Arguments)));
 
                 return true;
             }

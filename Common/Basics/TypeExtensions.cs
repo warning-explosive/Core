@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Basics
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
@@ -14,6 +15,27 @@ namespace SpaceEngineers.Core.Basics
     /// </summary>
     public static class TypeExtensions
     {
+        /// <summary>
+        /// All types from current app domain
+        /// </summary>
+        /// <returns>All types</returns>
+        public static IEnumerable<Type> AllTypes()
+        {
+            return AssembliesExtensions
+                .AllAssembliesFromCurrentDomain()
+                .Where(assembly => !assembly.IsDynamic)
+                .SelectMany(GetTypes);
+
+            static IEnumerable<Type> GetTypes(Assembly assembly)
+            {
+                return ExecutionExtensions
+                    .Try<IEnumerable<Type>>(assembly.GetTypes)
+                    .Catch<ReflectionTypeLoadException>()
+                    .Catch<FileNotFoundException>()
+                    .Invoke(_ => Enumerable.Empty<Type>());
+            }
+        }
+
         /// <summary>
         /// Finds type by type full name
         /// </summary>
@@ -686,6 +708,16 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
+        /// Types derived from source type
+        /// </summary>
+        /// <param name="source">Source type</param>
+        /// <returns>Derived types</returns>
+        public static IReadOnlyCollection<Type> DerivedTypes(this Type source)
+        {
+            return TypeInfoStorage.Get(source).DerivedTypes;
+        }
+
+        /// <summary>
         /// Extract GenericTypeDefinition or return argument type
         /// </summary>
         /// <param name="type">Type</param>
@@ -693,8 +725,8 @@ namespace SpaceEngineers.Core.Basics
         public static Type GenericTypeDefinitionOrSelf(this Type type)
         {
             return type.IsGenericType
-                       ? type.GetGenericTypeDefinition()
-                       : type;
+                ? type.GetGenericTypeDefinition()
+                : type;
         }
 
         /// <summary>

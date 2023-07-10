@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     internal class PolymorphicJsonTypeInfoResolver : DefaultJsonTypeInfoResolver,
                                                      IResolvable<IJsonTypeInfoResolver>
     {
-        internal const string TypeDiscriminatorPropertyName = "$type";
+        internal const string TypeDiscriminatorPropertyName = JsonSerializer.MetadataKey + "type";
 
         public override JsonTypeInfo GetTypeInfo(Type type, JsonSerializerOptions options)
         {

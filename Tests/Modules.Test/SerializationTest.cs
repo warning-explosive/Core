@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Modules.Test
     using System.Globalization;
     using System.Linq;
     using System.Text.Json.Nodes;
+    using System.Text.Json.Serialization;
     using Basics;
     using CompositionRoot;
     using Core.Test.Api;
@@ -77,6 +78,30 @@ namespace SpaceEngineers.Core.Modules.Test
             Assert.NotNull(deserialized.GetPropertyValue("Obj"));
         }
 
+        [Theory]
+        [InlineData($@"{{""Id"": 42}}")]
+        [InlineData($@"{{""Id"": 42, ""$id"": ""1"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata""}}")]
+        [InlineData($@"{{""$id"": ""1"", ""Id"": 42, ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata""}}")]
+        [InlineData($@"{{""$id"": ""1"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata"", ""Id"": 42}}")]
+        [InlineData($@"{{""Id"": 42, ""Inner"": {{""Id"": 43 }}}}")]
+        [InlineData($@"{{""Id"": 42, ""Inner"": {{""Id"": 43 }}, ""$id"": ""1"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata""}}")]
+        [InlineData($@"{{""$id"": ""1"", ""Id"": 42, ""Inner"": {{""Id"": 43 }}, ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata""}}")]
+        [InlineData($@"{{""$id"": ""1"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata"", ""Id"": 42, ""Inner"": {{""Id"": 43 }}}}")]
+        [InlineData($@"{{""Id"": 42, ""Inner"": {{""Id"": 43, ""$id"": ""2"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata"" }}}}")]
+        [InlineData($@"{{""Id"": 42, ""Inner"": {{""Id"": 43, ""$id"": ""2"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata"" }}, ""$id"": ""1"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata""}}")]
+        [InlineData($@"{{""$id"": ""1"", ""Id"": 42, ""Inner"": {{""Id"": 43, ""$id"": ""2"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata"" }}, ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata""}}")]
+        [InlineData($@"{{""$id"": ""1"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata"", ""Id"": 42, ""Inner"": {{""Id"": 43, ""$id"": ""2"", ""$type"": ""SpaceEngineers.Core.Modules.Test SpaceEngineers.Core.Modules.Test.SerializationTest+TestMetadata"" }}}}")]
+        internal void JsonMetadataDeserializationTest(string json)
+        {
+            Output.WriteLine(json);
+
+            var obj = DependencyContainer
+                .Resolve<IJsonSerializer>()
+                .DeserializeObject<TestMetadata>(json);
+
+            Assert.Equal(42, obj.Id);
+        }
+
         [Fact]
         internal void ObjectTreeDeserializationTest()
         {
@@ -136,6 +161,26 @@ namespace SpaceEngineers.Core.Modules.Test
             var strDate = (row.Last() as JsonValue)?.ToString();
             Assert.NotNull(strDate);
             Assert.Equal(new DateTime(2020, 09, 16, 21, 59, 59), Convert.ToDateTime(strDate, culture));
+        }
+
+        internal class TestMetadata
+        {
+            [JsonConstructor]
+            public TestMetadata()
+            {
+            }
+
+            public TestMetadata(
+                int id,
+                TestMetadata? inner)
+            {
+                Id = id;
+                Inner = inner;
+            }
+
+            public int Id { get; init; }
+
+            public TestMetadata? Inner { get; init; }
         }
     }
 }

@@ -1,13 +1,14 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Authorization
 {
     using System.Diagnostics.CodeAnalysis;
+    using System.Text.Json.Serialization;
     using Messaging.MessageHeaders;
 
     /// <summary>
     /// Authorization
     /// </summary>
     [SuppressMessage("Analysis", "CA1724", Justification = "desired name")]
-    public class Authorization : IIntegrationMessageHeader
+    public record Authorization : IIntegrationMessageHeader
     {
         /// <summary> .cctor </summary>
         /// <param name="value">Authorization token</param>
@@ -19,9 +20,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization
         /// <summary>
         /// Authorization token
         /// </summary>
-        public string Value { get; }
+        public string Value { get; init; }
 
         /// <inheritdoc />
+        [JsonIgnore]
         public string StringValue => Value;
 
         /// <inheritdoc />

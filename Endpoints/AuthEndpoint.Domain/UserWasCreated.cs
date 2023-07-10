@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.AuthEndpoint.Domain
 {
     using System;
+    using System.Text.Json.Serialization;
     using GenericDomain.Api.Abstractions;
 
     /// <summary>
@@ -8,6 +9,17 @@ namespace SpaceEngineers.Core.AuthEndpoint.Domain
     /// </summary>
     public record UserWasCreated : IDomainEvent<User>
     {
+        /// <summary> .cctor </summary>
+        [JsonConstructor]
+        [Obsolete("serialization constructor")]
+        public UserWasCreated()
+        {
+            AggregateId = default!;
+            Username = default!;
+            Salt = default!;
+            PasswordHash = default!;
+        }
+
         /// <summary> .cctor </summary>
         /// <param name="aggregateId">AggregateId</param>
         /// <param name="username">Username</param>

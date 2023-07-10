@@ -4,9 +4,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Text.Json.Serialization;
     using System.Text.RegularExpressions;
     using Api.Abstractions;
     using Basics;
+    using CompositionRoot;
     using CompositionRoot.Extensions;
     using CompositionRoot.Registration;
     using CompositionRoot.Verifiers;
@@ -14,6 +16,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
     using Contract.Abstractions;
     using Contract.Attributes;
     using Messaging;
+    using Messaging.MessageHeaders;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
@@ -23,18 +26,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
                                                           ICollectionResolvable<IConfigurationVerifier>
     {
         private readonly EndpointIdentity _endpointIdentity;
-        private readonly IConstructorResolutionBehavior _constructorResolutionBehavior;
+        private readonly ITypeProvider _typeProvider;
         private readonly IIntegrationTypeProvider _integrationTypeProvider;
         private readonly IRegistrationsContainer _registrations;
 
         public GenericEndpointConfigurationVerifier(
             EndpointIdentity endpointIdentity,
-            IConstructorResolutionBehavior constructorResolutionBehavior,
+            ITypeProvider typeProvider,
             IIntegrationTypeProvider integrationTypeProvider,
             IRegistrationsContainer registrations)
         {
             _endpointIdentity = endpointIdentity;
-            _constructorResolutionBehavior = constructorResolutionBehavior;
+            _typeProvider = typeProvider;
             _integrationTypeProvider = integrationTypeProvider;
             _registrations = registrations;
         }
@@ -51,14 +54,27 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
             VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.EndpointRequests(), exceptions);
             VerifyMessageNames(_endpointIdentity, _integrationTypeProvider.RepliesSubscriptions(), exceptions);
 
-            VerifyModifiers(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
-            VerifyConstructors(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
-            VerifyOwnedAttribute(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
-            VerifyMessageInterfaces(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
-            VerifyPropertyInitializers(_integrationTypeProvider.IntegrationMessageTypes(), exceptions);
+            var messages = _integrationTypeProvider.IntegrationMessageTypes();
 
-            VerifyHandlerExistence(_integrationTypeProvider.EndpointCommands().Where(type => type.IsConcreteType()), exceptions);
-            VerifyHandlerExistence(_integrationTypeProvider.EndpointRequests().Where(type => type.IsConcreteType()), exceptions);
+            VerifyModifiers(messages, exceptions);
+            VerifyConstructors(messages, exceptions);
+            VerifyOwnedAttribute(messages, exceptions);
+            VerifyMessageInterfaces(messages, exceptions);
+            VerifyPropertyInitializers(messages, exceptions);
+            VerifyTypeArguments(messages, exceptions);
+
+            var headers = _typeProvider
+                .OurTypes
+                .Where(typeof(IIntegrationMessageHeader).IsAssignableFrom)
+                .ToList();
+
+            VerifyModifiers(headers, exceptions);
+            VerifyConstructors(headers, exceptions);
+            VerifyPropertyInitializers(headers, exceptions);
+            VerifyTypeArguments(headers, exceptions);
+
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointCommands(), exceptions);
+            VerifyHandlerExistence(_integrationTypeProvider.EndpointRequests(), exceptions);
 
             VerifyMessageHandlersLifestyle(exceptions);
 
@@ -82,12 +98,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
 
         private static void VerifyMessageNames(
             EndpointIdentity endpointIdentity,
-            IEnumerable<Type> messageTypes,
+            IEnumerable<Type> types,
             ICollection<Exception> exceptions)
         {
-            foreach (var messageType in messageTypes.Where(type => HasWrongName(endpointIdentity, type)))
+            types = types.Where(type => HasWrongName(endpointIdentity, type));
+
+            foreach (var type in types)
             {
-                exceptions.Add(new InvalidOperationException($"Message name {messageType.FullName} should be less or equal than 255 bytes"));
+                exceptions.Add(new InvalidOperationException($"Message name {type.FullName} should be less or equal than 255 bytes"));
             }
 
             static bool HasWrongName(EndpointIdentity endpointIdentity, Type type)
@@ -100,12 +118,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         }
 
         private static void VerifyMessageInterfaces(
-            IEnumerable<Type> messageTypes,
+            IEnumerable<Type> types,
             ICollection<Exception> exceptions)
         {
-            foreach (var messageType in messageTypes.Where(ImplementsSeveralSpecializedInterfaces().Not()))
+            types = types.Where(ImplementsSeveralSpecializedInterfaces().Not());
+
+            foreach (var type in types)
             {
-                exceptions.Add(new InvalidOperationException($"Message {messageType.FullName} must implement only one specialized interface (command, request, event or just message)"));
+                exceptions.Add(new InvalidOperationException($"Message {type.FullName} must implement only one specialized interface (command, request, event or just message)"));
             }
 
             static Func<Type, bool> ImplementsSeveralSpecializedInterfaces()
@@ -123,74 +143,100 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         }
 
         private static void VerifyOwnedAttribute(
-            IReadOnlyCollection<Type> messageTypes,
+            IReadOnlyCollection<Type> types,
             ICollection<Exception> exceptions)
         {
-            foreach (var messageType in messageTypes)
+            foreach (var type in types)
             {
-                if (messageType.IsMessageContractAbstraction())
+                if (type.IsMessageContractAbstraction())
                 {
                     continue;
                 }
 
-                if (messageType.IsReply()
-                    && !messageTypes.Any(type => messageType.IsReplyOnRequest(type)))
+                if (type.IsReply()
+                    && !types.Any(type.IsReplyOnRequest))
                 {
-                    exceptions.Add(new InvalidOperationException($"Reply {messageType.FullName} should have at least one corresponding {nameof(IIntegrationRequest<IIntegrationReply>)}"));
+                    exceptions.Add(new InvalidOperationException($"Reply {type.FullName} should have at least one corresponding {nameof(IIntegrationRequest<IIntegrationReply>)}"));
                 }
 
-                if (messageType.IsReply()
-                    && messageType.HasAttribute<OwnedByAttribute>())
+                if (type.IsReply()
+                    && type.HasAttribute<OwnedByAttribute>())
                 {
-                    exceptions.Add(new InvalidOperationException($"Reply {messageType.FullName} should not be marked by {nameof(OwnedByAttribute)}"));
+                    exceptions.Add(new InvalidOperationException($"Reply {type.FullName} should not be marked by {nameof(OwnedByAttribute)}"));
                 }
 
-                if (!messageType.IsReply()
-                    && !messageType.HasAttribute<OwnedByAttribute>())
+                if (!type.IsReply()
+                    && !type.HasAttribute<OwnedByAttribute>())
                 {
-                    exceptions.Add(new InvalidOperationException($"Message {messageType.FullName} should be marked by {nameof(OwnedByAttribute)} in order to provide automatic service discovery"));
+                    exceptions.Add(new InvalidOperationException($"Message {type.FullName} should be marked by {nameof(OwnedByAttribute)} in order to provide automatic service discovery"));
                 }
             }
         }
 
-        private void VerifyConstructors(
-            IEnumerable<Type> messageTypes,
+        private static void VerifyConstructors(
+            IEnumerable<Type> types,
             ICollection<Exception> exceptions)
         {
-            foreach (var messageType in messageTypes.Where(type => HasWrongConstructors(type, _constructorResolutionBehavior)))
+            types = types
+                .Where(type => type.IsConcreteType())
+                .Where(HasMissingDefaultCctor);
+
+            foreach (var type in types)
             {
-                exceptions.Add(new InvalidOperationException($"Message {messageType.FullName} should have one public constructor"));
+                exceptions.Add(new InvalidOperationException($"Type {type.FullName} should have default constructor (optionally obsolete) so as to be deserialized by System.Text.Json"));
             }
 
-            static bool HasWrongConstructors(Type messageType, IConstructorResolutionBehavior constructorResolutionBehavior)
+            static bool HasMissingDefaultCctor(Type type)
             {
-                return messageType.IsConcreteType() && !constructorResolutionBehavior.TryGetConstructor(messageType, out _);
+                return type
+                    .GetConstructors()
+                    .All(cctor => cctor.GetParameters().Length > 0
+                                  && cctor.GetParameters().Any(parameter => !parameter.ParameterType.IsPrimitive()));
             }
         }
 
         private static void VerifyModifiers(
-            IEnumerable<Type> messageTypes,
+            IEnumerable<Type> types,
             ICollection<Exception> exceptions)
         {
-            foreach (var messageType in messageTypes.Where(messageType => !messageType.IsRecord()))
+            types = types
+                .Where(type => type.IsConcreteType())
+                .Where(type => !type.IsRecord());
+
+            foreach (var type in types)
             {
-                exceptions.Add(new InvalidOperationException($"Type {messageType} should be defined as record"));
+                exceptions.Add(new InvalidOperationException($"Type {type} should be defined as record"));
             }
         }
 
         private static void VerifyPropertyInitializers(
-            IEnumerable<Type> messageTypes,
+            IEnumerable<Type> types,
             ICollection<Exception> exceptions)
         {
-            var properties = messageTypes
-                .Where(messageType => messageType.IsConcreteType())
-                .SelectMany(messageType => messageType.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty))
+            var properties = types
+                .Where(type => type.IsConcreteType())
+                .SelectMany(type => type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty))
+                .Where(property => !property.HasAttribute<JsonIgnoreAttribute>())
                 .Where(property => !property.IsEqualityContract())
                 .Where(property => !(property.HasInitializer() && property.SetIsAccessible()));
 
             foreach (var property in properties)
             {
                 exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have public initializer (init modifier) so as to be immutable and deserializable"));
+            }
+        }
+
+        private static void VerifyTypeArguments(
+            IEnumerable<Type> types,
+            ICollection<Exception> exceptions)
+        {
+            types = types
+                .Where(type => type.IsConcreteType())
+                .Where(type => type.IsGenericTypeDefinition || type.IsPartiallyClosed());
+
+            foreach (var type in types)
+            {
+                exceptions.Add(new InvalidOperationException($"Type {type} should not have generic arguments so as to be deserializable as part of IntegrationMessage payload"));
             }
         }
 
@@ -209,12 +255,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Endpoint
         }
 
         private void VerifyHandlerExistence(
-            IEnumerable<Type> messageTypes,
+            IEnumerable<Type> types,
             ICollection<Exception> exceptions)
         {
-            foreach (var messageType in messageTypes.Where(messageType => !messageType.HasMessageHandler(_registrations)))
+            types = types
+                .Where(type => type.IsConcreteType())
+                .Where(type => !type.HasMessageHandler(_registrations));
+
+            foreach (var type in types)
             {
-                exceptions.Add(new InvalidOperationException($"Message '{messageType.FullName}' should have at least one message handler"));
+                exceptions.Add(new InvalidOperationException($"Message '{type.FullName}' should have at least one message handler"));
             }
         }
     }

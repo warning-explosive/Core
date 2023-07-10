@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text.Json.Serialization;
     using Basics;
     using Contract;
     using Contract.Abstractions;
@@ -20,6 +21,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging
                                       IComparable
     {
         private readonly Dictionary<Type, IIntegrationMessageHeader> _headers;
+
+        /// <summary> .cctor </summary>
+        [JsonConstructor]
+        [Obsolete("serialization constructor")]
+        public IntegrationMessage()
+            : this(default!, default!, new Dictionary<Type, IIntegrationMessageHeader>())
+        {
+        }
 
         /// <summary> .cctor </summary>
         /// <param name="payload">User-defined payload message</param>

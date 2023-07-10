@@ -173,7 +173,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
             }
         }
 
-        private static Task PersistOutgoingMessages(
+        private static async Task PersistOutgoingMessages(
             IDatabaseContext databaseContext,
             EndpointIdentity endpointIdentity,
             IReadOnlyCollection<IntegrationMessage> messages,
@@ -187,12 +187,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
                .Select(message => new OutboxMessage(message.PrimaryKey, outboxId, timestamp, endpointIdentity.LogicalName, endpointIdentity.InstanceName, message, false))
                .ToArray();
 
-            return outboxMessages.Any()
-                ? databaseContext
-                    .Insert(outboxMessages, EnInsertBehavior.Default)
-                    .CachedExpression($"{nameof(PersistOutgoingMessages)}:{outboxMessages.Length}")
+            if (!outboxMessages.Any())
+            {
+                return;
+            }
+
+            foreach (var outboxMessage in outboxMessages)
+            {
+                await databaseContext
+                    .Insert(new[] { outboxMessage }, EnInsertBehavior.Default)
+                    .CachedExpression($"{nameof(PersistOutgoingMessages)}:{outboxMessage.Message.Headers.Count}")
                     .Invoke(token)
-                : Task.CompletedTask;
+                    .ConfigureAwait(false);
+            }
         }
 
         private static Task DeliverOutgoingMessages(

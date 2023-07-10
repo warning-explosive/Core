@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Text.Json.Serialization;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Verifiers;
@@ -118,19 +119,39 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
                     exceptions.Add(new InvalidOperationException($"Type {domainEvent.FullName} should implement {typeof(IDomainEvent<>).FullName}"));
                 }
 
-                VerifyWrongModifiers(domainEvent, exceptions);
-                VerifyMissingPropertyInitializers(domainEvent, exceptions);
+                VerifyConstructors(domainEvent, exceptions);
+                VerifyModifiers(domainEvent, exceptions);
+                VerifyPropertyInitializers(domainEvent, exceptions);
                 VerifyMultipleAggregates(domainEvent, exceptions);
                 VerifyAggregateInterfaces(domainEvent, exceptions);
+                VerifyTypeArguments(domainEvent, exceptions);
             }
 
-            static void VerifyWrongModifiers(
-                Type type,
+            static void VerifyConstructors(
+                Type domainEvent,
                 ICollection<Exception> exceptions)
             {
-                if (!type.IsRecord())
+                if (HasMissingDefaultCctor(domainEvent))
                 {
-                    exceptions.Add(new InvalidOperationException($"Type {type} should be defined as record"));
+                    exceptions.Add(new InvalidOperationException($"Domain event {domainEvent.FullName} should have default constructor (optionally obsolete) so as to be deserialized by System.Text.Json"));
+                }
+
+                static bool HasMissingDefaultCctor(Type type)
+                {
+                    return type
+                        .GetConstructors()
+                        .All(cctor => cctor.GetParameters().Length > 0
+                                      && cctor.GetParameters().Any(parameter => !parameter.ParameterType.IsPrimitive()));
+                }
+            }
+
+            static void VerifyModifiers(
+                Type domainEvent,
+                ICollection<Exception> exceptions)
+            {
+                if (!domainEvent.IsRecord())
+                {
+                    exceptions.Add(new InvalidOperationException($"Domain event {domainEvent} should be defined as record"));
                 }
             }
 
@@ -154,7 +175,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
 
                 if (!hasDomainEvent.IsAssignableFrom(aggregate))
                 {
-                    exceptions.Add(new InvalidOperationException($"Type {aggregate} should implement {hasDomainEvent}"));
+                    exceptions.Add(new InvalidOperationException($"Domain event {aggregate} should implement {hasDomainEvent}"));
+                }
+            }
+
+            static void VerifyTypeArguments(
+                Type domainEvent,
+                ICollection<Exception> exceptions)
+            {
+                if (domainEvent.IsGenericTypeDefinition || domainEvent.IsPartiallyClosed())
+                {
+                    exceptions.Add(new InvalidOperationException($"Domain event {domainEvent} should not have generic arguments so as to be deserializable as part of IntegrationMessage payload"));
                 }
             }
         }
@@ -165,7 +196,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
         {
             foreach (var domainEntity in domainEntities)
             {
-                VerifyMissingPropertyInitializers(domainEntity, exceptions);
+                VerifyPropertyInitializers(domainEntity, exceptions);
             }
         }
 
@@ -175,16 +206,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing
         {
             foreach (var valueObject in valueObjects)
             {
-                VerifyMissingPropertyInitializers(valueObject, exceptions);
+                VerifyPropertyInitializers(valueObject, exceptions);
             }
         }
 
-        private static void VerifyMissingPropertyInitializers(
+        private static void VerifyPropertyInitializers(
             Type type,
             ICollection<Exception> exceptions)
         {
             var properties = type
                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
+               .Where(property => !property.HasAttribute<JsonIgnoreAttribute>())
                .Where(property => !property.IsEqualityContract())
                .Where(property => !(property.HasInitializer() && property.SetIsAccessible()));
 

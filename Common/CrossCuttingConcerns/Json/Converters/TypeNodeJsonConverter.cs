@@ -30,12 +30,32 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
                 : null;
         }
 
+        public override TypeNode ReadAsPropertyName(
+            ref Utf8JsonReader reader,
+            Type typeToConvert,
+            JsonSerializerOptions options)
+        {
+            var str = reader.GetString();
+
+            return str != null
+                ? TypeNode.FromString(str)
+                : throw new InvalidOperationException("Dictionary property name wasn't found");
+        }
+
         public override void Write(
             Utf8JsonWriter writer,
             TypeNode value,
             JsonSerializerOptions options)
         {
             writer.WriteStringValue(value.ToString());
+        }
+
+        public override void WriteAsPropertyName(
+            Utf8JsonWriter writer,
+            TypeNode value,
+            JsonSerializerOptions options)
+        {
+            writer.WritePropertyName(value.ToString());
         }
     }
 }

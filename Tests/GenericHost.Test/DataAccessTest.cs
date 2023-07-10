@@ -30,7 +30,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using GenericEndpoint.DataAccess.Sql.Deduplication;
     using GenericEndpoint.DataAccess.Sql.Host;
     using GenericEndpoint.DataAccess.Sql.Settings;
-    using GenericEndpoint.EventSourcing;
     using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
@@ -1056,7 +1055,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                         var awaiter = Task.WhenAll(
                             collector.WaitUntilMessageIsNotReceived<CreateUser>(),
-                            collector.WaitUntilMessageIsNotReceived<CaptureDomainEvent<AuthEndpoint.Domain.User, AuthEndpoint.Domain.UserWasCreated>>(),
                             collector.WaitUntilMessageIsNotReceived<UserWasCreated>());
 
                         await integrationContext

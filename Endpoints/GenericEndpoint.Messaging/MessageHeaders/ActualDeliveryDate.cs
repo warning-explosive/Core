@@ -1,11 +1,12 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 {
     using System;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Actual delivery date to the input queue
     /// </summary>
-    public class ActualDeliveryDate : IIntegrationMessageHeader
+    public record ActualDeliveryDate : IIntegrationMessageHeader
     {
         /// <summary> .cctor </summary>
         /// <param name="value">Actual delivery date</param>
@@ -17,9 +18,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         /// <summary>
         /// Actual delivery date
         /// </summary>
-        public DateTime Value { get; }
+        public DateTime Value { get; init; }
 
         /// <inheritdoc />
+        [JsonIgnore]
         public string StringValue => Value.ToString("O");
 
         /// <inheritdoc />

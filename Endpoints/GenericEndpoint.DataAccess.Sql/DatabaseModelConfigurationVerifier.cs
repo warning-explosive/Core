@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Text.Json.Serialization;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Registration;
@@ -69,6 +70,7 @@
                 VerifyForeignKeys(_modelProvider, databaseEntity, exceptions);
                 VerifyColumnsNullability(_modelProvider, databaseEntity, exceptions);
                 VerifyArrays(databaseEntity, exceptions);
+                VerifyTypeArguments(databaseEntity, exceptions);
             }
 
             static void VerifyModifiers(
@@ -118,6 +120,7 @@
             {
                 var properties = type
                     .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.DeclaredOnly)
+                    .Where(property => !property.HasAttribute<JsonIgnoreAttribute>())
                     .Where(property => !property.IsEqualityContract())
                     .Where(property => !(!property.HasInitializer() && property.SetIsAccessible()));
 
@@ -176,6 +179,16 @@
                 foreach (var property in properties)
                 {
                     exceptions.Add(new InvalidOperationException($"Property {property.ReflectedType.FullName}.{property.Name} should have element type"));
+                }
+            }
+
+            static void VerifyTypeArguments(
+                Type type,
+                ICollection<Exception> exceptions)
+            {
+                if (type.IsGenericTypeDefinition || type.IsPartiallyClosed())
+                {
+                    exceptions.Add(new InvalidOperationException($"Type {type} should not have generic arguments so as to be deserializable as part of IntegrationMessage payload"));
                 }
             }
         }

@@ -29,7 +29,6 @@
     using GenericEndpoint.DataAccess.Sql.Host;
     using GenericEndpoint.DataAccess.Sql.Host.BackgroundWorkers;
     using GenericEndpoint.DataAccess.Sql.Host.StartupActions;
-    using GenericEndpoint.EventSourcing;
     using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.EventSourcing.Host.StartupActions;
     using GenericEndpoint.Host;
@@ -389,7 +388,6 @@
 
                     var expectedIntegrationMessageTypes = new[]
                         {
-                            typeof(CaptureDomainEvent<,>),
                             typeof(BaseEvent),
                             typeof(InheritedEvent),
                             typeof(Command),
@@ -410,7 +408,6 @@
 
                     var expectedCommands = new[]
                         {
-                            typeof(CaptureDomainEvent<,>),
                             typeof(Command),
                             typeof(OpenGenericHandlerCommand)
                         }
@@ -583,7 +580,6 @@
 
                     var expectedIntegrationMessageTypes = new[]
                         {
-                            typeof(CaptureDomainEvent<,>),
                             typeof(AuthenticateUser),
                             typeof(UserAuthenticationResult),
                             typeof(CreateUser),

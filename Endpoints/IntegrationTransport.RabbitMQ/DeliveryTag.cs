@@ -1,12 +1,13 @@
 namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 {
     using System.Globalization;
+    using System.Text.Json.Serialization;
     using GenericEndpoint.Messaging.MessageHeaders;
 
     /// <summary>
     /// DeliveryTag
     /// </summary>
-    public class DeliveryTag : IIntegrationMessageHeader
+    public record DeliveryTag : IIntegrationMessageHeader
     {
         /// <summary> .cctor </summary>
         /// <param name="value">Delivery tag value</param>
@@ -18,9 +19,10 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         /// <summary>
         /// Delivery tag value
         /// </summary>
-        public ulong Value { get; }
+        public ulong Value { get; init; }
 
         /// <inheritdoc />
+        [JsonIgnore]
         public string StringValue => Value.ToString(CultureInfo.InvariantCulture);
 
         /// <inheritdoc />

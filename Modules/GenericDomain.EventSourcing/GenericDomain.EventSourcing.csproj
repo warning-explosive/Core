@@ -41,9 +41,4 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
     </ItemGroup>
-    <ItemGroup>
-      <Compile Update="DefaultDomainEventHandler.cs">
-        <DependentUpon>IDomainEventHandler.cs</DependentUpon>
-      </Compile>
-    </ItemGroup>
 </Project>

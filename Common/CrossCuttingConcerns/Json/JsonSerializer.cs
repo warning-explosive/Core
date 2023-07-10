@@ -3,18 +3,27 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
+    using System.Reflection;
     using System.Text.Json;
+    using System.Text.Json.Nodes;
     using System.Text.Json.Serialization;
     using System.Text.Json.Serialization.Metadata;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Basics;
+    using Basics.Exceptions;
 
     [Component(EnLifestyle.Singleton)]
     internal class JsonSerializer : IJsonSerializer,
                                     IResolvable<IJsonSerializer>
     {
+        internal const string MetadataKey = "$";
+
+        private static readonly PropertyInfo JsonNodeParent = typeof(JsonNode)
+            .GetProperty(nameof(JsonNode.Parent), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty | BindingFlags.SetProperty)
+            ?? throw new NotFoundException($"Unable to find '{nameof(JsonNode.Parent)}' property in the {typeof(JsonNode)} type");
+
         private readonly JsonSerializerOptions _options;
 
         [SuppressMessage("Analysis", "CA2326", Justification = "custom serializationBinder")]
@@ -41,11 +50,6 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
                 WriteIndented = false,
 
                 MaxDepth = 64
-
-                // TODO: #217
-                // Encoder =,
-                // DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-                // PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
             foreach (var converter in converters)
@@ -61,7 +65,8 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
 
         public object DeserializeObject(string serialized, Type type)
         {
-            type = GetType(serialized, type);
+            // TODO: #217 - https://github.com/dotnet/runtime/issues/72604
+            serialized = ReorderMetadata(JsonNode.Parse(serialized)).ToJsonString();
 
             return System.Text.Json.JsonSerializer.Deserialize(serialized, type, _options)
                    ?? throw new InvalidOperationException("Object should be serializable");
@@ -72,24 +77,61 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json
             return (T)DeserializeObject(serialized, typeof(T));
         }
 
-        private static Type GetType(string serialized, Type type)
+        private JsonNode? ReorderMetadata(JsonNode? node)
         {
-            using (var document = JsonDocument.Parse(serialized))
+            return node switch
             {
-                Type serializedType = document.RootElement.ValueKind == JsonValueKind.Object
-                                      && document.RootElement.TryGetProperty(PolymorphicJsonTypeInfoResolver.TypeDiscriminatorPropertyName, out var typeDiscriminatorProperty)
-                                      && typeDiscriminatorProperty.ValueKind != JsonValueKind.Undefined
-                                      && typeDiscriminatorProperty.GetString() is { } typeDiscriminator
-                                      && !typeDiscriminator.IsNullOrEmpty()
-                    ? TypeNode.FromString(typeDiscriminator)
-                    : type;
+                JsonObject jsonObject => ReorderJsonObject(jsonObject),
+                JsonArray jsonArray => ReorderJsonArray(jsonArray),
+                _ => node
+            };
 
-                if (!type.IsAssignableFrom(serializedType))
+            JsonNode ReorderJsonObject(JsonObject jsonObject)
+            {
+                var properties = jsonObject
+                    .Select(property =>
+                    {
+                        var value = ReorderMetadata(property.Value);
+
+                        if (value != null)
+                        {
+                            JsonNodeParent.SetValue(value, null);
+                        }
+
+                        return new KeyValuePair<string, JsonNode?>(property.Key, value);
+                    })
+                    .OrderByDescending(property => property.Key.StartsWith(MetadataKey));
+
+                var jsonNodeOptions = new JsonNodeOptions
                 {
-                    throw new InvalidOperationException($"Unable to deserialize {serializedType} as {type}");
-                }
+                    PropertyNameCaseInsensitive = _options.PropertyNameCaseInsensitive
+                };
 
-                return serializedType;
+                return new JsonObject(properties, jsonNodeOptions);
+            }
+
+            JsonNode ReorderJsonArray(JsonArray jsonArray)
+            {
+                var items = jsonArray
+                    .Select(item =>
+                    {
+                        var value = ReorderMetadata(item);
+
+                        if (value != null)
+                        {
+                            JsonNodeParent.SetValue(value, null);
+                        }
+
+                        return value;
+                    })
+                    .ToArray();
+
+                var jsonNodeOptions = new JsonNodeOptions
+                {
+                    PropertyNameCaseInsensitive = _options.PropertyNameCaseInsensitive
+                };
+
+                return new JsonArray(jsonNodeOptions, items);
             }
         }
     }

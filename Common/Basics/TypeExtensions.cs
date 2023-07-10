@@ -83,7 +83,7 @@ namespace SpaceEngineers.Core.Basics
         /// </summary>
         /// <param name="type">Type</param>
         /// <returns>Whether type is anonymous or not</returns>
-        public static bool IsAnonymous(this Type type)
+        public static bool IsCompilerGenerated(this Type type)
         {
             return type.HasAttribute<CompilerGeneratedAttribute>();
         }

@@ -1,12 +1,13 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 {
     using System;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Deferred until date defers delivery of a message until it arrives
     /// The message will be delivered no earlier than this date and not exactly in that time due to asynchronous nature of the messaging
     /// </summary>
-    public class DeferredUntil : IIntegrationMessageHeader
+    public record DeferredUntil : IIntegrationMessageHeader
     {
         /// <summary> .cctor </summary>
         /// <param name="value">Deferred until date</param>
@@ -18,9 +19,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         /// <summary>
         /// Deferred until date
         /// </summary>
-        public DateTime Value { get; }
+        public DateTime Value { get; init; }
 
         /// <inheritdoc />
+        [JsonIgnore]
         public string StringValue => Value.ToString("O");
 
         /// <inheritdoc />

@@ -1,12 +1,22 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 {
+    using System;
+    using System.Text.Json.Serialization;
     using Contract;
 
     /// <summary>
     /// Initiator endpoint identity
     /// </summary>
-    public class SentFrom : IIntegrationMessageHeader
+    public record SentFrom : IIntegrationMessageHeader
     {
+        /// <summary> .cctor </summary>
+        [JsonConstructor]
+        [Obsolete("serialization constructor")]
+        public SentFrom()
+        {
+            Value = default!;
+        }
+
         /// <summary> .cctor </summary>
         /// <param name="value">Initiator endpoint identity</param>
         public SentFrom(EndpointIdentity value)
@@ -17,9 +27,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         /// <summary>
         /// Initiator endpoint identity
         /// </summary>
-        public EndpointIdentity Value { get; }
+        public EndpointIdentity Value { get; init; }
 
         /// <inheritdoc />
+        [JsonIgnore]
         public string StringValue => Value.ToString();
 
         /// <inheritdoc />

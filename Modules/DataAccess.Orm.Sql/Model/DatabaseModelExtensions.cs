@@ -175,17 +175,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
             static IEnumerable<PropertyInfo> ReflectedColumns(Type type)
             {
                 return type
-                   .GetProperties(type.IsAnonymous() ? ReflectedColumnsFlags & ~BindingFlags.SetProperty : ReflectedColumnsFlags)
-                   .Where(property => property.GetIsAccessible() && (property.SetIsAccessible() || type.IsAnonymous()));
+                   .GetProperties(type.IsCompilerGenerated() ? ReflectedColumnsFlags & ~BindingFlags.SetProperty : ReflectedColumnsFlags)
+                   .Where(property => property.GetIsAccessible() && (property.SetIsAccessible() || type.IsCompilerGenerated()));
             }
 
             static IEnumerable<PropertyInfo> DeclaredColumns(Type type)
             {
                 return type
-                   .GetProperties(type.IsAnonymous() ? DeclaredColumnsFlags & ~BindingFlags.SetProperty : DeclaredColumnsFlags)
-                   .Where(property => property.GetIsAccessible() && (property.SetIsAccessible() || type.IsAnonymous()))
+                   .GetProperties(type.IsCompilerGenerated() ? DeclaredColumnsFlags & ~BindingFlags.SetProperty : DeclaredColumnsFlags)
+                   .Where(property => property.GetIsAccessible() && (property.SetIsAccessible() || type.IsCompilerGenerated()))
                    .Concat(BaseDeclaredColumns(type))
-                   .Where(property => property.CanRead && (property.CanWrite || type.IsAnonymous()));
+                   .Where(property => property.CanRead && (property.CanWrite || type.IsCompilerGenerated()));
             }
 
             static IEnumerable<PropertyInfo> BaseDeclaredColumns(Type type)

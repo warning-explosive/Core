@@ -9,9 +9,9 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
     using Basics;
 
     [Component(EnLifestyle.Singleton)]
-    internal sealed class SystemTypeNodeJsonConverter : JsonConverter<Type>,
-                                                        IResolvable<SystemTypeNodeJsonConverter>,
-                                                        ICollectionResolvable<JsonConverter>
+    internal sealed class SystemTypeJsonConverter : JsonConverter<Type>,
+                                                    IResolvable<SystemTypeJsonConverter>,
+                                                    ICollectionResolvable<JsonConverter>
     {
         public override bool CanConvert(Type objectType)
         {
@@ -30,12 +30,32 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Json.Converters
                 : null;
         }
 
+        public override Type ReadAsPropertyName(
+            ref Utf8JsonReader reader,
+            Type typeToConvert,
+            JsonSerializerOptions options)
+        {
+            var str = reader.GetString();
+
+            return str != null
+                ? TypeNode.ToType(TypeNode.FromString(str))
+                : throw new InvalidOperationException("Dictionary property name wasn't found");
+        }
+
         public override void Write(
             Utf8JsonWriter writer,
             Type value,
             JsonSerializerOptions options)
         {
             writer.WriteStringValue(TypeNode.FromType(value).ToString());
+        }
+
+        public override void WriteAsPropertyName(
+            Utf8JsonWriter writer,
+            Type value,
+            JsonSerializerOptions options)
+        {
+            writer.WritePropertyName(TypeNode.FromType(value).ToString());
         }
     }
 }

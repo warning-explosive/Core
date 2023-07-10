@@ -4,13 +4,13 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics;
     using Basics.Attributes;
     using CompositionRoot;
     using GenericDomain.Api.Abstractions;
+    using GenericDomain.EventSourcing;
     using GenericEndpoint.Host.StartupActions;
     using GenericHost.Api.Abstractions;
 
@@ -40,7 +40,7 @@
 
             foreach (var aggregate in aggregates)
             {
-                var subscription = OnDomainEvent(_dependencyContainer, aggregate, token);
+                var subscription = OnDomainEvent(_dependencyContainer, token);
 
                 Subscribe(aggregate, subscription);
 
@@ -82,30 +82,16 @@
 
         private static EventHandler<DomainEventArgs> OnDomainEvent(
             IDependencyContainer dependencyContainer,
-            Type aggregate,
             CancellationToken token)
         {
             return (_, args) =>
             {
-                typeof(EventSourcingHostStartupAction)
-                   .CallMethod(nameof(OnDomainEvent))
-                   .WithTypeArguments(aggregate, args.DomainEvent.GetType())
-                   .WithArguments(dependencyContainer, args, token)
-                   .Invoke<Task>()
-                   .Wait(token);
+                // TODO: #217 - make async callback / append to collection and insert on commit
+                dependencyContainer
+                    .Resolve<IEventStore>()
+                    .Append(args, token)
+                    .Wait(token);
             };
-        }
-
-        private static Task OnDomainEvent<TAggregate, TEvent>(
-            IDependencyContainer dependencyContainer,
-            DomainEventArgs args,
-            CancellationToken token)
-            where TAggregate : class, IAggregate<TAggregate>
-            where TEvent : class, IDomainEvent<TAggregate>
-        {
-            return dependencyContainer
-               .Resolve<IIntegrationContext>()
-               .Send(new CaptureDomainEvent<TAggregate, TEvent>(args), token);
         }
     }
 }

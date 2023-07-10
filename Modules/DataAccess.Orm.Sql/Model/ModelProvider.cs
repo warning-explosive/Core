@@ -189,7 +189,7 @@
 
         private IEnumerable<ColumnInfo> GetColumns(ITableInfo table, ColumnProperty property)
         {
-            if (!property.Declared.IsSupportedColumn() && !property.ReflectedType.IsAnonymous())
+            if (!property.Declared.IsSupportedColumn() && !property.ReflectedType.IsCompilerGenerated())
             {
                 throw new NotSupportedException($"Not supported column type: {property.Reflected} - {property.PropertyType}");
             }

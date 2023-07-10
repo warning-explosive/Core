@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Messages
 {
     using System;
+    using System.Text.Json.Serialization;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Contract.Attributes;
@@ -9,6 +10,14 @@ namespace SpaceEngineers.Core.GenericHost.Test.Messages
     [Feature(TestFeatures.Test)]
     internal record Endpoint2HandlerInvoked : IIntegrationEvent
     {
+        [JsonConstructor]
+        [Obsolete("serialization constructor")]
+        public Endpoint2HandlerInvoked()
+        {
+            HandlerType = default!;
+            EndpointIdentity = default!;
+        }
+
         public Endpoint2HandlerInvoked(Type handlerType, EndpointIdentity endpointIdentity)
         {
             HandlerType = handlerType;

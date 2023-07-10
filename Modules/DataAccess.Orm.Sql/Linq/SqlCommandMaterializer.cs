@@ -233,7 +233,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 if (value is string json
                     && type != typeof(string)
                     && !type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnum
-                    && !type.IsAnonymous()
+                    && !type.IsCompilerGenerated()
                     && !type.IsDatabaseEntity())
                 {
                     deserializedJsonObject = jsonSerializer.DeserializeObject(json, type);

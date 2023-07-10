@@ -1,9 +1,11 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 {
+    using System.Text.Json.Serialization;
+
     /// <summary>
     /// User
     /// </summary>
-    public class User : IIntegrationMessageHeader
+    public record User : IIntegrationMessageHeader
     {
         /// <summary> .cctor </summary>
         /// <param name="value">User</param>
@@ -15,9 +17,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         /// <summary>
         /// User
         /// </summary>
-        public string Value { get; }
+        public string Value { get; init; }
 
         /// <inheritdoc />
+        [JsonIgnore]
         public string StringValue => Value;
 
         /// <inheritdoc />

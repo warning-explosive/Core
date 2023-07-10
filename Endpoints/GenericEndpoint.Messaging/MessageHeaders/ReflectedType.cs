@@ -1,12 +1,21 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 {
     using System;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// ReflectedType
     /// </summary>
-    public class ReflectedType : IIntegrationMessageHeader
+    public record ReflectedType : IIntegrationMessageHeader
     {
+        /// <summary> .cctor </summary>
+        [JsonConstructor]
+        [Obsolete("serialization constructor")]
+        public ReflectedType()
+        {
+            Value = default!;
+        }
+
         /// <summary> .cctor </summary>
         /// <param name="value">Reflected type</param>
         public ReflectedType(Type value)
@@ -17,9 +26,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         /// <summary>
         /// Reflected type
         /// </summary>
-        public Type Value { get; }
+        public Type Value { get; init; }
 
         /// <inheritdoc />
+        [JsonIgnore]
         public string StringValue => Value.FullName!;
 
         /// <inheritdoc />

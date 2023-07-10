@@ -1,11 +1,12 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 {
     using System.Globalization;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Retry counter
     /// </summary>
-    public class RetryCounter : IIntegrationMessageHeader
+    public record RetryCounter : IIntegrationMessageHeader
     {
         /// <summary> .cctor </summary>
         /// <param name="value">Retry counter</param>
@@ -17,9 +18,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         /// <summary>
         /// Retry counter
         /// </summary>
-        public int Value { get; }
+        public int Value { get; init; }
 
         /// <inheritdoc />
+        [JsonIgnore]
         public string StringValue => Value.ToString(CultureInfo.InvariantCulture);
 
         /// <inheritdoc />

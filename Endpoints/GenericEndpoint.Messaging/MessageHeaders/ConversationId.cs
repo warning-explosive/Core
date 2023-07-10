@@ -1,11 +1,12 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
 {
     using System;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// ConversationId
     /// </summary>
-    public class ConversationId : IIntegrationMessageHeader
+    public record ConversationId : IIntegrationMessageHeader
     {
         /// <summary> .cctor </summary>
         /// <param name="value">Conversation id</param>
@@ -17,9 +18,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Messaging.MessageHeaders
         /// <summary>
         /// Value
         /// </summary>
-        public Guid Value { get; }
+        public Guid Value { get; init; }
 
         /// <inheritdoc />
+        [JsonIgnore]
         public string StringValue => Value.ToString();
 
         /// <inheritdoc />

@@ -36,7 +36,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Type = type;
             Source = source;
             IsProjectionToClass = type.IsClass && !type.IsPrimitive() && !type.IsCollection();
-            IsAnonymousProjection = type.IsAnonymous();
+            IsAnonymousProjection = type.IsCompilerGenerated();
 
             _expressions = expressions.ToList();
         }
@@ -82,7 +82,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public void Apply(TranslationContext context, NewExpression expression)
         {
             IsProjectionToClass = true;
-            IsAnonymousProjection = expression.Type.IsAnonymous();
+            IsAnonymousProjection = expression.Type.IsCompilerGenerated();
         }
 
         /// <inheritdoc />

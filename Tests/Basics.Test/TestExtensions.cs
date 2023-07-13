@@ -11,14 +11,14 @@ namespace SpaceEngineers.Core.Basics.Test
         /// <returns>FalseException</returns>
         public static FalseException FalseException()
         {
-            return new FalseException(nameof(FalseException), null);
+            return Xunit.Sdk.FalseException.ForNonFalseValue(nameof(FalseException), null);
         }
 
         /// <summary> Create TrueException </summary>
         /// <returns>TrueException</returns>
         public static TrueException TrueException()
         {
-            return new TrueException(nameof(TrueException), null);
+            return Xunit.Sdk.TrueException.ForNonTrueValue(nameof(TrueException), null);
         }
     }
 }

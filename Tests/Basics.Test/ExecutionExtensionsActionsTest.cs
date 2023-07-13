@@ -63,7 +63,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void HandledExceptionTest()
         {
-            Action action = () => throw FalseException();
+            Action action = () => throw TestExtensions.FalseException();
 
             ExecutionExtensions
                 .Try(action)
@@ -74,7 +74,7 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void SeveralCatchBlocksTest()
         {
-            Action action = () => throw FalseException();
+            Action action = () => throw TestExtensions.FalseException();
 
             ExecutionExtensions
                 .Try(action)
@@ -86,11 +86,11 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void ThrowInCatchBlockTest()
         {
-            Action action = () => throw FalseException();
+            Action action = () => throw TestExtensions.FalseException();
 
             void TestAction() => ExecutionExtensions
                 .Try(action)
-                .Catch<FalseException>(ex => throw TrueException())
+                .Catch<FalseException>(ex => throw TestExtensions.TrueException())
                 .Invoke();
 
             Assert.Throws<TrueException>(TestAction);
@@ -99,25 +99,15 @@ namespace SpaceEngineers.Core.Basics.Test
         [Fact]
         internal void ThrowInFinallyBlockTest()
         {
-            Action action = () => throw FalseException();
+            Action action = () => throw TestExtensions.FalseException();
 
             void TestAction() => ExecutionExtensions
                 .Try(action)
                 .Catch<FalseException>(ex => throw ex)
-                .Finally(() => throw TrueException())
+                .Finally(() => throw TestExtensions.TrueException())
                 .Invoke();
 
             Assert.Throws<TrueException>(TestAction);
-        }
-
-        private static FalseException FalseException()
-        {
-            return new FalseException(nameof(FalseException), null);
-        }
-
-        private static TrueException TrueException()
-        {
-            return new TrueException(nameof(TrueException), null);
         }
     }
 }

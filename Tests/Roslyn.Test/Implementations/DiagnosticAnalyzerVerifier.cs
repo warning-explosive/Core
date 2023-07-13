@@ -37,8 +37,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             {
                 var diagnosticsOutput = actualDiagnostics.Any() ? FormatDiagnostics(analyzer, actualDiagnostics.ToArray()) : "    NONE.";
 
-                Assert.True(false,
-                            $"Mismatch between number of diagnostics returned, expected \"{expectedCount}\" actual \"{actualCount}\"{Environment.NewLine}Diagnostics:{Environment.NewLine}{diagnosticsOutput}{Environment.NewLine}");
+                Assert.Fail($"Mismatch between number of diagnostics returned, expected \"{expectedCount}\" actual \"{actualCount}\"{Environment.NewLine}Diagnostics:{Environment.NewLine}{diagnosticsOutput}{Environment.NewLine}");
             }
 
             for (var i = 0; i < expectedResults.Length; i++)
@@ -50,8 +49,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
                 {
                     if (actual.Location != Location.None)
                     {
-                        Assert.True(false,
-                                    $"Expected:{Environment.NewLine}A project diagnostic with No location{Environment.NewLine}Actual:{Environment.NewLine}{FormatDiagnostics(analyzer, actual)}");
+                        Assert.Fail($"Expected:{Environment.NewLine}A project diagnostic with No location{Environment.NewLine}Actual:{Environment.NewLine}{FormatDiagnostics(analyzer, actual)}");
                     }
                 }
                 else
@@ -61,20 +59,17 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
 
                 if (actual.Id != expected.Descriptor.Id)
                 {
-                    Assert.True(false,
-                                $"Expected diagnostic id to be \"{expected.Descriptor.Id}\" was \"{actual.Id}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
+                    Assert.Fail($"Expected diagnostic id to be \"{expected.Descriptor.Id}\" was \"{actual.Id}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
                 }
 
                 if (actual.Severity != expected.Severity)
                 {
-                    Assert.True(false,
-                                $"Expected diagnostic severity to be \"{expected.Severity}\" was \"{actual.Severity}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
+                    Assert.Fail($"Expected diagnostic severity to be \"{expected.Severity}\" was \"{actual.Severity}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
                 }
 
                 if (actual.GetMessage(CultureInfo.InvariantCulture) != expected.ActualMessage)
                 {
-                    Assert.True(false,
-                                $"Expected diagnostic message to be \"{expected.ActualMessage}\" was \"{actual.GetMessage(CultureInfo.InvariantCulture)}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
+                    Assert.Fail($"Expected diagnostic message to be \"{expected.ActualMessage}\" was \"{actual.GetMessage(CultureInfo.InvariantCulture)}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, actual)}{Environment.NewLine}");
                 }
             }
         }
@@ -95,8 +90,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             {
                 if (actualLinePosition.Line + 1 != expected.Line)
                 {
-                    Assert.True(false,
-                                $"Expected diagnostic to be on line \"{expected.Line}\" was actually on line \"{actualLinePosition.Line + 1}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, diagnostic)}{Environment.NewLine}");
+                    Assert.Fail($"Expected diagnostic to be on line \"{expected.Line}\" was actually on line \"{actualLinePosition.Line + 1}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, diagnostic)}{Environment.NewLine}");
                 }
             }
 
@@ -105,8 +99,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Implementations
             {
                 if (actualLinePosition.Character + 1 != expected.Column)
                 {
-                    Assert.True(false,
-                                $"Expected diagnostic to start at column \"{expected.Column}\" was actually at column \"{actualLinePosition.Character + 1}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, diagnostic)}{Environment.NewLine}");
+                    Assert.Fail($"Expected diagnostic to start at column \"{expected.Column}\" was actually at column \"{actualLinePosition.Character + 1}\"{Environment.NewLine}Diagnostic:{Environment.NewLine}    {FormatDiagnostics(analyzer, diagnostic)}{Environment.NewLine}");
                 }
             }
         }

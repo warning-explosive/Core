@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.Basics.Test
     public class AsyncUnitOfWorkTest : BasicsTestBase
     {
         private static readonly Func<object, CancellationToken, Task> EmptyProducer = (_, _) => Task.CompletedTask;
-        private static readonly Func<object, CancellationToken, Task> ErrorProducer = (_, _) => throw new TrueException(nameof(TrueException), null);
+        private static readonly Func<object, CancellationToken, Task> ErrorProducer = (_, _) => throw TestExtensions.TrueException();
 
         /// <summary> .ctor </summary>
         /// <param name="output">ITestOutputHelper</param>

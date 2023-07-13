@@ -1297,7 +1297,7 @@
                             Assert.True(tableInfo.Columns.ContainsKey(column));
                             var columnInfo = tableInfo.Columns[column];
                             var actualConstraints = columnInfo.Constraints.ToString(" ");
-                            Assert.True(actualConstraints.Equals(constraints, StringComparison.OrdinalIgnoreCase));
+                            Assert.Equal(actualConstraints, constraints, ignoreCase: true);
                             Assert.False(columnInfo.IsMultipleRelation);
 
                             if (constraints.Contains("references", StringComparison.OrdinalIgnoreCase))
@@ -1346,7 +1346,7 @@
                 {
                     Assert.True(modelChanges[index] is CreateSchema);
                     var createSchema = (CreateSchema)modelChanges[index];
-                    Assert.True(createSchema.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
+                    Assert.Equal(createSchema.Schema, schema, ignoreCase: true);
                 }
 
                 static void AssertCreateEnumType(
@@ -1358,8 +1358,8 @@
                 {
                     Assert.True(modelChanges[index] is CreateEnumType);
                     var createEnumType = (CreateEnumType)modelChanges[index];
-                    Assert.True(createEnumType.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
-                    Assert.True(createEnumType.Type.Equals(type, StringComparison.OrdinalIgnoreCase));
+                    Assert.Equal(createEnumType.Schema, schema, ignoreCase: true);
+                    Assert.Equal(createEnumType.Type, type, ignoreCase: true);
                     Assert.True(createEnumType.Values.SequenceEqual(values, StringComparer.Ordinal));
                 }
 
@@ -1370,7 +1370,7 @@
                 {
                     Assert.True(modelChanges[index] is CreateView);
                     var createView = (CreateView)modelChanges[index];
-                    Assert.True(createView.View.Equals(view, StringComparison.OrdinalIgnoreCase));
+                    Assert.Equal(createView.View, view, ignoreCase: true);
                 }
 
                 static void AssertCreateIndex(
@@ -1386,10 +1386,10 @@
                 {
                     Assert.True(modelChanges[index] is CreateIndex);
                     var createIndex = (CreateIndex)modelChanges[index];
-                    Assert.True(createIndex.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
-                    Assert.True(createIndex.Table.Equals(table, StringComparison.OrdinalIgnoreCase));
+                    Assert.Equal(createIndex.Schema, schema, ignoreCase: true);
+                    Assert.Equal(createIndex.Table, table, ignoreCase: true);
                     var indexName = string.Join("__", table, string.Join("_", columns));
-                    Assert.True(createIndex.Index.Equals(indexName, StringComparison.OrdinalIgnoreCase));
+                    Assert.Equal(createIndex.Index, indexName, ignoreCase: true);
                     var indexInfo = modelProvider.TablesMap[schema][table].Indexes[createIndex.Index];
                     Assert.True(includedColumns.OrderBy(column => column).SequenceEqual(indexInfo.IncludedColumns.Select(column => column.Name).OrderBy(column => column), StringComparer.OrdinalIgnoreCase));
                     Assert.Equal(unique, indexInfo.Unique);
@@ -1405,8 +1405,8 @@
                 {
                     Assert.True(modelChanges[index] is CreateFunction);
                     var createFunction = (CreateFunction)modelChanges[index];
-                    Assert.True(createFunction.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
-                    Assert.True(createFunction.Function.Equals(function, StringComparison.OrdinalIgnoreCase));
+                    Assert.Equal(createFunction.Schema, schema, ignoreCase: true);
+                    Assert.Equal(createFunction.Function, function, ignoreCase: true);
                 }
 
                 static void AssertCreateTrigger(
@@ -1419,9 +1419,9 @@
                 {
                     Assert.True(modelChanges[index] is CreateTrigger);
                     var createTrigger = (CreateTrigger)modelChanges[index];
-                    Assert.True(createTrigger.Schema.Equals(schema, StringComparison.OrdinalIgnoreCase));
-                    Assert.True(createTrigger.Trigger.Equals(trigger, StringComparison.OrdinalIgnoreCase));
-                    Assert.True(createTrigger.Function.Equals(function, StringComparison.OrdinalIgnoreCase));
+                    Assert.Equal(createTrigger.Schema, schema, ignoreCase: true);
+                    Assert.Equal(createTrigger.Trigger, trigger, ignoreCase: true);
+                    Assert.Equal(createTrigger.Function, function, ignoreCase: true);
                 }
             }
         }

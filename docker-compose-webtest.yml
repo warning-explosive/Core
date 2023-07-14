@@ -57,7 +57,7 @@ services:
 
   # RabbitMQ
   rabbit:
-    image: rabbitmq:3.11.11-alpine
+    image: rabbitmq:3.12.1-alpine
     container_name: rabbit
     volumes:
       - ./docker-compose/rabbitmq/rabbitmq-enabled-plugins:/etc/rabbitmq/enabled_plugins
@@ -78,7 +78,7 @@ services:
 
   # Prometheus
   prometheus:
-    image: quay.io/prometheus/prometheus:v2.43.0
+    image: quay.io/prometheus/prometheus:v2.45.0
     container_name: prometheus
     command:
       - --web.console.templates=/etc/prometheus/consoles
@@ -102,11 +102,10 @@ services:
 
   # OpenTelemetry collector
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.74.0
+    image: otel/opentelemetry-collector-contrib:0.81.0
     container_name: otel-collector
     command:
       - --config=/etc/otel-collector-config.yaml
-      - --feature-gates=service.connectors
     volumes:
       - ./docker-compose/open-telemetry/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
@@ -122,7 +121,7 @@ services:
 
   # Jaeger
   jaeger:
-    image: jaegertracing/all-in-one:1.43.0
+    image: jaegertracing/all-in-one:1.47.0
     container_name: jaeger
     command:
       - "--memory.max-traces"
@@ -154,7 +153,7 @@ services:
 
   # Grafana
   grafana:
-    image: grafana/grafana:9.4.1
+    image: grafana/grafana:9.5.6
     container_name: grafana
     volumes:
       - ./docker-compose/grafana/grafana.ini:/etc/grafana/grafana.ini

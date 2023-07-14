@@ -32,7 +32,7 @@ jobs:
         ports:
           - 5432:5432
       rabbit_mq:
-        image: rabbitmq:3.11.11-management-alpine
+        image: rabbitmq:3.12.1-management-alpine
         ports:
           - 5672:5672
           - 15672:15672

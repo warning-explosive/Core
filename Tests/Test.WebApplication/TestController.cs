@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using GenericEndpoint.Contract.Attributes;
     using Microsoft.AspNetCore.Mvc;
     using RestSharp;
-    using Web.Api.Api;
+    using Web.Api;
     using Web.Api.Containers;
 
     /// <summary>

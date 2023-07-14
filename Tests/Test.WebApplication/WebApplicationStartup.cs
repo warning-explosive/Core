@@ -33,6 +33,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
         {
         }
 
+        // TODO: #225 - consider as separate template | project
         protected sealed override void ConfigureAspNetCoreServices(
             IServiceCollection serviceCollection,
             IConfiguration configuration)

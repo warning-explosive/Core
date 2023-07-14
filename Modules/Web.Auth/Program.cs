@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.Web.Auth
     /// <summary>
     /// Program
     /// </summary>
+    // TODO: #225 - remove dependency from integration transport
     public static class Program
     {
         /// <summary>

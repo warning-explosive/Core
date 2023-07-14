@@ -97,7 +97,6 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                     username,
                     new[]
                     {
-                        Features.EventSourcing,
                         nameof(MessageHandlerMiddlewareBenchmarkSource)
                     },
                     TimeSpan.FromSeconds(300));

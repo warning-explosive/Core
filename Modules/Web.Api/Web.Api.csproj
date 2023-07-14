@@ -44,18 +44,6 @@
       <Compile Update="Containers\StringDataContainer.cs">
         <DependentUpon>GenericDataContainer.cs</DependentUpon>
       </Compile>
-      <Compile Update="Api\CollectionResponse.cs">
-        <DependentUpon>BaseResponse.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Api\EmptyResponse.cs">
-        <DependentUpon>BaseResponse.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Api\ScalarResponse.cs">
-        <DependentUpon>BaseResponse.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Api\BaseResponse.cs">
-        <DependentUpon>IResponse.cs</DependentUpon>
-      </Compile>
       <Compile Update="Containers\DateTimeDataContainer.cs">
         <DependentUpon>GenericDataContainer.cs</DependentUpon>
       </Compile>
@@ -67,6 +55,18 @@
       </Compile>
       <Compile Update="Containers\DataContainersProvider.cs">
         <DependentUpon>IDataContainersProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="CollectionResponse.cs">
+        <DependentUpon>BaseResponse.cs</DependentUpon>
+      </Compile>
+      <Compile Update="EmptyResponse.cs">
+        <DependentUpon>BaseResponse.cs</DependentUpon>
+      </Compile>
+      <Compile Update="ScalarResponse.cs">
+        <DependentUpon>BaseResponse.cs</DependentUpon>
+      </Compile>
+      <Compile Update="BaseResponse.cs">
+        <DependentUpon>IResponse.cs</DependentUpon>
       </Compile>
     </ItemGroup>
     <ItemGroup>

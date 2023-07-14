@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Web.Auth
     using System.Net;
     using System.Net.Mime;
     using System.Threading.Tasks;
-    using Api.Api;
+    using Api;
     using Basics;
     using GenericEndpoint.Contract.Attributes;
     using Microsoft.AspNetCore.Mvc;

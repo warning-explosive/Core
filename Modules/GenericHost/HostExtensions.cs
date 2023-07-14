@@ -80,6 +80,8 @@ namespace SpaceEngineers.Core.GenericHost
             this IHostBuilder hostBuilder,
             DirectoryInfo settingsDirectory)
         {
+            // TODO: #225 - separate transport container from host container
+            // TODO: #225 - remove manual verification flag
             return hostBuilder.BuildHostInternal(settingsDirectory);
         }
 
@@ -153,8 +155,8 @@ namespace SpaceEngineers.Core.GenericHost
             {
                 return new HostedService(
                     Guid.NewGuid(),
+                    serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<HostedService>(),
                     serviceProvider.GetRequiredService<IHostApplicationLifetime>(),
-                    serviceProvider.GetRequiredService<ILoggerFactory>(),
                     serviceProvider.GetServices<IDependencyContainer>(),
                     serviceProvider.GetRequiredService<IHostStartupActionsRegistry>());
             }

@@ -21,6 +21,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RpcRequest
         /// <typeparam name="TRequest">TRequest type-argument</typeparam>
         /// <typeparam name="TReply">TReply type-argument</typeparam>
         /// <returns>Ongoing request operation</returns>
+        // TODO: #205 - implement http based rpc client (rest | grpc)
         public static async Task<TReply> RpcRequest<TRequest, TReply>(
             this IIntegrationContext integrationContext,
             TRequest request,

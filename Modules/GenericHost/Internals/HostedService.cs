@@ -27,14 +27,13 @@ namespace SpaceEngineers.Core.GenericHost.Internals
 
         public HostedService(
             Guid identifier,
+            ILogger logger,
             IHostApplicationLifetime hostApplicationLifetime,
-            ILoggerFactory loggerFactory,
             IEnumerable<IDependencyContainer> dependencyContainers,
             IHostStartupActionsRegistry hostStartupActionsRegistry)
         {
             Identifier = identifier;
-
-            Logger = loggerFactory.CreateLogger<HostedService>();
+            Logger = logger;
 
             _hostApplicationLifetime = hostApplicationLifetime;
             _dependencyContainers = dependencyContainers;

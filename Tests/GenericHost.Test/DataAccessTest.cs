@@ -1021,7 +1021,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     var authorizationToken = transportDependencyContainer
                         .Resolve<ITokenProvider>()
-                        .GenerateToken(username, new[] { AuthEndpoint.Contract.Features.Authentication, GenericEndpoint.EventSourcing.Features.EventSourcing }, TimeSpan.FromSeconds(60));
+                        .GenerateToken(username, new[] { AuthEndpoint.Contract.Features.Authentication }, TimeSpan.FromSeconds(60));
 
                     var initiatorMessage = transportDependencyContainer
                         .Resolve<IIntegrationMessageFactory>()

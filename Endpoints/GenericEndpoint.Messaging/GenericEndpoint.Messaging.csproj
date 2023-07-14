@@ -97,5 +97,8 @@
       <Compile Update="MessageHeaders\ReflectedType.cs">
         <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
       </Compile>
+      <Compile Update="MessageHeaders\TraceContext.cs">
+        <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

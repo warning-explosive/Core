@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.Web.Api.Api
+namespace SpaceEngineers.Core.Web.Api
 {
     using System;
     using System.Collections.Generic;

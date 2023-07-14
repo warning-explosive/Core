@@ -1,8 +1,7 @@
 namespace SpaceEngineers.Core.AutoRegistration.Api.Abstractions
 {
     /// <summary>
-    /// Represents initializable object
-    /// Initializable components can't be injected into another components as dependency, but can be resolved manually
+    /// Represents resolvable object that should be initialized manually with runtime data
     /// </summary>
     /// <typeparam name="TRunTimeInput">TRunTimeInput type-argument</typeparam>
     public interface IInitializable<in TRunTimeInput>

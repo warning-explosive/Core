@@ -47,4 +47,12 @@
       <ProjectReference Include="..\JwtAuthentication\JwtAuthentication.csproj" />
       <ProjectReference Include="..\Web.Api\Web.Api.csproj" />
     </ItemGroup>
+    <ItemGroup>
+      <Compile Update="WebApiConfigurationVerifier.cs">
+        <DependentUpon>IWebApiFeaturesProvider.cs</DependentUpon>
+      </Compile>
+      <Compile Update="CustomAuthorizationRequirement.cs">
+        <DependentUpon>CustomAuthorizationHandler.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

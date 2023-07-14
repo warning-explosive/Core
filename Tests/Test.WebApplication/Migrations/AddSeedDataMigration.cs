@@ -46,7 +46,6 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
             var domainEvents = new IDomainEvent<User>[]
             {
                 new UserWasCreated(aggregateId, new Username(username), salt, passwordHash),
-                new PermissionWasGranted(new Feature(GenericEndpoint.EventSourcing.Features.EventSourcing)),
                 new PermissionWasGranted(new Feature(AuthEndpoint.Contract.Features.Authentication)),
                 new PermissionWasGranted(new Feature(Features.WebApiTest))
             };

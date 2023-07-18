@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericHost
 {
     using System;
     using System.IO;
-    using System.Linq;
     using Api;
     using Api.Abstractions;
     using Basics;
@@ -31,8 +30,7 @@ namespace SpaceEngineers.Core.GenericHost
         public static SettingsDirectoryProvider GetSettingsDirectoryProvider(
             this IHostBuilder hostBuilder)
         {
-            if (hostBuilder.Properties.TryGetValue(nameof(SettingsDirectoryProvider), out var value)
-                && value is SettingsDirectoryProvider settingsDirectoryProvider)
+            if (hostBuilder.TryGetPropertyValue<SettingsDirectoryProvider>(nameof(SettingsDirectoryProvider), out var settingsDirectoryProvider))
             {
                 return settingsDirectoryProvider;
             }
@@ -48,8 +46,7 @@ namespace SpaceEngineers.Core.GenericHost
         public static IFrameworkDependenciesProvider GetFrameworkDependenciesProvider(
             this IHostBuilder hostBuilder)
         {
-            if (hostBuilder.Properties.TryGetValue(nameof(IFrameworkDependenciesProvider), out var value)
-                && value is IFrameworkDependenciesProvider frameworkDependenciesProvider)
+            if (hostBuilder.TryGetPropertyValue<IFrameworkDependenciesProvider>(nameof(IFrameworkDependenciesProvider), out var frameworkDependenciesProvider))
             {
                 return frameworkDependenciesProvider;
             }
@@ -66,7 +63,6 @@ namespace SpaceEngineers.Core.GenericHost
         {
             serviceProvider
                .GetServices<IDependencyContainer>()
-               .Distinct()
                .Each(dependencyContainer => ((DependencyContainer)dependencyContainer).Verify());
         }
 
@@ -130,14 +126,16 @@ namespace SpaceEngineers.Core.GenericHost
                 IHostBuilder hostBuilder,
                 DirectoryInfo settingsDirectory)
             {
-                hostBuilder.Properties[nameof(SettingsDirectoryProvider)] = new SettingsDirectoryProvider(settingsDirectory);
+                hostBuilder.SetPropertyValue(
+                    nameof(SettingsDirectoryProvider),
+                    new SettingsDirectoryProvider(settingsDirectory));
             }
 
             static FrameworkDependenciesProvider InitializeFrameworkDependenciesProvider(
                 IHostBuilder hostBuilder)
             {
                 var frameworkDependenciesProvider = new FrameworkDependenciesProvider();
-                hostBuilder.Properties[nameof(IFrameworkDependenciesProvider)] = frameworkDependenciesProvider;
+                hostBuilder.SetPropertyValue(nameof(IFrameworkDependenciesProvider), frameworkDependenciesProvider);
                 return frameworkDependenciesProvider;
             }
 

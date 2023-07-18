@@ -63,6 +63,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.EventSourci
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Authorization", "Endpoints\GenericEndpoint.Authorization\GenericEndpoint.Authorization.csproj", "{4EC8E902-24D7-4EC0-B886-AC76E9C73A54}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Telemetry", "Endpoints\GenericEndpoint.Telemetry\GenericEndpoint.Telemetry.csproj", "{29C52BD4-06D5-4C11-93AC-29E88351E05B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Host", "Endpoints\GenericEndpoint.Host\GenericEndpoint.Host.csproj", "{13D73582-68CF-43A1-B340-59BDB56AF69F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.DataAccess.Sql.Host", "Endpoints\GenericEndpoint.DataAccess.Sql.Host\GenericEndpoint.DataAccess.Sql.Host.csproj", "{1FCF0008-7443-460A-9467-0C1214875405}"
@@ -70,6 +72,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.EventSourcing.Host", "Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj", "{E3535BD7-4428-4289-9227-59154227FC08}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Authorization.Host", "Endpoints\GenericEndpoint.Authorization.Host\GenericEndpoint.Authorization.Host.csproj", "{C8EAFDC7-76E5-4022-9A23-795FD1C60027}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Telemetry.Host", "Endpoints\GenericEndpoint.Telemetry.Host\GenericEndpoint.Telemetry.Host.csproj", "{948CF169-F8C6-45E5-AEEB-78973C82F203}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.TestExtensions", "Endpoints\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj", "{8B3D2F61-04BF-422F-B466-FD74590412A0}"
 EndProject
@@ -357,6 +361,14 @@ Global
 		{E6CD349F-A556-4F90-8382-77A4AA0EEA80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E6CD349F-A556-4F90-8382-77A4AA0EEA80}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6CD349F-A556-4F90-8382-77A4AA0EEA80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29C52BD4-06D5-4C11-93AC-29E88351E05B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29C52BD4-06D5-4C11-93AC-29E88351E05B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29C52BD4-06D5-4C11-93AC-29E88351E05B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29C52BD4-06D5-4C11-93AC-29E88351E05B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{948CF169-F8C6-45E5-AEEB-78973C82F203}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{948CF169-F8C6-45E5-AEEB-78973C82F203}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{948CF169-F8C6-45E5-AEEB-78973C82F203}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{948CF169-F8C6-45E5-AEEB-78973C82F203}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -418,6 +430,8 @@ Global
 		{4EC8E902-24D7-4EC0-B886-AC76E9C73A54} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 		{C8EAFDC7-76E5-4022-9A23-795FD1C60027} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 		{E6CD349F-A556-4F90-8382-77A4AA0EEA80} = {CAB2EF9F-1D44-4B12-AA3D-BE2E508E0351}
+		{29C52BD4-06D5-4C11-93AC-29E88351E05B} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
+		{948CF169-F8C6-45E5-AEEB-78973C82F203} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

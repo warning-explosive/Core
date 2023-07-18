@@ -56,6 +56,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Verifiers
             var types = _registrations
                 .RegisteredComponents()
                 .Where(typeProvider.IsOurType)
+                .Where(type => !type.HasAttribute<ManuallyRegisteredComponentAttribute>())
                 .Where(HasWrongConstructor(initializableComponents, _options.ConstructorResolutionBehavior));
 
             foreach (var type in types)

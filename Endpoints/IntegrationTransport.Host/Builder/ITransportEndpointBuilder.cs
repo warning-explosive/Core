@@ -1,7 +1,6 @@
 ﻿namespace SpaceEngineers.Core.IntegrationTransport.Host.Builder
 {
     using GenericEndpoint.Host.Builder;
-    using Microsoft.Extensions.Hosting;
 
     /// <summary>
     /// ITransportEndpointBuilder
@@ -11,15 +10,13 @@
         /// <summary>
         /// With in-memory integration transport
         /// </summary>
-        /// <param name="hostBuilder">IHostBuilder</param>
         /// <returns>ITransportEndpointBuilder</returns>
-        public ITransportEndpointBuilder WithInMemoryIntegrationTransport(IHostBuilder hostBuilder);
+        public ITransportEndpointBuilder WithInMemoryIntegrationTransport();
 
         /// <summary>
         /// With RabbitMq integration transport
         /// </summary>
-        /// <param name="hostBuilder">IHostBuilder</param>
         /// <returns>ITransportEndpointBuilder</returns>
-        public ITransportEndpointBuilder WithRabbitMqIntegrationTransport(IHostBuilder hostBuilder);
+        public ITransportEndpointBuilder WithRabbitMqIntegrationTransport();
     }
 }

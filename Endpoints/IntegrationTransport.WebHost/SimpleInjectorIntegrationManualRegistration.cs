@@ -16,9 +16,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.WebHost
 
         public void Register(IManualRegistrationsContainer container)
         {
-            ((DependencyContainer)container.Advanced.Container).SuppressResolveWarnings();
+            ((DependencyContainer)container.Advanced.DependencyContainer).SuppressResolveWarnings();
 
-            var simpleInjector = ((DependencyContainer)container.Advanced.Container).Container;
+            var simpleInjector = ((DependencyContainer)container.Advanced.DependencyContainer).Container;
 
             _serviceCollection.AddSimpleInjector(
                 simpleInjector,

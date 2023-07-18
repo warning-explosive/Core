@@ -33,7 +33,9 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.4.0-rc.4" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.5.0-beta.1" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.5.0-beta.1" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.5.0" />
         <PackageReference Include="RestSharp" Version="110.2.0" />
         <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
           <PrivateAssets>all</PrivateAssets>
@@ -46,6 +48,7 @@
       <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Host\GenericEndpoint.DataAccess.Sql.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Telemetry.Host\GenericEndpoint.Telemetry.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\IntegrationTransport.WebHost\IntegrationTransport.WebHost.csproj" />
       <ProjectReference Include="..\..\Modules\Web.Api.Host\Web.Api.Host.csproj" />
     </ItemGroup>

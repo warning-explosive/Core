@@ -7,7 +7,6 @@ namespace SpaceEngineers.Core.AuthEndpoint.Host
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
     using Microsoft.Extensions.Hosting;
-    using SpaceEngineers.Core.GenericEndpoint.Contract;
 
     /// <summary>
     /// HostExtensions
@@ -32,8 +31,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Host
             };
 
             return hostBuilder.UseEndpoint(
-                new EndpointIdentity(Identity.LogicalName),
-                Identity.Assembly,
+                Identity.EndpointIdentity,
                 (context, endpointBuilder) => optionsFactory(endpointBuilder
                     .WithEndpointPluginAssemblies(assemblies)
                     .WithAuthorization(context.Configuration)));

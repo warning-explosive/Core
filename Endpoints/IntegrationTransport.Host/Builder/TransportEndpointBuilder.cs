@@ -8,7 +8,6 @@
     using GenericEndpoint.Host.Builder;
     using InMemory;
     using InMemory.Registrations;
-    using Microsoft.Extensions.Hosting;
     using RabbitMQ.Registrations;
     using Registrations;
 
@@ -19,7 +18,7 @@
         {
         }
 
-        public ITransportEndpointBuilder WithInMemoryIntegrationTransport(IHostBuilder hostBuilder)
+        public ITransportEndpointBuilder WithInMemoryIntegrationTransport()
         {
             var assembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(
@@ -47,7 +46,7 @@
             return this;
         }
 
-        public ITransportEndpointBuilder WithRabbitMqIntegrationTransport(IHostBuilder hostBuilder)
+        public ITransportEndpointBuilder WithRabbitMqIntegrationTransport()
         {
             var assembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(

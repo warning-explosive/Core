@@ -123,10 +123,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     var host = hostBuilder
                         .UseIntegrationTransport((_, builder) => builder
-                            .WithInMemoryIntegrationTransport(hostBuilder)
+                            .WithInMemoryIntegrationTransport()
                             .BuildOptions())
                         .UseEndpoint(TestIdentity.Endpoint10,
-                            TestIdentity.Endpoint1Assembly,
                             (_, builder) => builder
                                 .WithPostgreSqlDataAccess(options => options
                                     .ExecuteMigrations())

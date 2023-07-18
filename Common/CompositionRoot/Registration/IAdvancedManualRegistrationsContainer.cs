@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <summary>
         /// Dependency container implementation
         /// </summary>
-        IDependencyContainer Container { get; }
+        IDependencyContainer DependencyContainer { get; }
 
         /// <summary> Registers instance producer </summary>
         /// <param name="instanceProducer">Instance producer</param>

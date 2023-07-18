@@ -21,7 +21,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             DependencyContainer container,
             ITypeProvider typeProvider)
         {
-            Container = container;
+            DependencyContainer = container;
             Types = typeProvider;
 
             _instances = new List<InstanceRegistrationInfo>();
@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             _decorators = new List<DecoratorRegistrationInfo>();
         }
 
-        public IDependencyContainer Container { get; }
+        public IDependencyContainer DependencyContainer { get; }
 
         #region IRegistrationsContainer
 

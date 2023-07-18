@@ -3,12 +3,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
     using System;
     using System.Reflection;
     using CompositionRoot;
+    using Contract;
 
     /// <summary>
     /// IEndpointBuilder
     /// </summary>
     public interface IEndpointBuilder
     {
+        /// <summary>
+        /// Endpoint identity
+        /// </summary>
+        EndpointIdentity EndpointIdentity { get; }
+
         /// <summary>
         /// With endpoint plugin assemblies
         /// </summary>

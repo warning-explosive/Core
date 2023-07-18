@@ -8,14 +8,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using Basics.Attributes;
     using Messaging.MessageHeaders;
 
     /// <summary>
     /// ErrorHandlingMiddleware
     /// </summary>
     [Component(EnLifestyle.Singleton)]
-    [After(typeof(TracingMiddleware))]
     public class ErrorHandlingMiddleware : IMessageHandlerMiddleware,
                                            ICollectionResolvable<IMessageHandlerMiddleware>
     {

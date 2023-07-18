@@ -26,7 +26,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
         public IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> Modifiers { get; protected set; }
 
-        protected EndpointIdentity EndpointIdentity { get; }
+        public EndpointIdentity EndpointIdentity { get; }
 
         public IEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies)
         {

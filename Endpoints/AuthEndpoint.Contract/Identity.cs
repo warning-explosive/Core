@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract
 {
     using System.Reflection;
     using Basics;
+    using GenericEndpoint.Contract;
 
     /// <summary>
     /// Identity
@@ -16,10 +17,15 @@ namespace SpaceEngineers.Core.AuthEndpoint.Contract
         /// <summary>
         /// AuthEndpoint assembly
         /// </summary>
-        public static readonly Assembly Assembly = AssembliesExtensions.FindRequiredAssembly(
+        public static Assembly Assembly { get; } = AssembliesExtensions.FindRequiredAssembly(
             AssembliesExtensions.BuildName(
                 nameof(SpaceEngineers),
                 nameof(Core),
                 nameof(AuthEndpoint)));
+
+        /// <summary>
+        /// AuthEndpoint identity
+        /// </summary>
+        public static EndpointIdentity EndpointIdentity { get; } = new EndpointIdentity(LogicalName, Assembly);
     }
 }

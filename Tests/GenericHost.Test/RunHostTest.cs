@@ -65,7 +65,7 @@
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 static hostBuilder => hostBuilder
                    .UseIntegrationTransport((_, builder) => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .WithInMemoryIntegrationTransport()
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration()))
                        .BuildOptions()));
@@ -73,7 +73,7 @@
             var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 static hostBuilder => hostBuilder
                    .UseIntegrationTransport((_, builder) => builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .WithRabbitMqIntegrationTransport()
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration())
                            .WithManualRegistrations(new MessagesCollectorManualRegistration()))
@@ -121,7 +121,6 @@
 
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes))
@@ -198,7 +197,6 @@
 
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes))
@@ -272,7 +270,6 @@
 
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes))
@@ -347,7 +344,6 @@
 
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
@@ -466,13 +462,11 @@
 
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
                         .BuildOptions())
                 .UseEndpoint(TestIdentity.Endpoint20,
-                    TestIdentity.Endpoint2Assembly,
                     (_, builder) => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
@@ -524,9 +518,7 @@
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var host = useTransport(Fixture.CreateHostBuilder())
-                .UseEndpoint(
-                    TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
+                .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => builder.BuildOptions())
                 .BuildHost(settingsDirectory);
 

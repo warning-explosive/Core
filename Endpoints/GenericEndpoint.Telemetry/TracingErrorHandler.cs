@@ -1,13 +1,14 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
+namespace SpaceEngineers.Core.GenericEndpoint.Telemetry
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoRegistration.Api.Abstractions;
-    using AutoRegistration.Api.Attributes;
-    using AutoRegistration.Api.Enumerations;
     using Basics.Attributes;
     using OpenTelemetry.Trace;
+    using Pipeline;
+    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
+    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
+    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
 
     [Component(EnLifestyle.Singleton)]
     [After(typeof(RetryErrorHandler))]

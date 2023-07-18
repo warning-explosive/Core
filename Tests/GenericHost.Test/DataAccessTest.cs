@@ -89,7 +89,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder>(
                 static (hostBuilder, options) => hostBuilder
                    .UseIntegrationTransport((context, builder) => options(context, builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .WithInMemoryIntegrationTransport()
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())))
                        .BuildOptions()));
@@ -97,7 +97,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var useRabbitMqIntegrationTransport = new Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder>(
                 static (hostBuilder, options) => hostBuilder
                    .UseIntegrationTransport((context, builder) => options(context, builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .WithRabbitMqIntegrationTransport()
                        .ModifyContainerOptions(options => options
                            .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration())
                            .WithManualRegistrations(new MessagesCollectorManualRegistration())))
@@ -178,7 +178,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .ModifyContainerOptions(options => options
                             .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
@@ -264,7 +263,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .ModifyContainerOptions(options => options
                             .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
@@ -534,7 +532,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .ModifyContainerOptions(options => options
                             .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
@@ -825,7 +822,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .ModifyContainerOptions(options => options
                             .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
@@ -1119,7 +1115,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .ModifyContainerOptions(options => options
                             .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)

@@ -39,6 +39,19 @@ namespace SpaceEngineers.Core.Basics
             = new Lazy<(Assembly[] OurAssemblies, Assembly[] AllAssemblies)>(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
 
         /// <summary>
+        /// Gets assembly version
+        /// </summary>
+        /// <param name="assembly">Assembly</param>
+        /// <returns>Assembly version</returns>
+        public static string GetAssemblyVersion(this Assembly assembly)
+        {
+            return assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version
+                   ?? assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
+                   ?? assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                   ?? "1.0.0.0";
+        }
+
+        /// <summary>
         /// Build name
         /// </summary>
         /// <param name="nameParts">Name parts</param>

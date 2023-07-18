@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Contract
 {
     using System;
+    using System.Reflection;
+    using System.Text.Json.Serialization;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics;
@@ -14,11 +16,23 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
                                     IResolvable<EndpointIdentity>
     {
         /// <summary> .cctor </summary>
+        [JsonConstructor]
+        [Obsolete("serialization constructor")]
+        public EndpointIdentity()
+        {
+            LogicalName = default!;
+            InstanceName = default!;
+            Version = default!;
+        }
+
+        /// <summary> .cctor </summary>
         /// <param name="logicalName">Endpoint logical name</param>
-        public EndpointIdentity(string logicalName)
+        /// <param name="assembly">Assembly</param>
+        public EndpointIdentity(string logicalName, Assembly assembly)
         {
             LogicalName = logicalName;
             InstanceName = Guid.NewGuid().ToString();
+            Version = assembly.GetAssemblyVersion();
         }
 
         /// <summary>
@@ -30,6 +44,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
         /// Endpoint instance name
         /// </summary>
         public string InstanceName { get; init; }
+
+        /// <summary>
+        /// Endpoint version
+        /// </summary>
+        public string Version { get; init; }
 
         #region IEquatable
 
@@ -59,7 +78,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
         public bool SafeEquals(EndpointIdentity other)
         {
             return LogicalName.Equals(other.LogicalName, StringComparison.OrdinalIgnoreCase)
-                   && InstanceName.Equals(other.InstanceName, StringComparison.OrdinalIgnoreCase);
+                   && InstanceName.Equals(other.InstanceName, StringComparison.OrdinalIgnoreCase)
+                   && Version.Equals(other.Version, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <inheritdoc />
@@ -77,7 +97,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return HashCode.Combine(LogicalName, InstanceName);
+            return HashCode.Combine(
+                LogicalName.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                InstanceName.GetHashCode(StringComparison.OrdinalIgnoreCase),
+                Version.GetHashCode(StringComparison.OrdinalIgnoreCase));
         }
 
         #endregion
@@ -85,7 +108,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{LogicalName}:{InstanceName}";
+            return $"{LogicalName}:{InstanceName}:{Version}";
         }
     }
 }

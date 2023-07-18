@@ -4,13 +4,13 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Host</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Host</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Telemetry</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Telemetry</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.GenericEndpoint.Host</Title>
+        <Title>SpaceEngineers.Core.GenericEndpoint.Telemetry</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.GenericEndpoint.Host</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.GenericEndpoint.Telemetry</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -28,23 +28,17 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
-      <ProjectReference Include="..\..\Modules\GenericHost\GenericHost.csproj" />
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="OpenTelemetry.Api" Version="1.5.1" />
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Update="Builder\EndpointBuilder.cs">
-        <DependentUpon>IEndpointBuilder.cs</DependentUpon>
-      </Compile>
     </ItemGroup>
 </Project>

@@ -37,6 +37,8 @@
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Pipeline;
     using GenericEndpoint.RpcRequest;
+    using GenericEndpoint.Telemetry;
+    using GenericEndpoint.Telemetry.Host;
     using GenericHost;
     using IntegrationTransport.Host;
     using IntegrationTransport.Host.BackgroundWorkers;
@@ -85,13 +87,15 @@
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 hostBuilder => hostBuilder
                    .UseIntegrationTransport((_, builder) => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .WithInMemoryIntegrationTransport()
+                       .WithOpenTelemetry() // TODO: #225 - remove
                        .BuildOptions()));
 
             var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 hostBuilder => hostBuilder
                    .UseIntegrationTransport((_, builder) => builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .WithRabbitMqIntegrationTransport()
+                       .WithOpenTelemetry() // TODO: #225 - remove
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -126,13 +130,13 @@
             var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 static hostBuilder => hostBuilder
                    .UseIntegrationTransport((_, builder) => builder
-                       .WithInMemoryIntegrationTransport(hostBuilder)
+                       .WithInMemoryIntegrationTransport()
                        .BuildOptions()));
 
             var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
                 static hostBuilder => hostBuilder
                    .UseIntegrationTransport((_, builder) => builder
-                       .WithRabbitMqIntegrationTransport(hostBuilder)
+                       .WithRabbitMqIntegrationTransport()
                        .BuildOptions()));
 
             var integrationTransportProviders = new[]
@@ -196,11 +200,9 @@
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => builder.BuildOptions())
                 .UseEndpoint(
                     TestIdentity.Endpoint20,
-                    TestIdentity.Endpoint2Assembly,
                     (_, builder) => builder.BuildOptions())
                 .BuildHost(settingsDirectory);
 
@@ -245,13 +247,14 @@
                .ToArray();
 
             var host = useTransport(Fixture.CreateHostBuilder())
+                .UseOpenTelemetryLogger(TestIdentity.Endpoint10)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (context, builder) => builder
                         .WithPostgreSqlDataAccess(options => options
                             .ExecuteMigrations())
                         .WithSqlEventSourcing()
                         .WithAuthorization(context.Configuration)
+                        .WithOpenTelemetry()
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes))
                         .BuildOptions())
@@ -685,10 +688,10 @@
 
                 var expectedUserScopeProviders = new[]
                 {
-                    typeof(TraceContextPropagationProvider),
                     typeof(ConversationIdProvider),
                     typeof(MessageInitiatorProvider),
                     typeof(MessageOriginProvider),
+                    typeof(TraceContextPropagationProvider),
                     typeof(UserScopeProvider),
                     typeof(AnonymousUserScopeProvider)
                 };
@@ -719,7 +722,6 @@
 
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(startupActions))
@@ -797,7 +799,6 @@
 
             var host = useTransport(Fixture.CreateHostBuilder())
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    TestIdentity.Endpoint1Assembly,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)

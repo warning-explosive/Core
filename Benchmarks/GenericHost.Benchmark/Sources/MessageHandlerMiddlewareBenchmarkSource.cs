@@ -15,12 +15,13 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using GenericEndpoint.Authorization.Host;
     using GenericEndpoint.Contract;
     using GenericEndpoint.DataAccess.Sql.Host;
-    using GenericEndpoint.EventSourcing;
     using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
     using GenericEndpoint.Pipeline;
+    using GenericEndpoint.Telemetry;
+    using GenericEndpoint.Telemetry.Host;
     using IntegrationTransport.Host;
     using IntegrationTransport.RabbitMQ;
     using JwtAuthentication;
@@ -56,8 +57,6 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         {
             _cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
-            var hostBuilder = new TestFixture().CreateHostBuilder();
-
             var solutionFileDirectory = SolutionExtensions.SolutionFile().Directory
                                         ?? throw new InvalidOperationException("Solution directory wasn't found");
 
@@ -67,19 +66,25 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                 .StepInto("Settings")
                 .StepInto(nameof(MessageHandlerMiddlewareBenchmarkSource));
 
-            _host = hostBuilder
+            var endpointIdentity = new EndpointIdentity(
+                    nameof(MessageHandlerMiddlewareBenchmarkSource),
+                    Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly"));
+
+            _host = new TestFixture()
+                .CreateHostBuilder()
                 .UseIntegrationTransport((context, builder) => builder
-                    .WithInMemoryIntegrationTransport(hostBuilder)
+                    .WithInMemoryIntegrationTransport()
                     .WithAuthorization(context.Configuration)
+                    .WithOpenTelemetry()
                     .BuildOptions())
-                .UseEndpoint(
-                    new EndpointIdentity(nameof(MessageHandlerMiddlewareBenchmarkSource)),
-                    Assembly.GetEntryAssembly() !,
+                .UseOpenTelemetryLogger(endpointIdentity)
+                .UseEndpoint(endpointIdentity,
                     (context, builder) => builder
                     .WithPostgreSqlDataAccess(options => options
                         .ExecuteMigrations())
                     .WithSqlEventSourcing()
                     .WithAuthorization(context.Configuration)
+                    .WithOpenTelemetry()
                     .ModifyContainerOptions(options => options
                         .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostStartupAction)))
                     .BuildOptions())

@@ -71,13 +71,15 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                 .Concat(startupActions)
                 .ToArray();
 
+            var endpointIdentity = new EndpointIdentity(
+                nameof(DatabaseConnectionProviderBenchmarkSource),
+                Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly"));
+
             _host = hostBuilder
                 .UseIntegrationTransport((_, builder) => builder
-                    .WithInMemoryIntegrationTransport(hostBuilder)
+                    .WithInMemoryIntegrationTransport()
                     .BuildOptions())
-                .UseEndpoint(
-                    new EndpointIdentity(nameof(DatabaseConnectionProviderBenchmarkSource)),
-                    Assembly.GetEntryAssembly() !,
+                .UseEndpoint(endpointIdentity,
                     (_, builder) => builder
                     .WithPostgreSqlDataAccess(options => options
                         .ExecuteMigrations())

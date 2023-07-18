@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
+namespace SpaceEngineers.Core.GenericEndpoint.Telemetry
 {
     using System.Collections.Generic;
     using Messaging;

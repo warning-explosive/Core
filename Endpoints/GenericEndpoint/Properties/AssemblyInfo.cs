@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: AssemblyInformationalVersion("1.0.0.0")]
 
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Telemetry")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Host")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport.Host")]
 

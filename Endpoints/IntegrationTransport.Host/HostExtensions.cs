@@ -1,8 +1,6 @@
 namespace SpaceEngineers.Core.IntegrationTransport.Host
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Metrics;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -13,9 +11,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using Basics.Primitives;
     using Builder;
     using CompositionRoot;
+    using CompositionRoot.Registration;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Endpoint;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
     using GenericEndpoint.Host.Registrations;
@@ -23,9 +21,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     using GenericHost.Api;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using OpenTelemetry.Metrics;
-    using OpenTelemetry.Resources;
-    using OpenTelemetry.Trace;
     using Overrides;
     using Registrations;
 
@@ -117,19 +112,22 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         {
             hostBuilder.CheckMultipleCalls(nameof(UseIntegrationTransport));
 
-            var endpointIdentity = new EndpointIdentity(logicalName.IsNullOrWhiteSpace() ? Identity.LogicalName : logicalName);
+            // TODO: #225 - rethink transport as endpoint approach, move transport into separate assembly
+            var assembly = Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly");
+
+            logicalName = logicalName.IsNullOrWhiteSpace() ? Identity.LogicalName : logicalName;
+
+            var endpointIdentity = new EndpointIdentity(logicalName, assembly);
 
             hostBuilder.CheckDuplicates(endpointIdentity);
 
-            var assembly = Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly");
-
-            var builder = ConfigureBuilder(hostBuilder, endpointIdentity, assembly);
+            var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
 
             var options = optionsFactory(context, builder);
 
             var dependencyContainer = BuildDependencyContainer(options);
 
-            hostBuilder.Properties[nameof(IIntegrationTransport)] = new IntegrationTransportInjectionManualRegistration(dependencyContainer);
+            SetIntegrationTransportInjection(hostBuilder, dependencyContainer);
 
             return serviceCollection =>
             {
@@ -154,8 +152,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 
         private static ITransportEndpointBuilder ConfigureBuilder(
             IHostBuilder hostBuilder,
-            EndpointIdentity endpointIdentity,
-            Assembly assembly)
+            EndpointIdentity endpointIdentity)
         {
             var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(
@@ -165,20 +162,26 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
 
             var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
-            var telemetry = SetupTelemetry(endpointIdentity, assembly);
+
+            // TODO: #225 - rethink transport as endpoint approach, move transport into separate assembly
+            var plugins = GetPlugins(hostBuilder);
+            var injections = GetInjections(hostBuilder)
+                .Where(registration => registration is not IntegrationTransportInjectionManualRegistration)
+                .ToArray();
 
             return (ITransportEndpointBuilder)new TransportEndpointBuilder(endpointIdentity)
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
+               .WithEndpointPluginAssemblies(plugins)
                .ModifyContainerOptions(options => options
                    .WithAdditionalOurTypes(GetIntegrationTypes())
                    .WithManualRegistrations(
                        new GenericEndpointIdentityManualRegistration(endpointIdentity),
                        new SettingsProviderManualRegistration(settingsDirectoryProvider),
                        new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
-                       new TelemetryManualRegistration(telemetry),
                        new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
                        new GenericEndpointHostStartupActionManualRegistration(),
                        new IntegrationTransportHostBackgroundWorkerManualRegistration())
+                   .WithManualRegistrations(injections)
                    .WithOverrides(new IntegrationTransportOverride())
                    .WithManualVerification(true));
         }
@@ -211,50 +214,27 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                 .ToArray();
         }
 
-        [SuppressMessage("Analysis", "CA2000", Justification = "Meter will be disposed in outer scope by dependency container")]
-        private static ITelemetry SetupTelemetry(
-            EndpointIdentity endpointIdentity,
-            Assembly assembly)
+        private static Assembly[] GetPlugins(this IHostBuilder hostBuilder)
         {
-            var serviceName = endpointIdentity.LogicalName;
+            return hostBuilder.TryGetPropertyValue<Assembly[]>(nameof(Assembly), out var plugins)
+                ? plugins
+                : Array.Empty<Assembly>();
+        }
 
-            var version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version
-                          ?? assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
-                          ?? assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                          ?? "1.0.0.0";
+        private static IManualRegistration[] GetInjections(this IHostBuilder hostBuilder)
+        {
+            return hostBuilder.TryGetPropertyValue<IManualRegistration[]>(nameof(IManualRegistration), out var injections)
+                ? injections
+                : Array.Empty<IManualRegistration>();
+        }
 
-            var resourceBuilder = ResourceBuilder
-                .CreateDefault()
-                .AddService(
-                    serviceVersion: version,
-                    serviceName: endpointIdentity.LogicalName,
-                    serviceInstanceId: endpointIdentity.InstanceName,
-                    autoGenerateServiceInstanceId: false);
-
-            var tracerProvider = OpenTelemetry.Sdk
-                .CreateTracerProviderBuilder()
-                .SetResourceBuilder(resourceBuilder)
-                .AddSource(serviceName)
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddOtlpExporter()
-                .Build();
-
-            var meterProvider = OpenTelemetry.Sdk
-                .CreateMeterProviderBuilder()
-                .SetResourceBuilder(resourceBuilder)
-                .AddMeter(serviceName)
-                .AddRuntimeInstrumentation()
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddOtlpExporter()
-                .Build();
-
-            return new Telemetry(
-                tracerProvider!,
-                tracerProvider.GetTracer(serviceName, version),
-                meterProvider!,
-                new Meter(serviceName, version));
+        private static void SetIntegrationTransportInjection(
+            IHostBuilder hostBuilder,
+            IDependencyContainer dependencyContainer)
+        {
+            hostBuilder.AppendPropertyValue<IManualRegistration>(
+                nameof(IManualRegistration),
+                new IntegrationTransportInjectionManualRegistration(dependencyContainer));
         }
     }
 }

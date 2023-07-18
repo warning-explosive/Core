@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.Metrics;
     using System.Linq;
     using System.Reflection;
     using Basics;
@@ -10,14 +9,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using CompositionRoot;
     using CompositionRoot.Registration;
     using Contract;
-    using Endpoint;
     using GenericHost;
-    using IntegrationTransport.Api.Abstractions;
+    using GenericHost.Api;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using OpenTelemetry.Metrics;
-    using OpenTelemetry.Resources;
-    using OpenTelemetry.Trace;
     using Registrations;
 
     /// <summary>
@@ -26,8 +21,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     public static class HostExtensions
     {
         private const string EndpointDuplicatesWasFound = "Endpoint duplicates was found: {0}. Horizontal scaling in the same process doesn't make sense.";
-        private const string RequireUseTransportCall = ".UseIntegrationTransport() should be called before any endpoint declarations. {0}";
-        private const string RequireTransportInjection = "Unable to find IIntegrationTransport injection.";
         private const string RequireUseEndpointCall = ".UseEndpoint() with identity {0} should be called during host declaration";
 
         /// <summary>
@@ -96,20 +89,18 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="endpointIdentity">Endpoint identity</param>
-        /// <param name="assembly">Endpoint assembly (composition root or executable)</param>
         /// <param name="optionsFactory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseEndpoint(
             this IHostBuilder hostBuilder,
             EndpointIdentity endpointIdentity,
-            Assembly assembly,
             Func<HostBuilderContext, IEndpointBuilder, EndpointOptions> optionsFactory)
         {
             hostBuilder.CheckDuplicates(endpointIdentity);
 
             return hostBuilder.ConfigureServices((context, serviceCollection) =>
             {
-                var builder = ConfigureBuilder(hostBuilder, endpointIdentity, assembly);
+                var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
 
                 var options = optionsFactory(context, builder);
 
@@ -121,14 +112,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
         internal static void CheckDuplicates(this IHostBuilder hostBuilder, EndpointIdentity endpointIdentity)
         {
-            if (!hostBuilder.Properties.TryGetValue(nameof(EndpointIdentity), out var value)
-                || value is not Dictionary<string, EndpointIdentity> endpointIdentities)
+            if (!hostBuilder.TryGetPropertyValue<Dictionary<string, EndpointIdentity>>(nameof(EndpointIdentity), out var endpoints))
             {
-                endpointIdentities = new Dictionary<string, EndpointIdentity>(StringComparer.OrdinalIgnoreCase);
-                hostBuilder.Properties[nameof(EndpointIdentity)] = endpointIdentities;
+                endpoints = new Dictionary<string, EndpointIdentity>(StringComparer.OrdinalIgnoreCase);
+                hostBuilder.SetPropertyValue(nameof(EndpointIdentity), endpoints);
             }
 
-            if (!endpointIdentities.TryAdd(endpointIdentity.LogicalName, endpointIdentity))
+            if (!endpoints.TryAdd(endpointIdentity.LogicalName, endpointIdentity))
             {
                 throw new InvalidOperationException(EndpointDuplicatesWasFound.Format(endpointIdentity.LogicalName));
             }
@@ -143,8 +133,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
         private static IEndpointBuilder ConfigureBuilder(
             IHostBuilder hostBuilder,
-            EndpointIdentity endpointIdentity,
-            Assembly assembly)
+            EndpointIdentity endpointIdentity)
         {
             var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(
@@ -152,74 +141,37 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                     nameof(Core),
                     nameof(CrossCuttingConcerns)));
 
-            var integrationTransportInjection = hostBuilder.GetIntegrationTransportInjection();
             var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
             var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
-            var telemetry = SetupTelemetry(endpointIdentity, assembly);
+            var plugins = hostBuilder.GetPlugins();
+            var injections = hostBuilder.GetInjections();
 
             return new EndpointBuilder(endpointIdentity)
                .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
+               .WithEndpointPluginAssemblies(plugins)
                .ModifyContainerOptions(options => options
                    .WithManualRegistrations(
-                       integrationTransportInjection,
                        new GenericEndpointIdentityManualRegistration(endpointIdentity),
                        new SettingsProviderManualRegistration(settingsDirectoryProvider),
                        new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
-                       new TelemetryManualRegistration(telemetry),
                        new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
                        new GenericEndpointHostStartupActionManualRegistration())
+                   .WithManualRegistrations(injections)
                    .WithManualVerification(true));
         }
 
-        private static IManualRegistration GetIntegrationTransportInjection(this IHostBuilder hostBuilder)
+        private static Assembly[] GetPlugins(this IHostBuilder hostBuilder)
         {
-            if (hostBuilder.Properties.TryGetValue(nameof(IIntegrationTransport), out var value)
-                && value is IManualRegistration injection)
-            {
-                return injection;
-            }
-
-            throw new InvalidOperationException(RequireUseTransportCall.Format(RequireTransportInjection));
+            return hostBuilder.TryGetPropertyValue<Assembly[]>(nameof(Assembly), out var plugins)
+                ? plugins
+                : Array.Empty<Assembly>();
         }
 
-        private static ITelemetry SetupTelemetry(
-            EndpointIdentity endpointIdentity,
-            Assembly assembly)
+        private static IManualRegistration[] GetInjections(this IHostBuilder hostBuilder)
         {
-            var serviceName = endpointIdentity.LogicalName;
-
-            var version = assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version
-                          ?? assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
-                          ?? assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                          ?? "1.0.0.0";
-
-            var resourceBuilder = ResourceBuilder
-                .CreateDefault()
-                .AddService(
-                    serviceVersion: version,
-                    serviceName: endpointIdentity.LogicalName,
-                    serviceInstanceId: endpointIdentity.InstanceName,
-                    autoGenerateServiceInstanceId: false);
-
-            var tracerProvider = OpenTelemetry.Sdk
-                .CreateTracerProviderBuilder()
-                .SetResourceBuilder(resourceBuilder)
-                .AddSource(serviceName)
-                .AddOtlpExporter()
-                .Build();
-
-            var meterProvider = OpenTelemetry.Sdk
-                .CreateMeterProviderBuilder()
-                .SetResourceBuilder(resourceBuilder)
-                .AddMeter(serviceName)
-                .AddOtlpExporter()
-                .Build();
-
-            return new Telemetry(
-                tracerProvider!,
-                tracerProvider.GetTracer(serviceName, version),
-                meterProvider!,
-                new Meter(serviceName, version));
+            return hostBuilder.TryGetPropertyValue<IManualRegistration[]>(nameof(IManualRegistration), out var injections)
+                ? injections
+                : Array.Empty<IManualRegistration>();
         }
     }
 }

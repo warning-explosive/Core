@@ -48,6 +48,8 @@
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Authorization.Host\GenericEndpoint.Authorization.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Host\GenericEndpoint.DataAccess.Sql.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Telemetry.Host\GenericEndpoint.Telemetry.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Telemetry\GenericEndpoint.Telemetry.csproj" />
       <ProjectReference Include="..\..\Endpoints\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
       <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
       <ProjectReference Include="..\Benchmark.Api\Benchmark.Api.csproj" />

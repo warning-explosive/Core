@@ -2,8 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
-    using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
-    using SpaceEngineers.Core.DataAccess.Orm.Sql.Model.Attributes;
+    using DataAccess.Orm.Sql.Model;
+    using DataAccess.Orm.Sql.Model.Attributes;
 
     [Schema(nameof(GenericHost) + nameof(Test))]
     internal record Blog : BaseDatabaseEntity<Guid>

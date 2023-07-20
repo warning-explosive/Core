@@ -29,9 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
-      <ProjectReference Include="..\..\Modules\GenericHost.Api\GenericHost.Api.csproj" />
-      <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
-      <ProjectReference Include="..\IntegrationTransport\IntegrationTransport.csproj" />
+      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
       <ProjectReference Include="..\IntegrationTransport.InMemory\IntegrationTransport.InMemory.csproj" />
       <ProjectReference Include="..\IntegrationTransport.RabbitMQ\IntegrationTransport.RabbitMQ.csproj" />
     </ItemGroup>
@@ -45,10 +43,5 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Update="Builder\TransportEndpointBuilder.cs">
-        <DependentUpon>ITransportEndpointBuilder.cs</DependentUpon>
-      </Compile>
     </ItemGroup>
 </Project>

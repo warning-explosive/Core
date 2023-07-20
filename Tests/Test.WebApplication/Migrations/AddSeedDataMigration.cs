@@ -11,11 +11,11 @@ namespace SpaceEngineers.Core.Test.WebApplication.Migrations
     using Basics.Attributes;
     using CompositionRoot;
     using DataAccess.Orm.Sql.Linq;
+    using DataAccess.Orm.Sql.Migrations.Internals;
     using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Transaction;
     using GenericDomain.Api.Abstractions;
     using GenericDomain.EventSourcing;
-    using SpaceEngineers.Core.DataAccess.Orm.Sql.Host.Migrations;
 
     [Component(EnLifestyle.Singleton)]
     [After(typeof(ApplyDeltaMigration))]

@@ -101,7 +101,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             var selectionContext = new TypeArgumentSelectionContext(genericType, typeArgument, matches, resolved);
 
             return selector(selectionContext)
-                   ?? throw new InvalidOperationException($"Satisfying type for type argument {typeArgument} in {genericType} not found");
+                   ?? throw new InvalidOperationException($"Satisfying type for type argument {typeArgument} in {genericType} wasn't found");
         }
     }
 }

@@ -34,7 +34,6 @@ namespace SpaceEngineers.Core.CompositionRoot
 
         public TypeProvider(
             IReadOnlyCollection<Assembly> assemblies,
-            IReadOnlyCollection<Assembly> excludedAssemblies,
             IReadOnlyCollection<string> excludedNamespaces,
             IReadOnlyCollection<Type> additionalOurTypes)
         {
@@ -60,7 +59,6 @@ namespace SpaceEngineers.Core.CompositionRoot
                .ToList();
 
             OurAssemblies = ourLoadedAssemblies
-               .Where(assembly => !excludedAssemblies.Contains(assembly))
                .Where(isOurReference)
                .ToList();
 

@@ -12,7 +12,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
     using Messaging.MessageHeaders;
-    using RpcRequest;
 
     [Component(EnLifestyle.Scoped)]
     internal class AdvancedIntegrationContext : IAdvancedIntegrationContext,
@@ -22,7 +21,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IIntegrationMessageFactory _factory;
         private readonly IIntegrationTransport _transport;
-        private readonly IRpcRequestRegistry _rpcRequestRegistry;
         private readonly IMessagesCollector _messagesCollector;
 
         private IntegrationMessage? _message;
@@ -31,13 +29,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             EndpointIdentity endpointIdentity,
             IIntegrationMessageFactory factory,
             IIntegrationTransport transport,
-            IRpcRequestRegistry rpcRequestRegistry,
             IMessagesCollector messagesCollector)
         {
             _endpointIdentity = endpointIdentity;
             _factory = factory;
             _transport = transport;
-            _rpcRequestRegistry = rpcRequestRegistry;
             _messagesCollector = messagesCollector;
         }
 
@@ -90,6 +86,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             return _messagesCollector.Collect(CreateGeneralMessage(request, typeof(TRequest)), token);
         }
 
+        public Task<TReply> RpcRequest<TRequest, TReply>(TRequest request, CancellationToken token)
+            where TRequest : IIntegrationRequest<TReply>
+            where TReply : IIntegrationReply
+        {
+            var message = CreateGeneralMessage(request, typeof(TRequest));
+
+            throw new NotImplementedException("#225");
+        }
+
         public Task Reply<TRequest, TReply>(TRequest request, TReply reply, CancellationToken token)
             where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
@@ -97,19 +102,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             var message = CreateGeneralMessage(reply, typeof(TReply), new ReplyTo(Message.ReadRequiredHeader<SentFrom>().Value));
 
             return _messagesCollector.Collect(message, token);
-        }
-
-        public (IntegrationMessage request, Task<IntegrationMessage> replyTask) EnrollRpcRequest<TRequest, TReply>(
-            TRequest request,
-            CancellationToken token)
-            where TRequest : IIntegrationRequest<TReply>
-            where TReply : IIntegrationReply
-        {
-            var message = CreateGeneralMessage(request, typeof(TRequest));
-
-            var requestId = message.ReadRequiredHeader<Id>().Value;
-
-            return (message, _rpcRequestRegistry.Enroll(requestId, token));
         }
 
         public Task<bool> SendMessage(IntegrationMessage message, CancellationToken token)

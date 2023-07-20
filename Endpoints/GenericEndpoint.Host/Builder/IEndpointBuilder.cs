@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 {
     using System;
-    using System.Reflection;
     using CompositionRoot;
     using Contract;
 
@@ -14,13 +13,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         /// Endpoint identity
         /// </summary>
         EndpointIdentity EndpointIdentity { get; }
-
-        /// <summary>
-        /// With endpoint plugin assemblies
-        /// </summary>
-        /// <param name="assemblies">Endpoint plugin assemblies</param>
-        /// <returns>IEndpointBuilder</returns>
-        public IEndpointBuilder WithEndpointPluginAssemblies(params Assembly[] assemblies);
 
         /// <summary>
         /// Modify container options

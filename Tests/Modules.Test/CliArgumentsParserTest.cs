@@ -22,11 +22,15 @@ namespace SpaceEngineers.Core.Modules.Test
         public CliArgumentsParserTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser)));
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser)))
+            };
 
-            var options = new DependencyContainerOptions();
+            var options = new DependencyContainerOptions()
+                .WithPluginAssemblies(assemblies);
 
-            DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
+            DependencyContainer = fixture.DependencyContainer(options);
         }
 
         private IDependencyContainer DependencyContainer { get; }

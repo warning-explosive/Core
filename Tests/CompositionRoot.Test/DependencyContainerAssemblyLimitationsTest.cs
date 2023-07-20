@@ -24,57 +24,6 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         {
         }
 
-        [Fact]
-        internal void BoundedAboveContainerTest()
-        {
-            var assembly1 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser)));
-            var assembly2 = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Dynamic)));
-
-            var below1 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly1);
-            var below2 = AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly2);
-
-            Assert.DoesNotContain(assembly1, below2);
-            Assert.DoesNotContain(assembly2, below1);
-
-            var allowedAssemblies = new[]
-            {
-                assembly1,
-                assembly2,
-
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)))
-            };
-
-            var aboveAssemblies = new[]
-            {
-                assembly1,
-                assembly2
-            };
-
-            var options = new DependencyContainerOptions();
-
-            var ourTypes = Fixture
-                .BoundedAboveContainer(Output, options, aboveAssemblies)
-                .Resolve<ITypeProvider>()
-                .OurTypes;
-
-            Assert.True(ourTypes.All(Satisfies));
-
-            bool Satisfies(Type type)
-            {
-                var satisfies = allowedAssemblies.Contains(type.Assembly);
-
-                if (!satisfies)
-                {
-                    Output.WriteLine(type.FullName);
-                }
-
-                return satisfies;
-            }
-        }
-
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -82,14 +31,13 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         {
             var assemblies = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CliArgumentsParser)))
             };
 
-            var options = new DependencyContainerOptions();
+            var options = new DependencyContainerOptions()
+                .WithPluginAssemblies(assemblies);
 
-            var boundedContainer = Fixture.ExactlyBoundedContainer(Output, options, assemblies);
+            var boundedContainer = Fixture.DependencyContainer(options);
 
             _ = boundedContainer
                .Resolve<ICompositionInfoExtractor>()
@@ -103,10 +51,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
             };
 
             options = new DependencyContainerOptions()
-               .WithAdditionalOurTypes(additionalTypes);
+                .WithPluginAssemblies(assemblies)
+                .WithAdditionalOurTypes(additionalTypes);
 
             var compositionInfo = Fixture
-               .ExactlyBoundedContainer(Output, options, assemblies)
+               .DependencyContainer(options)
                .Resolve<ICompositionInfoExtractor>()
                .GetCompositionInfo(mode);
 

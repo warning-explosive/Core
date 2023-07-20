@@ -12,7 +12,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
     public interface IIntegrationContext
     {
         /// <summary>
-        /// Send integration command to logical owner
+        /// Sends integration command to logical owner
         /// </summary>
         /// <param name="command">Integration command</param>
         /// <param name="token">Cancellation token</param>
@@ -22,7 +22,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
             where TCommand : IIntegrationCommand;
 
         /// <summary>
-        /// Send integration command to logical owner with delay
+        /// Sends integration command to logical owner with delay
         /// </summary>
         /// <param name="command">Integration command</param>
         /// <param name="dueTime">Time that transport waits before deliver command</param>
@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
             where TCommand : IIntegrationCommand;
 
         /// <summary>
-        /// Send integration command to logical owner with delay
+        /// Sends integration command to logical owner with delay
         /// </summary>
         /// <param name="command">Integration command</param>
         /// <param name="dateTime">DateTime that transport waits before deliver command</param>
@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
             where TCommand : IIntegrationCommand;
 
         /// <summary>
-        /// Publish integration event to subscribers
+        /// Publishes integration event to subscribers
         /// </summary>
         /// <param name="integrationEvent">Integration event</param>
         /// <param name="token">Cancellation token</param>
@@ -54,7 +54,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
             where TEvent : IIntegrationEvent;
 
         /// <summary>
-        /// Request data from target endpoint
+        /// Requests data from target endpoint
         /// </summary>
         /// <param name="request">Integration request</param>
         /// <param name="token">Cancellation token</param>
@@ -66,7 +66,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Api.Abstractions
             where TReply : IIntegrationReply;
 
         /// <summary>
-        /// Reply to initiator endpoint
+        /// Requests data from target endpoint in blocking manner
+        /// </summary>
+        /// <param name="request">Integration request</param>
+        /// <param name="token">Cancellation token</param>
+        /// <typeparam name="TRequest">TRequest type-argument</typeparam>
+        /// <typeparam name="TReply">TReply type-argument</typeparam>
+        /// <returns>Ongoing request operation</returns>
+        Task<TReply> RpcRequest<TRequest, TReply>(TRequest request, CancellationToken token)
+            where TRequest : IIntegrationRequest<TReply>
+            where TReply : IIntegrationReply;
+
+        /// <summary>
+        /// Replies to initiator endpoint
         /// Should be called within endpoint scope (in message handler)
         /// </summary>
         /// <param name="request">Integration request</param>

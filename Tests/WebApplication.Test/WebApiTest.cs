@@ -12,6 +12,8 @@ namespace SpaceEngineers.Core.WebApplication.Test
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Core.Test.WebApplication;
+    using GenericEndpoint.Authorization.Host;
+    using GenericEndpoint.Authorization.Web;
     using JwtAuthentication;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
@@ -19,7 +21,6 @@ namespace SpaceEngineers.Core.WebApplication.Test
     using Newtonsoft.Json.Linq;
     using RestSharp;
     using Web.Api;
-    using Web.Auth;
     using Xunit;
     using Xunit.Abstractions;
     using Program = Core.Test.WebApplication.Program;
@@ -188,7 +189,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
             yield return new object?[]
             {
                 new RestRequest($"http://127.0.0.1:5000/api/Test/{nameof(TestController.FakePost)}/List", Method.Get)
-                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { SpaceEngineers.Core.Test.WebApplication.Features.WebApiTest }, TimeSpan.FromMinutes(1))}"),
+                    .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { Features.WebApiTest }, TimeSpan.FromMinutes(1))}"),
                 new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
                 {
                     Assert.Equal(HttpStatusCode.OK, response.StatusCode);

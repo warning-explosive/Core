@@ -24,16 +24,20 @@ namespace SpaceEngineers.Core.Modules.Test
             : base(output, fixture)
         {
             var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
-                                       ?? throw new InvalidOperationException("Project directory not found");
+                                       ?? throw new InvalidOperationException("Project directory wasn't found");
 
             var settingsDirectory = projectFileDirectory.StepInto("Settings");
 
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)));
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns)))
+            };
 
             var options = new DependencyContainerOptions()
+                .WithPluginAssemblies(assemblies)
                 .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(settingsDirectory)));
 
-            DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
+            DependencyContainer = fixture.DependencyContainer(options);
         }
 
         private IDependencyContainer DependencyContainer { get; }

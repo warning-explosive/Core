@@ -5,11 +5,12 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.IdentityModel.Tokens.Jwt;
     using System.Linq;
     using Basics;
+    using GenericEndpoint.Authorization.Host;
+    using GenericEndpoint.Authorization.Web;
     using JwtAuthentication;
     using Microsoft.Extensions.Configuration;
     using SpaceEngineers.Core.Test.Api;
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
-    using Web.Auth;
     using Xunit;
     using Xunit.Abstractions;
 

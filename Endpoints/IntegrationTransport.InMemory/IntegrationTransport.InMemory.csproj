@@ -42,7 +42,7 @@
       </PackageReference>
     </ItemGroup>
     <ItemGroup>
-      <Compile Update="EndpointInstanceSelectionBehavior.cs">
+      <Compile Update="RoundRobinEndpointInstanceSelectionBehavior.cs">
         <DependentUpon>IEndpointInstanceSelectionBehavior.cs</DependentUpon>
       </Compile>
       <Compile Update="IEndpointInstanceSelectionBehavior.cs">

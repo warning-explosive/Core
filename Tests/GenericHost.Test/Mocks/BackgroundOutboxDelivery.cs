@@ -4,10 +4,10 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.UnitOfWork;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using IntegrationUnitOfWork = GenericEndpoint.DataAccess.Sql.UnitOfWork.IntegrationUnitOfWork;
 
     [ComponentOverride]

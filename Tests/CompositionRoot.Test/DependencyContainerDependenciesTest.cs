@@ -24,13 +24,15 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         {
             var assemblies = new[]
             {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.Test), nameof(Core.Test.Api))),
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Test)))
             };
 
             var options = new DependencyContainerOptions()
-               .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration());
+                .WithPluginAssemblies(assemblies)
+                .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration());
 
-            DependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
+            DependencyContainer = fixture.DependencyContainer(options);
         }
 
         private IDependencyContainer DependencyContainer { get; }

@@ -44,6 +44,9 @@
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Authorization.Web\GenericEndpoint.Authorization.Web.csproj" />
+        <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Postgres.Host\GenericEndpoint.DataAccess.Sql.Postgres.Host.csproj" />
+        <ProjectReference Include="..\..\Endpoints\GenericHost\GenericHost.csproj" />
         <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Host\GenericEndpoint.DataAccess.Sql.Host.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj" />
@@ -51,10 +54,8 @@
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Telemetry.Host\GenericEndpoint.Telemetry.Host.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.TestExtensions\GenericEndpoint.TestExtensions.csproj" />
         <ProjectReference Include="..\..\Endpoints\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
-        <ProjectReference Include="..\..\Modules\DataAccess.Orm.PortgreSql.Host\DataAccess.Orm.PortgreSql.Host.csproj" />
-        <ProjectReference Include="..\..\Modules\DataAccess.Orm.Sql.Host\DataAccess.Orm.Sql.Host.csproj" />
-        <ProjectReference Include="..\..\Modules\GenericHost\GenericHost.csproj" />
-        <ProjectReference Include="..\..\Modules\Web.Auth\Web.Auth.csproj" />
+        <ProjectReference Include="..\..\Endpoints\IntegrationTransport.RabbitMQ\IntegrationTransport.RabbitMQ.csproj" />
+        <ProjectReference Include="..\..\Modules\DataAccess.Orm.Sql.Migrations.Portgres\DataAccess.Orm.Sql.Migrations.Portgres.csproj" />
         <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj" />
     </ItemGroup>
 </Project>

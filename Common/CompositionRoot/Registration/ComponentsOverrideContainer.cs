@@ -147,7 +147,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             IEnumerable<(Func<object> instanceProducer, EnLifestyle lifestyle)> instanceProducerReplacements)
         {
             var collection = instanceReplacements
-                .Select(replacement => new InstanceRegistrationInfo(service, instanceReplacements))
+                .Select(replacement => new InstanceRegistrationInfo(service, replacement))
                 .Cast<IRegistrationInfo>()
                 .Concat(replacements
                     .Select(replacement => new ServiceRegistrationInfo(service, replacement.implementation, replacement.lifestyle)))

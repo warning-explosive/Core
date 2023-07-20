@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Telemetry")]
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Host")]
-[assembly: InternalsVisibleTo("SpaceEngineers.Core.IntegrationTransport.Host")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Postgres.Host")]
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericHost.Test")]
 [assembly: InternalsVisibleTo("GenericHost.Benchmark")]

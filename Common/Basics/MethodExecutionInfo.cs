@@ -175,7 +175,7 @@ namespace SpaceEngineers.Core.Basics
             };
 
             var methodInfo = methodFinder.FindMethod()
-                             ?? throw new NotFoundException($"Method not found: {methodFinder}");
+                             ?? throw new NotFoundException($"Method wasn't found: {methodFinder}");
 
             // 3 - call
             var isGenericMethod = _typeArguments.Any();

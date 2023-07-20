@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Registrations
 {
-    using Api.Abstractions;
     using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Registration;
     using StartupActions;
@@ -9,8 +8,9 @@ namespace SpaceEngineers.Core.GenericHost.Test.Registrations
     {
         public void Register(IManualRegistrationsContainer container)
         {
-            container.Register<PurgeRabbitMqQueuesHostStartupAction, PurgeRabbitMqQueuesHostStartupAction>(EnLifestyle.Singleton);
-            container.Advanced.RegisterCollectionEntry<IHostStartupAction, PurgeRabbitMqQueuesHostStartupAction>(EnLifestyle.Singleton);
+            container.Register<PurgeRabbitMqQueuesHostedServiceStartupAction, PurgeRabbitMqQueuesHostedServiceStartupAction>(EnLifestyle.Singleton);
+            container.Advanced.RegisterCollectionEntry<IHostedServiceStartupAction, PurgeRabbitMqQueuesHostedServiceStartupAction>(EnLifestyle.Singleton);
+            container.Advanced.RegisterCollectionEntry<IHostedServiceObject, PurgeRabbitMqQueuesHostedServiceStartupAction>(EnLifestyle.Singleton);
         }
     }
 }

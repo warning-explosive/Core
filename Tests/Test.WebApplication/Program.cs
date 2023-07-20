@@ -7,19 +7,18 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.Threading.Tasks;
     using AuthEndpoint.Host;
     using Basics;
-    using GenericEndpoint.DataAccess.Sql.Host;
+    using GenericEndpoint.DataAccess.Sql.Postgres.Host;
     using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.Telemetry.Host;
+    using GenericEndpoint.Web.Host;
     using GenericHost;
-    using IntegrationTransport.WebHost;
+    using IntegrationTransport.Host;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Migrations;
     using OpenTelemetry.Metrics;
     using OpenTelemetry.Trace;
-    using Registrations;
     using StartupActions;
-    using Web.Api.Host;
 
     /// <summary>
     /// Program
@@ -51,7 +50,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
         {
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
             var migrations = new[]

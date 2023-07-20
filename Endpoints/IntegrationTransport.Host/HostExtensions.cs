@@ -1,27 +1,17 @@
 namespace SpaceEngineers.Core.IntegrationTransport.Host
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Api.Abstractions;
-    using Api.Enumerations;
+    using Api;
     using Basics;
-    using Basics.Primitives;
-    using Builder;
     using CompositionRoot;
-    using CompositionRoot.Registration;
+    using CrossCuttingConcerns.Settings;
     using GenericEndpoint.Contract;
-    using GenericEndpoint.Contract.Abstractions;
-    using GenericEndpoint.Host;
-    using GenericEndpoint.Host.Builder;
-    using GenericEndpoint.Host.Registrations;
     using GenericHost;
-    using GenericHost.Api;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Overrides;
+    using Microsoft.Extensions.Logging;
     using Registrations;
 
     /// <summary>
@@ -29,212 +19,185 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
     /// </summary>
     public static class HostExtensions
     {
-        private const string RequireUseTransportCall = ".UseIntegrationTransport() should be called before any endpoint declarations. {0}";
-        private const string RequireTransportDependencyContainer = "Unable to resolve transport IDependencyContainer.";
-
         /// <summary>
         /// Gets endpoint dependency container
         /// </summary>
         /// <param name="host">IHost</param>
+        /// <param name="transportIdentity">TransportIdentity</param>
         /// <returns>IDependencyContainer</returns>
-        public static IDependencyContainer GetTransportDependencyContainer(this IHost host)
+        public static IDependencyContainer GetIntegrationTransportDependencyContainer(
+            this IHost host,
+            TransportIdentity transportIdentity)
         {
-            return GetTransportEndpointDependencyContainer(host.Services);
+            return host.Services.GetIntegrationTransportDependencyContainer(transportIdentity);
         }
 
         /// <summary>
-        /// Waits until transport is not in running state
+        /// Gets endpoint dependency container
         /// </summary>
-        /// <param name="host">IHost</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        public static async Task WaitUntilTransportIsNotRunning(this IHost host, CancellationToken token)
+        /// <param name="serviceProvider">IServiceProvider</param>
+        /// <param name="transportIdentity">TransportIdentity</param>
+        /// <returns>IDependencyContainer</returns>
+        public static IDependencyContainer GetIntegrationTransportDependencyContainer(
+            this IServiceProvider serviceProvider,
+            TransportIdentity transportIdentity)
         {
-            using (var tcs = new TaskCancellationCompletionSource<object?>(token))
+            return serviceProvider
+                       .GetServices<IntegrationTransportDependencyContainer>()
+                       .Select(wrapper => wrapper.DependencyContainer)
+                       .Where(IsTransportContainer(transportIdentity))
+                       .InformativeSingleOrDefault(Amb(transportIdentity))
+                   ?? throw new InvalidOperationException($@".UseIntegrationTransport(""{transportIdentity}"") should be called at least once during host declaration");
+
+            static Func<IDependencyContainer, bool> IsTransportContainer(TransportIdentity transportIdentity)
             {
-                var subscription = MakeSubscription(tcs);
-
-                var integrationTransport = host
-                   .GetTransportDependencyContainer()
-                   .Resolve<IExecutableIntegrationTransport>();
-
-                using (Disposable.Create((integrationTransport, subscription), Subscribe, Unsubscribe))
-                {
-                    await tcs.Task.ConfigureAwait(false);
-                }
+                return dependencyContainer => dependencyContainer
+                    .Resolve<TransportIdentity>()
+                    .Equals(transportIdentity);
             }
 
-            static EventHandler<IntegrationTransportStatusChangedEventArgs> MakeSubscription(
-                TaskCompletionSource<object?> tcs)
+            static Func<IEnumerable<IDependencyContainer>, string> Amb(TransportIdentity transportIdentity)
             {
-                return (_, args) =>
-                {
-                    if (args.CurrentStatus == EnIntegrationTransportStatus.Running)
-                    {
-                        tcs.TrySetResult(default!);
-                    }
-                };
-            }
-
-            static void Subscribe((IExecutableIntegrationTransport, EventHandler<IntegrationTransportStatusChangedEventArgs>) state)
-            {
-                var (integrationTransport, subscription) = state;
-                integrationTransport.StatusChanged += subscription;
-            }
-
-            static void Unsubscribe((IExecutableIntegrationTransport, EventHandler<IntegrationTransportStatusChangedEventArgs>) state)
-            {
-                var (integrationTransport, subscription) = state;
-                integrationTransport.StatusChanged -= subscription;
+                return _ => $"Unable to choose between multiple integration transports with identity: {transportIdentity}";
             }
         }
 
         /// <summary>
-        /// Use in-memory integration transport inside specified host
+        /// UseInMemoryIntegrationTransport
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="optionsFactory">Transport endpoint options factory</param>
-        /// <param name="logicalName">Logical name</param>
+        /// <param name="transportIdentity">TransportIdentity</param>
+        /// <param name="optionsFactory">Container options factory</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHostBuilder UseIntegrationTransport(
+        // TODO: review InternalVisibleToAttributes
+        public static IHostBuilder UseInMemoryIntegrationTransport(
             this IHostBuilder hostBuilder,
-            Func<HostBuilderContext, ITransportEndpointBuilder, EndpointOptions> optionsFactory,
-            string? logicalName = null)
+            TransportIdentity transportIdentity,
+            Func<DependencyContainerOptions, DependencyContainerOptions>? optionsFactory = null)
         {
-            return hostBuilder.ConfigureServices((context, serviceCollection) => InitializeIntegrationTransport(context, hostBuilder, optionsFactory, logicalName)(serviceCollection));
-        }
+            hostBuilder.CheckEndpointsExistence();
 
-        internal static Action<IServiceCollection> InitializeIntegrationTransport(
-            HostBuilderContext context,
-            IHostBuilder hostBuilder,
-            Func<HostBuilderContext, ITransportEndpointBuilder, EndpointOptions> optionsFactory,
-            string? logicalName = null)
-        {
-            hostBuilder.CheckMultipleCalls(nameof(UseIntegrationTransport));
-
-            // TODO: #225 - rethink transport as endpoint approach, move transport into separate assembly
-            var assembly = Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly");
-
-            logicalName = logicalName.IsNullOrWhiteSpace() ? Identity.LogicalName : logicalName;
-
-            var endpointIdentity = new EndpointIdentity(logicalName, assembly);
-
-            hostBuilder.CheckDuplicates(endpointIdentity);
-
-            var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
-
-            var options = optionsFactory(context, builder);
-
-            var dependencyContainer = BuildDependencyContainer(options);
-
-            SetIntegrationTransportInjection(hostBuilder, dependencyContainer);
-
-            return serviceCollection =>
+            return hostBuilder.ConfigureServices(serviceCollection =>
             {
-                serviceCollection.AddSingleton<IDependencyContainer>(dependencyContainer);
-                serviceCollection.AddSingleton<ITransportDependencyContainer>(new TransportDependencyContainer(dependencyContainer));
-            };
+                serviceCollection.AddSingleton(serviceProvider => ConfigureDependencyContainer(serviceProvider, transportIdentity, optionsFactory));
+
+                serviceCollection.AddSingleton(serviceProvider => BuildHostedService(serviceProvider, transportIdentity));
+            });
+
+            static IntegrationTransportDependencyContainer ConfigureDependencyContainer(
+                IServiceProvider serviceProvider,
+                TransportIdentity transportIdentity,
+                Func<DependencyContainerOptions, DependencyContainerOptions>? optionsFactory)
+            {
+                var frameworkDependenciesProvider = serviceProvider.GetRequiredService<IFrameworkDependenciesProvider>();
+                var settingsDirectoryProvider = serviceProvider.GetRequiredService<SettingsDirectoryProvider>();
+                var hostedServiceRegistry = new HostedServiceRegistry();
+
+                var assemblies = new[]
+                {
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(IntegrationTransport), nameof(Api))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(IntegrationTransport), nameof(InMemory)))
+                };
+
+                var options = new DependencyContainerOptions()
+                    .WithPluginAssemblies(assemblies)
+                    .WithManualRegistrations(
+                        new TransportIdentityManualRegistration(transportIdentity),
+                        new SettingsProviderManualRegistration(settingsDirectoryProvider),
+                        new LoggerFactoryManualRegistration(transportIdentity, frameworkDependenciesProvider),
+                        new HostedServiceRegistryManualRegistration(hostedServiceRegistry),
+                        new IntegrationTransportHostedServiceManualRegistration());
+
+                if (optionsFactory != null)
+                {
+                    options = optionsFactory(options);
+                }
+
+                var dependencyContainer = DependencyContainer.Create(options);
+
+                return new IntegrationTransportDependencyContainer(dependencyContainer);
+            }
         }
 
-        internal static IDependencyContainer GetTransportEndpointDependencyContainer(
-            this IServiceProvider serviceProvider)
+        /// <summary>
+        /// UseRabbitMqIntegrationTransport
+        /// </summary>
+        /// <param name="hostBuilder">IHostBuilder</param>
+        /// <param name="transportIdentity">TransportIdentity</param>
+        /// <param name="optionsFactory">Container options factory</param>
+        /// <returns>Configured IHostBuilder</returns>
+        public static IHostBuilder UseRabbitMqIntegrationTransport(
+            this IHostBuilder hostBuilder,
+            TransportIdentity transportIdentity,
+            Func<DependencyContainerOptions, DependencyContainerOptions>? optionsFactory = null)
         {
-            return serviceProvider.GetService<ITransportDependencyContainer>()?.DependencyContainer
-                ?? throw new InvalidOperationException(RequireUseTransportCall.Format(RequireTransportDependencyContainer));
+            hostBuilder.CheckEndpointsExistence();
+
+            return hostBuilder.ConfigureServices(serviceCollection =>
+            {
+                serviceCollection.AddSingleton(serviceProvider => ConfigureDependencyContainer(serviceProvider, transportIdentity, optionsFactory));
+
+                serviceCollection.AddSingleton(serviceProvider => BuildHostedService(serviceProvider, transportIdentity));
+            });
+
+            static IntegrationTransportDependencyContainer ConfigureDependencyContainer(
+                IServiceProvider serviceProvider,
+                TransportIdentity transportIdentity,
+                Func<DependencyContainerOptions, DependencyContainerOptions>? optionsFactory)
+            {
+                var frameworkDependenciesProvider = serviceProvider.GetRequiredService<IFrameworkDependenciesProvider>();
+                var settingsDirectoryProvider = serviceProvider.GetRequiredService<SettingsDirectoryProvider>();
+                var hostedServiceRegistry = new HostedServiceRegistry();
+
+                var assemblies = new[]
+                {
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(IntegrationTransport), nameof(Api))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(IntegrationTransport), nameof(RabbitMQ)))
+                };
+
+                var options = new DependencyContainerOptions()
+                    .WithPluginAssemblies(assemblies)
+                    .WithManualRegistrations(
+                        new TransportIdentityManualRegistration(transportIdentity),
+                        new SettingsProviderManualRegistration(settingsDirectoryProvider),
+                        new LoggerFactoryManualRegistration(transportIdentity, frameworkDependenciesProvider),
+                        new HostedServiceRegistryManualRegistration(hostedServiceRegistry),
+                        new IntegrationTransportHostedServiceManualRegistration());
+
+                if (optionsFactory != null)
+                {
+                    options = optionsFactory(options);
+                }
+
+                var dependencyContainer = DependencyContainer.Create(options);
+
+                return new IntegrationTransportDependencyContainer(dependencyContainer);
+            }
         }
 
-        private static IDependencyContainer BuildDependencyContainer(EndpointOptions options)
+        private static IHostedService BuildHostedService(
+            IServiceProvider serviceProvider,
+            TransportIdentity transportIdentity)
         {
-            return DependencyContainer.CreateBoundedAbove(
-                options.ContainerOptions,
-                options.AboveAssemblies.ToArray());
+            var dependencyContainer = serviceProvider.GetIntegrationTransportDependencyContainer(transportIdentity);
+
+            return new HostedService(
+                transportIdentity.ToString(),
+                serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<HostedService>(),
+                serviceProvider.GetRequiredService<IHostApplicationLifetime>(),
+                dependencyContainer.Resolve<IHostedServiceRegistry>(),
+                dependencyContainer.ResolveCollection<IHostedServiceObject>());
         }
 
-        private static ITransportEndpointBuilder ConfigureBuilder(
-            IHostBuilder hostBuilder,
-            EndpointIdentity endpointIdentity)
+        private static void CheckEndpointsExistence(this IHostBuilder hostBuilder)
         {
-            var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
-                AssembliesExtensions.BuildName(
-                    nameof(SpaceEngineers),
-                    nameof(Core),
-                    nameof(CrossCuttingConcerns)));
-
-            var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
-            var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
-
-            // TODO: #225 - rethink transport as endpoint approach, move transport into separate assembly
-            var plugins = GetPlugins(hostBuilder);
-            var injections = GetInjections(hostBuilder)
-                .Where(registration => registration is not IntegrationTransportInjectionManualRegistration)
-                .ToArray();
-
-            return (ITransportEndpointBuilder)new TransportEndpointBuilder(endpointIdentity)
-               .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
-               .WithEndpointPluginAssemblies(plugins)
-               .ModifyContainerOptions(options => options
-                   .WithAdditionalOurTypes(GetIntegrationTypes())
-                   .WithManualRegistrations(
-                       new GenericEndpointIdentityManualRegistration(endpointIdentity),
-                       new SettingsProviderManualRegistration(settingsDirectoryProvider),
-                       new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
-                       new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
-                       new GenericEndpointHostStartupActionManualRegistration(),
-                       new IntegrationTransportHostBackgroundWorkerManualRegistration())
-                   .WithManualRegistrations(injections)
-                   .WithOverrides(new IntegrationTransportOverride())
-                   .WithManualVerification(true));
-        }
-
-        private static Type[] GetIntegrationTypes()
-        {
-            var integrationMessageTypes = AssembliesExtensions
-                .AllOurAssembliesFromCurrentDomain()
-                .SelectMany(assembly => assembly.GetTypes())
-                .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
-                               && !type.IsMessageContractAbstraction());
-
-            var aggregates = TypeExtensions.TryFindType("SpaceEngineers.Core.GenericDomain.Api SpaceEngineers.Core.GenericDomain.Api.Abstractions.IAggregate", out var aggregateType)
-                ? AssembliesExtensions
-                    .AllOurAssembliesFromCurrentDomain()
-                    .SelectMany(assembly => assembly.GetTypes())
-                    .Where(type => aggregateType.IsAssignableFrom(type))
-                : Enumerable.Empty<Type>();
-
-            var domainEvents = TypeExtensions.TryFindType("SpaceEngineers.Core.GenericDomain.Api SpaceEngineers.Core.GenericDomain.Api.Abstractions.IDomainEvent", out var domainEventType)
-                ? AssembliesExtensions
-                    .AllOurAssembliesFromCurrentDomain()
-                    .SelectMany(assembly => assembly.GetTypes())
-                    .Where(type => domainEventType.IsAssignableFrom(type))
-                : Enumerable.Empty<Type>();
-
-            return integrationMessageTypes
-                .Concat(aggregates)
-                .Concat(domainEvents)
-                .ToArray();
-        }
-
-        private static Assembly[] GetPlugins(this IHostBuilder hostBuilder)
-        {
-            return hostBuilder.TryGetPropertyValue<Assembly[]>(nameof(Assembly), out var plugins)
-                ? plugins
-                : Array.Empty<Assembly>();
-        }
-
-        private static IManualRegistration[] GetInjections(this IHostBuilder hostBuilder)
-        {
-            return hostBuilder.TryGetPropertyValue<IManualRegistration[]>(nameof(IManualRegistration), out var injections)
-                ? injections
-                : Array.Empty<IManualRegistration>();
-        }
-
-        private static void SetIntegrationTransportInjection(
-            IHostBuilder hostBuilder,
-            IDependencyContainer dependencyContainer)
-        {
-            hostBuilder.AppendPropertyValue<IManualRegistration>(
-                nameof(IManualRegistration),
-                new IntegrationTransportInjectionManualRegistration(dependencyContainer));
+            if (hostBuilder.TryGetPropertyValue<Dictionary<string, EndpointIdentity>>(nameof(EndpointIdentity), out var endpoints)
+                && endpoints.Any())
+            {
+                throw new InvalidOperationException(".UseIntegrationTransport() should be called before any endpoint declarations");
+            }
         }
     }
 }

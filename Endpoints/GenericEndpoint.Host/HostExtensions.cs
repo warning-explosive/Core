@@ -2,17 +2,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Reflection;
     using Basics;
     using Builder;
     using CompositionRoot;
-    using CompositionRoot.Registration;
     using Contract;
+    using CrossCuttingConcerns.Settings;
     using GenericHost;
-    using GenericHost.Api;
+    using IntegrationTransport.Api.Abstractions;
+    using IntegrationTransport.Host;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
     using Registrations;
 
     /// <summary>
@@ -20,67 +23,40 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     /// </summary>
     public static class HostExtensions
     {
-        private const string EndpointDuplicatesWasFound = "Endpoint duplicates was found: {0}. Horizontal scaling in the same process doesn't make sense.";
-        private const string RequireUseEndpointCall = ".UseEndpoint() with identity {0} should be called during host declaration";
-
         /// <summary>
         /// Gets endpoint dependency container
         /// </summary>
         /// <param name="host">IHost</param>
         /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <returns>IDependencyContainer</returns>
-        public static IDependencyContainer GetEndpointDependencyContainer(this IHost host, EndpointIdentity endpointIdentity)
+        public static IDependencyContainer GetEndpointDependencyContainer(
+            this IHost host,
+            EndpointIdentity endpointIdentity)
         {
-            return host
-                       .Services
-                       .GetServices<IDependencyContainer>()
-                       .SingleOrDefault(IsEndpointContainer(endpointIdentity))
-                   ?? throw new InvalidOperationException(RequireUseEndpointCall.Format(endpointIdentity));
-
-            static Func<IDependencyContainer, bool> IsEndpointContainer(EndpointIdentity endpointIdentity)
-            {
-                return container => ExecutionExtensions
-                    .Try(state => IsEndpointContainerUnsafe(state, endpointIdentity), container)
-                    .Catch<Exception>()
-                    .Invoke(_ => false);
-            }
-
-            static bool IsEndpointContainerUnsafe(IDependencyContainer dependencyContainer, EndpointIdentity endpointIdentity)
-            {
-                return dependencyContainer
-                   .Resolve<EndpointIdentity>()
-                   .Equals(endpointIdentity);
-            }
+            return host.Services.GetEndpointDependencyContainer(endpointIdentity);
         }
 
         /// <summary>
         /// Gets endpoint dependency container
         /// </summary>
-        /// <param name="host">IHost</param>
-        /// <param name="logicalName">Logical name</param>
+        /// <param name="serviceProvider">IServiceProvider</param>
+        /// <param name="endpointIdentity">EndpointIdentity</param>
         /// <returns>IDependencyContainer</returns>
-        public static IDependencyContainer GetEndpointDependencyContainer(this IHost host, string logicalName)
+        public static IDependencyContainer GetEndpointDependencyContainer(
+            this IServiceProvider serviceProvider,
+            EndpointIdentity endpointIdentity)
         {
-            return host
-                       .Services
-                       .GetServices<IDependencyContainer>()
-                       .SingleOrDefault(IsEndpointContainer(logicalName))
-                   ?? throw new InvalidOperationException(RequireUseEndpointCall.Format(logicalName));
+            return serviceProvider
+                       .GetServices<GenericEndpointDependencyContainer>()
+                       .Select(wrapper => wrapper.DependencyContainer)
+                       .SingleOrDefault(IsEndpointContainer(endpointIdentity))
+                   ?? throw new InvalidOperationException($@".UseEndpoint(""{endpointIdentity}"") should be called during host declaration");
 
-            static Func<IDependencyContainer, bool> IsEndpointContainer(string logicalName)
+            static Func<IDependencyContainer, bool> IsEndpointContainer(EndpointIdentity endpointIdentity)
             {
-                return container => ExecutionExtensions
-                    .Try(state => IsEndpointContainerUnsafe(state, logicalName), container)
-                    .Catch<Exception>()
-                    .Invoke(_ => false);
-            }
-
-            static bool IsEndpointContainerUnsafe(IDependencyContainer dependencyContainer, string logicalName)
-            {
-                return dependencyContainer
-                   .Resolve<EndpointIdentity>()
-                   .LogicalName
-                   .Equals(logicalName, StringComparison.OrdinalIgnoreCase);
+                return dependencyContainer => dependencyContainer
+                    .Resolve<EndpointIdentity>()
+                    .Equals(endpointIdentity);
             }
         }
 
@@ -91,26 +67,90 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         /// <param name="endpointIdentity">Endpoint identity</param>
         /// <param name="optionsFactory">Endpoint options factory</param>
         /// <returns>Configured IHostBuilder</returns>
+        [SuppressMessage("Analysis", "CA1506", Justification = "application composition root")]
         public static IHostBuilder UseEndpoint(
             this IHostBuilder hostBuilder,
             EndpointIdentity endpointIdentity,
-            Func<HostBuilderContext, IEndpointBuilder, EndpointOptions> optionsFactory)
+            Func<IConfiguration, IEndpointBuilder, EndpointOptions> optionsFactory)
         {
             hostBuilder.CheckDuplicates(endpointIdentity);
 
-            return hostBuilder.ConfigureServices((context, serviceCollection) =>
+            return hostBuilder.ConfigureServices(serviceCollection =>
             {
-                var builder = ConfigureBuilder(hostBuilder, endpointIdentity);
+                serviceCollection.AddSingleton(serviceProvider => ConfigureDependencyContainer(serviceProvider, endpointIdentity, optionsFactory));
 
-                var options = optionsFactory(context, builder);
-
-                var dependencyContainer = BuildDependencyContainer(options);
-
-                serviceCollection.AddSingleton<IDependencyContainer>(dependencyContainer);
+                serviceCollection.AddSingleton(serviceProvider => BuildHostedService(serviceProvider, endpointIdentity));
             });
+
+            static GenericEndpointDependencyContainer ConfigureDependencyContainer(
+                IServiceProvider serviceProvider,
+                EndpointIdentity endpointIdentity,
+                Func<IConfiguration, IEndpointBuilder, EndpointOptions> optionsFactory)
+            {
+                var frameworkDependenciesProvider = serviceProvider.GetRequiredService<IFrameworkDependenciesProvider>();
+                var settingsDirectoryProvider = serviceProvider.GetRequiredService<SettingsDirectoryProvider>();
+                var hostedServiceRegistry = new HostedServiceRegistry();
+                var integrationTransport = GetIntegrationTransport(serviceProvider);
+
+                var assemblies = new[]
+                {
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(Contract))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(Api))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(Messaging))),
+                    AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint)))
+                };
+
+                var builder = new EndpointBuilder(endpointIdentity)
+                   .ModifyContainerOptions(options => options
+                       .WithPluginAssemblies(assemblies)
+                       .WithManualRegistrations(
+                           new GenericEndpointIdentityManualRegistration(endpointIdentity),
+                           new SettingsProviderManualRegistration(settingsDirectoryProvider),
+                           new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
+                           new HostedServiceRegistryManualRegistration(hostedServiceRegistry),
+                           new IntegrationTransportManualRegistration(integrationTransport),
+                           new HostedServiceStartupActionManualRegistration()));
+
+                var options = optionsFactory(serviceProvider.GetRequiredService<IConfiguration>(), builder);
+
+                var dependencyContainer = DependencyContainer.Create(options.ContainerOptions);
+
+                return new GenericEndpointDependencyContainer(dependencyContainer);
+            }
+
+            static IIntegrationTransport GetIntegrationTransport(IServiceProvider serviceProvider)
+            {
+                var dependencyContainer = serviceProvider
+                    .GetServices<IntegrationTransportDependencyContainer>()
+                    .Select(wrapper => wrapper.DependencyContainer)
+                    .InformativeSingleOrDefault(Amb);
+
+                return dependencyContainer.Resolve<IIntegrationTransport>();
+
+                static string Amb(IEnumerable<IDependencyContainer> dependencyContainers)
+                {
+                    // TODO: #225 - support multiple transport per host
+                    return "multiple transports aren't supported";
+                }
+            }
+
+            static IHostedService BuildHostedService(
+                IServiceProvider serviceProvider,
+                EndpointIdentity endpointIdentity)
+            {
+                var dependencyContainer = serviceProvider.GetEndpointDependencyContainer(endpointIdentity);
+
+                return new HostedService(
+                    endpointIdentity.ToString(),
+                    serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger<HostedService>(),
+                    serviceProvider.GetRequiredService<IHostApplicationLifetime>(),
+                    dependencyContainer.Resolve<IHostedServiceRegistry>(),
+                    dependencyContainer.ResolveCollection<IHostedServiceObject>());
+            }
         }
 
-        internal static void CheckDuplicates(this IHostBuilder hostBuilder, EndpointIdentity endpointIdentity)
+        private static void CheckDuplicates(this IHostBuilder hostBuilder, EndpointIdentity endpointIdentity)
         {
             if (!hostBuilder.TryGetPropertyValue<Dictionary<string, EndpointIdentity>>(nameof(EndpointIdentity), out var endpoints))
             {
@@ -120,58 +160,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
             if (!endpoints.TryAdd(endpointIdentity.LogicalName, endpointIdentity))
             {
-                throw new InvalidOperationException(EndpointDuplicatesWasFound.Format(endpointIdentity.LogicalName));
+                throw new InvalidOperationException($"Endpoint duplicates was found: {endpointIdentity.LogicalName}. Horizontal scaling in the same process doesn't make sense.");
             }
-        }
-
-        private static IDependencyContainer BuildDependencyContainer(EndpointOptions options)
-        {
-            return DependencyContainer.CreateBoundedAbove(
-                options.ContainerOptions,
-                options.AboveAssemblies.ToArray());
-        }
-
-        private static IEndpointBuilder ConfigureBuilder(
-            IHostBuilder hostBuilder,
-            EndpointIdentity endpointIdentity)
-        {
-            var crossCuttingConcernsAssembly = AssembliesExtensions.FindRequiredAssembly(
-                AssembliesExtensions.BuildName(
-                    nameof(SpaceEngineers),
-                    nameof(Core),
-                    nameof(CrossCuttingConcerns)));
-
-            var settingsDirectoryProvider = hostBuilder.GetSettingsDirectoryProvider();
-            var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
-            var plugins = hostBuilder.GetPlugins();
-            var injections = hostBuilder.GetInjections();
-
-            return new EndpointBuilder(endpointIdentity)
-               .WithEndpointPluginAssemblies(crossCuttingConcernsAssembly)
-               .WithEndpointPluginAssemblies(plugins)
-               .ModifyContainerOptions(options => options
-                   .WithManualRegistrations(
-                       new GenericEndpointIdentityManualRegistration(endpointIdentity),
-                       new SettingsProviderManualRegistration(settingsDirectoryProvider),
-                       new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
-                       new HostStartupActionsRegistryManualRegistration(frameworkDependenciesProvider),
-                       new GenericEndpointHostStartupActionManualRegistration())
-                   .WithManualRegistrations(injections)
-                   .WithManualVerification(true));
-        }
-
-        private static Assembly[] GetPlugins(this IHostBuilder hostBuilder)
-        {
-            return hostBuilder.TryGetPropertyValue<Assembly[]>(nameof(Assembly), out var plugins)
-                ? plugins
-                : Array.Empty<Assembly>();
-        }
-
-        private static IManualRegistration[] GetInjections(this IHostBuilder hostBuilder)
-        {
-            return hostBuilder.TryGetPropertyValue<IManualRegistration[]>(nameof(IManualRegistration), out var injections)
-                ? injections
-                : Array.Empty<IManualRegistration>();
         }
     }
 }

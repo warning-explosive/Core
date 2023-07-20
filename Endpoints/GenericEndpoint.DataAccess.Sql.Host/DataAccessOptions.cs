@@ -1,6 +1,5 @@
 namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Host
 {
-    using Basics;
     using Registrations;
     using SpaceEngineers.Core.GenericEndpoint.Host.Builder;
 
@@ -24,10 +23,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Host
         /// <returns>IMigrationsEndpointBuilder</returns>
         public DataAccessOptions ExecuteMigrations()
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Core.DataAccess), nameof(Core.DataAccess.Orm), nameof(Core.DataAccess.Orm.Sql), nameof(Core.DataAccess.Orm.Sql.Host)));
-
             _ = _endpointBuilder
-               .WithEndpointPluginAssemblies(assembly)
                .ModifyContainerOptions(options => options
                    .WithManualRegistrations(new UpgradeDatabaseHostStartupActionManualRegistration()));
 

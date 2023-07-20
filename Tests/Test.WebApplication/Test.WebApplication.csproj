@@ -28,7 +28,6 @@
         <ServerGarbageCollection>true</ServerGarbageCollection>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.9" />
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -41,15 +40,14 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.5.0" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Host\GenericEndpoint.DataAccess.Sql.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Postgres.Host\GenericEndpoint.DataAccess.Sql.Postgres.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Telemetry.Host\GenericEndpoint.Telemetry.Host.csproj" />
-      <ProjectReference Include="..\..\Endpoints\IntegrationTransport.WebHost\IntegrationTransport.WebHost.csproj" />
-      <ProjectReference Include="..\..\Modules\Web.Api.Host\Web.Api.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Web.Host\GenericEndpoint.Web.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
     </ItemGroup>
 </Project>

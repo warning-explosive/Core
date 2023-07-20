@@ -3,9 +3,9 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using System;
     using System.Collections.Concurrent;
     using System.Linq.Expressions;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using DataAccess.Orm.Sql.Linq;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
 
     [ManuallyRegisteredComponent(nameof(TranslationTest))]
     internal class QueryExpressionsCollector : IResolvable<QueryExpressionsCollector>,

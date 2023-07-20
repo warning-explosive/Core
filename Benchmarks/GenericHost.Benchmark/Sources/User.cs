@@ -1,8 +1,8 @@
 ﻿namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
 {
     using System;
-    using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
-    using SpaceEngineers.Core.DataAccess.Orm.Sql.Model.Attributes;
+    using DataAccess.Orm.Sql.Model;
+    using DataAccess.Orm.Sql.Model.Attributes;
 
     [Schema(nameof(GenericHost) + nameof(Test))]
     internal record User : BaseDatabaseEntity<Guid>

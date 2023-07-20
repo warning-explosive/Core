@@ -2,12 +2,12 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
+    using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Contract;
     using Messages;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using SpaceEngineers.Core.GenericEndpoint.Api.Abstractions;
 
     [Component(EnLifestyle.Transient)]
     internal class InheritedEventEmptyMessageHandler : IMessageHandler<InheritedEvent>,

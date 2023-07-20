@@ -2,8 +2,6 @@ namespace SpaceEngineers.Core.CompositionRoot
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics;
@@ -25,8 +23,6 @@ namespace SpaceEngineers.Core.CompositionRoot
                                        IResolvable<IDependencyContainer>
     {
         private DependencyContainerOptions _options;
-        private bool _wasVerified;
-        private bool _suppressResolveWarnings;
 
         /// <summary> .cctor </summary>
         /// <param name="typeProvider">ContainerDependentTypeProvider</param>
@@ -52,15 +48,10 @@ namespace SpaceEngineers.Core.CompositionRoot
             };
 
             _options = options;
-            _wasVerified = false;
-            _suppressResolveWarnings = false;
 
             Configure(typeProvider);
 
-            if (!options.ManualVerification)
-            {
-                Verify();
-            }
+            Verify();
         }
 
         /// <summary>
@@ -77,66 +68,14 @@ namespace SpaceEngineers.Core.CompositionRoot
         #region Creation
 
         /// <summary>
-        /// Creates IDependencyContainer without assembly limitations
+        /// Creates IDependencyContainer exactly bounded by specified assemblies
         /// </summary>
         /// <param name="options">DependencyContainer creation options</param>
         /// <returns>DependencyContainer</returns>
         public static IDependencyContainer Create(DependencyContainerOptions options)
         {
             var typeProvider = new TypeProvider(
-                AssembliesExtensions.AllAssembliesFromCurrentDomain(),
-                options.ExcludedAssemblies,
-                options.ExcludedNamespaces,
-                options.AdditionalOurTypes);
-
-            #pragma warning disable 618
-
-            return new DependencyContainer(options, typeProvider);
-
-            #pragma warning restore 618
-        }
-
-        /// <summary>
-        /// Creates IDependencyContainer bounded above by specified assemblies
-        /// </summary>
-        /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="assemblies">Assembly for container configuration</param>
-        /// <returns>DependencyContainer</returns>
-        public static IDependencyContainer CreateBoundedAbove(
-            DependencyContainerOptions options,
-            params Assembly[] assemblies)
-        {
-            var belowAssemblies = assemblies
-                .SelectMany(assembly => AssembliesExtensions.AllAssembliesFromCurrentDomain().Below(assembly))
-                .Distinct()
-                .ToArray();
-
-            var typeProvider = new TypeProvider(
-                belowAssemblies,
-                options.ExcludedAssemblies,
-                options.ExcludedNamespaces,
-                options.AdditionalOurTypes);
-
-            #pragma warning disable 618
-
-            return new DependencyContainer(options, typeProvider);
-
-            #pragma warning restore 618
-        }
-
-        /// <summary>
-        /// Creates IDependencyContainer exactly bounded by specified assemblies
-        /// </summary>
-        /// <param name="options">DependencyContainer creation options</param>
-        /// <param name="assemblies">Assemblies for container configuration</param>
-        /// <returns>DependencyContainer</returns>
-        public static IDependencyContainer CreateExactlyBounded(
-            DependencyContainerOptions options,
-            params Assembly[] assemblies)
-        {
-            var typeProvider = new TypeProvider(
-                assemblies,
-                options.ExcludedAssemblies,
+                options.Assemblies,
                 options.ExcludedNamespaces,
                 options.AdditionalOurTypes);
 
@@ -247,27 +186,21 @@ namespace SpaceEngineers.Core.CompositionRoot
         #region Internals
 
         /// <summary>
-        /// Suppresses warnings on service resolution
-        /// </summary>
-        public void SuppressResolveWarnings()
-        {
-            _suppressResolveWarnings = true;
-        }
-
-        /// <summary>
         /// Verifies container's integrity
         /// </summary>
         public void Verify()
         {
             ExecutionExtensions
-                .Try(() =>
-                {
-                    Container.GetAllInstances<IConfigurationVerifier>().Each(v => v.Verify());
-                    _wasVerified = true;
-                    _suppressResolveWarnings = false;
-                })
+                .Try(VerifyUnsafe, Container)
                 .Catch<Exception>(ex => throw new ContainerConfigurationException(ex))
                 .Invoke();
+
+            static void VerifyUnsafe(Container container)
+            {
+                container
+                    .GetAllInstances<IConfigurationVerifier>()
+                    .Each(v => v.Verify());
+            }
         }
 
         private void Configure(ITypeProvider typeProvider)
@@ -310,13 +243,8 @@ namespace SpaceEngineers.Core.CompositionRoot
             registrations.Decorators().RegisterDecorators(Container);
         }
 
-        private T Resolve<T>(Type service, Func<T> producer)
+        private static T Resolve<T>(Type service, Func<T> producer)
         {
-            if (!_wasVerified && !_suppressResolveWarnings)
-            {
-                Console.WriteLine($"WRN: Trying to resolve '{service.FullName}' but dependency container isn't verified. Make sure you have set up auto verification on container creation to true '.WithManualVerification(false)' or you verified it manually.");
-            }
-
             return producer
                 .Try()
                 .Catch<Exception>()

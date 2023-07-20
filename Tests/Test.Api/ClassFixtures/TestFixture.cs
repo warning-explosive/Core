@@ -24,7 +24,9 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         {
             return Host
                 .CreateDefaultBuilder()
-                .ConfigureLogging(context => context.AddConsole().SetMinimumLevel(LogLevel.Trace));
+                .ConfigureLogging(context => context
+                    .AddConsole()
+                    .SetMinimumLevel(LogLevel.Trace));
         }
 
         /// <inheritdoc />
@@ -40,52 +42,16 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         }
 
         /// <inheritdoc />
-        public IDependencyContainer BoundedAboveContainer(
-            ITestOutputHelper output,
-            DependencyContainerOptions options,
-            params Assembly[] aboveAssemblies)
+        public IDependencyContainer DependencyContainer(DependencyContainerOptions options)
         {
-            return CreateDependencyContainer(
-                options,
-                DependencyContainer.CreateBoundedAbove,
-                aboveAssemblies);
-        }
-
-        /// <inheritdoc />
-        public IDependencyContainer ExactlyBoundedContainer(
-            ITestOutputHelper output,
-            DependencyContainerOptions options,
-            params Assembly[] exactAssemblies)
-        {
-            return CreateDependencyContainer(
-                options,
-                DependencyContainer.CreateExactlyBounded,
-                exactAssemblies);
-        }
-
-        /// <inheritdoc />
-        public IDependencyContainer Container(
-            ITestOutputHelper output,
-            DependencyContainerOptions options)
-        {
-            return CreateDependencyContainer(
-                options,
-                (containerOptions, _) => DependencyContainer.Create(containerOptions));
-        }
-
-        private static IDependencyContainer CreateDependencyContainer(
-            DependencyContainerOptions options,
-            Func<DependencyContainerOptions, Assembly[], IDependencyContainer> factory,
-            params Assembly[] assemblies)
-        {
-            var hash = DependencyContainerHash(options, assemblies);
+            var hash = DependencyContainerHash(options);
 
             if (Cache.TryGetValue(hash, out var container))
             {
                 return container;
             }
 
-            container = factory(options, assemblies);
+            container = CompositionRoot.DependencyContainer.Create(options);
 
             return Cache.AddOrUpdate(hash, _ => container, (_, _) => container);
         }

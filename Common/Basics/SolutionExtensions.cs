@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.Basics
         /// Has valid behavior only in test environment where we have full solution structure on disk
         /// </summary>
         /// <returns>Project directory path</returns>
-        /// <exception cref="DirectoryNotFoundException">If project directory not found or depth in 42 nested directories exceeded</exception>
+        /// <exception cref="DirectoryNotFoundException">If project directory wasn't found or depth in 42 nested directories exceeded</exception>
         public static FileInfo ProjectFile()
         {
             return FindFile("*.csproj");
@@ -101,7 +101,7 @@ namespace SpaceEngineers.Core.Basics
 
             if (!FileExist(directory, out var file))
             {
-                throw new DirectoryNotFoundException($"Directory with {pattern} not found");
+                throw new DirectoryNotFoundException($"Directory with {pattern} wasn't found");
             }
 
             return file ?? throw new InvalidOperationException("File must exists");

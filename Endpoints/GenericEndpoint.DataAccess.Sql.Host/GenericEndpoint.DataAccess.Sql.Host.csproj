@@ -28,7 +28,7 @@
         <Library />
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\Modules\DataAccess.Orm.PortgreSql.Host\DataAccess.Orm.PortgreSql.Host.csproj" />
+        <ProjectReference Include="..\..\Modules\DataAccess.Orm.Sql.Migrations\DataAccess.Orm.Sql.Migrations.csproj" />
         <ProjectReference Include="..\GenericEndpoint.DataAccess.Sql\GenericEndpoint.DataAccess.Sql.csproj" />
         <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
     </ItemGroup>

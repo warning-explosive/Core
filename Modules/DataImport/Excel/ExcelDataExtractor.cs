@@ -44,13 +44,13 @@
                 var sheet = sheets
                                 .OfType<Sheet>()
                                 .SingleOrDefault(sheet => sheet.Name.Value.Equals(specification.SheetName, StringComparison.Ordinal))
-                            ?? throw new InvalidOperationException($"Worksheet {specification.SheetName} not found");
+                            ?? throw new InvalidOperationException($"Worksheet {specification.SheetName} wasn't found");
 
                 var worksheetPart = document
                                         .WorkbookPart
                                         .WorksheetParts
                                         .SingleOrDefault(part => part.Uri.OriginalString.EndsWith(sheet.LocalName + sheet.SheetId + ".xml", StringComparison.Ordinal))
-                                    ?? throw new InvalidOperationException($"Worksheet {specification.SheetName} not found");
+                                    ?? throw new InvalidOperationException($"Worksheet {specification.SheetName} wasn't found");
 
                 var sharedStrings = SharedStrings(document);
 

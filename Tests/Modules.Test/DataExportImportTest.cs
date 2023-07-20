@@ -36,13 +36,14 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             var options = new DependencyContainerOptions()
-               .WithManualRegistrations(fixture.DelegateRegistration(container =>
-               {
-                   container.Register<IDataExtractor<TestDataRow, ExcelDataExtractorSpecification>, TestDataRowExcelDataExtractor>(EnLifestyle.Transient);
-                   container.Register<IDataTableReader<TestDataRow, ExcelTableMetadata>, TestDataRowDataTableReader>(EnLifestyle.Transient);
-               }));
+                .WithPluginAssemblies(assemblies)
+                .WithManualRegistrations(fixture.DelegateRegistration(container =>
+                {
+                    container.Register<IDataExtractor<TestDataRow, ExcelDataExtractorSpecification>, TestDataRowExcelDataExtractor>(EnLifestyle.Transient);
+                    container.Register<IDataTableReader<TestDataRow, ExcelTableMetadata>, TestDataRowDataTableReader>(EnLifestyle.Transient);
+                }));
 
-            DependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
+            DependencyContainer = fixture.DependencyContainer(options);
         }
 
         private IDependencyContainer DependencyContainer { get; }

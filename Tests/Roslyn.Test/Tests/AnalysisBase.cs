@@ -50,7 +50,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
 
             var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
-                                       ?? throw new InvalidOperationException("Project directory not found");
+                                       ?? throw new InvalidOperationException("Project directory wasn't found");
 
             var settingsDirectory = projectFileDirectory.StepInto("Settings");
 
@@ -59,7 +59,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                 .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(settingsDirectory)))
                 .WithExcludedNamespaces(IgnoredNamespaces.ToArray());
 
-            DependencyContainer = fixture.Container(output, options);
+            DependencyContainer = fixture.DependencyContainer(options);
         }
 
         /// <summary>

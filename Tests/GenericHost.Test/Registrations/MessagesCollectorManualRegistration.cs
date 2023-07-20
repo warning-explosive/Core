@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Registrations
 {
+    using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Registration;
     using Mocks;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
 
     internal class MessagesCollectorManualRegistration : IManualRegistration
     {

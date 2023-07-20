@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using Api.Enumerations;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Primitives;
     using CrossCuttingConcerns.Json;
@@ -30,7 +31,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using Settings;
 
     [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
-    [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
+    [Component(EnLifestyle.Singleton)]
     internal class RabbitMqIntegrationTransport : IIntegrationTransport,
                                                   IConfigurableIntegrationTransport,
                                                   IExecutableIntegrationTransport,
@@ -315,22 +316,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 return generatedName;
             }
-        }
-
-        public Task EnqueueError(
-            EndpointIdentity endpointIdentity,
-            IntegrationMessage message,
-            Exception exception,
-            CancellationToken token)
-        {
-            OnMessageReceived(() => message, exception);
-
-            if (_errorMessageHandlers.TryGetValue(endpointIdentity, out var handlers))
-            {
-                return Task.WhenAll(handlers.Select(handler => handler(message, exception, token)));
-            }
-
-            throw new InvalidOperationException($"Unable to process error message. Please register error handler for {endpointIdentity} endpoint.");
         }
 
         public Task StartBackgroundMessageProcessing(CancellationToken token)
@@ -889,27 +874,25 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 var consumer = (AsyncEventingBasicConsumer)sender;
 
-                EndpointIdentity endpointIdentity;
-                IntegrationMessage message;
-
                 try
                 {
-                    endpointIdentity = GetEndpointIdentityForConsumer(consumer, consumers);
-                    message = args.DecodeIntegrationMessage(jsonSerializer);
+                    var endpointIdentity = GetEndpointIdentityForConsumer(consumer, consumers);
+
+                    var message = args.DecodeIntegrationMessage(jsonSerializer);
+
                     ManageMessageHeaders(message, args);
+
+                    await InvokeMessageHandler(consumer, args, endpointIdentity, message, messageHandlers, onMessageReceived)
+                        .TryAsync()
+                        .Catch<Exception>((exception, t) => EnqueueError(endpointIdentity, message, exception, t))
+                        .Invoke(token())
+                        .ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
                     logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleReceivedMessage)} - {args.BasicProperties.MessageId}");
                     args.Nack(consumer.Model);
-                    return;
                 }
-
-                await InvokeMessageHandler(consumer, args, endpointIdentity, message, messageHandlers, onMessageReceived)
-                   .TryAsync()
-                   .Catch<Exception>((exception, t) => EnqueueError(endpointIdentity, message, exception, t))
-                   .Invoke(token())
-                   .ConfigureAwait(false);
             };
 
             static async Task InvokeMessageHandler(
@@ -981,6 +964,24 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 return messageHandler;
             }
+        }
+
+        private Task EnqueueError(
+            EndpointIdentity endpointIdentity,
+            IntegrationMessage message,
+            Exception exception,
+            CancellationToken token)
+        {
+            OnMessageReceived(() => message, exception);
+
+            if (_errorMessageHandlers.TryGetValue(endpointIdentity, out var handlers))
+            {
+                return Task.WhenAll(handlers.Select(handler => handler(message, exception, token)));
+            }
+
+            _logger.Error(exception, $"Message handling error: {message.ReflectedType.FullName}");
+
+            return Task.CompletedTask;
         }
 
         #endregion

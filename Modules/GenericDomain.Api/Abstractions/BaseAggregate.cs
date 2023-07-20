@@ -32,6 +32,7 @@ namespace SpaceEngineers.Core.GenericDomain.Api.Abstractions
         /// <summary>
         /// OnDomainEvent
         /// </summary>
+        // TODO: persist events on a par with outgoing messages on business transaction commit
         public static event EventHandler<DomainEventArgs>? OnDomainEvent;
 
         /// <inheritdoc />

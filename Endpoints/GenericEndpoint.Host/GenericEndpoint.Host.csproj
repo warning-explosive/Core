@@ -29,8 +29,9 @@
     </PropertyGroup>
     <ItemGroup>
       <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj" />
-      <ProjectReference Include="..\..\Modules\GenericHost\GenericHost.csproj" />
+      <ProjectReference Include="..\GenericHost\GenericHost.csproj" />
       <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj" />
+      <ProjectReference Include="..\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">

@@ -3,12 +3,12 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using System;
     using System.Collections.Concurrent;
     using System.Threading.Tasks;
+    using AutoRegistration.Api.Abstractions;
+    using AutoRegistration.Api.Attributes;
     using Basics.Primitives;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using IntegrationTransport.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
-    using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
 
     [ManuallyRegisteredComponent(nameof(RunHostTest))]
     internal class TestMessagesCollector : IResolvable<TestMessagesCollector>,
@@ -40,20 +40,6 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
 
             Messages.Clear();
             ErrorMessages.Clear();
-        }
-
-        public void Collect(object? sender, IntegrationTransportMessageReceivedEventArgs args)
-        {
-            if (args.Exception == null)
-            {
-                Messages.Enqueue(args.Message);
-            }
-            else
-            {
-                ErrorMessages.Enqueue((args.Message, args.Exception));
-            }
-
-            OnCollected?.Invoke(this, new MessageCollectedEventArgs(args.Message, args.Exception));
         }
 
         public async Task WaitUntilErrorMessageIsNotReceived(
@@ -170,6 +156,20 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
                     }
                 };
             }
+        }
+
+        private void Collect(object? sender, IntegrationTransportMessageReceivedEventArgs args)
+        {
+            if (args.Exception == null)
+            {
+                Messages.Enqueue(args.Message);
+            }
+            else
+            {
+                ErrorMessages.Enqueue((args.Message, args.Exception));
+            }
+
+            OnCollected?.Invoke(this, new MessageCollectedEventArgs(args.Message, args.Exception));
         }
 
         private static void Subscribe((TestMessagesCollector, EventHandler<MessageCollectedEventArgs>) state)

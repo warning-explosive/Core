@@ -28,6 +28,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry.Host
             this IHostBuilder hostBuilder,
             EndpointIdentity endpointIdentity)
         {
+            // TODO: #225 - verify endpoints and transports
             return hostBuilder
                 .ConfigureLogging(loggingBuilder => loggingBuilder
                     .AddOpenTelemetry(options =>
@@ -108,13 +109,13 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry.Host
             var assembly = AssembliesExtensions.FindRequiredAssembly(
                 AssembliesExtensions.BuildName(
                     nameof(SpaceEngineers),
-                    nameof(SpaceEngineers.Core),
-                    nameof(SpaceEngineers.Core.GenericEndpoint),
-                    nameof(SpaceEngineers.Core.GenericEndpoint.Telemetry)));
+                    nameof(Core),
+                    nameof(GenericEndpoint),
+                    nameof(Telemetry)));
 
             return builder
-                .WithEndpointPluginAssemblies(assembly)
                 .ModifyContainerOptions(options => options
+                    .WithPluginAssemblies(assembly)
                     .WithManualRegistrations(new TelemetryManualRegistration(tracerProvider, tracer, meterProvider, meter)));
         }
     }

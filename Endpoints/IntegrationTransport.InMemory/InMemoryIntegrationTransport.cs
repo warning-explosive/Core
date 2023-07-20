@@ -3,6 +3,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -10,15 +11,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
     using Api.Enumerations;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
+    using AutoRegistration.Api.Enumerations;
     using Basics;
     using Basics.Enumerations;
-    using Basics.Exceptions;
     using Basics.Primitives;
+    using CrossCuttingConcerns.Logging;
     using GenericEndpoint.Contract;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
+    using Microsoft.Extensions.Logging;
 
-    [ManuallyRegisteredComponent("We have isolation between several endpoints. Each of them have their own DependencyContainer. We need to pass the same instance of transport into all DI containers.")]
+    [Component(EnLifestyle.Singleton)]
     internal class InMemoryIntegrationTransport : IIntegrationTransport,
                                                   IConfigurableIntegrationTransport,
                                                   IExecutableIntegrationTransport,
@@ -26,11 +29,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
                                                   IResolvable<IConfigurableIntegrationTransport>,
                                                   IResolvable<IExecutableIntegrationTransport>
     {
-        private readonly EndpointIdentity _endpointIdentity;
-
         private readonly AsyncManualResetEvent _ready;
         private readonly MessageQueue<IntegrationMessage> _inputQueue;
         private readonly DeferredQueue<IntegrationMessage> _delayedDeliveryQueue;
+
+        private readonly ILogger _logger;
         private readonly IEndpointInstanceSelectionBehavior _instanceSelectionBehavior;
 
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>> _topology;
@@ -39,11 +42,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
         private EnIntegrationTransportStatus _status;
 
         public InMemoryIntegrationTransport(
-            EndpointIdentity endpointIdentity,
+            ILogger logger,
             IEndpointInstanceSelectionBehavior instanceSelectionBehavior)
         {
-            _endpointIdentity = endpointIdentity;
-
             _status = EnIntegrationTransportStatus.Stopped;
             _ready = new AsyncManualResetEvent(false);
 
@@ -52,6 +53,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
             var heap = new BinaryHeap<HeapEntry<IntegrationMessage, DateTime>>(EnOrderingDirection.Asc);
             _delayedDeliveryQueue = new DeferredQueue<IntegrationMessage>(heap, PrioritySelector);
 
+            _logger = logger;
             _instanceSelectionBehavior = instanceSelectionBehavior;
 
             _topology = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, ConcurrentDictionary<string, ConcurrentDictionary<EndpointIdentity, Func<IntegrationMessage, Task>>>>>();
@@ -129,29 +131,13 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
             return true;
         }
 
-        public Task EnqueueError(
-            EndpointIdentity endpointIdentity,
-            IntegrationMessage message,
-            Exception exception,
-            CancellationToken token)
-        {
-            MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(message, exception));
-
-            if (_errorMessageHandlers.TryGetValue(endpointIdentity, out var handlers))
-            {
-                return Task.WhenAll(handlers.Select(handler => handler(message, exception, token)));
-            }
-
-            throw new InvalidOperationException($"Unable to process error message. Please register error handler for {endpointIdentity} endpoint.");
-        }
-
         public Task StartBackgroundMessageProcessing(CancellationToken token)
         {
             Status = EnIntegrationTransportStatus.Starting;
 
             var messageProcessingTask = Task.WhenAll(
                 _delayedDeliveryQueue.Run(EnqueueInput, token),
-                _inputQueue.Run(MessageProcessingCallback, token));
+                _inputQueue.Run(HandleReceivedMessage, token));
 
             _ready.Set();
 
@@ -165,84 +151,138 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
             return _inputQueue.Enqueue(message, token);
         }
 
-        private Task MessageProcessingCallback(IntegrationMessage message, CancellationToken token)
-        {
-            return DispatchToEndpoint(message, token)
-                .TryAsync()
-                .Catch<Exception>((exception, t) => EnqueueError(_endpointIdentity, message, exception, t))
-                .Invoke(token);
-        }
-
-        private async Task DispatchToEndpoint(IntegrationMessage message, CancellationToken token)
+        [SuppressMessage("Analysis", "CA1031", Justification = "async event handler with void as retun value")]
+        private async Task HandleReceivedMessage(IntegrationMessage message, CancellationToken token)
         {
             await _ready.WaitAsync(token).ConfigureAwait(false);
 
+            try
+            {
+                ManageMessageHeaders(message);
+
+                await Dispatch(message)
+                    .Select(async pair =>
+                    {
+                        var (messageHandler, reflectedType) = pair;
+
+                        if (messageHandler == null)
+                        {
+                            await EnqueueError(
+                                    null,
+                                    message,
+                                    new InvalidOperationException($"Target endpoint {message.GetTargetEndpoint()} for message '{message.ReflectedType.FullName}' wasn't found"),
+                                    token)
+                                .ConfigureAwait(false);
+
+                            return;
+                        }
+
+                        var copy = message.ContravariantClone(reflectedType);
+
+                        await InvokeMessageHandler(messageHandler, copy)
+                            .TryAsync()
+                            .Catch<Exception>((exception, t) => EnqueueError(copy.ReadHeader<HandledBy>()?.Value, message, exception, t))
+                            .Invoke(token)
+                            .ConfigureAwait(false);
+                    })
+                    .WhenAll()
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, $"{nameof(InMemoryIntegrationTransport)}.{nameof(HandleReceivedMessage)} - {message.ReadRequiredHeader<Id>().StringValue}");
+            }
+        }
+
+        private static void ManageMessageHeaders(IntegrationMessage message)
+        {
             message.OverwriteHeader(new ActualDeliveryDate(DateTime.UtcNow));
+        }
 
-            var targetEndpointLogicalName = message.GetTargetEndpoint();
-
+        private IEnumerable<(Func<IntegrationMessage, Task>?, Type)> Dispatch(IntegrationMessage message)
+        {
             if (_topology.TryGetValue(message.ReflectedType.GenericTypeDefinitionOrSelf(), out var contravariantGroup))
             {
-                var messageHandlers = contravariantGroup
-                   .SelectMany(logicalGroup =>
-                   {
-                       var reflectedType = logicalGroup.Key.ApplyGenericArguments(message.ReflectedType);
+                return contravariantGroup
+                    .SelectMany(logicalGroup =>
+                    {
+                        var targetEndpointLogicalName = message.GetTargetEndpoint();
+                        var reflectedType = logicalGroup.Key.ApplyGenericArguments(message.ReflectedType);
 
-                       return logicalGroup
-                          .Value
-                          .Where(group => targetEndpointLogicalName.Equals("*", StringComparison.Ordinal)
-                                       || group.Key.Equals(targetEndpointLogicalName, StringComparison.OrdinalIgnoreCase))
-                          .Select(group =>
-                          {
-                              var (_, instanceGroup) = group;
-                              var selectedEndpointInstanceIdentity = _instanceSelectionBehavior.SelectInstance(message, instanceGroup.Keys.ToList());
-                              var messageHandler = instanceGroup[selectedEndpointInstanceIdentity];
+                        return logicalGroup
+                            .Value
+                            .Where(group => targetEndpointLogicalName.Equals("*", StringComparison.Ordinal)
+                                            || group.Key.Equals(targetEndpointLogicalName, StringComparison.OrdinalIgnoreCase))
+                            .Select(group =>
+                            {
+                                var (_, instanceGroup) = group;
+                                var selectedEndpointInstanceIdentity = _instanceSelectionBehavior.SelectInstance(message, instanceGroup.Keys.ToList());
+                                var messageHandler = instanceGroup[selectedEndpointInstanceIdentity];
 
-                              return new Func<Task>(async () =>
-                              {
-                                  var copy = message.ContravariantClone(reflectedType);
-
-                                  MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(copy, default));
-
-                                  try
-                                  {
-                                      await messageHandler
-                                         .Invoke(copy)
-                                         .ConfigureAwait(false);
-                                  }
-                                  catch (OperationCanceledException)
-                                  {
-                                      return;
-                                  }
-
-                                  var rejectReason = copy.ReadHeader<RejectReason>();
-
-                                  if (rejectReason?.Value != null)
-                                  {
-                                      throw rejectReason.Value.Rethrow();
-                                  }
-                              });
-                          });
-                   })
-                   .ToList();
-
-                if (messageHandlers.Any())
-                {
-                    await messageHandlers
-                       .Select(messageHandler => messageHandler.Invoke())
-                       .WhenAll()
-                       .ConfigureAwait(false);
-
-                    return;
-                }
+                                (Func<IntegrationMessage, Task>?, Type) pair = (messageHandler, reflectedType);
+                                return pair;
+                            });
+                    });
             }
 
-            throw new NotFoundException($"Target endpoint {targetEndpointLogicalName} for message '{message.ReflectedType.FullName}' not found");
+            return new (Func<IntegrationMessage, Task>?, Type)[]
+            {
+                (null, message.ReflectedType)
+            };
+        }
+
+        private async Task InvokeMessageHandler(
+            Func<IntegrationMessage, Task> messageHandler,
+            IntegrationMessage message)
+        {
+            OnMessageReceived(message, default);
+
+            try
+            {
+                await messageHandler
+                    .Invoke(message)
+                    .ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            var rejectReason = message.ReadHeader<RejectReason>();
+
+            if (rejectReason?.Value != null)
+            {
+                throw rejectReason.Value.Rethrow();
+            }
+        }
+
+        private Task EnqueueError(
+            EndpointIdentity? endpointIdentity,
+            IntegrationMessage message,
+            Exception exception,
+            CancellationToken token)
+        {
+            OnMessageReceived(message, exception);
+
+            if (endpointIdentity != null
+                && _errorMessageHandlers.TryGetValue(endpointIdentity, out var handlers))
+            {
+                return Task.WhenAll(handlers.Select(handler => handler(message, exception, token)));
+            }
+
+            _logger.Error(exception, $"Message handling error: {message.ReflectedType.FullName}");
+
+            return Task.CompletedTask;
         }
 
         private static DateTime PrioritySelector(IntegrationMessage message)
         {
             return message.ReadRequiredHeader<DeferredUntil>().Value;
+        }
+
+        private void OnMessageReceived(IntegrationMessage integrationMessage, Exception? exception)
+        {
+            MessageReceived?.Invoke(this, new IntegrationTransportMessageReceivedEventArgs(integrationMessage, exception));
         }
     }
 }

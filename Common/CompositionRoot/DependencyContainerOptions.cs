@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.CompositionRoot
     using System.Reflection;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
+    using Basics;
     using Registration;
 
     /// <summary>
@@ -14,17 +15,24 @@ namespace SpaceEngineers.Core.CompositionRoot
     [ManuallyRegisteredComponent("Is created manually during DependencyContainer initialization")]
     public class DependencyContainerOptions : IResolvable<DependencyContainerOptions>
     {
+        private readonly HashSet<Assembly> _assemblies;
+
         /// <summary> .cctor </summary>
         public DependencyContainerOptions()
         {
+            _assemblies = new HashSet<Assembly>
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot)))
+            };
+
             ConstructorResolutionBehavior = new ConstructorResolutionBehavior();
 
             ManualRegistrations = Array.Empty<IManualRegistration>();
             Overrides = Array.Empty<IComponentsOverride>();
-            ExcludedAssemblies = Array.Empty<Assembly>();
             ExcludedNamespaces = Array.Empty<string>();
             AdditionalOurTypes = Array.Empty<Type>();
-            ManualVerification = false;
         }
 
         /// <summary>
@@ -43,29 +51,19 @@ namespace SpaceEngineers.Core.CompositionRoot
         public IReadOnlyCollection<IComponentsOverride> Overrides { get; private set; }
 
         /// <summary>
-        /// Excluded assemblies
-        /// Assemblies excluded from type loading
-        /// These assemblies and their types will be identified as third party and won't participate in components registrations
+        /// Assemblies which will be identified as ours and will take part in components registration
         /// </summary>
-        public IReadOnlyCollection<Assembly> ExcludedAssemblies { get; private set; }
+        public IReadOnlyCollection<Assembly> Assemblies => _assemblies;
 
         /// <summary>
-        /// Excluded namespaces
-        /// Namespaces excluded from type loading
-        /// These types will be identified as third party and won't participate in components registrations
+        /// Namespaces which will be identified as third party and won't participate in components registrations
         /// </summary>
         public IReadOnlyCollection<string> ExcludedNamespaces { get; private set; }
 
         /// <summary>
-        /// Additional our types
-        /// Types that will be identified as ours and will take part in components registration
+        /// Types which will be identified as ours and will take part in components registration
         /// </summary>
         public IReadOnlyCollection<Type> AdditionalOurTypes { get; private set; }
-
-        /// <summary>
-        /// Disables or enables automatic verification on container's creation
-        /// </summary>
-        public bool ManualVerification { get; private set; }
 
         /// <inheritdoc />
         public override int GetHashCode()
@@ -73,7 +71,7 @@ namespace SpaceEngineers.Core.CompositionRoot
             return HashCode.Combine(
                 CombineHashCode(ManualRegistrations),
                 CombineHashCode(Overrides),
-                CombineHashCode(ExcludedAssemblies),
+                CombineHashCode(Assemblies),
                 CombineHashCode(ExcludedNamespaces),
                 CombineHashCode(AdditionalOurTypes));
 
@@ -110,13 +108,21 @@ namespace SpaceEngineers.Core.CompositionRoot
         }
 
         /// <summary>
-        /// With excluded assemblies
+        /// With plugin assemblies
         /// </summary>
-        /// <param name="assemblies">Excluded assemblies</param>
+        /// <param name="assemblies">Assemblies</param>
         /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithExcludedAssemblies(params Assembly[] assemblies)
+        public DependencyContainerOptions WithPluginAssemblies(params Assembly[] assemblies)
         {
-            ExcludedAssemblies = ExcludedAssemblies.Concat(assemblies).ToList();
+            foreach (var assembly in assemblies)
+            {
+                if (_assemblies.Contains(assembly))
+                {
+                    throw new InvalidOperationException($"Assembly '{assembly}' already added as plugin assembly");
+                }
+
+                _assemblies.Add(assembly);
+            }
 
             return this;
         }
@@ -141,18 +147,6 @@ namespace SpaceEngineers.Core.CompositionRoot
         public DependencyContainerOptions WithAdditionalOurTypes(params Type[] additionalOurTypes)
         {
             AdditionalOurTypes = AdditionalOurTypes.Concat(additionalOurTypes).ToHashSet();
-
-            return this;
-        }
-
-        /// <summary>
-        /// Disables or enables automatic verification on container's creation
-        /// </summary>
-        /// <param name="attribute">Attribute value</param>
-        /// <returns>DependencyContainerOptions</returns>
-        public DependencyContainerOptions WithManualVerification(bool attribute)
-        {
-            ManualVerification = attribute;
 
             return this;
         }

@@ -89,6 +89,14 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
         }
 
         /// <inheritdoc />
+        public Task<TReply> RpcRequest<TRequest, TReply>(TRequest request, CancellationToken token)
+            where TRequest : IIntegrationRequest<TReply>
+            where TReply : IIntegrationReply
+        {
+            throw new NotImplementedException("#225");
+        }
+
+        /// <inheritdoc />
         public Task Reply<TRequest, TReply>(TRequest request, TReply reply, CancellationToken token)
             where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply

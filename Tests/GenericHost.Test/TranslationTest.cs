@@ -17,8 +17,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using CompositionRoot.Registration;
     using Core.Test.Api.ClassFixtures;
     using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.Sql.Host.Model;
     using DataAccess.Orm.Sql.Linq;
+    using DataAccess.Orm.Sql.Migrations.Model;
     using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Sql.Transaction;
@@ -26,9 +26,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using DatabaseEntities;
     using DatabaseEntities.Relations;
     using GenericDomain.EventSourcing.Sql;
-    using GenericEndpoint.DataAccess.Sql.Host;
+    using GenericEndpoint.DataAccess.Sql.Postgres.Host;
     using GenericEndpoint.Host;
-    using GenericHost;
     using IntegrationTransport.Host;
     using Messages;
     using Microsoft.Extensions.Hosting;
@@ -109,7 +108,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     var startupActions = new[]
                     {
-                        typeof(CreateOrGetExistedPostgreSqlDatabaseHostStartupAction)
+                        typeof(CreateOrGetExistedPostgreSqlDatabaseHostedServiceStartupAction)
                     };
 
                     var additionalOurTypes = databaseEntities
@@ -122,9 +121,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     };
 
                     var host = hostBuilder
-                        .UseIntegrationTransport((_, builder) => builder
-                            .WithInMemoryIntegrationTransport()
-                            .BuildOptions())
+                        .UseInMemoryIntegrationTransport(IntegrationTransport.InMemory.Identity.TransportIdentity())
                         .UseEndpoint(TestIdentity.Endpoint10,
                             (_, builder) => builder
                                 .WithPostgreSqlDataAccess(options => options
@@ -135,11 +132,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
                                 .BuildOptions())
                         .BuildHost(settingsDirectory);
 
-                    var awaiter = host.WaitUntilTransportIsNotRunning(cts.Token);
-
-                    host.StartAsync(cts.Token).Wait(cts.Token);
-
-                    awaiter.Wait(cts.Token);
+                    host
+                        .StartAsync(cts.Token)
+                        .Wait(cts.Token);
 
                     return host;
                 },
@@ -191,7 +186,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
              */
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - all",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - all",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -202,7 +197,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - read\\write complex object (with relations, arrays, json, nullable columns) without null values",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - read\\write complex object (with relations, arrays, json, nullable columns) without null values",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -213,7 +208,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - read\\write complex object (with relations, arrays, json, nullable columns) with null values",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - read\\write complex object (with relations, arrays, json, nullable columns) with null values",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -224,7 +219,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - all mtm",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - all mtm",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().AllMtm<Community, Participant, Guid, Guid>(container.Resolve<IModelProvider>(), it => it.Participants)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -235,7 +230,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - all mtm (reverse)",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - all mtm (reverse)",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().AllMtm<Participant, Community, Guid, Guid>(container.Resolve<IModelProvider>(), it => it.Communities)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -246,7 +241,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - all with circular mtm",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - all with circular mtm",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Community>()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -257,7 +252,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - all with circular mtm (reverse)",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - all with circular mtm (reverse)",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Participant>()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -273,7 +268,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - unary filter",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - unary filter",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => !it.BooleanField || it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -284,7 +279,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - unary projection to anonymous class",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - unary projection to anonymous class",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { Negation = !it.BooleanField })),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -295,7 +290,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - unary projection",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - unary projection",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => !it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -311,7 +306,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison !=",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - binary comparison !=",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.IntField != 43)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -322,7 +317,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison <",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - binary comparison <",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.IntField < 43)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -333,7 +328,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison <=",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - binary comparison <=",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.IntField <= 42)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -344,7 +339,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison ==",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - binary comparison ==",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.IntField == 42)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -355,7 +350,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison >",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - binary comparison >",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.IntField > 41)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -366,7 +361,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - binary comparison >=",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - binary comparison >=",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.IntField >= 42)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -377,7 +372,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - binary filter",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - binary filter",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.NullableStringField).Where(it => it != null)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -388,7 +383,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - reverse binary filter",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - reverse binary filter",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.NullableStringField).Where(it => null != it)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -404,7 +399,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter after projection with renaming",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - ternary filter after projection with renaming",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, Filter = it.NullableStringField }).Where(it => it.Filter != null ? true : false)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -415,7 +410,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter after projection",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - ternary filter after projection",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, it.NullableStringField }).Where(it => it.NullableStringField != null ? true : false)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -426,7 +421,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary filter",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - ternary filter",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.NullableStringField != null ? true : false)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -437,7 +432,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - ternary projection",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - ternary projection",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.NullableStringField != null ? it.NullableStringField : string.Empty)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -453,7 +448,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - boolean property filter after anonymous projection",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - boolean property filter after anonymous projection",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.BooleanField, it.StringField }).Where(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -464,7 +459,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - boolean property filter",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - boolean property filter",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -475,7 +470,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - projection/filter chain",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - projection/filter chain",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.NullableStringField, it.StringField, it.IntField }).Select(it => new { it.NullableStringField, it.IntField }).Where(it => it.NullableStringField != null).Select(it => new { it.IntField }).Where(it => it.IntField > 0).Where(it => it.IntField <= 42).Select(it => it.IntField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -491,7 +486,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - coalesce projection",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - coalesce projection",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.NullableStringField ?? string.Empty)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -502,7 +497,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection to anonymous type",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - distinct projection to anonymous type",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).Select(it => new { it.StringField }).Distinct()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -513,7 +508,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection to primitive type",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - distinct projection to primitive type",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).Select(it => it.StringField).Distinct()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -524,7 +519,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection with join expression",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - distinct projection with join expression",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay").Select(it => it.User.Nickname).Distinct()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -535,7 +530,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - distinct projection with predicate",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - distinct projection with predicate",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, it.BooleanField }).Where(it => it.BooleanField).Distinct()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -551,7 +546,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - anonymous projections chain",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - anonymous projections chain",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { it.StringField, it.IntField, it.BooleanField }).Select(it => new { it.StringField, it.IntField }).Select(it => new { it.IntField }).Select(it => it.IntField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -562,7 +557,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - change anonymous projection parameter name",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - change anonymous projection parameter name",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => new { Nsf = it.NullableStringField, Sf = it.StringField }).Where(it => it.Nsf != null)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -578,7 +573,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property comparison",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - enum property comparison",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.Enum > EnEnum.Two)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -589,7 +584,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property filter (equals operator)",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - enum property filter (equals operator)",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.Enum == EnEnum.Three)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -600,7 +595,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property filter (object.Equals)",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - enum property filter (object.Equals)",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.Enum.Equals(EnEnum.Three))),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -611,7 +606,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property filter (array.Contains)",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - enum property filter (array.Contains)",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => new[] { EnEnum.Three }.Contains(it.Enum))),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -622,7 +617,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - enum property filter (list.Contains)",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - enum property filter (list.Contains)",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => new List<EnEnum> { EnEnum.Three }.Contains(it.Enum))),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -633,7 +628,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - enum.HasFlag()",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - enum.HasFlag()",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<ComplexDatabaseEntity>().Select(it => it.EnumFlags.HasFlag(EnEnumFlags.B | EnEnumFlags.C))),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -649,7 +644,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one property projection - bool",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - one property projection - bool",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -660,7 +655,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one property projection - guid",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - one property projection - guid",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.PrimaryKey)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -671,7 +666,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one property projection - int",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - one property projection - int",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.IntField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -682,7 +677,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one property projection - string",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - one property projection - string",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.StringField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -693,7 +688,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - property chain with translated member",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - property chain with translated member",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.StringField.Length)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -709,7 +704,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - all",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - all",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().All(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -720,7 +715,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - all async",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - all async",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().CachedExpression(Guid.NewGuid().ToString()).AllAsync(it => it.BooleanField, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -731,7 +726,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - any",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).Any()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -742,7 +737,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - any 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Any(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -753,7 +748,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any async",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - any async",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).AnyAsync(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -764,7 +759,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - any async 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - any async 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().CachedExpression(Guid.NewGuid().ToString()).AnyAsync(it => it.BooleanField, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -775,7 +770,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - count",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).Count()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -786,7 +781,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - count 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Count(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -797,7 +792,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count async",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - count async",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).CountAsync(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -808,7 +803,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - count async 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - count async 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().CachedExpression(Guid.NewGuid().ToString()).CountAsync(it => it.BooleanField, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -819,7 +814,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - first",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().First(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -830,7 +825,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - first 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).First()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -841,7 +836,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first async",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - first async",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().CachedExpression(Guid.NewGuid().ToString()).FirstAsync(it => it.BooleanField, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -852,7 +847,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first async 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - first async 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).FirstAsync(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -863,7 +858,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first or default",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - first or default",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().FirstOrDefault(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -874,7 +869,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first or default 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - first or default 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).FirstOrDefault()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -885,7 +880,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first or default async",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - first or default async",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().CachedExpression(Guid.NewGuid().ToString()).FirstOrDefaultAsync(it => it.BooleanField, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -896,7 +891,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - first or default async 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - first or default async 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).FirstOrDefaultAsync(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -907,7 +902,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Single(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -918,7 +913,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).Single()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -929,7 +924,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single async",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single async",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().CachedExpression(Guid.NewGuid().ToString()).SingleAsync(it => it.BooleanField, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -940,7 +935,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single async 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single async 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).SingleAsync(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -951,7 +946,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single or default",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().SingleOrDefault(it => it.BooleanField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -962,7 +957,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single or default 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).SingleOrDefault()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -973,7 +968,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default async",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single or default async",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().CachedExpression(Guid.NewGuid().ToString()).SingleOrDefaultAsync(it => it.BooleanField, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -984,7 +979,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default async 2",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single or default async 2",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).SingleOrDefaultAsync(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -995,7 +990,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single by primary key",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single by primary key",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Single<DatabaseEntity, Guid>(databaseEntity.PrimaryKey, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1006,7 +1001,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - scalar result - single or default by primary key",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - scalar result - single or default by primary key",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().SingleOrDefault<DatabaseEntity, Guid>(databaseEntity.PrimaryKey, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1022,7 +1017,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in filter",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - one-to-one relation in filter",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.Blog.Theme == "MilkyWay" && it.User.Nickname == "SpaceEngineer")),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1033,7 +1028,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection with filter as source",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - one-to-one relation in projection with filter as source",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.DateTime > DateTime.MinValue).Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1044,7 +1039,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - one-to-one relation in projection",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - one-to-one relation in projection",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Select(it => new { it.Blog.Theme, Author = it.User.Nickname })),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1055,7 +1050,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - select one-to-one relation",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - select one-to-one relation",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Where(it => it.DateTime > DateTime.MinValue).Select(it => it.Blog)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1071,7 +1066,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - order by join",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - order by join",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().OrderByDescending(it => it.Blog.Theme).ThenBy(it => it.User.Nickname)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1082,7 +1077,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - order by then by",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - order by then by",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).OrderBy(it => it.IntField).ThenByDescending(it => it.StringField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1093,7 +1088,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - order by",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - order by",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField).OrderBy(it => it.IntField)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1109,7 +1104,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - sub-query",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - sub-query",
                 new Func<IDependencyContainer, object?>(container =>
                 {
                     var subQuery = container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Select(it => it.PrimaryKey);
@@ -1124,7 +1119,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - sub-query with parameters",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - sub-query with parameters",
                 new Func<IDependencyContainer, object?>(container =>
                 {
                     var subQuery = container.Resolve<IDatabaseContext>().All<DatabaseEntity>().Where(it => it.BooleanField == true).Select(it => it.PrimaryKey);
@@ -1144,18 +1139,18 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - sql view translation after migration",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - sql view translation after migration",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseColumn>().Where(column => column.Schema == schema).First()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
-                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Column)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.DataType)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.DefaultValue)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Length)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Nullable)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Position)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Precision)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Scale)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Schema)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Table)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{nameof(DataAccess.Orm.Sql.Host.Migrations)}"".""{nameof(DatabaseColumn)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseColumn.Schema)}"" IS NULL ELSE a.""{nameof(DatabaseColumn.Schema)}"" = @param_1 END{Environment.NewLine}FETCH FIRST 1 ROWS ONLY",
+                        $@"SELECT{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Column)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.DataType)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.DefaultValue)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Length)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Nullable)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Position)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Precision)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.PrimaryKey)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Scale)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Schema)}"",{Environment.NewLine}{'\t'}a.""{nameof(DatabaseColumn.Table)}""{Environment.NewLine}FROM{Environment.NewLine}{'\t'}""{nameof(DataAccess.Orm.Sql.Migrations)}"".""{nameof(DatabaseColumn)}"" a{Environment.NewLine}WHERE{Environment.NewLine}{'\t'}CASE WHEN @param_0 IS NULL THEN a.""{nameof(DatabaseColumn.Schema)}"" IS NULL ELSE a.""{nameof(DatabaseColumn.Schema)}"" = @param_1 END{Environment.NewLine}FETCH FIRST 1 ROWS ONLY",
                         new[] { new SqlCommandParameter("param_0", schema, typeof(string)), new SqlCommandParameter("param_1", schema, typeof(string)) },
                         log)),
                 Array.Empty<IDatabaseEntity>()
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - sql view translation before migration (cachekey = 'C3B9DD2E-7279-455D-A718-356FD8F86035')",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - sql view translation before migration (cachekey = 'C3B9DD2E-7279-455D-A718-356FD8F86035')",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseColumn>().Where(column => column.Schema == schema).CachedExpression("C3B9DD2E-7279-455D-A718-356FD8F86035").ToListAsync(token).Result.First()),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1171,7 +1166,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - select json column",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - select json column",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseDomainEvent>().Where(it => it.AggregateId == aggregateId).Select(it => it.DomainEvent)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1182,7 +1177,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - select json column to anonymous type",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - select json column to anonymous type",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseDomainEvent>().Where(it => it.AggregateId == aggregateId).Select(it => new { it.AggregateId, it.DomainEvent })),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1193,7 +1188,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - select json attribute",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - select json attribute",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseDomainEvent>().Where(it => it.DomainEvent.AsJsonObject().HasJsonAttribute(nameof(UserWasCreated.Username)) && it.DomainEvent.AsJsonObject().GetJsonAttribute<Username>(nameof(UserWasCreated.Username)).HasJsonAttribute(nameof(Username.Value)) && it.DomainEvent.AsJsonObject().GetJsonAttribute<Username>(nameof(UserWasCreated.Username)).GetJsonAttribute<string>(nameof(Username.Value)) == username.AsJsonObject()).Select(it => it.DomainEvent.AsJsonObject().GetJsonAttribute<Username>(nameof(UserWasCreated.Username)).GetJsonAttribute<string>(nameof(Username.Value)).Value)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1204,7 +1199,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - compose json object",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - compose json object",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<DatabaseDomainEvent>().Select(it => it.DomainEvent.AsJsonObject().ExcludeJsonAttribute("$id").ExcludeJsonAttribute("$type").ExcludeJsonAttribute(nameof(UserWasCreated.Salt)).ExcludeJsonAttribute(nameof(UserWasCreated.PasswordHash)).ExcludeJsonAttribute(nameof(UserWasCreated.Username)).ConcatJsonObjects<ComposedJsonObject>(it.DomainEvent.AsJsonObject().GetJsonAttribute<Username>(nameof(UserWasCreated.Username))).TypedValue)),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1220,7 +1215,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - insert entity",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - insert entity",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { databaseEntity }, EnInsertBehavior.Default).CachedExpression(Guid.NewGuid().ToString()).Invoke(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1231,7 +1226,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - insert several vales",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - insert several vales",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { databaseEntity, DatabaseEntity.Generate(aggregateId) }, EnInsertBehavior.Default).CachedExpression(Guid.NewGuid().ToString()).Invoke(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1242,7 +1237,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - insert entities",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - insert entities",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Insert(new IDatabaseEntity[] { user, blog, post }, EnInsertBehavior.Default).CachedExpression(Guid.NewGuid().ToString()).Invoke(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1258,7 +1253,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - delete entity",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - delete entity",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Delete<DatabaseEntity>().Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).Invoke(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1269,7 +1264,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - delete entity with query parameters",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - delete entity with query parameters",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Delete<DatabaseEntity>().Where(it => it.BooleanField == true && it.IntField == 42).CachedExpression(Guid.NewGuid().ToString()).Invoke(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1285,7 +1280,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - update entity with column reference",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - update entity with column reference",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Update<DatabaseEntity>().Set(it => it.IntField.Assign(it.IntField + 1)).Where(it => it.BooleanField).CachedExpression(Guid.NewGuid().ToString()).Invoke(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1296,7 +1291,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - update entity with multiple sets",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - update entity with multiple sets",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().Update<DatabaseEntity>().Set(it => it.IntField.Assign(it.IntField + 1)).Set(it => it.Enum.Assign(EnEnum.Two)).Where(it => it.BooleanField == true).CachedExpression(Guid.NewGuid().ToString()).Invoke(token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,
@@ -1312,7 +1307,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             yield return new object[]
             {
-                $"{nameof(DataAccess.Orm.PostgreSql)} - explain analyze",
+                $"{nameof(DataAccess.Orm.Sql.Postgres)} - explain analyze",
                 new Func<IDependencyContainer, object?>(container => container.Resolve<IDatabaseContext>().All<Post>().Select(it => new { it.Blog.Theme, Author = it.User.Nickname }).CachedExpression(Guid.NewGuid().ToString()).Explain(true, token).Result),
                 new Action<ICommand, ITestOutputHelper>(
                     (query, log) => CheckSqlCommand(query,

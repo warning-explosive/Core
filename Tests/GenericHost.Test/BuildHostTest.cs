@@ -7,28 +7,32 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Abstractions;
-    using AuthEndpoint.Contract;
     using Basics;
     using CompositionRoot;
     using CompositionRoot.Exceptions;
     using CompositionRoot.Extensions;
-    using DataAccess.Orm.PostgreSql.Host.StartupActions;
+    using Core.Test.Api;
+    using Core.Test.Api.ClassFixtures;
     using DataAccess.Orm.Sql.Connection;
-    using DataAccess.Orm.Sql.Host.Model;
+    using DataAccess.Orm.Sql.Migrations.Model;
     using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Model.Attributes;
+    using DataAccess.Orm.Sql.Postgres.Connection;
     using DataAccess.Orm.Sql.Transaction;
     using DatabaseEntities;
     using DatabaseEntities.Relations;
+    using Extensions;
     using GenericDomain.EventSourcing.Sql;
+    using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Authorization;
     using GenericEndpoint.Authorization.Host;
-    using GenericEndpoint.Contract.Abstractions;
+    using GenericEndpoint.Contract;
     using GenericEndpoint.DataAccess.Sql.Deduplication;
     using GenericEndpoint.DataAccess.Sql.Host;
     using GenericEndpoint.DataAccess.Sql.Host.BackgroundWorkers;
     using GenericEndpoint.DataAccess.Sql.Host.StartupActions;
+    using GenericEndpoint.DataAccess.Sql.Postgres.Host;
+    using GenericEndpoint.DataAccess.Sql.Postgres.Host.StartupActions;
     using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.EventSourcing.Host.StartupActions;
     using GenericEndpoint.Host;
@@ -36,25 +40,21 @@
     using GenericEndpoint.Host.StartupActions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Pipeline;
-    using GenericEndpoint.RpcRequest;
     using GenericEndpoint.Telemetry;
     using GenericEndpoint.Telemetry.Host;
-    using GenericHost;
+    using IntegrationTransport.Api;
+    using IntegrationTransport.Api.Abstractions;
     using IntegrationTransport.Host;
     using IntegrationTransport.Host.BackgroundWorkers;
-    using IntegrationTransport.Integration;
+    using IntegrationTransport.Host.StartupActions;
+    using IntegrationTransport.InMemory;
     using MessageHandlers;
     using Messages;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using SpaceEngineers.Core.GenericEndpoint.Api.Abstractions;
-    using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
-    using SpaceEngineers.Core.Test.Api;
-    using SpaceEngineers.Core.Test.Api.ClassFixtures;
     using StartupActions;
     using Xunit;
     using Xunit.Abstractions;
-    using EndpointIdentity = GenericEndpoint.Contract.EndpointIdentity;
     using IntegrationMessage = GenericEndpoint.Messaging.IntegrationMessage;
 
     /// <summary>
@@ -84,31 +84,33 @@
                 .StepInto("Settings")
                 .StepInto(nameof(BuildHostTest));
 
-            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
-                hostBuilder => hostBuilder
-                   .UseIntegrationTransport((_, builder) => builder
-                       .WithInMemoryIntegrationTransport()
-                       .WithOpenTelemetry() // TODO: #225 - remove
-                       .BuildOptions()));
+            var inMemoryIntegrationTransportIdentity = Identity.TransportIdentity();
 
-            var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
-                hostBuilder => hostBuilder
-                   .UseIntegrationTransport((_, builder) => builder
-                       .WithRabbitMqIntegrationTransport()
-                       .WithOpenTelemetry() // TODO: #225 - remove
-                       .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<IHostBuilder, TransportIdentity, IHostBuilder>(
+                static (hostBuilder, transportIdentity) => hostBuilder.UseInMemoryIntegrationTransport(transportIdentity));
+
+            var rabbitMqIntegrationTransportIdentity = IntegrationTransport.RabbitMQ.Identity.TransportIdentity();
+
+            var useRabbitMqIntegrationTransport = new Func<IHostBuilder, TransportIdentity, IHostBuilder>(
+                static (hostBuilder, transportIdentity) => hostBuilder.UseRabbitMqIntegrationTransport(transportIdentity));
 
             var integrationTransportProviders = new[]
             {
-                useInMemoryIntegrationTransport,
-                useRabbitMqIntegrationTransport
+                new object[] { inMemoryIntegrationTransportIdentity, useInMemoryIntegrationTransport },
+                new object[] { rabbitMqIntegrationTransportIdentity, useRabbitMqIntegrationTransport }
             };
 
             return integrationTransportProviders
-               .Select(useTransport => new object[]
+               .Select(transport =>
                {
-                   settingsDirectory,
-                   useTransport
+                   var (transportIdentity, useTransport, _) = transport;
+
+                   return new[]
+                   {
+                       settingsDirectory,
+                       transportIdentity,
+                       useTransport
+                   };
                });
         }
 
@@ -127,22 +129,20 @@
                 .StepInto("Settings")
                 .StepInto(nameof(BuildHostTest));
 
-            var useInMemoryIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
-                static hostBuilder => hostBuilder
-                   .UseIntegrationTransport((_, builder) => builder
-                       .WithInMemoryIntegrationTransport()
-                       .BuildOptions()));
+            var inMemoryIntegrationTransportIdentity = Identity.TransportIdentity();
 
-            var useRabbitMqIntegrationTransport = new Func<IHostBuilder, IHostBuilder>(
-                static hostBuilder => hostBuilder
-                   .UseIntegrationTransport((_, builder) => builder
-                       .WithRabbitMqIntegrationTransport()
-                       .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<IHostBuilder, TransportIdentity, IHostBuilder>(
+                static (hostBuilder, transportIdentity) => hostBuilder.UseInMemoryIntegrationTransport(transportIdentity));
+
+            var rabbitMqIntegrationTransportIdentity = IntegrationTransport.RabbitMQ.Identity.TransportIdentity();
+
+            var useRabbitMqIntegrationTransport = new Func<IHostBuilder, TransportIdentity, IHostBuilder>(
+                static (hostBuilder, transportIdentity) => hostBuilder.UseRabbitMqIntegrationTransport(transportIdentity));
 
             var integrationTransportProviders = new[]
             {
-                useInMemoryIntegrationTransport,
-                useRabbitMqIntegrationTransport
+                new object[] { inMemoryIntegrationTransportIdentity, useInMemoryIntegrationTransport },
+                new object[] { rabbitMqIntegrationTransportIdentity, useRabbitMqIntegrationTransport }
             };
 
             var dataAccessProviders = new Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder>[]
@@ -156,15 +156,21 @@
             };
 
             return integrationTransportProviders
-               .SelectMany(useTransport => dataAccessProviders
+               .SelectMany(transport => dataAccessProviders
                    .SelectMany(withDataAccess => eventSourcingProviders
-                       .Select(withEventSourcing => new object[]
+                       .Select(withEventSourcing =>
                        {
-                           settingsDirectory,
-                           useTransport,
-                           withDataAccess,
-                           withEventSourcing,
-                           timeout
+                           var (transportIdentity, useTransport, _) = transport;
+
+                           return new[]
+                           {
+                               settingsDirectory,
+                               transportIdentity,
+                               useTransport,
+                               withDataAccess,
+                               withEventSourcing,
+                               timeout
+                           };
                        })));
         }
 
@@ -172,32 +178,12 @@
         [MemberData(nameof(BuildHostTestData))]
         internal void SameTransportTest(
             DirectoryInfo settingsDirectory,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, IHostBuilder> useTransport)
         {
-            SameComponentTest(
-                settingsDirectory,
-                useTransport,
-                dependencyContainer => dependencyContainer.Resolve<IIntegrationTransport>());
-        }
-
-        [Theory(Timeout = 60_000)]
-        [MemberData(nameof(BuildHostTestData))]
-        internal void SameRpcRequestRegistryTest(
-            DirectoryInfo settingsDirectory,
-            Func<IHostBuilder, IHostBuilder> useTransport)
-        {
-            SameComponentTest(
-                settingsDirectory,
-                useTransport,
-                dependencyContainer => dependencyContainer.Resolve<IRpcRequestRegistry>());
-        }
-
-        internal void SameComponentTest(
-            DirectoryInfo settingsDirectory,
-            Func<IHostBuilder, IHostBuilder> useTransport,
-            Func<IDependencyContainer, object> resolve)
-        {
-            var host = useTransport(Fixture.CreateHostBuilder())
+            var host = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
                     (_, builder) => builder.BuildOptions())
@@ -206,21 +192,27 @@
                     (_, builder) => builder.BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            var gatewayHost = useTransport(Fixture.CreateHostBuilder()).BuildHost(settingsDirectory);
+            var gatewayHost = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport)
+                .BuildHost(settingsDirectory);
 
-            var component = resolve(host.GetTransportDependencyContainer());
-            var gatewayComponent = resolve(gatewayHost.GetTransportDependencyContainer());
+            var gatewayTransport = gatewayHost.GetIntegrationTransportDependencyContainer(transportIdentity).Resolve<IIntegrationTransport>();
+            var hostTransport = host.GetIntegrationTransportDependencyContainer(transportIdentity).Resolve<IIntegrationTransport>();
+            var endpoint10Transport = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10).Resolve<IIntegrationTransport>();
+            var endpoint20Transport = host.GetEndpointDependencyContainer(TestIdentity.Endpoint20).Resolve<IIntegrationTransport>();
 
-            Assert.NotSame(component, gatewayComponent);
-            Assert.Same(component, resolve(host.GetEndpointDependencyContainer(TestIdentity.Endpoint10)));
-            Assert.Same(component, resolve(host.GetEndpointDependencyContainer(TestIdentity.Endpoint20)));
+            Assert.NotSame(hostTransport, gatewayTransport);
+            Assert.Same(hostTransport, endpoint10Transport);
+            Assert.Same(hostTransport, endpoint20Transport);
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(BuildHostTestData))]
         internal void BuildTest(
             DirectoryInfo settingsDirectory,
-            Func<IHostBuilder, IHostBuilder> useTransport)
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, IHostBuilder> useTransport)
         {
             var messageTypes = new[]
             {
@@ -246,14 +238,16 @@
                .Concat(messageHandlerTypes)
                .ToArray();
 
-            var host = useTransport(Fixture.CreateHostBuilder())
+            var host = Fixture
+                .CreateHostBuilder()
                 .UseOpenTelemetryLogger(TestIdentity.Endpoint10)
+                .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (context, builder) => builder
+                    (configuration, builder) => builder
                         .WithPostgreSqlDataAccess(options => options
                             .ExecuteMigrations())
                         .WithSqlEventSourcing()
-                        .WithAuthorization(context.Configuration)
+                        .WithAuthorization(configuration)
                         .WithOpenTelemetry()
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes))
@@ -263,59 +257,96 @@
             using (host)
             {
                 CheckHost(host);
+                CheckTransport(host, transportIdentity, Output.WriteLine);
                 CheckEndpoint(host, TestIdentity.Endpoint10, Output.WriteLine);
-                CheckTransport(host, Output.WriteLine);
             }
 
             static void CheckHost(IHost host)
             {
-                _ = host.Services.GetRequiredService<IHostedService>();
+                var hostedServices = host
+                    .Services
+                    .GetServices<IHostedService>()
+                    .OfType<HostedService>()
+                    .ToArray();
 
-                var expectedHostStartupActions = new[]
-                    {
-                        typeof(InboxInvalidationHostStartupAction),
-                        typeof(UpgradeDatabaseHostStartupAction),
-                        typeof(EventSourcingHostStartupAction),
-                        typeof(ReloadNpgsqlTypesHostStartupAction),
-                        typeof(GenericEndpointHostStartupAction),
-                        typeof(GenericEndpointHostStartupAction),
-                        typeof(MessagingHostStartupAction),
-                        typeof(MessagingHostStartupAction)
-                    }
-                    .OrderByDependencies()
-                    .ThenBy(type => type.Name)
-                    .ToList();
+                Assert.Equal(2, hostedServices.Length);
+            }
 
-                var actualHostStartupActions = host
-                   .Services
-                   .GetServices<IDependencyContainer>()
-                   .SelectMany(dependencyContainer => dependencyContainer.ResolveCollection<IHostStartupAction>())
-                   .Select(startup => startup.GetType())
-                   .OrderByDependencies()
-                   .ThenBy(type => type.Name)
-                   .ToList();
+            static void CheckTransport(IHost host, TransportIdentity transportIdentity, Action<string> log)
+            {
+                log($"Endpoint: {transportIdentity}");
 
-                Assert.Equal(expectedHostStartupActions, actualHostStartupActions);
+                IDependencyContainer integrationTransportDependencyContainer = host.GetIntegrationTransportDependencyContainer(transportIdentity);
 
-                var expectedHostBackgroundWorkers = new[]
-                    {
-                        typeof(GenericEndpointDataAccessHostBackgroundWorker),
-                        typeof(IntegrationTransportHostBackgroundWorker)
-                    }
-                    .OrderByDependencies()
-                    .ThenBy(type => type.Name)
-                    .ToList();
+                // IHostedServiceStartupAction
+                {
+                    var expectedHostedServiceStartupActions = new[]
+                        {
+                            typeof(IntegrationTransportHostedServiceStartupAction)
+                        }
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
 
-                var actualHostBackgroundWorkers = host
-                   .Services
-                   .GetServices<IDependencyContainer>()
-                   .SelectMany(dependencyContainer => dependencyContainer.ResolveCollection<IHostBackgroundWorker>())
-                   .Select(startup => startup.GetType())
-                   .OrderByDependencies()
-                   .ThenBy(type => type.Name)
-                   .ToList();
+                    var actualHostedServiceStartupActions = integrationTransportDependencyContainer
+                        .ResolveCollection<IHostedServiceStartupAction>()
+                        .Select(startup => startup.GetType())
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
 
-                Assert.Equal(expectedHostBackgroundWorkers, actualHostBackgroundWorkers);
+                    Assert.Equal(expectedHostedServiceStartupActions, actualHostedServiceStartupActions);
+                }
+
+                // IHostedServiceBackgroundWorker
+                {
+                    var expectedHostedServiceBackgroundWorkers = new[]
+                        {
+                            typeof(IntegrationTransportHostedServiceBackgroundWorker)
+                        }
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    var actualHostedServiceBackgroundWorkers = integrationTransportDependencyContainer
+                        .ResolveCollection<IHostedServiceBackgroundWorker>()
+                        .Select(startup => startup.GetType())
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    Assert.Equal(expectedHostedServiceBackgroundWorkers, actualHostedServiceBackgroundWorkers);
+                }
+
+                // IHostedServiceObject
+                {
+                    var expectedHostedServiceBackgroundWorkers = new[]
+                        {
+                            typeof(IntegrationTransportHostedServiceBackgroundWorker),
+                            typeof(IntegrationTransportHostedServiceStartupAction)
+                        }
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    var actualHostedServiceObjects = integrationTransportDependencyContainer
+                        .ResolveCollection<IHostedServiceObject>()
+                        .Select(startup => startup.GetType())
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    Assert.Equal(expectedHostedServiceBackgroundWorkers, actualHostedServiceObjects);
+                }
+
+                // IntegrationContext
+                {
+                    var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command));
+
+                    Assert.Throws<ComponentResolutionException>(() => integrationTransportDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+                    Assert.Throws<ComponentResolutionException>(() => integrationTransportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
+                    Assert.Throws<ComponentResolutionException>(() => integrationTransportDependencyContainer.Resolve<IIntegrationContext>());
+                }
             }
 
             static void CheckEndpoint(IHost host, EndpointIdentity endpointIdentity, Action<string> log)
@@ -323,386 +354,313 @@
                 log($"Endpoint: {endpointIdentity}");
 
                 var endpointDependencyContainer = host.GetEndpointDependencyContainer(endpointIdentity);
-                var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command));
 
-                Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
-                Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
-                Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IIntegrationContext>());
+                // IHostedServiceStartupAction
+                {
+                    var expectedHostedServiceStartupActions = new[]
+                        {
+                            typeof(EventSourcingHostedServiceStartupAction),
+                            typeof(InboxInvalidationHostedServiceStartupAction),
+                            typeof(MessagingHostedServiceStartupAction),
+                            typeof(UpgradeDatabaseHostedServiceStartupAction),
+                            typeof(ReloadNpgsqlTypesHostedServiceStartupAction),
+                            typeof(GenericEndpointHostedServiceStartupAction)
+                        }
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    var actualHostedServiceStartupActions = endpointDependencyContainer
+                        .ResolveCollection<IHostedServiceStartupAction>()
+                        .Select(startup => startup.GetType())
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    Assert.Equal(expectedHostedServiceStartupActions, actualHostedServiceStartupActions);
+                }
+
+                // IHostedServiceBackgroundWorker
+                {
+                    var expectedHostedServiceBackgroundWorkers = new[]
+                        {
+                            typeof(GenericEndpointDataAccessHostedServiceBackgroundWorker)
+                        }
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    var actualHostedServiceBackgroundWorkers = endpointDependencyContainer
+                        .ResolveCollection<IHostedServiceBackgroundWorker>()
+                        .Select(startup => startup.GetType())
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    Assert.Equal(expectedHostedServiceBackgroundWorkers, actualHostedServiceBackgroundWorkers);
+                }
+
+                // IHostedServiceObject
+                {
+                    var expectedHostedServiceBackgroundWorkers = new[]
+                        {
+                            typeof(EventSourcingHostedServiceStartupAction),
+                            typeof(InboxInvalidationHostedServiceStartupAction),
+                            typeof(MessagingHostedServiceStartupAction),
+                            typeof(UpgradeDatabaseHostedServiceStartupAction),
+                            typeof(ReloadNpgsqlTypesHostedServiceStartupAction),
+                            typeof(GenericEndpointHostedServiceStartupAction),
+                            typeof(GenericEndpointDataAccessHostedServiceBackgroundWorker)
+                        }
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    var actualHostedServiceObjects = endpointDependencyContainer
+                        .ResolveCollection<IHostedServiceObject>()
+                        .Select(startup => startup.GetType())
+                        .OrderByDependencies()
+                        .ThenBy(type => type.Name)
+                        .ToList();
+
+                    Assert.Equal(expectedHostedServiceBackgroundWorkers, actualHostedServiceObjects);
+                }
+
+                // IntegrationContext
+                {
+                    var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command));
+
+                    Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+                    Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
+                    Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IIntegrationContext>());
+                }
 
                 using (endpointDependencyContainer.OpenScope())
                 {
-                    var expectedContexts = new[]
+                    // IIntegrationContext
                     {
-                        typeof(AdvancedIntegrationContext)
-                    };
+                        var expectedContexts = new[]
+                        {
+                            typeof(AdvancedIntegrationContext)
+                        };
 
-                    Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
-                    var advancedIntegrationContext = endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage);
+                        var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command));
 
-                    var actualAdvancedIntegrationContexts = advancedIntegrationContext
-                        .FlattenDecoratedObject(obj => obj.GetType())
-                        .ShowTypes("advanced integration context", log)
-                        .ToList();
+                        Assert.Throws<ComponentResolutionException>(() => endpointDependencyContainer.Resolve<IAdvancedIntegrationContext>());
+                        var advancedIntegrationContext = endpointDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage);
 
-                    Assert.Equal(expectedContexts, actualAdvancedIntegrationContexts);
+                        var actualAdvancedIntegrationContexts = advancedIntegrationContext
+                            .FlattenDecoratedObject(obj => obj.GetType())
+                            .ShowTypes(nameof(IAdvancedIntegrationContext), log)
+                            .ToList();
 
-                    var integrationContext = endpointDependencyContainer.Resolve<IIntegrationContext>();
+                        Assert.Equal(expectedContexts, actualAdvancedIntegrationContexts);
 
-                    var actualIntegrationContexts = integrationContext
-                        .FlattenDecoratedObject(obj => obj.GetType())
-                        .ShowTypes("integration context", log)
-                        .ToList();
+                        var integrationContext = endpointDependencyContainer.Resolve<IIntegrationContext>();
 
-                    Assert.Equal(expectedContexts, actualIntegrationContexts);
+                        var actualIntegrationContexts = integrationContext
+                            .FlattenDecoratedObject(obj => obj.GetType())
+                            .ShowTypes(nameof(IIntegrationContext), log)
+                            .ToList();
 
-                    var expectedMessagesCollector = new[]
+                        Assert.Equal(expectedContexts, actualIntegrationContexts);
+                    }
+
+                    // IMessagesCollector
                     {
-                        typeof(MessagesCollector)
-                    };
+                        var expectedMessagesCollector = new[]
+                        {
+                            typeof(MessagesCollector)
+                        };
 
-                    var messagesCollector = endpointDependencyContainer.Resolve<IMessagesCollector>();
+                        var messagesCollector = endpointDependencyContainer.Resolve<IMessagesCollector>();
 
-                    var actualMessagesCollector = messagesCollector
-                       .FlattenDecoratedObject(obj => obj.GetType())
-                       .ShowTypes("collector", log)
-                       .ToList();
+                        var actualMessagesCollector = messagesCollector
+                            .FlattenDecoratedObject(obj => obj.GetType())
+                            .ShowTypes(nameof(IMessagesCollector), log)
+                            .ToList();
 
-                    Assert.Equal(expectedMessagesCollector, actualMessagesCollector);
+                        Assert.Equal(expectedMessagesCollector, actualMessagesCollector);
+                    }
 
-                    var expectedPipeline = new[]
+                    // IMessageHandlerMiddleware
                     {
-                        typeof(TracingMiddleware),
-                        typeof(ErrorHandlingMiddleware),
-                        typeof(AuthorizationMiddleware),
-                        typeof(UnitOfWorkMiddleware),
-                        typeof(HandledByEndpointMiddleware),
-                        typeof(RequestReplyMiddleware)
-                    };
-
-                    var actualPipeline = endpointDependencyContainer
-                        .ResolveCollection<IMessageHandlerMiddleware>()
-                        .Select(middleware => middleware.GetType())
-                        .ShowTypes("message pipeline", log)
-                        .ToList();
-
-                    Assert.Equal(expectedPipeline, actualPipeline);
-
-                    var integrationTypeProvider = endpointDependencyContainer.Resolve<IIntegrationTypeProvider>();
-
-                    var expectedIntegrationMessageTypes = new[]
+                        var expectedMiddlewares = new[]
                         {
-                            typeof(BaseEvent),
-                            typeof(InheritedEvent),
-                            typeof(Command),
-                            typeof(OpenGenericHandlerCommand),
-                            typeof(Request),
-                            typeof(Reply)
-                        }
-                        .OrderBy(type => type.Name)
-                        .ToList();
+                            typeof(TracingMiddleware),
+                            typeof(ErrorHandlingMiddleware),
+                            typeof(AuthorizationMiddleware),
+                            typeof(UnitOfWorkMiddleware),
+                            typeof(HandledByEndpointMiddleware),
+                            typeof(RequestReplyMiddleware)
+                        };
 
-                    var actualIntegrationMessageTypes = integrationTypeProvider
-                        .IntegrationMessageTypes()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.IntegrationMessageTypes), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
+                        var actualMiddlewares = endpointDependencyContainer
+                            .ResolveCollection<IMessageHandlerMiddleware>()
+                            .Select(middleware => middleware.GetType())
+                            .ShowTypes(nameof(IMessageHandlerMiddleware), log)
+                            .ToList();
 
-                    Assert.Equal(expectedIntegrationMessageTypes, actualIntegrationMessageTypes);
+                        Assert.Equal(expectedMiddlewares, actualMiddlewares);
+                    }
 
-                    var expectedCommands = new[]
-                        {
-                            typeof(Command),
-                            typeof(OpenGenericHandlerCommand)
-                        }
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    var actualCommands = integrationTypeProvider
-                        .EndpointCommands()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointCommands), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    Assert.Equal(expectedCommands, actualCommands);
-
-                    var expectedRequests = new[]
-                        {
-                            typeof(Request)
-                        }
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    var actualRequests = integrationTypeProvider
-                        .EndpointRequests()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointRequests), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    Assert.Equal(expectedRequests, actualRequests);
-
-                    var expectedReplies = new[]
-                        {
-                            typeof(Reply)
-                        }
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    var actualReplies = integrationTypeProvider
-                        .RepliesSubscriptions()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.RepliesSubscriptions), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    Assert.Equal(expectedReplies, actualReplies);
-
-                    var expectedEvents = new[]
-                        {
-                            typeof(BaseEvent),
-                            typeof(InheritedEvent)
-                        }
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    var actualEvents = integrationTypeProvider
-                        .EventsSubscriptions()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EventsSubscriptions), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    Assert.Equal(expectedEvents, actualEvents);
-
-                    Assert.Equal(typeof(BaseEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<BaseEvent>>().GetType());
-                    Assert.Equal(typeof(InheritedEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<InheritedEvent>>().GetType());
-                    Assert.Equal(typeof(CommandEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Command>>().GetType());
-                    Assert.Equal(typeof(OpenGenericCommandEmptyMessageHandler<OpenGenericHandlerCommand>), endpointDependencyContainer.Resolve<IMessageHandler<OpenGenericHandlerCommand>>().GetType());
-                    Assert.Equal(typeof(AlwaysReplyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Request>>().GetType());
-                    Assert.Equal(typeof(ReplyEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Reply>>().GetType());
-
-                    var expectedErrorHandlers = new[]
+                    // IIntegrationMessage
                     {
-                        typeof(RpcRequestErrorHandler),
-                        typeof(RetryErrorHandler),
-                        typeof(TracingErrorHandler)
-                    };
+                        var integrationTypeProvider = endpointDependencyContainer.Resolve<IIntegrationTypeProvider>();
 
-                    var actualErrorHandlers = endpointDependencyContainer
-                       .ResolveCollection<IErrorHandler>()
-                       .Select(obj => obj.GetType())
-                       .ShowTypes(nameof(IErrorHandler), log)
-                       .ToList();
+                        var expectedIntegrationMessageTypes = new[]
+                            {
+                                typeof(BaseEvent),
+                                typeof(InheritedEvent),
+                                typeof(Command),
+                                typeof(OpenGenericHandlerCommand),
+                                typeof(Request),
+                                typeof(Reply)
+                            }
+                            .OrderBy(type => type.Name)
+                            .ToList();
 
-                    Assert.Equal(expectedErrorHandlers, actualErrorHandlers);
+                        var actualIntegrationMessageTypes = integrationTypeProvider
+                            .IntegrationMessageTypes()
+                            .ShowTypes(nameof(IIntegrationTypeProvider.IntegrationMessageTypes), log)
+                            .OrderBy(type => type.Name)
+                            .ToList();
+
+                        Assert.Equal(expectedIntegrationMessageTypes, actualIntegrationMessageTypes);
+                    }
+
+                    // IIntegrationCommand
+                    {
+                        var integrationTypeProvider = endpointDependencyContainer.Resolve<IIntegrationTypeProvider>();
+
+                        var expectedCommands = new[]
+                            {
+                                typeof(Command),
+                                typeof(OpenGenericHandlerCommand)
+                            }
+                            .OrderBy(type => type.Name)
+                            .ToList();
+
+                        var actualCommands = integrationTypeProvider
+                            .EndpointCommands()
+                            .ShowTypes(nameof(IIntegrationTypeProvider.EndpointCommands), log)
+                            .OrderBy(type => type.Name)
+                            .ToList();
+
+                        Assert.Equal(expectedCommands, actualCommands);
+                    }
+
+                    // IIntegrationRequest
+                    {
+                        var integrationTypeProvider = endpointDependencyContainer.Resolve<IIntegrationTypeProvider>();
+
+                        var expectedRequests = new[]
+                            {
+                                typeof(Request)
+                            }
+                            .OrderBy(type => type.Name)
+                            .ToList();
+
+                        var actualRequests = integrationTypeProvider
+                            .EndpointRequests()
+                            .ShowTypes(nameof(IIntegrationTypeProvider.EndpointRequests), log)
+                            .OrderBy(type => type.Name)
+                            .ToList();
+
+                        Assert.Equal(expectedRequests, actualRequests);
+                    }
+
+                    // IIntegrationReply
+                    {
+                        var integrationTypeProvider = endpointDependencyContainer.Resolve<IIntegrationTypeProvider>();
+
+                        var expectedReplies = new[]
+                            {
+                                typeof(Reply)
+                            }
+                            .OrderBy(type => type.Name)
+                            .ToList();
+
+                        var actualReplies = integrationTypeProvider
+                            .RepliesSubscriptions()
+                            .ShowTypes(nameof(IIntegrationTypeProvider.RepliesSubscriptions), log)
+                            .OrderBy(type => type.Name)
+                            .ToList();
+
+                        Assert.Equal(expectedReplies, actualReplies);
+                    }
+
+                    // IIntegrationEvent
+                    {
+                        var integrationTypeProvider = endpointDependencyContainer.Resolve<IIntegrationTypeProvider>();
+
+                        var expectedEvents = new[]
+                            {
+                                typeof(BaseEvent),
+                                typeof(InheritedEvent)
+                            }
+                            .OrderBy(type => type.Name)
+                            .ToList();
+
+                        var actualEvents = integrationTypeProvider
+                            .EventsSubscriptions()
+                            .ShowTypes(nameof(IIntegrationTypeProvider.EventsSubscriptions), log)
+                            .OrderBy(type => type.Name)
+                            .ToList();
+
+                        Assert.Equal(expectedEvents, actualEvents);
+                    }
+
+                    // IIntegrationMessageHeaderProvider
+                    {
+                        var expectedIntegrationMessageHeaderProvider = new[]
+                            {
+                                typeof(ConversationIdProvider),
+                                typeof(MessageInitiatorProvider),
+                                typeof(MessageOriginProvider),
+                                typeof(TraceContextPropagationProvider),
+                                typeof(UserScopeProvider),
+                                typeof(AuthorizationHeaderProvider),
+                                typeof(AnonymousUserScopeProvider)
+                            }
+                            .ToList();
+
+                        var actualIntegrationMessageHeaderProvider = endpointDependencyContainer
+                            .ResolveCollection<IIntegrationMessageHeaderProvider>()
+                            .Select(obj => obj.GetType())
+                            .ShowTypes(nameof(IIntegrationMessageHeaderProvider), log)
+                            .ToList();
+
+                        Assert.Equal(expectedIntegrationMessageHeaderProvider, actualIntegrationMessageHeaderProvider);
+                    }
+
+                    // IMessageHandler
+                    {
+                        Assert.Equal(typeof(BaseEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<BaseEvent>>().GetType());
+                        Assert.Equal(typeof(InheritedEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<InheritedEvent>>().GetType());
+                        Assert.Equal(typeof(CommandEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Command>>().GetType());
+                        Assert.Equal(typeof(OpenGenericCommandEmptyMessageHandler<OpenGenericHandlerCommand>), endpointDependencyContainer.Resolve<IMessageHandler<OpenGenericHandlerCommand>>().GetType());
+                        Assert.Equal(typeof(AlwaysReplyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Request>>().GetType());
+                        Assert.Equal(typeof(ReplyEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Reply>>().GetType());
+                    }
+
+                    // IErrorHandler
+                    {
+                        var expectedErrorHandlers = new[]
+                        {
+                            typeof(RetryErrorHandler),
+                            typeof(TracingErrorHandler)
+                        };
+
+                        var actualErrorHandlers = endpointDependencyContainer
+                            .ResolveCollection<IErrorHandler>()
+                            .Select(obj => obj.GetType())
+                            .ShowTypes(nameof(IErrorHandler), log)
+                            .ToList();
+
+                        Assert.Equal(expectedErrorHandlers, actualErrorHandlers);
+                    }
                 }
-            }
-
-            static void CheckTransport(IHost host, Action<string> log)
-            {
-                var transportDependencyContainer = host.GetTransportDependencyContainer();
-
-                var integrationTransport = transportDependencyContainer.Resolve<IIntegrationTransport>();
-                var endpointIdentity = transportDependencyContainer.Resolve<EndpointIdentity>();
-                log($"Endpoint: {endpointIdentity}");
-                log($"{nameof(IIntegrationTransport)}: {integrationTransport.GetType().FullName}");
-
-                var integrationMessage = new IntegrationMessage(new Command(0), typeof(Command));
-
-                Assert.Throws<ComponentResolutionException>(() => transportDependencyContainer.Resolve<IAdvancedIntegrationContext>());
-                Assert.Throws<ComponentResolutionException>(() => transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage));
-                Assert.Throws<ComponentResolutionException>(() => transportDependencyContainer.Resolve<IIntegrationContext>());
-
-                using (transportDependencyContainer.OpenScope())
-                {
-                    var expectedContexts = new[]
-                    {
-                        typeof(AdvancedIntegrationContext)
-                    };
-
-                    Assert.Throws<ComponentResolutionException>(() => transportDependencyContainer.Resolve<IAdvancedIntegrationContext>());
-                    var advancedIntegrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, IntegrationMessage>(integrationMessage);
-
-                    var actualAdvancedIntegrationContexts = advancedIntegrationContext
-                        .FlattenDecoratedObject(obj => obj.GetType())
-                        .ShowTypes("advanced integration context", log)
-                        .ToList();
-
-                    Assert.Equal(expectedContexts, actualAdvancedIntegrationContexts);
-
-                    var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-
-                    var actualIntegrationContexts = integrationContext
-                        .FlattenDecoratedObject(obj => obj.GetType())
-                        .ShowTypes("integration context", log)
-                        .ToList();
-
-                    Assert.Equal(expectedContexts, actualIntegrationContexts);
-
-                    var expectedMessagesCollector = new[]
-                    {
-                        typeof(IntegrationTransportMessagesCollector)
-                    };
-
-                    var messagesCollector = transportDependencyContainer.Resolve<IMessagesCollector>();
-
-                    var actualMessagesCollector = messagesCollector
-                        .FlattenDecoratedObject(obj => obj.GetType())
-                        .ShowTypes("collector", log)
-                        .ToList();
-
-                    Assert.Equal(expectedMessagesCollector, actualMessagesCollector);
-
-                    var expectedPipeline = new[]
-                    {
-                        typeof(TracingMiddleware),
-                        typeof(ErrorHandlingMiddleware),
-                        typeof(UnitOfWorkMiddleware),
-                        typeof(HandledByEndpointMiddleware),
-                        typeof(RequestReplyMiddleware)
-                    };
-
-                    var actualPipeline = transportDependencyContainer
-                        .ResolveCollection<IMessageHandlerMiddleware>()
-                        .Select(middleware => middleware.GetType())
-                        .ShowTypes("message pipeline", log)
-                        .ToList();
-
-                    Assert.Equal(expectedPipeline, actualPipeline);
-
-                    var expectedIntegrationTypeProviders = new[]
-                    {
-                        typeof(IntegrationTransportIntegrationTypeProvider)
-                    };
-
-                    var integrationTypeProvider = transportDependencyContainer.Resolve<IIntegrationTypeProvider>();
-
-                    var actualIntegrationTypeProviders = integrationTypeProvider
-                       .FlattenDecoratedObject(obj => obj.GetType())
-                       .ShowTypes("integration type provider", log)
-                       .ToList();
-
-                    Assert.Equal(expectedIntegrationTypeProviders, actualIntegrationTypeProviders);
-
-                    var expectedIntegrationMessageTypes = new[]
-                        {
-                            typeof(AuthenticateUser),
-                            typeof(UserAuthenticationResult),
-                            typeof(CreateUser),
-                            typeof(UserWasCreated),
-                            typeof(BaseEvent),
-                            typeof(InheritedEvent),
-                            typeof(Event),
-                            typeof(TransportEvent),
-                            typeof(PublishEventCommand),
-                            typeof(PublishInheritedEventCommand),
-                            typeof(Command),
-                            typeof(OpenGenericHandlerCommand),
-                            typeof(Request),
-                            typeof(Reply),
-                            typeof(MakeRequestCommand),
-                            typeof(Endpoint1HandlerInvoked),
-                            typeof(Endpoint2HandlerInvoked)
-                        }
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    var actualIntegrationMessageTypes = integrationTypeProvider
-                        .IntegrationMessageTypes()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.IntegrationMessageTypes), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    Assert.Equal(expectedIntegrationMessageTypes, actualIntegrationMessageTypes);
-
-                    var actualCommands = integrationTypeProvider
-                        .EndpointCommands()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointCommands), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    Assert.Equal(Array.Empty<Type>(), actualCommands);
-
-                    var actualRequests = integrationTypeProvider
-                        .EndpointRequests()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EndpointRequests), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    Assert.Equal(Array.Empty<Type>(), actualRequests);
-
-                    var expectedReplies = new[]
-                        {
-                            typeof(Reply),
-                            typeof(UserAuthenticationResult)
-                        }
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    var actualReplies = integrationTypeProvider
-                        .RepliesSubscriptions()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.RepliesSubscriptions), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    Assert.Equal(expectedReplies, actualReplies);
-
-                    var actualEvents = integrationTypeProvider
-                        .EventsSubscriptions()
-                        .ShowTypes(nameof(IIntegrationTypeProvider.EventsSubscriptions), log)
-                        .OrderBy(type => type.Name)
-                        .ToList();
-
-                    Assert.Equal(Array.Empty<Type>(), actualEvents);
-
-                    var expectedErrorHandlers = new[]
-                    {
-                        typeof(RpcRequestErrorHandler),
-                        typeof(RetryErrorHandler),
-                        typeof(TracingErrorHandler)
-                    };
-
-                    var actualErrorHandlers = transportDependencyContainer
-                       .ResolveCollection<IErrorHandler>()
-                       .Select(obj => obj.GetType())
-                       .ShowTypes(nameof(IErrorHandler), log)
-                       .ToList();
-
-                    Assert.Equal(expectedErrorHandlers, actualErrorHandlers);
-                }
-
-                _ = transportDependencyContainer.Resolve<IRpcRequestRegistry>();
-
-                using (transportDependencyContainer.OpenScope())
-                {
-                    var expectedRpcReplyHandlers = new[]
-                    {
-                        typeof(RpcReplyMessageHandler<IIntegrationReply>)
-                    };
-
-                    var actualRpcReplyHandlers = transportDependencyContainer
-                        .Resolve<IMessageHandler<IIntegrationReply>>()
-                        .FlattenDecoratedObject(obj => obj.GetType())
-                        .ShowTypes("rpc reply handlers", log)
-                        .ToList();
-
-                    Assert.Equal(expectedRpcReplyHandlers, actualRpcReplyHandlers);
-                }
-
-                var expectedUserScopeProviders = new[]
-                {
-                    typeof(ConversationIdProvider),
-                    typeof(MessageInitiatorProvider),
-                    typeof(MessageOriginProvider),
-                    typeof(TraceContextPropagationProvider),
-                    typeof(UserScopeProvider),
-                    typeof(AnonymousUserScopeProvider)
-                };
-
-                var actualUserScopeProviders = transportDependencyContainer
-                   .ResolveCollection<IIntegrationMessageHeaderProvider>()
-                   .Select(obj => obj.GetType())
-                   .ShowTypes(nameof(IIntegrationMessageHeaderProvider), log)
-                   .ToList();
-
-                Assert.Equal(expectedUserScopeProviders, actualUserScopeProviders);
             }
         }
 
@@ -710,19 +668,23 @@
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task CompareEquivalentDatabaseDatabaseModelsTest(
             DirectoryInfo settingsDirectory,
-            Func<IHostBuilder, IHostBuilder> useTransport,
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             TimeSpan timeout)
         {
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
-            var host = useTransport(Fixture.CreateHostBuilder())
+            var host = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options
+                            .ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(startupActions))
                         .BuildOptions())
@@ -734,7 +696,7 @@
                 var endpointContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
                 await endpointContainer
-                    .Resolve<RecreatePostgreSqlDatabaseHostStartupAction>()
+                    .Resolve<RecreatePostgreSqlDatabaseHostedServiceStartupAction>()
                     .Run(cts.Token)
                     .ConfigureAwait(false);
 
@@ -772,7 +734,8 @@
         [MemberData(nameof(BuildHostWithDataAccessTestData))]
         internal async Task ExtractDatabaseModelChangesDiffTest(
             DirectoryInfo settingsDirectory,
-            Func<IHostBuilder, IHostBuilder> useTransport,
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
             TimeSpan timeout)
@@ -790,19 +753,22 @@
 
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
             var additionalOurTypes = databaseEntities
                 .Concat(startupActions)
                 .ToArray();
 
-            var host = useTransport(Fixture.CreateHostBuilder())
+            var host = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options
+                            .ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
-                            .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostStartupAction)))
+                            .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)))
                         .BuildOptions())
                 .BuildHost(settingsDirectory);
 
@@ -812,7 +778,7 @@
                 var endpointContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
                 await endpointContainer
-                    .Resolve<RecreatePostgreSqlDatabaseHostStartupAction>()
+                    .Resolve<RecreatePostgreSqlDatabaseHostedServiceStartupAction>()
                     .Run(cts.Token)
                     .ConfigureAwait(false);
 
@@ -847,19 +813,19 @@
 
                 var databaseConnectionProvider = endpointContainer.Resolve<IDatabaseConnectionProvider>();
 
-                if (databaseConnectionProvider.GetType() == typeof(DataAccess.Orm.PostgreSql.Connection.DatabaseConnectionProvider))
+                if (databaseConnectionProvider.GetType() == typeof(DatabaseConnectionProvider))
                 {
                     var assertions = new Action<int>[]
                     {
                         index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.DataAccess.Sql.Deduplication)),
                         index => AssertCreateSchema(modelChanges, index, nameof(GenericEndpoint.EventSourcing)),
                         index => AssertCreateSchema(modelChanges, index, nameof(GenericHost) + nameof(Test)),
-                        index => AssertCreateSchema(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations)),
+                        index => AssertCreateSchema(modelChanges, index, nameof(DataAccess.Orm.Sql.Migrations)),
                         index => AssertCreateEnumType(modelChanges, index, nameof(GenericHost) + nameof(Test), nameof(EnEnum), nameof(EnEnum.One), nameof(EnEnum.Two), nameof(EnEnum.Three)),
                         index => AssertCreateEnumType(modelChanges, index, nameof(GenericHost) + nameof(Test), nameof(EnEnumFlags), nameof(EnEnumFlags.A), nameof(EnEnumFlags.B), nameof(EnEnumFlags.C)),
-                        index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnColumnConstraintType), nameof(EnColumnConstraintType.PrimaryKey), nameof(EnColumnConstraintType.ForeignKey)),
-                        index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnTriggerEvent), nameof(EnTriggerEvent.Insert), nameof(EnTriggerEvent.Update), nameof(EnTriggerEvent.Delete)),
-                        index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(EnTriggerType), nameof(EnTriggerType.Before), nameof(EnTriggerType.After)),
+                        index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Migrations), nameof(EnColumnConstraintType), nameof(EnColumnConstraintType.PrimaryKey), nameof(EnColumnConstraintType.ForeignKey)),
+                        index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Migrations), nameof(EnTriggerEvent), nameof(EnTriggerEvent.Insert), nameof(EnTriggerEvent.Update), nameof(EnTriggerEvent.Delete)),
+                        index => AssertCreateEnumType(modelChanges, index, nameof(DataAccess.Orm.Sql.Migrations), nameof(EnTriggerType), nameof(EnTriggerType.Before), nameof(EnTriggerType.After)),
                         index =>
                         {
                             AssertCreateTable(
@@ -1015,7 +981,7 @@
                                 modelProvider,
                                 modelChanges,
                                 index,
-                                nameof(DataAccess.Orm.Sql.Host.Migrations),
+                                nameof(DataAccess.Orm.Sql.Migrations),
                                 typeof(AppliedMigration),
                                 new[]
                                 {
@@ -1033,7 +999,7 @@
                                 modelProvider,
                                 modelChanges,
                                 index,
-                                nameof(DataAccess.Orm.Sql.Host.Migrations),
+                                nameof(DataAccess.Orm.Sql.Migrations),
                                 typeof(FunctionView),
                                 new[]
                                 {
@@ -1051,7 +1017,7 @@
                                 modelProvider,
                                 modelChanges,
                                 index,
-                                nameof(DataAccess.Orm.Sql.Host.Migrations),
+                                nameof(DataAccess.Orm.Sql.Migrations),
                                 typeof(SqlView),
                                 new[]
                                 {
@@ -1225,16 +1191,16 @@
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericHost) + nameof(Test), $"{nameof(Blog)}_{nameof(Post)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(GenericHost) + nameof(Test), $"{nameof(Community)}_{nameof(Participant)}", new[] { nameof(BaseMtmDatabaseEntity<Guid, Guid>.Left), nameof(BaseMtmDatabaseEntity<Guid, Guid>.Right) }, Array.Empty<string>()),
                         index => AssertCreateIndex(modelProvider, modelChanges, index, false, $@"""{nameof(DatabaseEntity.BooleanField)}""",  nameof(GenericHost) + nameof(Test), nameof(DatabaseEntity), new[] { nameof(DatabaseEntity.StringField) }, new[] { nameof(DatabaseEntity.IntField) }),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(AppliedMigration), new[] { nameof(AppliedMigration.Name) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseColumn), new[] { nameof(DatabaseColumn.Column), nameof(DatabaseColumn.Schema), nameof(DatabaseColumn.Table) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseEnumType), new[] { nameof(DatabaseView.Schema), nameof(DatabaseEnumType.Type), nameof(DatabaseEnumType.Value) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseFunction), new[] { nameof(DatabaseFunction.Function), nameof(DatabaseFunction.Schema) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseIndexColumn), new[] { nameof(DatabaseIndexColumn.Column), nameof(DatabaseIndexColumn.Index), nameof(DatabaseIndexColumn.Schema), nameof(DatabaseIndexColumn.Table) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseSchema), new[] { nameof(DatabaseSchema.Name) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseTrigger), new[] { nameof(DatabaseTrigger.Schema), nameof(DatabaseTrigger.Trigger) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(DatabaseView), new[] { nameof(DatabaseView.Schema), nameof(DatabaseView.View) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(FunctionView), new[] { nameof(FunctionView.Function), nameof(FunctionView.Schema) }, Array.Empty<string>()),
-                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Host.Migrations), nameof(SqlView), new[] { nameof(SqlView.Schema), nameof(SqlView.View) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(AppliedMigration), new[] { nameof(AppliedMigration.Name) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(DatabaseColumn), new[] { nameof(DatabaseColumn.Column), nameof(DatabaseColumn.Schema), nameof(DatabaseColumn.Table) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(DatabaseEnumType), new[] { nameof(DatabaseView.Schema), nameof(DatabaseEnumType.Type), nameof(DatabaseEnumType.Value) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(DatabaseFunction), new[] { nameof(DatabaseFunction.Function), nameof(DatabaseFunction.Schema) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(DatabaseIndexColumn), new[] { nameof(DatabaseIndexColumn.Column), nameof(DatabaseIndexColumn.Index), nameof(DatabaseIndexColumn.Schema), nameof(DatabaseIndexColumn.Table) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(DatabaseSchema), new[] { nameof(DatabaseSchema.Name) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(DatabaseTrigger), new[] { nameof(DatabaseTrigger.Schema), nameof(DatabaseTrigger.Trigger) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(DatabaseView), new[] { nameof(DatabaseView.Schema), nameof(DatabaseView.View) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(FunctionView), new[] { nameof(FunctionView.Function), nameof(FunctionView.Schema) }, Array.Empty<string>()),
+                        index => AssertCreateIndex(modelProvider, modelChanges, index, true, null, nameof(DataAccess.Orm.Sql.Migrations), nameof(SqlView), new[] { nameof(SqlView.Schema), nameof(SqlView.View) }, Array.Empty<string>()),
                         index => AssertCreateFunction(modelProvider, modelChanges, index, nameof(GenericEndpoint.EventSourcing), nameof(AppendOnlyAttribute)),
                         index => AssertCreateTrigger(modelProvider, modelChanges, index, nameof(GenericEndpoint.EventSourcing), $"{nameof(DatabaseDomainEvent)}_aotrg", nameof(AppendOnlyAttribute))
                     };

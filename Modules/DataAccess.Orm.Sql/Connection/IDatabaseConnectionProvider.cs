@@ -4,8 +4,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Connection
     using System.Data;
     using System.Threading;
     using System.Threading.Tasks;
-    using SpaceEngineers.Core.DataAccess.Orm.Sql.Translation;
     using Transaction;
+    using Translation;
 
     /// <summary>
     /// IDatabaseConnectionProvider

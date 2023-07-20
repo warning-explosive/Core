@@ -21,15 +21,9 @@ namespace SpaceEngineers.Core.Modules.Test
         public CompositionInfoExtractorTest(ITestOutputHelper output, TestFixture fixture)
             : base(output, fixture)
         {
-            var assembly = AssembliesExtensions.FindRequiredAssembly(
-                AssembliesExtensions.BuildName(
-                    nameof(SpaceEngineers),
-                    nameof(Core),
-                    nameof(CompositionRoot)));
-
             var options = new DependencyContainerOptions();
 
-            DependencyContainer = fixture.BoundedAboveContainer(output, options, assembly);
+            DependencyContainer = fixture.DependencyContainer(options);
         }
 
         private IDependencyContainer DependencyContainer { get; }

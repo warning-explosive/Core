@@ -1,9 +1,9 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Registrations
 {
+    using AutoRegistration.Api.Enumerations;
     using CompositionRoot.Registration;
     using GenericEndpoint.UnitOfWork;
     using Mocks;
-    using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
 
     internal class BackgroundOutboxDeliveryManualRegistration : IManualRegistration
     {

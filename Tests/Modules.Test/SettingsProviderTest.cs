@@ -25,7 +25,7 @@ namespace SpaceEngineers.Core.Modules.Test
             : base(output, fixture)
         {
             var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
-                                       ?? throw new InvalidOperationException("Project directory not found");
+                                       ?? throw new InvalidOperationException("Project directory wasn't found");
 
             var settingsDirectory = projectFileDirectory
                 .StepInto("Settings")
@@ -42,6 +42,7 @@ namespace SpaceEngineers.Core.Modules.Test
             };
 
             var options = new DependencyContainerOptions()
+                .WithPluginAssemblies(assemblies)
                 .WithAdditionalOurTypes(additionalOurTypes)
                 .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(settingsDirectory)))
                 .WithManualRegistrations(Fixture.DelegateRegistration(container =>
@@ -49,7 +50,7 @@ namespace SpaceEngineers.Core.Modules.Test
                     container.Register<ISettingsProvider<TestConfigurationSettings>, AppSettingsJsonSettingsProvider<TestConfigurationSettings>>(EnLifestyle.Singleton);
                 }));
 
-            DependencyContainer = Fixture.BoundedAboveContainer(Output, options, assemblies);
+            DependencyContainer = Fixture.DependencyContainer(options);
         }
 
         private IDependencyContainer DependencyContainer { get; }

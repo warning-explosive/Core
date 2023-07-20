@@ -30,17 +30,18 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
         {
             var assemblies = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Test))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot), nameof(Test)))
             };
 
             var options = new DependencyContainerOptions()
-               .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration())
-               .WithManualRegistrations(fixture.DelegateRegistration(container =>
-               {
-                   container.RegisterInstance(new ConcreteImplementationGenericService<string>());
-               }));
+                .WithPluginAssemblies(assemblies)
+                .WithManualRegistrations(new ManuallyRegisteredServiceManualRegistration())
+                .WithManualRegistrations(fixture.DelegateRegistration(container =>
+                {
+                    container.RegisterInstance(new ConcreteImplementationGenericService<string>());
+                }));
 
-            DependencyContainer = fixture.BoundedAboveContainer(output, options, assemblies);
+            DependencyContainer = fixture.DependencyContainer(options);
         }
 
         private IDependencyContainer DependencyContainer { get; }
@@ -294,9 +295,10 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
                     .Register<OpenGenericTestService<object>, OpenGenericTestService<object>>(EnLifestyle.Transient);
             });
 
-            var options = new DependencyContainerOptions().WithManualRegistrations(registration);
+            var options = new DependencyContainerOptions()
+                .WithManualRegistrations(registration);
 
-            var localContainer = Fixture.ExactlyBoundedContainer(Output, options);
+            var localContainer = Fixture.DependencyContainer(options);
 
             localContainer.Resolve<IWiredTestService>();
             localContainer.Resolve<WiredTestService>();

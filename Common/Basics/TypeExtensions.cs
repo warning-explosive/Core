@@ -659,12 +659,12 @@ namespace SpaceEngineers.Core.Basics
             }
 
             if (openGeneric.IsGenericType
-             && openGeneric.IsGenericTypeDefinition
-             && source.IsConstructedOrNonGenericType())
+                && openGeneric.IsGenericTypeDefinition
+                && source.IsConstructedOrNonGenericType())
             {
                 var genericArguments = source
-                   .ExtractAllGenericArguments(openGeneric)
-                   .InformativeSingle(Amb(openGeneric, source));
+                    .ExtractAllGenericArguments(openGeneric)
+                    .InformativeSingle(Amb(openGeneric, source));
 
                 return openGeneric.MakeGenericType(genericArguments);
             }

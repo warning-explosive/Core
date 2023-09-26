@@ -115,6 +115,7 @@ namespace SpaceEngineers.Core.GenericHost
             this IHostBuilder hostBuilder,
             DirectoryInfo settingsDirectory)
         {
+            // TODO: #225 check for al least 1 endpoint and transport
             hostBuilder.CheckMultipleCalls(nameof(BuildHost));
 
             return hostBuilder

@@ -74,7 +74,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
                 IHostBuilder hostBuilder,
                 IConfiguration configuration)
             {
-                var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();
+                // TODO: #225 review
+                /*var frameworkDependenciesProvider = hostBuilder.GetFrameworkDependenciesProvider();*/
 
                 var assemblies = new[]
                 {
@@ -87,7 +88,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
                     .ModifyContainerOptions(options => options
                         .WithPluginAssemblies(assemblies)
                         .WithManualRegistrations(
-                            new HttpContextAccessorManualRegistration(frameworkDependenciesProvider)));
+                            /*new HttpContextAccessorManualRegistration(frameworkDependenciesProvider)*/));
             }
         }
 

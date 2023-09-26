@@ -44,8 +44,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.StartupActions
 
         public Task Run(CancellationToken token)
         {
-            _transport.Bind(_endpointIdentity, MessageHandler(_dependencyContainer), _integrationTypeProvider);
+            _transport.BindMessageHandler(_endpointIdentity, MessageHandler(_dependencyContainer), _integrationTypeProvider);
             _transport.BindErrorHandler(_endpointIdentity, ErrorMessageHandler(_logger));
+            _transport.LockTopologyConfiguration(_endpointIdentity);
 
             return Task.CompletedTask;
         }

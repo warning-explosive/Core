@@ -2,10 +2,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Postgres.Host;
 
 using System;
 using Basics;
-using Overrides;
 using Registrations;
 using SpaceEngineers.Core.GenericEndpoint.Host.Builder;
 using Sql.Host;
+using Sql.Host.Overrides;
 using Translation;
 
 /// <summary>

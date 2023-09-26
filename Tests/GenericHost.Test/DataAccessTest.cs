@@ -16,29 +16,31 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using CompositionRoot;
     using CrossCuttingConcerns.Logging;
     using CrossCuttingConcerns.Settings;
-    using DataAccess.Orm.PostgreSql.Connection;
     using DataAccess.Orm.Sql.Exceptions;
     using DataAccess.Orm.Sql.Linq;
     using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Model.Attributes;
+    using DataAccess.Orm.Sql.Postgres.Connection;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Sql.Transaction;
     using DatabaseEntities;
+    using Extensions;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Authorization;
-    using GenericEndpoint.Authorization.Host;
     using GenericEndpoint.DataAccess.Sql.Deduplication;
     using GenericEndpoint.DataAccess.Sql.Host;
+    using GenericEndpoint.DataAccess.Sql.Postgres.Host;
     using GenericEndpoint.DataAccess.Sql.Settings;
     using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
-    using GenericEndpoint.Pipeline;
+    using IntegrationTransport.Api;
+    using IntegrationTransport.Api.Abstractions;
     using IntegrationTransport.Host;
+    using IntegrationTransport.RabbitMQ;
     using IntegrationTransport.RabbitMQ.Settings;
-    using IntegrationTransport.RpcRequest;
     using JwtAuthentication;
     using MessageHandlers;
     using Messages;
@@ -73,8 +75,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
         /// <returns>Test cases</returns>
         public static IEnumerable<object[]> DataAccessTestData()
         {
-            var timeout = TimeSpan.FromSeconds(60);
-
             Func<string, DirectoryInfo> settingsDirectoryProducer =
                 testDirectory =>
                 {
@@ -86,27 +86,28 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .StepInto(testDirectory);
                 };
 
-            var useInMemoryIntegrationTransport = new Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder>(
-                static (hostBuilder, options) => hostBuilder
-                   .UseIntegrationTransport((context, builder) => options(context, builder
-                       .WithInMemoryIntegrationTransport()
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())))
-                       .BuildOptions()));
+            var inMemoryIntegrationTransportIdentity = IntegrationTransport.InMemory.Identity.TransportIdentity();
 
-            var useRabbitMqIntegrationTransport = new Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder>(
-                static (hostBuilder, options) => hostBuilder
-                   .UseIntegrationTransport((context, builder) => options(context, builder
-                       .WithRabbitMqIntegrationTransport()
-                       .ModifyContainerOptions(options => options
-                           .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration())
-                           .WithManualRegistrations(new MessagesCollectorManualRegistration())))
-                       .BuildOptions()));
+            var useInMemoryIntegrationTransport = new Func<IsolationLevel, Func<IHostBuilder, TransportIdentity, DirectoryInfo, IHostBuilder>>(
+                static _ => (hostBuilder, transportIdentity, _) => hostBuilder.UseInMemoryIntegrationTransport(
+                    transportIdentity,
+                    options => options
+                        .WithManualRegistrations(new MessagesCollectorManualRegistration())));
+
+            var rabbitMqIntegrationTransportIdentity = IntegrationTransport.RabbitMQ.Identity.TransportIdentity();
+
+            var useRabbitMqIntegrationTransport = new Func<IsolationLevel, Func<IHostBuilder, TransportIdentity, DirectoryInfo, IHostBuilder>>(
+                static isolationLevel => (hostBuilder, transportIdentity, settingsDirectory) => hostBuilder.UseRabbitMqIntegrationTransport(
+                    transportIdentity,
+                    builder => builder
+                        .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration())
+                        .WithManualRegistrations(new MessagesCollectorManualRegistration())
+                        .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))));
 
             var integrationTransportProviders = new[]
             {
-                useInMemoryIntegrationTransport,
-                useRabbitMqIntegrationTransport
+                (inMemoryIntegrationTransportIdentity, useInMemoryIntegrationTransport),
+                (rabbitMqIntegrationTransportIdentity, useRabbitMqIntegrationTransport)
             };
 
             var dataAccessProviders = new Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder>[]
@@ -126,29 +127,34 @@ namespace SpaceEngineers.Core.GenericHost.Test
             };
 
             return integrationTransportProviders
-               .SelectMany(useTransport => dataAccessProviders
-                   .SelectMany(withDataAccess => eventSourcingProviders
-                       .SelectMany(withEventSourcing => isolationLevels
-                           .Select(isolationLevel => new object[]
-                           {
-                               settingsDirectoryProducer,
-                               useTransport,
-                               withDataAccess,
-                               withEventSourcing,
-                               isolationLevel,
-                               timeout
-                           }))));
+               .SelectMany(transport =>
+               {
+                   var (transportIdentity, useTransport) = transport;
+
+                   return dataAccessProviders
+                       .SelectMany(withDataAccess => eventSourcingProviders
+                           .SelectMany(withEventSourcing => isolationLevels
+                               .Select(isolationLevel => new object[]
+                               {
+                                   settingsDirectoryProducer,
+                                   transportIdentity,
+                                   useTransport(isolationLevel),
+                                   withDataAccess,
+                                   withEventSourcing,
+                                   isolationLevel
+                               })));
+               });
         }
 
         [Theory(Timeout = 60_000)]
         [MemberData(nameof(DataAccessTestData))]
         internal async Task BackgroundOutboxDeliveryTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, DirectoryInfo, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
-            IsolationLevel isolationLevel,
-            TimeSpan timeout)
+            IsolationLevel isolationLevel)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
@@ -160,12 +166,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var messageHandlerTypes = new[]
             {
-                typeof(AlwaysReplyMessageHandler)
+                typeof(AlwaysReplyRequestHandler),
+                typeof(ReplyHandler)
             };
 
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
             var additionalOurTypes = messageTypes
@@ -173,10 +180,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(startupActions)
                .ToArray();
 
-            var host = useTransport(Fixture.CreateHostBuilder(),
-                    (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
+            var host = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
@@ -186,16 +192,18 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            await RunHostTest.RunTestHost(Output, host, BackgroundOutboxDeliveryTestInternal(settingsDirectory, isolationLevel), timeout)
-               .ConfigureAwait(false);
+            await host
+                .RunTestHost(Output, TestCase, BackgroundOutboxDeliveryTestInternal(settingsDirectory, transportIdentity, isolationLevel))
+                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> BackgroundOutboxDeliveryTestInternal(
                 DirectoryInfo settingsDirectory,
+                TransportIdentity transportIdentity,
                 IsolationLevel isolationLevel)
             {
                 return async (_, host, token) =>
                 {
-                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var transportDependencyContainer = host.GetIntegrationTransportDependencyContainer(transportIdentity);
                     var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
                     var sqlDatabaseSettings = endpointDependencyContainer
@@ -206,11 +214,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                    var rabbitMqSettings = transportDependencyContainer
-                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                        .Get();
+                    if (transportDependencyContainer.Resolve<IIntegrationTransport>() is RabbitMqIntegrationTransport)
+                    {
+                        var rabbitMqSettings = transportDependencyContainer
+                            .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                            .Get();
 
-                    Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                        Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                    }
 
                     var outboxSettings = endpointDependencyContainer
                         .Resolve<ISettingsProvider<OutboxSettings>>()
@@ -220,13 +231,27 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                        var reply = await integrationContext
-                           .RpcRequest<Request, Reply>(new Request(42), token)
-                           .ConfigureAwait(false);
+                        var awaiter = Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<Request>(),
+                            collector.WaitUntilMessageIsNotReceived<Reply>(),
+                            collector.WaitUntilErrorMessageIsNotReceived<HandlerInvoked>(message => message.HandlerType == typeof(ReplyHandler) && message.EndpointIdentity == TestIdentity.Endpoint10));
 
-                        Assert.Equal(42, reply.Id);
+                        var integrationMessage = endpointDependencyContainer
+                            .Resolve<IIntegrationMessageFactory>()
+                            .CreateGeneralMessage(
+                                new Request(42),
+                                typeof(Request),
+                                Array.Empty<IIntegrationMessageHeader>(),
+                                null);
+
+                        await transportDependencyContainer
+                            .Resolve<IIntegrationTransport>()
+                            .Enqueue(integrationMessage, token)
+                            .ConfigureAwait(false);
+
+                        await awaiter.ConfigureAwait(false);
                     }
                 };
             }
@@ -236,11 +261,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task OptimisticConcurrencyTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, DirectoryInfo, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
-            IsolationLevel isolationLevel,
-            TimeSpan timeout)
+            IsolationLevel isolationLevel)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
@@ -251,17 +276,16 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
             var additionalOurTypes = databaseEntities
                .Concat(startupActions)
                .ToArray();
 
-            var host = useTransport(Fixture.CreateHostBuilder(),
-                    (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
+            var host = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
@@ -270,16 +294,18 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            await RunHostTest.RunTestHost(Output, host, OptimisticConcurrencyTestInternal(settingsDirectory, isolationLevel), timeout)
-               .ConfigureAwait(false);
+            await host
+                .RunTestHost(Output, TestCase, OptimisticConcurrencyTestInternal(settingsDirectory, transportIdentity, isolationLevel))
+                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> OptimisticConcurrencyTestInternal(
                 DirectoryInfo settingsDirectory,
+                TransportIdentity transportIdentity,
                 IsolationLevel isolationLevel)
             {
                 return async (_, host, token) =>
                 {
-                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var transportDependencyContainer = host.GetIntegrationTransportDependencyContainer(transportIdentity);
                     var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
                     var sqlDatabaseSettings = endpointDependencyContainer
@@ -290,11 +316,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(3u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                    var rabbitMqSettings = transportDependencyContainer
-                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                        .Get();
+                    if (transportDependencyContainer.Resolve<IIntegrationTransport>() is RabbitMqIntegrationTransport)
+                    {
+                        var rabbitMqSettings = transportDependencyContainer
+                            .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                            .Get();
 
-                    Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                        Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                    }
 
                     var primaryKey = Guid.NewGuid();
 
@@ -505,11 +534,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task ReactiveTransactionalStoreTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, DirectoryInfo, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
-            IsolationLevel isolationLevel,
-            TimeSpan timeout)
+            IsolationLevel isolationLevel)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
@@ -520,17 +549,16 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
             var additionalOurTypes = databaseEntities
                .Concat(startupActions)
                .ToArray();
 
-            var host = useTransport(Fixture.CreateHostBuilder(),
-                    (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
+            var host = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
@@ -539,16 +567,18 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            await RunHostTest.RunTestHost(Output, host, ReactiveTransactionalStoreTestInternal(settingsDirectory, isolationLevel), timeout)
-               .ConfigureAwait(false);
+            await host
+                .RunTestHost(Output, TestCase, ReactiveTransactionalStoreTestInternal(settingsDirectory, transportIdentity, isolationLevel))
+                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> ReactiveTransactionalStoreTestInternal(
                 DirectoryInfo settingsDirectory,
+                TransportIdentity transportIdentity,
                 IsolationLevel isolationLevel)
             {
                 return async (_, host, token) =>
                 {
-                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var transportDependencyContainer = host.GetIntegrationTransportDependencyContainer(transportIdentity);
                     var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
                     var sqlDatabaseSettings = endpointDependencyContainer
@@ -559,11 +589,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                    var rabbitMqSettings = transportDependencyContainer
-                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                        .Get();
+                    if (transportDependencyContainer.Resolve<IIntegrationTransport>() is RabbitMqIntegrationTransport)
+                    {
+                        var rabbitMqSettings = transportDependencyContainer
+                            .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                            .Get();
 
-                    Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                        Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                    }
 
                     // [I] - update transactional store without explicit reads
                     await using (endpointDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
@@ -777,11 +810,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task OnlyCommandsCanIntroduceChanges(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, DirectoryInfo, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
-            IsolationLevel isolationLevel,
-            TimeSpan timeout)
+            IsolationLevel isolationLevel)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
@@ -790,15 +823,15 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 typeof(Command),
                 typeof(Request),
                 typeof(Reply),
-                typeof(TransportEvent)
+                typeof(Event)
             };
 
             var messageHandlerTypes = new[]
             {
-                typeof(CommandIntroduceDatabaseChanges),
-                typeof(RequestIntroduceDatabaseChanges),
-                typeof(ReplyIntroduceDatabaseChanges),
-                typeof(TransportEventIntroduceDatabaseChanges)
+                typeof(IntroduceDatabaseChangesCommandHandler),
+                typeof(IntroduceDatabaseChangesRequestHandler),
+                typeof(IntroduceDatabaseChangesReplyHandler),
+                typeof(IntroduceDatabaseChangesEventHandler)
             };
 
             var databaseEntities = new[]
@@ -808,7 +841,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
             var additionalOurTypes = messageTypes
@@ -817,10 +850,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
                .Concat(startupActions)
                .ToArray();
 
-            var host = useTransport(Fixture.CreateHostBuilder(),
-                    (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
+            var host = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
@@ -829,16 +861,18 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            await RunHostTest.RunTestHost(Output, host, OnlyCommandsCanIntroduceChangesInternal(settingsDirectory, isolationLevel), timeout)
-               .ConfigureAwait(false);
+            await host
+                .RunTestHost(Output, TestCase, OnlyCommandsCanIntroduceChangesInternal(settingsDirectory, transportIdentity, isolationLevel))
+                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> OnlyCommandsCanIntroduceChangesInternal(
                 DirectoryInfo settingsDirectory,
+                TransportIdentity transportIdentity,
                 IsolationLevel isolationLevel)
             {
                 return async (output, host, token) =>
                 {
-                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var transportDependencyContainer = host.GetIntegrationTransportDependencyContainer(transportIdentity);
                     var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
                     var sqlDatabaseSettings = endpointDependencyContainer
@@ -849,108 +883,120 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                    var rabbitMqSettings = transportDependencyContainer
-                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                        .Get();
-
-                    Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
-
-                    await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
+                    if (transportDependencyContainer.Resolve<IIntegrationTransport>() is RabbitMqIntegrationTransport)
                     {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
-                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+                        var rabbitMqSettings = transportDependencyContainer
+                            .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                            .Get();
 
-                        var awaiter = collector.WaitUntilMessageIsNotReceived(message => message.Payload is Command);
-
-                        await integrationContext
-                           .Send(new Command(42), token)
-                           .ConfigureAwait(false);
-
-                        await awaiter.ConfigureAwait(false);
-
-                        Assert.Empty(collector.ErrorMessages);
+                        Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
                     }
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
                         var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Request);
+                        var awaiter = collector.WaitUntilMessageIsNotReceived<Command>();
 
-                        await integrationContext
-                            .Request<Request, Reply>(new Request(42), token)
+                        var integrationMessage = endpointDependencyContainer
+                            .Resolve<IIntegrationMessageFactory>()
+                            .CreateGeneralMessage(
+                                new Command(42),
+                                typeof(Command),
+                                Array.Empty<IIntegrationMessageHeader>(),
+                                null);
+
+                        await transportDependencyContainer
+                            .Resolve<IIntegrationTransport>()
+                            .Enqueue(integrationMessage, token)
                             .ConfigureAwait(false);
 
                         await awaiter.ConfigureAwait(false);
-
-                        Assert.Single(collector.ErrorMessages);
-                        Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
                     }
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
                         var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Request);
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived<Request>(
+                            exceptionPredicate: exception =>
+                                exception is InvalidOperationException &&
+                                exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
 
-                        var rpcException = default(Exception?);
+                        var integrationMessage = endpointDependencyContainer
+                            .Resolve<IIntegrationMessageFactory>()
+                            .CreateGeneralMessage(
+                                new Request(42),
+                                typeof(Request),
+                                Array.Empty<IIntegrationMessageHeader>(),
+                                null);
 
-                        try
-                        {
-                            _ = await integrationContext
-                               .RpcRequest<Request, Reply>(new Request(42), token)
-                               .ConfigureAwait(false);
-                        }
-                        catch (InvalidOperationException invalidOperationException)
-                        {
-                            rpcException = invalidOperationException;
-                        }
+                        await transportDependencyContainer
+                            .Resolve<IIntegrationTransport>()
+                            .Enqueue(integrationMessage, token)
+                            .ConfigureAwait(false);
 
                         await awaiter.ConfigureAwait(false);
-
-                        Assert.Single(collector.ErrorMessages);
-                        Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
-                        Assert.Equal(collector.ErrorMessages.Single().exception.GetType(), rpcException.GetType());
-                        Assert.Equal(collector.ErrorMessages.Single().exception.Message, rpcException.Message);
                     }
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var integrationMessageFactory = transportDependencyContainer.Resolve<IIntegrationMessageFactory>();
+                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
+
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived<Reply>(
+                            exceptionPredicate: exception =>
+                                exception is InvalidOperationException
+                                && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
+
                         var request = new Request(42);
-                        var initiatorMessage = integrationMessageFactory.CreateGeneralMessage(request, typeof(Request), new[] { new SentFrom(TestIdentity.Endpoint10) }, null);
-                        var integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, GenericEndpoint.Messaging.IntegrationMessage>(initiatorMessage);
-                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is Reply);
+                        var initiatorMessage = endpointDependencyContainer
+                            .Resolve<IIntegrationMessageFactory>()
+                            .CreateGeneralMessage(
+                                request,
+                                typeof(Request),
+                                new[] { new SentFrom(TestIdentity.Endpoint10) },
+                                null);
 
-                        await integrationContext
-                           .Reply(request, new Reply(request.Id), token)
-                           .ConfigureAwait(false);
+                        var integrationMessage = endpointDependencyContainer
+                            .Resolve<IIntegrationMessageFactory>()
+                            .CreateGeneralMessage(
+                                new Reply(request.Id),
+                                typeof(Reply),
+                                Array.Empty<IIntegrationMessageHeader>(),
+                                initiatorMessage);
+
+                        await transportDependencyContainer
+                            .Resolve<IIntegrationTransport>()
+                            .Enqueue(integrationMessage, token)
+                            .ConfigureAwait(false);
 
                         await awaiter.ConfigureAwait(false);
-
-                        Assert.Single(collector.ErrorMessages);
-                        Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
                     }
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
                         var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived(message => message.Payload is TransportEvent);
+                        var awaiter = collector.WaitUntilErrorMessageIsNotReceived<Event>(
+                            exceptionPredicate: exception =>
+                                exception is InvalidOperationException
+                                && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
 
-                        await integrationContext
-                           .Publish(new TransportEvent(42), token)
-                           .ConfigureAwait(false);
+                        var integrationMessage = endpointDependencyContainer
+                            .Resolve<IIntegrationMessageFactory>()
+                            .CreateGeneralMessage(
+                                new Event(42),
+                                typeof(Event),
+                                Array.Empty<IIntegrationMessageHeader>(),
+                                null);
+
+                        await transportDependencyContainer
+                            .Resolve<IIntegrationTransport>()
+                            .Enqueue(integrationMessage, token)
+                            .ConfigureAwait(false);
 
                         await awaiter.ConfigureAwait(false);
-
-                        Assert.Single(collector.ErrorMessages);
-                        Assert.True(collector.ErrorMessages.Single().exception is InvalidOperationException exception && exception.Message.Contains("only commands can introduce changes", StringComparison.OrdinalIgnoreCase));
                     }
                 };
             }
@@ -960,25 +1006,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task AuthenticateUserTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, DirectoryInfo, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
-            IsolationLevel isolationLevel,
-            TimeSpan timeout)
+            IsolationLevel isolationLevel)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
-            var host = useTransport(Fixture.CreateHostBuilder(),
-                    (context, builder) => builder
-                        .WithAuthorization(context.Configuration)
-                        .ModifyContainerOptions(options => options
-                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
-                .UseAuthEndpoint(builder =>
+            var host = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
+                .UseAuthEndpoint((_, builder) =>
                     withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(startupActions)
@@ -986,17 +1030,19 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            await RunHostTest.RunTestHost(Output, host, AuthorizeUserTestInternal(settingsDirectory, isolationLevel), timeout)
-               .ConfigureAwait(false);
+            await host
+                .RunTestHost(Output, TestCase, AuthorizeUserTestInternal(settingsDirectory, transportIdentity, isolationLevel))
+                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> AuthorizeUserTestInternal(
                 DirectoryInfo settingsDirectory,
+                TransportIdentity transportIdentity,
                 IsolationLevel isolationLevel)
             {
                 return async (output, host, token) =>
                 {
-                    var transportDependencyContainer = host.GetTransportDependencyContainer();
-                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(AuthEndpoint.Contract.Identity.LogicalName);
+                    var transportDependencyContainer = host.GetIntegrationTransportDependencyContainer(transportIdentity);
+                    var endpointDependencyContainer = host.GetEndpointDependencyContainer(AuthEndpoint.Contract.Identity.EndpointIdentity);
 
                     var sqlDatabaseSettings = endpointDependencyContainer
                         .Resolve<ISettingsProvider<SqlDatabaseSettings>>()
@@ -1006,20 +1052,23 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                    var rabbitMqSettings = transportDependencyContainer
-                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                        .Get();
+                    if (transportDependencyContainer.Resolve<IIntegrationTransport>() is RabbitMqIntegrationTransport)
+                    {
+                        var rabbitMqSettings = transportDependencyContainer
+                            .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                            .Get();
 
-                    Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                        Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                    }
 
                     var username = "qwerty";
                     var password = "12345678";
 
-                    var authorizationToken = transportDependencyContainer
+                    var authorizationToken = endpointDependencyContainer
                         .Resolve<ITokenProvider>()
-                        .GenerateToken(username, new[] { AuthEndpoint.Contract.Features.Authentication }, TimeSpan.FromSeconds(60));
+                        .GenerateToken(username, new[] { Features.Authentication }, TimeSpan.FromSeconds(60));
 
-                    var initiatorMessage = transportDependencyContainer
+                    var initiatorMessage = endpointDependencyContainer
                         .Resolve<IIntegrationMessageFactory>()
                         .CreateGeneralMessage(
                             new Command(42),
@@ -1046,16 +1095,24 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        IIntegrationContext integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, GenericEndpoint.Messaging.IntegrationMessage>(initiatorMessage);
                         var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
                         var awaiter = Task.WhenAll(
                             collector.WaitUntilMessageIsNotReceived<CreateUser>(),
                             collector.WaitUntilMessageIsNotReceived<UserWasCreated>());
 
-                        await integrationContext
-                           .Send(new CreateUser(username, password), token)
-                           .ConfigureAwait(false);
+                        var integrationMessage = endpointDependencyContainer
+                            .Resolve<IIntegrationMessageFactory>()
+                            .CreateGeneralMessage(
+                                new CreateUser(username, password),
+                                typeof(CreateUser),
+                                Array.Empty<IIntegrationMessageHeader>(),
+                                null);
+
+                        await transportDependencyContainer
+                            .Resolve<IIntegrationTransport>()
+                            .Enqueue(integrationMessage, token)
+                            .ConfigureAwait(false);
 
                         await awaiter.ConfigureAwait(false);
                     }
@@ -1081,11 +1138,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
         [MemberData(nameof(DataAccessTestData))]
         internal async Task CascadeDeleteTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
-            Func<IHostBuilder, Func<HostBuilderContext, IEndpointBuilder, IEndpointBuilder>, IHostBuilder> useTransport,
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, DirectoryInfo, IHostBuilder> useTransport,
             Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder> withDataAccess,
             Func<IEndpointBuilder, IEndpointBuilder> withEventSourcing,
-            IsolationLevel isolationLevel,
-            TimeSpan timeout)
+            IsolationLevel isolationLevel)
         {
             var settingsDirectory = settingsDirectoryProducer(TestCase.Method.Name);
 
@@ -1097,12 +1154,13 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
             var messageHandlerTypes = new[]
             {
-                typeof(AlwaysReplyMessageHandler)
+                typeof(AlwaysReplyRequestHandler),
+                typeof(ReplyHandler)
             };
 
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
             var additionalOurTypes = messageTypes
@@ -1110,10 +1168,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 .Concat(startupActions)
                 .ToArray();
 
-            var host = useTransport(Fixture.CreateHostBuilder(),
-                    (_, builder) => builder
-                        .ModifyContainerOptions(options => options
-                            .WithManualRegistrations(new VirtualHostManualRegistration(settingsDirectory.Name + isolationLevel))))
+            var host = Fixture
+                .CreateHostBuilder()
+                .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
                     (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
@@ -1122,16 +1179,18 @@ namespace SpaceEngineers.Core.GenericHost.Test
                         .BuildOptions())
                 .BuildHost(settingsDirectory);
 
-            await RunHostTest.RunTestHost(Output, host, CascadeDeleteTestInternal(settingsDirectory, isolationLevel), timeout)
-               .ConfigureAwait(false);
+            await host
+                .RunTestHost(Output, TestCase, CascadeDeleteTestInternal(settingsDirectory, transportIdentity, isolationLevel))
+                .ConfigureAwait(false);
 
             static Func<ITestOutputHelper, IHost, CancellationToken, Task> CascadeDeleteTestInternal(
                 DirectoryInfo settingsDirectory,
+                TransportIdentity transportIdentity,
                 IsolationLevel isolationLevel)
             {
                 return async (output, host, token) =>
                 {
-                    var transportDependencyContainer = host.GetTransportDependencyContainer();
+                    var transportDependencyContainer = host.GetIntegrationTransportDependencyContainer(transportIdentity);
                     var endpointDependencyContainer = host.GetEndpointDependencyContainer(TestIdentity.Endpoint10);
 
                     var sqlDatabaseSettings = endpointDependencyContainer
@@ -1142,11 +1201,14 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     Assert.Equal(isolationLevel, sqlDatabaseSettings.IsolationLevel);
                     Assert.Equal(1u, sqlDatabaseSettings.ConnectionPoolSize);
 
-                    var rabbitMqSettings = transportDependencyContainer
-                        .Resolve<ISettingsProvider<RabbitMqSettings>>()
-                        .Get();
+                    if (transportDependencyContainer.Resolve<IIntegrationTransport>() is RabbitMqIntegrationTransport)
+                    {
+                        var rabbitMqSettings = transportDependencyContainer
+                            .Resolve<ISettingsProvider<RabbitMqSettings>>()
+                            .Get();
 
-                    Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                        Assert.Equal(settingsDirectory.Name + isolationLevel, rabbitMqSettings.VirtualHost);
+                    }
 
                     var modelProvider = endpointDependencyContainer.Resolve<IModelProvider>();
 
@@ -1173,11 +1235,28 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        var integrationContext = transportDependencyContainer.Resolve<IIntegrationContext>();
+                        var collector = transportDependencyContainer.Resolve<TestMessagesCollector>();
 
-                        _ = await integrationContext
-                            .RpcRequest<Request, Reply>(new Request(42), token)
+                        var awaiter = Task.WhenAll(
+                            collector.WaitUntilMessageIsNotReceived<Request>(),
+                            collector.WaitUntilMessageIsNotReceived<Reply>(),
+                            collector.WaitUntilErrorMessageIsNotReceived<HandlerInvoked>(message => message.HandlerType == typeof(ReplyHandler) && message.EndpointIdentity == TestIdentity.Endpoint10));
+
+                        // TODO: simplify sending
+                        var integrationMessage = endpointDependencyContainer
+                            .Resolve<IIntegrationMessageFactory>()
+                            .CreateGeneralMessage(
+                                new Request(42),
+                                typeof(Request),
+                                Array.Empty<IIntegrationMessageHeader>(),
+                                null);
+
+                        await transportDependencyContainer
+                            .Resolve<IIntegrationTransport>()
+                            .Enqueue(integrationMessage, token)
                             .ConfigureAwait(false);
+
+                        await awaiter.ConfigureAwait(false);
                     }
 
                     await endpointDependencyContainer
@@ -1207,7 +1286,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                 var rowsCount = await transaction.All<IntegrationMessage>().CachedExpression("37A34847-5A14-4D4E-928A-75683BBB1514").CountAsync(token).ConfigureAwait(false);
 
-                Assert.Equal(2, rowsCount);
+                Assert.Equal(3, rowsCount);
             }
 
             static async Task Delete(
@@ -1221,7 +1300,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     .Invoke(token)
                     .ConfigureAwait(false);
 
-                Assert.Equal(2, affectedRowsCount);
+                Assert.Equal(3, affectedRowsCount);
             }
 
             static async Task CheckEmptyRows(

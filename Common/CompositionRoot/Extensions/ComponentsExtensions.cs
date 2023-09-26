@@ -59,16 +59,18 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
         {
             return registrations
                .Select(RegisteredComponent)
-               .Where(type => type.IsConcreteType());
+               .Where(type => type != null && type.IsConcreteType())
+               .Select(type => type!);
 
-            static Type RegisteredComponent(IRegistrationInfo info)
+            static Type? RegisteredComponent(IRegistrationInfo info)
             {
                 return info switch
                 {
                     InstanceRegistrationInfo instanceRegistrationInfo => instanceRegistrationInfo.Instance.GetType(),
                     ServiceRegistrationInfo serviceRegistrationInfo => serviceRegistrationInfo.Implementation,
-                    DelegateRegistrationInfo delegateRegistrationInfo => delegateRegistrationInfo.InstanceProducer().GetType(),
                     DecoratorRegistrationInfo decoratorRegistrationInfo => decoratorRegistrationInfo.Implementation,
+                    DelegateRegistrationInfo delegateRegistrationInfo => default,
+                    EmptyCollectionRegistrationInfo emptyCollectionRegistrationInfo => default,
                     _ => throw new NotSupportedException(info.GetType().Name)
                 };
             }

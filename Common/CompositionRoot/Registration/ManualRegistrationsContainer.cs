@@ -18,7 +18,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         private readonly List<DecoratorRegistrationInfo> _decorators;
 
         public ManualRegistrationsContainer(
-            DependencyContainer container,
+            IDependencyContainer container,
             ITypeProvider typeProvider)
         {
             DependencyContainer = container;
@@ -158,6 +158,12 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         public IManualRegistrationsContainer RegisterCollectionEntryDelegate(Type service, Func<object> instanceProducer, EnLifestyle lifestyle)
         {
             _collections.Add(new DelegateRegistrationInfo(service, instanceProducer, lifestyle));
+            return this;
+        }
+
+        public IManualRegistrationsContainer RegisterEmptyCollection<TService>()
+        {
+            _collections.Add(new EmptyCollectionRegistrationInfo(typeof(TService)));
             return this;
         }
 

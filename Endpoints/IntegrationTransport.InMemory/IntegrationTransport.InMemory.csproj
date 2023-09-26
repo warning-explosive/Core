@@ -45,8 +45,8 @@
       <Compile Update="RoundRobinEndpointInstanceSelectionBehavior.cs">
         <DependentUpon>IEndpointInstanceSelectionBehavior.cs</DependentUpon>
       </Compile>
-      <Compile Update="IEndpointInstanceSelectionBehavior.cs">
-        <DependentUpon>InMemoryIntegrationTransport.cs</DependentUpon>
+      <Compile Update="InMemoryTopology.cs">
+        <DependentUpon>IInMemoryTopology.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 </Project>

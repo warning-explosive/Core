@@ -8,8 +8,6 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
     /// </summary>
     public static class LoggingExtensions
     {
-        private static readonly Func<string?, Exception?, string> _messageFormatter = MessageFormatter;
-
         /// <summary>
         /// Log critical information that leads to application failure
         /// </summary>
@@ -17,7 +15,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="exception">Exception</param>
         public static void Critical(this ILogger logger, Exception exception)
         {
-            logger.Log(LogLevel.Critical, 0, null, exception, _messageFormatter);
+            logger.Log(LogLevel.Critical, 0, exception, null, Array.Empty<object>());
         }
 
         /// <summary>
@@ -28,7 +26,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="message">Message</param>
         public static void Critical(this ILogger logger, Exception exception, string message)
         {
-            logger.Log(LogLevel.Critical, 0, message, exception, _messageFormatter);
+            logger.Log(LogLevel.Critical, 0, exception, message, Array.Empty<object>());
         }
 
         /// <summary>
@@ -38,7 +36,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="exception">Exception</param>
         public static void Error(this ILogger logger, Exception exception)
         {
-            logger.Log(LogLevel.Error, 0, null, exception, _messageFormatter);
+            logger.Log(LogLevel.Error, 0, exception, null, Array.Empty<object>());
         }
 
         /// <summary>
@@ -49,7 +47,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="message">Message</param>
         public static void Error(this ILogger logger, Exception exception, string message)
         {
-            logger.Log(LogLevel.Error, 0, message, exception, _messageFormatter);
+            logger.Log(LogLevel.Error, 0, exception, message, Array.Empty<object>());
         }
 
         /// <summary>
@@ -59,7 +57,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="message">Message template</param>
         public static void Warning(this ILogger logger, string message)
         {
-            logger.Log(LogLevel.Warning, 0, message, null, _messageFormatter);
+            logger.Log(LogLevel.Warning, 0, message, Array.Empty<object>());
         }
 
         /// <summary>
@@ -69,7 +67,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="message">Message template</param>
         public static void Information(this ILogger logger, string message)
         {
-            logger.Log(LogLevel.Information, 0, message, null, _messageFormatter);
+            logger.Log(LogLevel.Information, 0, message, Array.Empty<object>());
         }
 
         /// <summary>
@@ -79,7 +77,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="message">Message template</param>
         public static void Debug(this ILogger logger, string message)
         {
-            logger.Log(LogLevel.Debug, 0, message, null, _messageFormatter);
+            logger.Log(LogLevel.Debug, 0, message, Array.Empty<object>());
         }
 
         /// <summary>
@@ -89,24 +87,7 @@ namespace SpaceEngineers.Core.CrossCuttingConcerns.Logging
         /// <param name="message">Message template</param>
         public static void Trace(this ILogger logger, string message)
         {
-            logger.Log(LogLevel.Trace, 0, message, null, _messageFormatter);
-        }
-
-        private static string MessageFormatter(string? message, Exception? exception)
-        {
-            if (message != null)
-            {
-                return exception != null
-                    ? $"{message}{Environment.NewLine}{exception}"
-                    : message;
-            }
-
-            if (exception != null)
-            {
-                return exception.ToString();
-            }
-
-            return string.Empty;
+            logger.Log(LogLevel.Trace, 0, message, Array.Empty<object>());
         }
     }
 }

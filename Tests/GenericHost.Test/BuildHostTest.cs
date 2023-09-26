@@ -46,7 +46,6 @@
     using IntegrationTransport.Api.Abstractions;
     using IntegrationTransport.Host;
     using IntegrationTransport.Host.BackgroundWorkers;
-    using IntegrationTransport.Host.StartupActions;
     using IntegrationTransport.InMemory;
     using MessageHandlers;
     using Messages;
@@ -96,16 +95,16 @@
 
             var integrationTransportProviders = new[]
             {
-                new object[] { inMemoryIntegrationTransportIdentity, useInMemoryIntegrationTransport },
-                new object[] { rabbitMqIntegrationTransportIdentity, useRabbitMqIntegrationTransport }
+                (inMemoryIntegrationTransportIdentity, useInMemoryIntegrationTransport),
+                (rabbitMqIntegrationTransportIdentity, useRabbitMqIntegrationTransport)
             };
 
             return integrationTransportProviders
                .Select(transport =>
                {
-                   var (transportIdentity, useTransport, _) = transport;
+                   var (transportIdentity, useTransport) = transport;
 
-                   return new[]
+                   return new object[]
                    {
                        settingsDirectory,
                        transportIdentity,
@@ -141,8 +140,8 @@
 
             var integrationTransportProviders = new[]
             {
-                new object[] { inMemoryIntegrationTransportIdentity, useInMemoryIntegrationTransport },
-                new object[] { rabbitMqIntegrationTransportIdentity, useRabbitMqIntegrationTransport }
+                (inMemoryIntegrationTransportIdentity, useInMemoryIntegrationTransport),
+                (rabbitMqIntegrationTransportIdentity, useRabbitMqIntegrationTransport)
             };
 
             var dataAccessProviders = new Func<IEndpointBuilder, Action<DataAccessOptions>?, IEndpointBuilder>[]
@@ -160,9 +159,9 @@
                    .SelectMany(withDataAccess => eventSourcingProviders
                        .Select(withEventSourcing =>
                        {
-                           var (transportIdentity, useTransport, _) = transport;
+                           var (transportIdentity, useTransport) = transport;
 
-                           return new[]
+                           return new object[]
                            {
                                settingsDirectory,
                                transportIdentity,
@@ -226,12 +225,12 @@
 
             var messageHandlerTypes = new[]
             {
-                typeof(BaseEventEmptyMessageHandler),
-                typeof(InheritedEventEmptyMessageHandler),
-                typeof(CommandEmptyMessageHandler),
-                typeof(OpenGenericCommandEmptyMessageHandler<>),
-                typeof(AlwaysReplyMessageHandler),
-                typeof(ReplyEmptyMessageHandler)
+                typeof(BaseEventHandler),
+                typeof(InheritedEventHandler),
+                typeof(CommandHandler),
+                typeof(OpenGenericCommandHandler<>),
+                typeof(AlwaysReplyRequestHandler),
+                typeof(ReplyHandler)
             };
 
             var additionalOurTypes = messageTypes
@@ -280,10 +279,8 @@
 
                 // IHostedServiceStartupAction
                 {
-                    var expectedHostedServiceStartupActions = new[]
-                        {
-                            typeof(IntegrationTransportHostedServiceStartupAction)
-                        }
+                    var expectedHostedServiceStartupActions = Array
+                        .Empty<Type>()
                         .OrderByDependencies()
                         .ThenBy(type => type.Name)
                         .ToList();
@@ -322,8 +319,7 @@
                 {
                     var expectedHostedServiceBackgroundWorkers = new[]
                         {
-                            typeof(IntegrationTransportHostedServiceBackgroundWorker),
-                            typeof(IntegrationTransportHostedServiceStartupAction)
+                            typeof(IntegrationTransportHostedServiceBackgroundWorker)
                         }
                         .OrderByDependencies()
                         .ThenBy(type => type.Name)
@@ -618,6 +614,7 @@
                                 typeof(ConversationIdProvider),
                                 typeof(MessageInitiatorProvider),
                                 typeof(MessageOriginProvider),
+                                typeof(ReplyToProvider),
                                 typeof(TraceContextPropagationProvider),
                                 typeof(UserScopeProvider),
                                 typeof(AuthorizationHeaderProvider),
@@ -636,12 +633,12 @@
 
                     // IMessageHandler
                     {
-                        Assert.Equal(typeof(BaseEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<BaseEvent>>().GetType());
-                        Assert.Equal(typeof(InheritedEventEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<InheritedEvent>>().GetType());
-                        Assert.Equal(typeof(CommandEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Command>>().GetType());
-                        Assert.Equal(typeof(OpenGenericCommandEmptyMessageHandler<OpenGenericHandlerCommand>), endpointDependencyContainer.Resolve<IMessageHandler<OpenGenericHandlerCommand>>().GetType());
-                        Assert.Equal(typeof(AlwaysReplyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Request>>().GetType());
-                        Assert.Equal(typeof(ReplyEmptyMessageHandler), endpointDependencyContainer.Resolve<IMessageHandler<Reply>>().GetType());
+                        Assert.Equal(typeof(BaseEventHandler), endpointDependencyContainer.Resolve<IMessageHandler<BaseEvent>>().GetType());
+                        Assert.Equal(typeof(InheritedEventHandler), endpointDependencyContainer.Resolve<IMessageHandler<InheritedEvent>>().GetType());
+                        Assert.Equal(typeof(CommandHandler), endpointDependencyContainer.Resolve<IMessageHandler<Command>>().GetType());
+                        Assert.Equal(typeof(OpenGenericCommandHandler<OpenGenericHandlerCommand>), endpointDependencyContainer.Resolve<IMessageHandler<OpenGenericHandlerCommand>>().GetType());
+                        Assert.Equal(typeof(AlwaysReplyRequestHandler), endpointDependencyContainer.Resolve<IMessageHandler<Request>>().GetType());
+                        Assert.Equal(typeof(ReplyHandler), endpointDependencyContainer.Resolve<IMessageHandler<Reply>>().GetType());
                     }
 
                     // IErrorHandler

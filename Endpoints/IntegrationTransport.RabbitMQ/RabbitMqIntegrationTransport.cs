@@ -4,9 +4,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
     using System.Linq;
-    using System.Net.Mime;
     using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
@@ -21,7 +19,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using CrossCuttingConcerns.Settings;
     using Extensions;
     using GenericEndpoint.Contract;
-    using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using GenericEndpoint.Messaging.MessageHeaders;
     using global::RabbitMQ.Client;
@@ -30,15 +27,18 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
     using Microsoft.Extensions.Logging;
     using Settings;
 
+    /// <summary>
+    /// RabbitMqIntegrationTransport
+    /// </summary>
     [SuppressMessage("Analysis", "CA1506", Justification = "Infrastructural code")]
     [Component(EnLifestyle.Singleton)]
-    internal class RabbitMqIntegrationTransport : IIntegrationTransport,
-                                                  IConfigurableIntegrationTransport,
-                                                  IExecutableIntegrationTransport,
-                                                  IResolvable<IIntegrationTransport>,
-                                                  IResolvable<IConfigurableIntegrationTransport>,
-                                                  IResolvable<IExecutableIntegrationTransport>,
-                                                  IDisposable
+    internal partial class RabbitMqIntegrationTransport : IIntegrationTransport,
+                                                          IConfigurableIntegrationTransport,
+                                                          IExecutableIntegrationTransport,
+                                                          IResolvable<IIntegrationTransport>,
+                                                          IResolvable<IConfigurableIntegrationTransport>,
+                                                          IResolvable<IExecutableIntegrationTransport>,
+                                                          IDisposable
     {
         public const string ContentEncoding = "gzip";
 
@@ -86,6 +86,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         [SuppressMessage("Analysis", "CA2213", Justification = "singleton instance keeps reference forever")]
         private CancellationTokenSource? _cts;
+        private CancellationTokenRegistration? _cancellationRegistration;
 
         public RabbitMqIntegrationTransport(
             ILogger logger,
@@ -112,307 +113,34 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
             _backgroundMessageProcessingTcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            _handleConnectionShutdownSubscription = HandleConnectionShutdown(_logger, _backgroundMessageProcessingTcs);
+            _handleConnectionShutdownSubscription = HandleConnectionShutdown(_logger);
 
-            _handleChannelShutdownSubscription = HandleChannelShutdown(_logger, _backgroundMessageProcessingTcs);
-            _handleChannelCallbackExceptionSubscription = HandleChannelCallbackException(_logger, _backgroundMessageProcessingTcs);
+            _handleChannelShutdownSubscription = HandleChannelShutdown(_logger);
+            _handleChannelCallbackExceptionSubscription = HandleChannelCallbackException(_logger);
             _handleChannelBasicReturnSubscription = HandleChannelBasicReturn(_logger, OnMessageReceived, _jsonSerializer, _ready, GetCancellationToken);
             _handleChannelBasicAcksSubscription = HandleChannelBasicAcks();
             _handleChannelBasicNacksSubscription = HandleChannelBasicNacks();
 
             _handleReceivedMessageSubscription = HandleReceivedMessage(_logger, _consumers, _messageHandlers, OnMessageReceived, _jsonSerializer, _ready, GetCancellationToken);
-            _handleConsumerShutdownSubscription = HandleConsumerShutdown(_logger, _backgroundMessageProcessingTcs);
+            _handleConsumerShutdownSubscription = HandleConsumerShutdown(_logger);
 
             _status = EnIntegrationTransportStatus.Stopped;
-        }
-
-        public event EventHandler<IntegrationTransportStatusChangedEventArgs>? StatusChanged;
-
-        public event EventHandler<IntegrationTransportMessageReceivedEventArgs>? MessageReceived;
-
-        public EnIntegrationTransportStatus Status
-        {
-            get => _status;
-
-            private set
-            {
-                var previousValue = _status;
-
-                _status = value;
-
-                StatusChanged?.Invoke(this, new IntegrationTransportStatusChangedEventArgs(previousValue, value));
-            }
         }
 
         private CancellationToken Token => GetCancellationToken();
 
         public void Dispose()
         {
-            _ready.Reset();
+            StopBackgroundMessageProcessing(Token).Wait(Token);
 
-            foreach (var (_, channel) in _channels)
-            {
-                channel.ModelShutdown -= _handleChannelShutdownSubscription;
-                channel.CallbackException -= _handleChannelCallbackExceptionSubscription;
-                channel.BasicReturn -= _handleChannelBasicReturnSubscription;
-                channel.BasicAcks -= _handleChannelBasicAcksSubscription;
-                channel.BasicNacks -= _handleChannelBasicNacksSubscription;
-
-                channel.Close();
-                channel.Dispose();
-            }
-
-            _channels.Clear();
-
-            var connection = Interlocked.Exchange(ref _connection, null);
-
-            if (connection != null)
-            {
-                connection.ConnectionShutdown -= _handleConnectionShutdownSubscription;
-
-                connection.Close();
-                connection.Dispose();
-            }
-
-            if (Status != EnIntegrationTransportStatus.Stopped)
-            {
-                Status = EnIntegrationTransportStatus.Stopped;
-            }
-        }
-
-        public void Bind(
-            EndpointIdentity endpointIdentity,
-            Func<IntegrationMessage, Task> messageHandler,
-            IIntegrationTypeProvider integrationTypeProvider)
-        {
-            _endpoints.TryAdd(endpointIdentity, default);
-
-            _integrationMessageTypes.TryAdd(endpointIdentity, integrationTypeProvider);
-            _messageHandlers.TryAdd(endpointIdentity, messageHandler);
-        }
-
-        public void BindErrorHandler(
-            EndpointIdentity endpointIdentity,
-            Func<IntegrationMessage, Exception, CancellationToken, Task> errorMessageHandler)
-        {
-            _endpoints.TryAdd(endpointIdentity, default);
-
-            var endpointErrorHandlers = _errorMessageHandlers.GetOrAdd(endpointIdentity, new ConcurrentBag<Func<IntegrationMessage, Exception, CancellationToken, Task>>());
-            endpointErrorHandlers.Add(errorMessageHandler);
-        }
-
-        public async Task<bool> Enqueue(IntegrationMessage message, CancellationToken token)
-        {
-            await _ready.WaitAsync(token).ConfigureAwait(false);
-
-            var result = true;
-
-            var messageTypes = message
-               .ReflectedType
-               .IncludedTypes()
-               .Where(type => typeof(IIntegrationMessage).IsAssignableFrom(type)
-                           && !type.IsMessageContractAbstraction())
-               .ToList();
-
-            var channel = _channels[message.ReadRequiredHeader<SentFrom>().Value];
-
-            foreach (var type in messageTypes)
-            {
-                var copy = message.ContravariantClone(type);
-                result = await Publish(copy, channel, _rabbitMqSettings, _outstandingConfirms, _jsonSerializer).ConfigureAwait(false);
-            }
-
-            return result;
-
-            static Task<bool> Publish(
-                IntegrationMessage message,
-                IModel channel,
-                RabbitMqSettings rabbitMqSettings,
-                ConcurrentDictionary<ulong, TaskCompletionSource<bool>> outstandingConfirms,
-                IJsonSerializer jsonSerializer)
-            {
-                var basicProperties = CreateBasicProperties(channel, message, rabbitMqSettings);
-
-                var exchange = basicProperties.Expiration.IsNullOrEmpty()
-                    ? InputExchange
-                    : (string)basicProperties.Headers[DeferredExchange];
-
-                var bodyBytes = message.EncodeIntegrationMessage(jsonSerializer);
-
-                var left = message.ReflectedType.GenericTypeDefinitionOrSelf().FullName!.GetRoutingKeyPart();
-
-                var right = message.GetTargetEndpoint();
-
-                var routingKey = string.Join(".", left, right);
-
-                return channel.Publish(exchange, routingKey, basicProperties, bodyBytes, outstandingConfirms);
-            }
-
-            static IBasicProperties CreateBasicProperties(
-                IModel channel,
-                IntegrationMessage message,
-                RabbitMqSettings rabbitMqSettings)
-            {
-                var basicProperties = channel.CreateBasicProperties();
-
-                basicProperties.DeliveryMode = 2;
-
-                basicProperties.ContentType = MediaTypeNames.Application.Json;
-                basicProperties.ContentEncoding = ContentEncoding;
-
-                basicProperties.AppId = message.ReadRequiredHeader<SentFrom>().Value.LogicalName;
-                basicProperties.ClusterId = message.ReadRequiredHeader<SentFrom>().Value.InstanceName;
-                basicProperties.MessageId = message.ReadRequiredHeader<Id>().Value.ToString();
-                basicProperties.CorrelationId = message.ReadRequiredHeader<ConversationId>().Value.ToString();
-                basicProperties.Type = message.ReflectedType.GenericTypeDefinitionOrSelf().FullName;
-                basicProperties.Headers = new Dictionary<string, object>();
-
-                var deferredUntil = message.ReadHeader<DeferredUntil>();
-                var now = DateTime.UtcNow;
-                var expirationMilliseconds = deferredUntil != null && deferredUntil.Value >= now
-                    ? (int)Math.Round((deferredUntil.Value - now).TotalMilliseconds, MidpointRounding.AwayFromZero)
-                    : 0;
-
-                var isDeferred = expirationMilliseconds > 100;
-
-                if (isDeferred)
-                {
-                    basicProperties.Expiration = expirationMilliseconds.ToString(CultureInfo.InvariantCulture);
-                    var deferredExchange = BuildDeferredPath(channel, expirationMilliseconds, rabbitMqSettings);
-                    basicProperties.Headers[DeferredExchange] = deferredExchange;
-                }
-
-                return basicProperties;
-            }
-
-            static string BuildDeferredPath(
-                IModel channel,
-                int expirationMilliseconds,
-                RabbitMqSettings rabbitMqSettings)
-            {
-                var generatedName = Guid.NewGuid().ToString();
-
-                channel.DeclareExchange(
-                    generatedName,
-                    ExchangeType.Fanout,
-                    autoDelete: true);
-
-                channel.DeclareQueue(
-                    generatedName,
-                    new Dictionary<string, object>
-                    {
-                        ["x-queue-type"] = "quorum",
-                        ["x-max-length-bytes"] = rabbitMqSettings.QueueMaxLengthBytes,
-                        ["x-dead-letter-exchange"] = InputExchange,
-                        ["x-dead-letter-strategy"] = "at-least-once",
-                        ["x-overflow"] = "reject-publish",
-                        ["x-expires"] = expirationMilliseconds + 4200
-                    });
-
-                channel.BindQueue(
-                    generatedName,
-                    generatedName,
-                    string.Empty);
-
-                return generatedName;
-            }
-        }
-
-        public Task StartBackgroundMessageProcessing(CancellationToken token)
-        {
-            _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
-
-            _cts.Token.Register(() => _backgroundMessageProcessingTcs.TrySetCanceled());
-
-            ConfigureErrorHandlers(_channels, _endpoints.Keys, BindErrorHandler);
-
-            return RestartBackgroundMessageProcessing(_backgroundMessageProcessingTcs, Token);
+            _cancellationRegistration?.Dispose();
+            _cts?.Dispose();
         }
 
         private CancellationToken GetCancellationToken()
         {
             return _cts?.Token
-                ?? throw new InvalidOperationException($"Call {nameof(RabbitMqIntegrationTransport)}.{nameof(StartBackgroundMessageProcessing)} before");
-        }
-
-        private async Task RestartBackgroundMessageProcessing(
-            TaskCompletionSource<object?> tcs,
-            CancellationToken token)
-        {
-            try
-            {
-                await _sync.WaitAsync(token).ConfigureAwait(false);
-                await RestartBackgroundMessageProcessingUnsafe(tcs, token).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            finally
-            {
-                _sync.Set();
-            }
-        }
-
-        private async Task RestartBackgroundMessageProcessingUnsafe(
-            TaskCompletionSource<object?> tcs,
-            CancellationToken token)
-        {
-            Dispose();
-
-            Status = EnIntegrationTransportStatus.Starting;
-
-            await _rabbitMqSettings
-               .DeclareVirtualHost(_jsonSerializer, _logger, token)
-               .ConfigureAwait(false);
-
-            _connection = await ConfigureConnection(
-                    _logger,
-                    _rabbitMqSettings,
-                    (ushort)_endpoints.Keys.Count,
-                    _handleConnectionShutdownSubscription,
-                    token)
-               .ConfigureAwait(false);
-
-            using (var commonChannel = ConfigureChannel(
-                       _connection,
-                       _rabbitMqSettings,
-                       (_, _) => { },
-                       (_, _) => { },
-                       (_, _) => { },
-                       (_, _) => { },
-                       (_, _) => { }))
-            {
-                BuildTopology(commonChannel,
-                    _rabbitMqSettings,
-                    _endpoints.Keys,
-                    _integrationMessageTypes);
-
-                commonChannel.Close();
-            }
-
-            ConfigureChannels(
-                _connection,
-                _channels,
-                _endpoints.Keys,
-                _rabbitMqSettings,
-                _handleChannelShutdownSubscription,
-                _handleChannelCallbackExceptionSubscription,
-                _handleChannelBasicReturnSubscription,
-                _handleChannelBasicAcksSubscription,
-                _handleChannelBasicNacksSubscription);
-
-            StartConsumers(
-                _rabbitMqSettings,
-                _channels,
-                _consumers,
-                _handleReceivedMessageSubscription,
-                _handleConsumerShutdownSubscription);
-
-            Status = EnIntegrationTransportStatus.Running;
-
-            _ready.Set();
-
-            await tcs.Task.ConfigureAwait(false);
+                   ?? throw new InvalidOperationException($"Call {nameof(RabbitMqIntegrationTransport)}.{nameof(RunBackgroundMessageProcessing)} before");
         }
 
         #region configuration
@@ -649,20 +377,17 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             }
         }
 
-        private static void ConfigureErrorHandlers(
+        private static void ConfigureErrorHandler(
             IReadOnlyDictionary<EndpointIdentity, IModel> channels,
-            ICollection<EndpointIdentity> endpoints,
+            EndpointIdentity endpointIdentity,
             Action<EndpointIdentity, Func<IntegrationMessage, Exception, CancellationToken, Task>> bindErrorHandler)
         {
-            foreach (var endpointIdentity in endpoints)
-            {
-                bindErrorHandler(endpointIdentity,
-                    (message, _, _) =>
-                    {
-                        message.Nack(channels[message.ReadRequiredHeader<HandledBy>().Value]);
-                        return Task.CompletedTask;
-                    });
-            }
+            bindErrorHandler(endpointIdentity,
+                (message, _, _) =>
+                {
+                    message.Nack(channels[message.ReadRequiredHeader<HandledBy>().Value]);
+                    return Task.CompletedTask;
+                });
         }
 
         private static void StartConsumers(
@@ -698,44 +423,51 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
         #region error_event_handlers
 
-        private EventHandler<ShutdownEventArgs> HandleConnectionShutdown(
-            ILogger logger,
-            TaskCompletionSource<object?> tcs)
+        private EventHandler<ShutdownEventArgs> HandleConnectionShutdown(ILogger logger)
         {
             return (_, args) =>
             {
-                Shutdown(logger, tcs, new InvalidOperationException(args.ToString()), nameof(HandleConnectionShutdown));
+                logger.Error(
+                    new InvalidOperationException(args.ToString()),
+                    $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleConnectionShutdown)}");
+
+                RestartBackgroundMessageProcessing(Token).Wait(Token);
             };
         }
 
-        private EventHandler<ShutdownEventArgs> HandleChannelShutdown(
-            ILogger logger,
-            TaskCompletionSource<object?> tcs)
+        private EventHandler<ShutdownEventArgs> HandleChannelShutdown(ILogger logger)
         {
             return (_, args) =>
             {
-                Shutdown(logger, tcs, new InvalidOperationException(args.ToString()), nameof(HandleChannelShutdown));
+                logger.Error(
+                    new InvalidOperationException(args.ToString()),
+                    $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelShutdown)}");
+
+                RestartBackgroundMessageProcessing(Token).Wait(Token);
             };
         }
 
-        private AsyncEventHandler<ShutdownEventArgs> HandleConsumerShutdown(
-            ILogger logger,
-            TaskCompletionSource<object?> tcs)
+        private AsyncEventHandler<ShutdownEventArgs> HandleConsumerShutdown(ILogger logger)
         {
             return (_, args) =>
             {
-                Shutdown(logger, tcs, new InvalidOperationException(args.ToString()), nameof(HandleConsumerShutdown));
+                logger.Error(
+                    new InvalidOperationException(args.ToString()),
+                    $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleConsumerShutdown)}");
+
                 return Task.CompletedTask;
             };
         }
 
-        private EventHandler<CallbackExceptionEventArgs> HandleChannelCallbackException(
-            ILogger logger,
-            TaskCompletionSource<object?> tcs)
+        private EventHandler<CallbackExceptionEventArgs> HandleChannelCallbackException(ILogger logger)
         {
             return (_, args) =>
             {
-                Shutdown(logger, tcs, new InvalidOperationException(ShowDetails(args.Detail), args.Exception), nameof(HandleChannelCallbackException));
+                logger.Error(
+                    new InvalidOperationException(ShowDetails(args.Detail), args.Exception),
+                    $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelCallbackException)}");
+
+                RestartBackgroundMessageProcessing(Token).Wait(Token);
 
                 static string ShowDetails(IDictionary<string, object> dict)
                 {
@@ -749,17 +481,6 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
                     return nameof(HandleChannelCallbackException);
                 }
             };
-        }
-
-        private void Shutdown(
-            ILogger logger,
-            TaskCompletionSource<object?> tcs,
-            Exception exception,
-            string message)
-        {
-            logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{message}");
-
-            RestartBackgroundMessageProcessing(tcs, Token).Wait(Token);
         }
 
         #endregion
@@ -828,7 +549,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         {
             return (sender, args) =>
             {
-                ready.WaitAsync(token()).Wait(token());
+                ready
+                    .WaitAsync(token())
+                    .Wait(token());
 
                 new Action(() => EnqueueReturnedErrorMessage((IModel)sender, args, onMessageReceived, jsonSerializer, logger))
                    .Try()
@@ -845,7 +568,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             {
                 var exception = new InvalidOperationException($"{args.ReplyCode}: {args.ReplyText} - {args.BasicProperties.Type}: {args.BasicProperties.MessageId}");
 
-                logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(HandleChannelBasicReturn)} - {args.BasicProperties.MessageId}");
+                logger.Error(exception, $"{nameof(RabbitMqIntegrationTransport)}.{nameof(EnqueueReturnedErrorMessage)} - {args.BasicProperties.MessageId}");
 
                 onMessageReceived(() => args.DecodeIntegrationMessage(jsonSerializer), exception);
 
@@ -870,7 +593,9 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         {
             return async (sender, args) =>
             {
-                await ready.WaitAsync(token()).ConfigureAwait(false);
+                await ready
+                    .WaitAsync(token())
+                    .ConfigureAwait(false);
 
                 var consumer = (AsyncEventingBasicConsumer)sender;
 

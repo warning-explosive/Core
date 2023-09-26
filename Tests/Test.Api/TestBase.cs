@@ -7,11 +7,11 @@ namespace SpaceEngineers.Core.Test.Api
     using System.Threading;
     using Basics;
     using ClassFixtures;
-    using Internals;
+    using Logging;
     using Xunit;
     using Xunit.Abstractions;
     using Xunit.Sdk;
-    using TraceListener = Internals.TraceListener;
+    using TraceListener = Logging.TraceListener;
 
     /// <summary>
     /// TestBase
@@ -53,8 +53,6 @@ namespace SpaceEngineers.Core.Test.Api
         [SuppressMessage("Analysis", "CA2000", Justification = "IDbConnection will be disposed in outer scope by client")]
         public static void Redirect()
         {
-            var writer = new TestOutputTextWriter();
-
             Trace.Listeners.Clear();
             Trace.Listeners.Add(new TraceListener());
 
@@ -62,6 +60,7 @@ namespace SpaceEngineers.Core.Test.Api
                 .GetField("s_WriteCore", BindingFlags.Static | BindingFlags.NonPublic)
                 .SetValue(null, DebugListener.Write);
 
+            var writer = new TestOutputTextWriter();
             Console.SetOut(writer);
             Console.SetError(writer);
         }

@@ -10,6 +10,7 @@
     using SpaceEngineers.Core.Test.Api.ClassFixtures;
     using Xunit;
     using Xunit.Abstractions;
+    using EventHandler = MessageHandlers.EventHandler;
 
     /// <summary>
     /// GenericEndpoint.TestExtensions test
@@ -30,11 +31,11 @@
             {
                 var context = new TestIntegrationContext();
 
-                new CommandEmptyMessageHandler(TestIdentity.Endpoint10, context)
+                new CommandHandler(TestIdentity.Endpoint10, context)
                     .OnMessage(new Command(42))
-                    .Publishes<Endpoint1HandlerInvoked>(invoked =>
-                        invoked.EndpointIdentity.Equals(TestIdentity.Endpoint10)
-                        && invoked.HandlerType == typeof(CommandEmptyMessageHandler))
+                    .Publishes<HandlerInvoked>(invoked =>
+                        invoked.EndpointIdentity == TestIdentity.Endpoint10
+                        && invoked.HandlerType == typeof(CommandHandler))
                     .DoesNotThrow()
                     .Invoke(context);
             }
@@ -42,7 +43,7 @@
             {
                 var context = new TestIntegrationContext();
 
-                new CommandThrowingMessageHandler()
+                new ThrowingCommandHandler()
                     .OnMessage(new Command(42))
                     .ProducesNothing()
                     .Throws<InvalidOperationException>(ex => ex.Message == "42")
@@ -52,11 +53,11 @@
             {
                 var context = new TestIntegrationContext();
 
-                new EventEmptyMessageHandler(TestIdentity.Endpoint20, context)
+                new EventHandler(TestIdentity.Endpoint20, context)
                     .OnMessage(new Event(42))
-                    .Publishes<Endpoint2HandlerInvoked>(invoked =>
-                        invoked.EndpointIdentity.Equals(TestIdentity.Endpoint20)
-                        && invoked.HandlerType == typeof(EventEmptyMessageHandler))
+                    .Publishes<HandlerInvoked>(invoked =>
+                        invoked.EndpointIdentity == TestIdentity.Endpoint20
+                        && invoked.HandlerType == typeof(EventHandler))
                     .DoesNotThrow()
                     .Invoke(context);
             }
@@ -64,7 +65,7 @@
             {
                 var context = new TestIntegrationContext();
 
-                new OddRequestReplyMessageHandler(context)
+                new OddReplyRequestHandler(context)
                     .OnMessage(new Request(42))
                     .ProducesNothing()
                     .DoesNotThrow()
@@ -74,7 +75,7 @@
             {
                 var context = new TestIntegrationContext();
 
-                new OddRequestReplyMessageHandler(context)
+                new OddReplyRequestHandler(context)
                     .OnMessage(new Request(43))
                     .DoesNotSend<IIntegrationCommand>()
                     .DoesNotDelay<IIntegrationCommand>()
@@ -88,7 +89,7 @@
             {
                 var context = new TestIntegrationContext();
 
-                new EventSendsDelayedCommandMessageHandler(context)
+                new SendDelayedCommandEventHandler(context)
                     .OnMessage(new Event(42))
                     .DoesNotSend<IIntegrationCommand>()
                     .Delays<Command>((command, dateTime) =>

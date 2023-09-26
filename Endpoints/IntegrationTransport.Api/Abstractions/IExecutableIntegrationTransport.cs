@@ -17,13 +17,14 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Abstractions
         /// <summary>
         /// Message received
         /// </summary>
+        // TODO: #225 review
         event EventHandler<IntegrationTransportMessageReceivedEventArgs>? MessageReceived;
 
         /// <summary>
-        /// Starts message processing in background thread
+        /// Runs message processing
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns>Ongoing message processing operation</returns>
-        public Task StartBackgroundMessageProcessing(CancellationToken token);
+        public Task RunBackgroundMessageProcessing(CancellationToken token);
     }
 }

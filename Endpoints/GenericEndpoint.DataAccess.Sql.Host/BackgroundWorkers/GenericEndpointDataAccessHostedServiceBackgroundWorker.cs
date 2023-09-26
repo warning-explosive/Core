@@ -95,7 +95,7 @@
 
         private static async Task WaitUntilTransportIsRunning(IExecutableIntegrationTransport transport)
         {
-            var tcs = new TaskCompletionSource<object?>();
+            var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             var subscription = MakeSubscription(tcs);
 

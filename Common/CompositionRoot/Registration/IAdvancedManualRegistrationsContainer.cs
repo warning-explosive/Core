@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <param name="lifestyle">Lifestyle</param>
         /// <typeparam name="TService">TService type-argument</typeparam>
         /// <returns>IManualRegistrationsContainer</returns>
-        public IManualRegistrationsContainer RegisterCollectionEntryDelegate<TService>(Func<TService> instanceProducer, EnLifestyle lifestyle)
+        IManualRegistrationsContainer RegisterCollectionEntryDelegate<TService>(Func<TService> instanceProducer, EnLifestyle lifestyle)
             where TService : class;
 
         /// <summary> Register service collection entry instance producer </summary>
@@ -41,6 +41,11 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <param name="instanceProducer">Instance producer</param>
         /// <param name="lifestyle">Lifestyle</param>
         /// <returns>IManualRegistrationsContainer</returns>
-        public IManualRegistrationsContainer RegisterCollectionEntryDelegate(Type service, Func<object> instanceProducer, EnLifestyle lifestyle);
+        IManualRegistrationsContainer RegisterCollectionEntryDelegate(Type service, Func<object> instanceProducer, EnLifestyle lifestyle);
+
+        /// <summary> Register empty service collection </summary>
+        /// <typeparam name="TService">TService type-argument</typeparam>
+        /// <returns>IManualRegistrationsContainer</returns>
+        IManualRegistrationsContainer RegisterEmptyCollection<TService>();
     }
 }

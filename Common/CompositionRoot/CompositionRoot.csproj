@@ -136,5 +136,8 @@
     <Compile Update="Registration\ConstructorResolutionBehavior.cs">
       <DependentUpon>IConstructorResolutionBehavior.cs</DependentUpon>
     </Compile>
+    <Compile Update="Registration\EmptyCollectionRegistrationInfo.cs">
+      <DependentUpon>IRegistrationInfo.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

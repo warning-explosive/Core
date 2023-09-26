@@ -32,6 +32,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                     InstanceRegistrationInfo instanceRegistrationInfo => instanceRegistrationInfo.Instance.GetType(),
                     ServiceRegistrationInfo serviceRegistrationInfo => serviceRegistrationInfo.Implementation,
                     DelegateRegistrationInfo delegateRegistrationInfo => typeof(object),
+                    EmptyCollectionRegistrationInfo emptyCollectionRegistrationInfo => typeof(object),
                     _ => throw new NotSupportedException(info.GetType().Name)
                 };
             }
@@ -45,21 +46,30 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                     switch (info)
                     {
                         case InstanceRegistrationInfo instanceRegistrationInfo:
-                            RegisterCollectionEntryInstance(container,
+                            RegisterCollectionEntryInstance(
+                                container,
                                 instanceRegistrationInfo.Service,
                                 instanceRegistrationInfo.Instance);
                             break;
                         case ServiceRegistrationInfo serviceRegistrationInfo:
-                            RegisterCollectionEntry(container,
+                            RegisterCollectionEntry(
+                                container,
                                 serviceRegistrationInfo.Service,
                                 serviceRegistrationInfo.Implementation,
                                 serviceRegistrationInfo.Lifestyle);
                             break;
                         case DelegateRegistrationInfo delegateRegistrationInfo:
-                            RegisterCollectionEntryDelegate(container,
+                            RegisterCollectionEntryDelegate(
+                                container,
                                 delegateRegistrationInfo.Service,
                                 delegateRegistrationInfo.InstanceProducer,
                                 delegateRegistrationInfo.Lifestyle);
+                            break;
+                        case EmptyCollectionRegistrationInfo emptyCollectionRegistrationInfo:
+                            RegisterEmptyCollection(
+                                container,
+                                emptyCollectionRegistrationInfo.Service,
+                                emptyCollectionRegistrationInfo.Lifestyle);
                             break;
                         default:
                             throw new NotSupportedException(info.GetType().Name);
@@ -91,6 +101,14 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                 EnLifestyle lifestyle)
             {
                 container.AppendCollectionInstanceProducer(service, instanceProducer, lifestyle);
+            }
+
+            static void RegisterEmptyCollection(
+                Container container,
+                Type service,
+                EnLifestyle lifestyle)
+            {
+                container.Collection.Register(service, Array.Empty<Type>(), lifestyle.MapLifestyle());
             }
         }
 

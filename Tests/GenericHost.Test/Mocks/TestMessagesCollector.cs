@@ -6,20 +6,28 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using Basics.Primitives;
+    using CrossCuttingConcerns.Logging;
     using GenericEndpoint.Contract.Abstractions;
     using GenericEndpoint.Messaging;
     using IntegrationTransport.Api.Abstractions;
+    using Microsoft.Extensions.Logging;
 
     [ManuallyRegisteredComponent(nameof(RunHostTest))]
     internal class TestMessagesCollector : IResolvable<TestMessagesCollector>,
                                            IDisposable
     {
         private readonly IExecutableIntegrationTransport _integrationTransport;
+        private readonly ILogger _logger;
+
         private readonly EventHandler<IntegrationTransportMessageReceivedEventArgs> _subscription;
 
-        public TestMessagesCollector(IExecutableIntegrationTransport integrationTransport)
+        public TestMessagesCollector(
+            IExecutableIntegrationTransport integrationTransport,
+            ILogger logger)
         {
             _integrationTransport = integrationTransport;
+            _logger = logger;
+
             _subscription = Collect;
 
             integrationTransport.MessageReceived += _subscription;
@@ -162,10 +170,12 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
         {
             if (args.Exception == null)
             {
+                _logger.Information($"Message has been collected: {args.Message.Payload.GetType().Name};");
                 Messages.Enqueue(args.Message);
             }
             else
             {
+                _logger.Information($"Failed message has been collected: {args.Message.Payload.GetType().Name};");
                 ErrorMessages.Enqueue((args.Message, args.Exception));
             }
 

@@ -35,7 +35,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host.BackgroundWorkers
             using (Disposable.Create((_transport, subscription), Subscribe, Unsubscribe))
             {
                 await _transport
-                    .StartBackgroundMessageProcessing(token)
+                    .RunBackgroundMessageProcessing(token)
                     .ConfigureAwait(false);
             }
 

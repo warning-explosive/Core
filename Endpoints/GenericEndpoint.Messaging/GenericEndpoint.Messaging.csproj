@@ -100,5 +100,8 @@
       <Compile Update="MessageHeaders\TraceContext.cs">
         <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
       </Compile>
+      <Compile Update="ReplyToProvider.cs">
+        <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

@@ -153,6 +153,7 @@ namespace SpaceEngineers.Core.GenericHost
             await obj
                 .Run(Token)
                 .TryAsync()
+                .Catch<OperationCanceledException>()
                 .Catch<Exception>(OnUnhandledException(Logger))
                 .Invoke(Token)
                 .ConfigureAwait(false);

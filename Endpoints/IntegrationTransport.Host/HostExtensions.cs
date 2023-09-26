@@ -100,6 +100,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                     AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(IntegrationTransport), nameof(InMemory)))
                 };
 
+                // TODO: #225 - add .WithOpenTelemetry() extension
                 var options = new DependencyContainerOptions()
                     .WithPluginAssemblies(assemblies)
                     .WithManualRegistrations(

@@ -7,8 +7,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using Contract;
     using Contract.Abstractions;
+    using Contract.Attributes;
     using IntegrationTransport.Api.Abstractions;
     using Messaging;
     using Messaging.MessageHeaders;
@@ -76,7 +78,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
                 return _messagesCollector.Collect(CreateGeneralMessage(integrationEvent, typeof(TEvent)), token);
             }
 
-            throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Required owner: {_endpointIdentity.LogicalName}");
+            throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Required owner: {_endpointIdentity.LogicalName}; Actual owner: {typeof(TEvent).GetAttribute<OwnedByAttribute>().EndpointName};");
         }
 
         public Task Request<TRequest, TReply>(TRequest request, CancellationToken token)
@@ -99,7 +101,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
-            var message = CreateGeneralMessage(reply, typeof(TReply), new ReplyTo(Message.ReadRequiredHeader<SentFrom>().Value));
+            var message = CreateGeneralMessage(reply, typeof(TReply));
 
             return _messagesCollector.Collect(message, token);
         }

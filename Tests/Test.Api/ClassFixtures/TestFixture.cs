@@ -7,10 +7,10 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
     using Abstractions;
     using CompositionRoot;
     using CompositionRoot.Registration;
-    using Internals;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using Xunit.Abstractions;
+    using Microsoft.Extensions.Logging.Console;
+    using Registrations;
 
     /// <summary>
     /// TestFixture
@@ -24,9 +24,20 @@ namespace SpaceEngineers.Core.Test.Api.ClassFixtures
         {
             return Host
                 .CreateDefaultBuilder()
-                .ConfigureLogging(context => context
-                    .AddConsole()
-                    .SetMinimumLevel(LogLevel.Trace));
+                .ConfigureLogging((context, builder) =>
+                {
+                    builder.ClearProviders();
+                    builder.AddConfiguration(context.Configuration.GetSection("Logging"));
+                    builder
+                        .AddSimpleConsole(options =>
+                        {
+                            options.ColorBehavior = LoggerColorBehavior.Disabled;
+                            options.SingleLine = false;
+                            options.IncludeScopes = false;
+                            options.TimestampFormat = null;
+                        })
+                        .SetMinimumLevel(LogLevel.Trace);
+                });
         }
 
         /// <inheritdoc />

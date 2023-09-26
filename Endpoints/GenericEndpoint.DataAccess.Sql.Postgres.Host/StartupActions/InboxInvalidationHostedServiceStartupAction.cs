@@ -21,7 +21,7 @@ using EndpointIdentity = Contract.EndpointIdentity;
 using IntegrationMessage = Messaging.IntegrationMessage;
 
 [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
-[Before(typeof(GenericEndpointHostedServiceStartupAction))]
+[Before(typeof(MessagingHostedServiceStartupAction))]
 internal class InboxInvalidationHostedServiceStartupAction : IHostedServiceStartupAction,
                                                              ICollectionResolvable<IHostedServiceObject>,
                                                              ICollectionResolvable<IHostedServiceStartupAction>,

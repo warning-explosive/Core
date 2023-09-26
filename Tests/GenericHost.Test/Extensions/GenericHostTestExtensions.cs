@@ -1,9 +1,11 @@
 namespace SpaceEngineers.Core.GenericHost.Test.Extensions
 {
     using System;
+    using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
     using IntegrationTransport.Api;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Xunit.Abstractions;
     using Xunit.Sdk;
@@ -18,6 +20,15 @@ namespace SpaceEngineers.Core.GenericHost.Test.Extensions
             return useTransport(hostBuilder, transportIdentity);
         }
 
+        public static IHostBuilder UseIntegrationTransport(
+            this IHostBuilder hostBuilder,
+            TransportIdentity transportIdentity,
+            Func<IHostBuilder, TransportIdentity, DirectoryInfo, IHostBuilder> useTransport,
+            DirectoryInfo settingsDirectory)
+        {
+            return useTransport(hostBuilder, transportIdentity, settingsDirectory);
+        }
+
         internal static async Task RunTestHost(
             this IHost host,
             ITestOutputHelper output,
@@ -27,12 +38,10 @@ namespace SpaceEngineers.Core.GenericHost.Test.Extensions
             using (host)
             using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(testCase.Timeout)))
             {
-                // TODO: var waitUntilTransportIsNotRunning = host.WaitUntilTransportIsNotRunning(cts.Token);
                 await host.StartAsync(cts.Token).ConfigureAwait(false);
 
                 var hostShutdown = host.WaitForShutdownAsync(cts.Token);
 
-                // TODO: await waitUntilTransportIsNotRunning.ConfigureAwait(false);
                 var awaiter = Task.WhenAny(producer(output, host, cts.Token), hostShutdown);
 
                 var result = await awaiter.ConfigureAwait(false);
@@ -44,7 +53,10 @@ namespace SpaceEngineers.Core.GenericHost.Test.Extensions
 
                 await result.ConfigureAwait(false);
 
-                await host.StopAsync(cts.Token).ConfigureAwait(false);
+                host
+                    .Services
+                    .GetRequiredService<IHostApplicationLifetime>()
+                    .StopApplication();
 
                 await hostShutdown.ConfigureAwait(false);
             }

@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
+    using System.Text.Json;
     using System.Threading.Tasks;
     using AuthEndpoint.Host;
     using Basics;

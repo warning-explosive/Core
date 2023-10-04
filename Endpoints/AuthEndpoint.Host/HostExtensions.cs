@@ -3,10 +3,8 @@ namespace SpaceEngineers.Core.AuthEndpoint.Host
     using System;
     using Basics;
     using Contract;
-    using GenericEndpoint.Authorization.Host;
     using GenericEndpoint.Host;
     using GenericEndpoint.Host.Builder;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
 
     /// <summary>
@@ -22,7 +20,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.Host
         /// <returns>Configured IHostBuilder</returns>
         public static IHostBuilder UseAuthEndpoint(
             this IHostBuilder hostBuilder,
-            Func<IConfiguration, IEndpointBuilder, EndpointOptions> optionsFactory)
+            Func<IEndpointBuilder, EndpointOptions> optionsFactory)
         {
             var assemblies = new[]
             {
@@ -33,12 +31,11 @@ namespace SpaceEngineers.Core.AuthEndpoint.Host
 
             return hostBuilder.UseEndpoint(
                 Identity.EndpointIdentity,
-                (configuration, endpointBuilder) => optionsFactory(
-                    configuration,
-                    endpointBuilder
-                        .WithAuthorization(configuration)
+                builder => optionsFactory(
+                    builder
                         .ModifyContainerOptions(options => options
-                            .WithPluginAssemblies(assemblies))));
+                            .WithPluginAssemblies(assemblies)
+                            .WithAdditionalOurTypes(typeof(AuthController)))));
         }
     }
 }

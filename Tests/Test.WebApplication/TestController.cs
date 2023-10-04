@@ -12,6 +12,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using GenericEndpoint.Contract;
     using GenericEndpoint.Contract.Attributes;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.AspNetCore.Routing;
     using RestSharp;
     using Web.Api;
     using Web.Api.Containers;
@@ -20,6 +21,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     /// Test controller
     /// </summary>
     [Route("api/[controller]/[action]")]
+    [EndpointGroupName(Identity.LogicalName)]
     [ApiController]
     [Feature(Features.WebApiTest)]
     public class TestController : ControllerBase

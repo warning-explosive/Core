@@ -47,14 +47,22 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
             : base(output, fixture)
         {
             output.WriteLine($"Used framework version: {Version}");
-            output.WriteLine($"Available versions: {string.Join(", ", AvailableVersions.Select(v => v.ToString()))}");
+            output.WriteLine($"Available versions: {AvailableVersions.Select(v => v.ToString()).ToString(", ")}");
 
             var projectFileDirectory = SolutionExtensions.ProjectFile().Directory
                                        ?? throw new InvalidOperationException("Project directory wasn't found");
 
             var settingsDirectory = projectFileDirectory.StepInto("Settings");
 
+            var assemblies = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Analyzers), nameof(Analyzers.Api))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api), nameof(AutoRegistration.Api.Analyzers))),
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Roslyn), nameof(Test)))
+            };
+
             var options = new DependencyContainerOptions()
+                .WithPluginAssemblies(assemblies)
                 .WithManualRegistrations(new AnalyzersManualRegistration())
                 .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(settingsDirectory)))
                 .WithExcludedNamespaces(IgnoredNamespaces.ToArray());

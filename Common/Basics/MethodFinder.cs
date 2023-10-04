@@ -50,11 +50,11 @@ namespace SpaceEngineers.Core.Basics
                 [nameof(DeclaringType)] = DeclaringType.FullName,
                 [nameof(MethodName)] = MethodName,
                 [nameof(BindingFlags)] = BindingFlags.ToString("G"),
-                [nameof(TypeArguments)] = string.Join(string.Empty, TypeArguments.Select(type => type.FullName)),
-                [nameof(ArgumentTypes)] = string.Join(string.Empty, ArgumentTypes.Select(type => type.FullName))
+                [nameof(TypeArguments)] = TypeArguments.Select(type => type.FullName).ToString(string.Empty),
+                [nameof(ArgumentTypes)] = ArgumentTypes.Select(type => type.FullName).ToString(string.Empty)
             };
 
-            return string.Join(string.Empty, properties);
+            return properties.ToString(string.Empty);
         }
 
         /// <summary> Find method </summary>
@@ -103,9 +103,9 @@ namespace SpaceEngineers.Core.Basics
 
             static string Amb(MethodFinder methodFinder, IEnumerable<MethodInfo> source)
             {
-                string Generics(MethodInfo m) => string.Join(", ", m.GetGenericArguments().Select(g => g.Name));
+                string Generics(MethodInfo m) => m.GetGenericArguments().Select(g => g.Name).ToString(", ");
                 string Show(MethodInfo m) => methodFinder.DeclaringType.FullName + "." + m.Name + "[" + Generics(m) + "]";
-                return string.Join(", ", source.Select(Show));
+                return source.Select(Show).ToString(", ");
             }
         }
 

@@ -32,6 +32,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
         {
             LogicalName = logicalName;
             InstanceName = Guid.NewGuid().ToString();
+            Assembly = assembly;
             Version = assembly.GetAssemblyVersion();
         }
 
@@ -44,6 +45,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Contract
         /// Endpoint instance name
         /// </summary>
         public string InstanceName { get; init; }
+
+        /// <summary>
+        /// Endpoint version
+        /// </summary>
+        [JsonIgnore]
+        public Assembly? Assembly { get; init; }
 
         /// <summary>
         /// Endpoint version

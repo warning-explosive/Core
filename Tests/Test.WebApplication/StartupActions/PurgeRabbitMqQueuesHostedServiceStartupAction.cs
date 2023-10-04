@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.Test.WebApplication.StartupActions
     using SpaceEngineers.Core.IntegrationTransport.RabbitMQ.Settings;
 
     [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
-    [Before("SpaceEngineers.Core.GenericEndpoint.Host SpaceEngineers.Core.GenericEndpoint.Host.StartupActions.GenericEndpointHostStartupAction")]
+    [Before("SpaceEngineers.Core.GenericEndpoint.Host SpaceEngineers.Core.GenericEndpoint.Host.StartupActions.GenericEndpointHostedServiceStartupAction")]
     internal class PurgeRabbitMqQueuesHostedServiceStartupAction : IHostedServiceStartupAction,
                                                                    ICollectionResolvable<IHostedServiceObject>,
                                                                    ICollectionResolvable<IHostedServiceStartupAction>,

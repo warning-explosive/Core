@@ -675,7 +675,12 @@ namespace SpaceEngineers.Core.Basics
             {
                 return args =>
                 {
-                    var details = string.Join("; ", args.Select(genericArguments => string.Join(", ", genericArguments.Select(arg => arg.Name))));
+                    var details = args
+                        .Select(genericArguments => genericArguments
+                            .Select(arg => arg.Name)
+                            .ToString(", "))
+                        .ToString("; ");
+
                     return $"Type {source.FullName} has different implementations of {openGeneric.FullName}: {details}";
                 };
             }

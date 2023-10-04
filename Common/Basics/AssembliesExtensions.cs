@@ -58,7 +58,7 @@ namespace SpaceEngineers.Core.Basics
         /// <returns>Built name</returns>
         public static string BuildName(params string[] nameParts)
         {
-            return string.Join(Dot, nameParts);
+            return nameParts.ToString(Dot);
         }
 
         /// <summary>

@@ -66,7 +66,7 @@ namespace SpaceEngineers.Core.CompositionRoot.CompositionInfo
 
             tags.Add(Lifestyle(dependencyInfo.Lifestyle));
 
-            return string.Join(string.Empty, tags);
+            return tags.ToString(string.Empty);
         }
 
         private static string Lifestyle(EnLifestyle? lifestyle)
@@ -92,7 +92,7 @@ namespace SpaceEngineers.Core.CompositionRoot.CompositionInfo
 
             var genericArguments = type.GetGenericTypeDefinition().GetGenericArguments();
 
-            return format.Format(string.Join(", ", genericArguments.Select((t, i) => t.Name)));
+            return format.Format(genericArguments.Select((t, i) => t.Name).ToString(", "));
         }
     }
 }

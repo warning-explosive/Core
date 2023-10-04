@@ -82,7 +82,9 @@ namespace SpaceEngineers.Core.Basics
 
             static string Amb(IEnumerable<XElement> source)
             {
-                return string.Join(Environment.NewLine, source.Select(e => e.Value));
+                return source
+                    .Select(e => e.Value)
+                    .ToString(Environment.NewLine);
             }
         }
 

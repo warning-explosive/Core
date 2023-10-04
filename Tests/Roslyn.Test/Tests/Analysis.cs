@@ -9,6 +9,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
     using System.Threading.Tasks;
     using Abstractions;
     using Analyzers.Api;
+    using Basics;
     using Basics.Exceptions;
     using Core.Test.Api.ClassFixtures;
     using Extensions;
@@ -122,7 +123,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
 
                 if (expectedDiagnostics.Any())
                 {
-                    var files = string.Join(", ", expectedDiagnostics.Keys);
+                    var files = expectedDiagnostics.Keys.ToString(", ");
                     throw new InvalidOperationException($"Ambiguous diagnostics in files: {files}");
                 }
 
@@ -133,7 +134,7 @@ namespace SpaceEngineers.Core.Roslyn.Test.Tests
                         throw new NotFoundException($"Specify code fix for: {analyzer.GetType().Name}");
                     }
 
-                    throw new InvalidOperationException($"Ambiguous expected codeFix sources: {string.Join(", ", expectedFixedSources.Keys)}");
+                    throw new InvalidOperationException($"Ambiguous expected codeFix sources: {expectedFixedSources.Keys.ToString(", ")}");
                 }
             }
         }

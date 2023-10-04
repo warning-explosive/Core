@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.Modules.Test
 {
     using System;
     using System.Linq;
-    using Basics;
     using CompositionRoot;
     using CompositionRoot.CompositionInfo;
     using Core.Test.Api;

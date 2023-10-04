@@ -6,6 +6,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry.Host
     using Basics;
     using Contract;
     using GenericEndpoint.Host.Builder;
+    using GenericHost;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using OpenTelemetry.Logs;
@@ -28,6 +29,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry.Host
             this IHostBuilder hostBuilder,
             EndpointIdentity endpointIdentity)
         {
+            hostBuilder.CheckMultipleCalls(nameof(UseOpenTelemetryLogger));
+
             // TODO: #225 - verify endpoints and transports
             return hostBuilder
                 .ConfigureLogging(loggingBuilder => loggingBuilder
@@ -57,13 +60,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry.Host
         /// <param name="builder">IEndpointBuilder</param>
         /// <param name="configureTracingInstrumentation">Configure tracing instrumentation</param>
         /// <param name="configureMetricsInstrumentation">Configure metrics instrumentation</param>
-        /// <returns>Configured IHostBuilder</returns>
+        /// <returns>Configured IEndpointBuilder</returns>
         [SuppressMessage("Analysis", "CA2000", Justification = "Meter will be disposed in outer scope by dependency container")]
         public static IEndpointBuilder WithOpenTelemetry(
             this IEndpointBuilder builder,
             Func<TracerProviderBuilder, TracerProviderBuilder>? configureTracingInstrumentation = default,
             Func<MeterProviderBuilder, MeterProviderBuilder>? configureMetricsInstrumentation = default)
         {
+            builder.CheckMultipleCalls(nameof(WithOpenTelemetry));
+
             var endpointIdentity = builder.EndpointIdentity;
 
             var resourceBuilder = ResourceBuilder

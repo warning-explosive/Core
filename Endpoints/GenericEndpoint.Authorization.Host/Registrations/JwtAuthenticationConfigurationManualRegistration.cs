@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host.Registrations
 
         public void Register(IManualRegistrationsContainer container)
         {
-            container.RegisterInstance<JwtAuthenticationConfiguration>(_configuration);
+            container.RegisterInstance(_configuration);
         }
     }
 }

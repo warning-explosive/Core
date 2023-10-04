@@ -7,13 +7,14 @@ namespace SpaceEngineers.Core.WebApplication.Test
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
+    using AuthEndpoint.Host;
     using Basics;
     using Basics.Primitives;
     using Core.Test.Api;
     using Core.Test.Api.ClassFixtures;
     using Core.Test.WebApplication;
     using GenericEndpoint.Authorization.Host;
-    using GenericEndpoint.Authorization.Web.Api;
+    using GenericEndpoint.Authorization.Web;
     using JwtAuthentication;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
@@ -188,6 +189,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
 
             yield return new object?[]
             {
+                // TODO: #217 - review web.api serialization
                 new RestRequest($"http://127.0.0.1:5000/api/Test/{nameof(TestController.FakePost)}/List", Method.Get)
                     .AddHeader("Authorization", $"Bearer {tokenProvider.GenerateToken(username, new[] { Features.WebApiTest }, TimeSpan.FromMinutes(1))}"),
                 new Action<RestResponse, ITestOutputHelper>(static (response, output) =>
@@ -218,7 +220,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
                 {
                     request.AddHeader("Cache-Control", "no-cache");
 
-                    request.Timeout = 10_000;
+                    request.Timeout = TestCase.Timeout;
 
                     var awaiter = Task.WhenAny(
                         hostShutdown,

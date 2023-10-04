@@ -77,11 +77,12 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                 .UseOpenTelemetryLogger(endpointIdentity)
                 .UseInMemoryIntegrationTransport(transportIdentity)
                 .UseEndpoint(endpointIdentity,
-                    (configuration, builder) => builder
+                    builder => builder
                         .WithPostgreSqlDataAccess(options => options
                             .ExecuteMigrations())
                         .WithSqlEventSourcing()
-                        .WithAuthorization(configuration)
+                        .WithJwtAuthentication(builder.Context.Configuration)
+                        .WithAuthorization()
                         .WithOpenTelemetry()
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)))

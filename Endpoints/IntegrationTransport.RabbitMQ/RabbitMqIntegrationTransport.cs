@@ -665,7 +665,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
             {
                 if (consumer.ConsumerTags.Length != 1)
                 {
-                    throw new InvalidOperationException($"Consumer has several consumer tags: {string.Join(", ", consumer.ConsumerTags)}");
+                    throw new InvalidOperationException($"Consumer has several consumer tags: {consumer.ConsumerTags.ToString(", ")}");
                 }
 
                 var consumerTag = consumer.ConsumerTags.Single();

@@ -297,7 +297,7 @@
             var mtmBaseType = typeof(BaseMtmDatabaseEntity<,>).MakeGenericType(leftKey, rightKey);
 
             var schema = MtmSchemaName(left, right);
-            var mtmTypeName = string.Join("_", TableName(left), TableName(right));
+            var mtmTypeName = (TableName(left), TableName(right)).ToString("_");
 
             var dynamicClass = new DynamicClass(schema, mtmTypeName).InheritsFrom(mtmBaseType);
             var mtmType = _dynamicClassProvider.CreateType(dynamicClass);

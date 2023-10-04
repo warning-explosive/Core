@@ -15,6 +15,17 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
         EndpointIdentity EndpointIdentity { get; }
 
         /// <summary>
+        /// Endpoint initialization context
+        /// </summary>
+        EndpointInitializationContext Context { get; }
+
+        /// <summary>
+        /// Check multiple calls
+        /// </summary>
+        /// <param name="key">Key</param>
+        void CheckMultipleCalls(string key);
+
+        /// <summary>
         /// Modify container options
         /// </summary>
         /// <param name="modifier">Modifier</param>

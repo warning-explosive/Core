@@ -88,7 +88,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <inheritdoc />
         public override string ToString()
         {
-            return string.Join(" | ", Service, Implementation, Lifestyle);
+            return (Service, Implementation, Lifestyle).ToString(" | ");
         }
     }
 }

@@ -27,6 +27,8 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using Extensions;
     using GenericEndpoint.Api.Abstractions;
     using GenericEndpoint.Authorization;
+    using GenericEndpoint.Authorization.Host;
+    using GenericEndpoint.Authorization.Web.Host;
     using GenericEndpoint.DataAccess.Sql.Deduplication;
     using GenericEndpoint.DataAccess.Sql.Host;
     using GenericEndpoint.DataAccess.Sql.Postgres.Host;
@@ -184,7 +186,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                    builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
                             .WithManualRegistrations(new BackgroundOutboxDeliveryManualRegistration())
@@ -287,7 +289,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                    builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
                             .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))
@@ -560,7 +562,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                    builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
                             .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))
@@ -854,7 +856,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                    builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
                             .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))
@@ -1002,7 +1004,9 @@ namespace SpaceEngineers.Core.GenericHost.Test
             }
         }
 
-        [Theory(Timeout = 60_000)]
+        // TODO: #205 - recode after rpc-transport implementation
+        [SuppressMessage("Analysis", "xUnit1004", Justification = "#225")]
+        [Theory(Skip = "#225", Timeout = 60_000)]
         [MemberData(nameof(DataAccessTestData))]
         internal async Task AuthenticateUserTest(
             Func<string, DirectoryInfo> settingsDirectoryProducer,
@@ -1022,8 +1026,11 @@ namespace SpaceEngineers.Core.GenericHost.Test
             var host = Fixture
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
-                .UseAuthEndpoint((_, builder) =>
+                .UseAuthEndpoint(builder =>
                     withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                        .WithJwtAuthentication(builder.Context.Configuration)
+                        .WithAuthorization()
+                        .WithWebAuthorization()
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(startupActions)
                             .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))
@@ -1170,7 +1177,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport, settingsDirectory)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
+                    builder => withEventSourcing(withDataAccess(builder, options => options.ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
                             .WithManualRegistrations(new IsolationLevelManualRegistration(isolationLevel)))

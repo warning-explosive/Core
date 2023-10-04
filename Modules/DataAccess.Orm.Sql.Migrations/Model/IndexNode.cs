@@ -47,10 +47,7 @@
         /// <summary>
         /// Index
         /// </summary>
-        public string Index => string.Join(
-            "__",
-            Table,
-            string.Join("_", Columns.OrderBy(column => column)));
+        public string Index => (Table, Columns.OrderBy(column => column).ToString("_")).ToString("__");
 
         /// <summary>
         /// Unique

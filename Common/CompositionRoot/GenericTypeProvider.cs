@@ -58,7 +58,7 @@ namespace SpaceEngineers.Core.CompositionRoot
                            + Environment.NewLine
                            + "Candidates:"
                            + Environment.NewLine
-                           + string.Join(Environment.NewLine, source.Take(10).Select(t => t.FullName))
+                           + source.Take(10).Select(t => t.FullName).ToString(Environment.NewLine)
                            + Environment.NewLine
                            + "...";
                 }

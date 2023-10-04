@@ -123,7 +123,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                     var host = hostBuilder
                         .UseInMemoryIntegrationTransport(IntegrationTransport.InMemory.Identity.TransportIdentity())
                         .UseEndpoint(TestIdentity.Endpoint10,
-                            (_, builder) => builder
+                            builder => builder
                                 .WithPostgreSqlDataAccess(options => options
                                     .ExecuteMigrations())
                                 .ModifyContainerOptions(options => options

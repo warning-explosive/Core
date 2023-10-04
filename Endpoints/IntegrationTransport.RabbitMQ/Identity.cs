@@ -13,7 +13,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
         /// RabbitMq transport assembly
         /// </summary>
         public static Assembly Assembly { get; } = AssembliesExtensions.FindRequiredAssembly(
-            AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(IntegrationTransport), nameof(RabbitMQ)));
+            AssembliesExtensions.BuildName(
+                nameof(SpaceEngineers),
+                nameof(Core),
+                nameof(IntegrationTransport),
+                nameof(RabbitMQ)));
 
         /// <summary>
         /// RabbitMq transport identity

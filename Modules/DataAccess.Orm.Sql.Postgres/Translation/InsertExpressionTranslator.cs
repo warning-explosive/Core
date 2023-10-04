@@ -114,7 +114,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
                        ?.Columns
                         .Select(column => column.Name) ?? new[] { nameof(IDatabaseEntity.PrimaryKey) };
 
-                    return string.Join(", ", uniqueIndexColumns.Select(column => ColumnFormat.Format(column)));
+                    return uniqueIndexColumns.Select(column => ColumnFormat.Format(column)).ToString(", ");
                 }
 
                 static string Update(ITableInfo table)

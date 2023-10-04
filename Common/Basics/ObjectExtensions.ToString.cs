@@ -19,11 +19,84 @@ namespace SpaceEngineers.Core.Basics
         /// <param name="projection">Projection func</param>
         /// <typeparam name="TSource">TSource type-argument</typeparam>
         /// <returns>String</returns>
-        public static string ToString<TSource>(this IEnumerable<TSource> source, string separator, Func<TSource, string>? projection = null)
+        public static string ToString<TSource>(
+            this IEnumerable<TSource> source,
+            string separator,
+            Func<TSource, string>? projection = null)
         {
-            projection ??= item => item.ToString();
+            projection ??= static item => item as string ?? item.ToString();
 
             return string.Join(separator, source.Select(projection));
+        }
+
+        /// <summary>
+        /// Converts enumerable source into string
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <param name="separator">Elements separator</param>
+        /// <param name="projection">Projection func</param>
+        /// <returns>String</returns>
+        public static string ToString(
+            this (object first, object second) source,
+            string separator,
+            Func<object, string>? projection = null)
+        {
+            return source
+                .ConstructEnumerable()
+                .ToString(separator, projection);
+        }
+
+        /// <summary>
+        /// Converts enumerable source into string
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <param name="separator">Elements separator</param>
+        /// <param name="projection">Projection func</param>
+        /// <typeparam name="TSource">TSource type-argument</typeparam>
+        /// <returns>String</returns>
+        public static string ToString<TSource>(
+            this (TSource first, TSource second) source,
+            string separator,
+            Func<TSource, string>? projection = null)
+        {
+            return source
+                .ConstructEnumerable()
+                .ToString(separator, projection);
+        }
+
+        /// <summary>
+        /// Converts enumerable source into string
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <param name="separator">Elements separator</param>
+        /// <param name="projection">Projection func</param>
+        /// <typeparam name="TSource">TSource type-argument</typeparam>
+        /// <returns>String</returns>
+        public static string ToString<TSource>(
+            this (TSource first, TSource second, TSource third) source,
+            string separator,
+            Func<TSource, string>? projection = null)
+        {
+            return source
+                .ConstructEnumerable()
+                .ToString(separator, projection);
+        }
+
+        /// <summary>
+        /// Converts enumerable source into string
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <param name="separator">Elements separator</param>
+        /// <param name="projection">Projection func</param>
+        /// <returns>String</returns>
+        public static string ToString(
+            this (object first, object second, object third) source,
+            string separator,
+            Func<object, string>? projection = null)
+        {
+            return source
+                .ConstructEnumerable()
+                .ToString(separator, projection);
         }
 
         /// <summary>

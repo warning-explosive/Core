@@ -13,7 +13,11 @@ namespace SpaceEngineers.Core.IntegrationTransport.InMemory
         /// InMemory transport assembly
         /// </summary>
         public static Assembly Assembly { get; } = AssembliesExtensions.FindRequiredAssembly(
-            AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(IntegrationTransport), nameof(InMemory)));
+            AssembliesExtensions.BuildName(
+                nameof(SpaceEngineers),
+                nameof(Core),
+                nameof(IntegrationTransport),
+                nameof(InMemory)));
 
         /// <summary>
         /// InMemory transport identity

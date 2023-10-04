@@ -77,7 +77,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
         /// <inheritdoc />
         public override string ToString()
         {
-            return string.Join(" | ", Service);
+            return Service.ToString();
         }
     }
 }

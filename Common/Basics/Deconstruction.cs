@@ -43,5 +43,34 @@ namespace SpaceEngineers.Core.Basics
         /// <typeparam name="T">T type-argument</typeparam>
         public static void Deconstruct<T>(this IEnumerable<T> source, out T first, out T second, out T third, out IEnumerable<T> rest)
             => (first, second, (third, rest)) = source;
+
+        /// <summary>
+        /// Constructs source stream
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Stream</returns>
+        public static IEnumerable<T> ConstructEnumerable<T>(this (T first, T second) source)
+        {
+            var (first, second) = source;
+
+            yield return first;
+            yield return second;
+        }
+
+        /// <summary>
+        /// Constructs source stream
+        /// </summary>
+        /// <param name="source">Source</param>
+        /// <typeparam name="T">T type-argument</typeparam>
+        /// <returns>Stream</returns>
+        public static IEnumerable<T> ConstructEnumerable<T>(this (T first, T second, T third) source)
+        {
+            var (first, second, third) = source;
+
+            yield return first;
+            yield return second;
+            yield return third;
+        }
     }
 }

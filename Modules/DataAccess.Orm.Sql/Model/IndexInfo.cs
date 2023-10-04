@@ -30,10 +30,7 @@
 
         public IReadOnlyCollection<ColumnInfo> IncludedColumns { get; }
 
-        public string Name => string.Join(
-            "__",
-            Table.Name,
-            string.Join("_", Columns.OrderBy(column => column.Name).Select(column => column.Name)));
+        public string Name => (Table.Name, Columns.OrderBy(column => column.Name).Select(column => column.Name).ToString("_")).ToString("__");
 
         public bool Unique { get; }
 

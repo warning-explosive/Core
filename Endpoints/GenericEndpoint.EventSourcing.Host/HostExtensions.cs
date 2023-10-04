@@ -12,11 +12,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.EventSourcing.Host
         /// <summary>
         /// With sql event sourcing
         /// </summary>
-        /// <param name="builder">Endpoint builder</param>
-        /// <returns>IEndpointBuilder</returns>
-        public static IEndpointBuilder WithSqlEventSourcing(
-            this IEndpointBuilder builder)
+        /// <param name="builder">IEndpointBuilder</param>
+        /// <returns>Configured IEndpointBuilder</returns>
+        public static IEndpointBuilder WithSqlEventSourcing(this IEndpointBuilder builder)
         {
+            builder.CheckMultipleCalls(nameof(WithSqlEventSourcing));
+
             var assemblies = new[]
             {
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(EventSourcing))),

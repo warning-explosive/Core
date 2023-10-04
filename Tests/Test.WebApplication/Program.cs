@@ -3,22 +3,22 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
-    using System.Linq;
     using System.Text.Json;
     using System.Threading.Tasks;
     using AuthEndpoint.Host;
     using Basics;
+    using GenericEndpoint.Authorization.Host;
+    using GenericEndpoint.Authorization.Web.Host;
     using GenericEndpoint.DataAccess.Sql.Postgres.Host;
     using GenericEndpoint.EventSourcing.Host;
+    using GenericEndpoint.Host;
     using GenericEndpoint.Telemetry.Host;
-    using GenericEndpoint.Web.Api.Host;
+    using GenericEndpoint.Web.Host;
     using GenericHost;
     using IntegrationTransport.Host;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Migrations;
-    using OpenTelemetry.Metrics;
-    using OpenTelemetry.Trace;
     using Registrations;
     using StartupActions;
 
@@ -50,20 +50,6 @@ namespace SpaceEngineers.Core.Test.WebApplication
         [SuppressMessage("Analysis", "CA1506", Justification = "application composition root")]
         public static IHost BuildHost(DirectoryInfo settingsDirectory, string[] args)
         {
-            var startupActions = new[]
-            {
-                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
-            };
-
-            var migrations = new[]
-            {
-                typeof(AddSeedDataMigration)
-            };
-
-            var additionalOurTypes = startupActions
-                .Concat(migrations)
-                .ToArray();
-
             return Host
                 .CreateDefaultBuilder(args)
 
@@ -75,8 +61,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
                 {
                     builder.ClearProviders();
                     builder.AddConfiguration(context.Configuration.GetSection("Logging"));
-                    builder
-                        .AddJsonConsole(options =>
+                    builder.AddJsonConsole(options =>
                         {
                             options.JsonWriterOptions = new JsonWriterOptions
                             {
@@ -100,36 +85,59 @@ namespace SpaceEngineers.Core.Test.WebApplication
                  * AuthEndpoint
                  */
 
-                .UseAuthEndpoint((_, builder) => builder
+                .UseAuthEndpoint(builder => builder
                     .WithPostgreSqlDataAccess(options => options.ExecuteMigrations())
                     .WithSqlEventSourcing()
                     .WithOpenTelemetry()
-                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                    .WithJwtAuthentication(builder.Context.Configuration)
+                    .WithAuthorization()
+                    .WithWebAuthorization()
+                    .WithWebApi()
+                    .ModifyContainerOptions(options => options
+                        .WithAdditionalOurTypes(
+                            typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction),
+                            typeof(AddSeedDataMigration)))
                     .BuildOptions())
+
+                /*
+                 * TestEndpoint
+                 */
+
+                .UseEndpoint(
+                    Identity.EndpointIdentity,
+                    builder => builder
+                        .WithJwtAuthentication(builder.Context.Configuration)
+                        .WithAuthorization()
+                        .WithWebAuthorization()
+                        .WithWebApi()
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(typeof(TestController)))
+                        .BuildOptions())
 
                 /*
                  * WebApiGateway
                  */
 
-                .UseWebApiGateway(hostBuilder =>
-                    context => new WebApplicationStartup(
-                        hostBuilder,
-                        context.Configuration,
-                        Identity.EndpointIdentity,
-                        builder => builder
-                            .WithOpenTelemetry(
-                                tracerProviderBuilder => tracerProviderBuilder
-                                    .AddAspNetCoreInstrumentation()
-                                    .AddHttpClientInstrumentation(),
-                                meterProviderBuilder => meterProviderBuilder
-                                    .AddRuntimeInstrumentation()
-                                    .AddAspNetCoreInstrumentation()
-                                    .AddHttpClientInstrumentation())
-                            .BuildOptions()))
+                .UseWebApiGateway()
+
+                // TODO: #225 - pass open telemetry instrumentation
+                    /*Identity.EndpointIdentity,
+                    builder => builder
+                        .WithOpenTelemetry(
+                            tracerProviderBuilder => tracerProviderBuilder
+                                .AddAspNetCoreInstrumentation()
+                                .AddHttpClientInstrumentation(),
+                            meterProviderBuilder => meterProviderBuilder
+                                .AddRuntimeInstrumentation()
+                                .AddAspNetCoreInstrumentation()
+                                .AddHttpClientInstrumentation())
+                        .BuildOptions()*/
 
                 /*
                  * Building
                  */
+
+                .UseEnvironment(Environments.Development)
 
                 .BuildHost(settingsDirectory);
         }

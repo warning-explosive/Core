@@ -93,7 +93,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
             where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
-            throw new NotImplementedException("#225");
+            throw new NotImplementedException("#205");
         }
 
         /// <inheritdoc />

@@ -182,7 +182,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 
             if (notUniqueTypes.Any())
             {
-                Output.WriteLine(string.Join(Environment.NewLine, notUniqueTypes));
+                Output.WriteLine(notUniqueTypes.ToString(Environment.NewLine));
             }
 
             Assert.Equal(ourTypes.Count, ourTypes.Distinct().Count());

@@ -5,7 +5,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     using System.Threading.Tasks;
     using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
-    using Contract.Abstractions;
     using Messaging;
 
     /// <summary>

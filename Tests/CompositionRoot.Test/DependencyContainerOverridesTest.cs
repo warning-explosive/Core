@@ -2,11 +2,9 @@ namespace SpaceEngineers.Core.CompositionRoot.Test
 {
     using System;
     using System.Linq;
-    using System.Reflection;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Enumerations;
     using AutoRegistrationTest;
-    using Basics;
     using CompositionRoot;
     using Exceptions;
     using Registrations;

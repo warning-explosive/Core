@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Reflection;
     using Basics;
     using Builder;
     using CompositionRoot;
@@ -50,7 +51,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                        .GetServices<GenericEndpointDependencyContainer>()
                        .Select(wrapper => wrapper.DependencyContainer)
                        .SingleOrDefault(IsEndpointContainer(endpointIdentity))
-                   ?? throw new InvalidOperationException($@".UseEndpoint(""{endpointIdentity}"") should be called during host declaration");
+                   ?? throw new InvalidOperationException($@".{nameof(UseEndpoint)}(""{endpointIdentity}"") should be called during host declaration");
 
             static Func<IDependencyContainer, bool> IsEndpointContainer(EndpointIdentity endpointIdentity)
             {
@@ -71,22 +72,30 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
         public static IHostBuilder UseEndpoint(
             this IHostBuilder hostBuilder,
             EndpointIdentity endpointIdentity,
-            Func<IConfiguration, IEndpointBuilder, EndpointOptions> optionsFactory)
+            Func<IEndpointBuilder, EndpointOptions> optionsFactory)
         {
+            hostBuilder.CheckAfterUseEndpointCall();
+
             hostBuilder.CheckDuplicates(endpointIdentity);
 
             return hostBuilder.ConfigureServices(serviceCollection =>
             {
-                serviceCollection.AddSingleton(serviceProvider => ConfigureDependencyContainer(serviceProvider, endpointIdentity, optionsFactory));
+                serviceCollection.AddSingleton(serviceProvider => ConfigureDependencyContainer(serviceCollection, serviceProvider, endpointIdentity, optionsFactory));
 
                 serviceCollection.AddSingleton(serviceProvider => BuildHostedService(serviceProvider, endpointIdentity));
             });
 
             static GenericEndpointDependencyContainer ConfigureDependencyContainer(
+                IServiceCollection serviceCollection,
                 IServiceProvider serviceProvider,
                 EndpointIdentity endpointIdentity,
-                Func<IConfiguration, IEndpointBuilder, EndpointOptions> optionsFactory)
+                Func<IEndpointBuilder, EndpointOptions> optionsFactory)
             {
+                var context = new EndpointInitializationContext(
+                    serviceCollection,
+                    serviceProvider,
+                    serviceProvider.GetRequiredService<IConfiguration>());
+
                 var frameworkDependenciesProvider = serviceProvider.GetRequiredService<IFrameworkDependenciesProvider>();
                 var settingsDirectoryProvider = serviceProvider.GetRequiredService<SettingsDirectoryProvider>();
                 var hostedServiceRegistry = new HostedServiceRegistry();
@@ -101,18 +110,19 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                     AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint)))
                 };
 
-                var builder = new EndpointBuilder(endpointIdentity)
+                var builder = new EndpointBuilder(endpointIdentity, context)
                    .ModifyContainerOptions(options => options
                        .WithPluginAssemblies(assemblies)
                        .WithManualRegistrations(
                            new GenericEndpointIdentityManualRegistration(endpointIdentity),
                            new SettingsProviderManualRegistration(settingsDirectoryProvider),
-                           new LoggerFactoryManualRegistration(endpointIdentity, frameworkDependenciesProvider),
+                           new FrameworkDependenciesProviderManualRegistration(frameworkDependenciesProvider),
+                           new LoggerFactoryManualRegistration(endpointIdentity),
                            new HostedServiceRegistryManualRegistration(hostedServiceRegistry),
                            new IntegrationTransportManualRegistration(integrationTransport),
                            new HostedServiceStartupActionManualRegistration()));
 
-                var options = optionsFactory(serviceProvider.GetRequiredService<IConfiguration>(), builder);
+                var options = optionsFactory(builder);
 
                 var dependencyContainer = DependencyContainer.Create(options.ContainerOptions);
 
@@ -130,8 +140,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
 
                 static string Amb(IEnumerable<IDependencyContainer> dependencyContainers)
                 {
-                    // TODO: #225 - support multiple transport per host
-                    return "multiple transports aren't supported";
+                    return "multiple transports per host aren't supported";
                 }
             }
 
@@ -161,6 +170,32 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
             if (!endpoints.TryAdd(endpointIdentity.LogicalName, endpointIdentity))
             {
                 throw new InvalidOperationException($"Endpoint duplicates was found: {endpointIdentity.LogicalName}. Horizontal scaling in the same process doesn't make sense.");
+            }
+        }
+
+        private static void CheckAfterUseEndpointCall(this IHostBuilder hostBuilder)
+        {
+            var assemblyName = AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), "Web", "Host");
+            var typeName = AssembliesExtensions.BuildName(assemblyName, "HostExtensions");
+            var typeFullName = (assemblyName, typeName).ToString(" ");
+            var methodName = "UseWebApiGateway";
+
+            if (!TypeExtensions.TryFindType(typeFullName, out var type))
+            {
+                return;
+            }
+
+            var method = new MethodFinder(
+                type,
+                methodName,
+                BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+            {
+                ArgumentTypes = new[] { typeof(IHostBuilder) }
+            }.FindMethod() ?? throw new InvalidOperationException($"Could not find {typeName}.{methodName}() method");
+
+            if (hostBuilder.TryGetPropertyValue<bool>(method.Name, out _))
+            {
+                throw new InvalidOperationException($".{method.Name}() should be called after all endpoint declarations");
             }
         }
     }

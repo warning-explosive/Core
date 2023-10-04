@@ -1,8 +1,8 @@
 namespace SpaceEngineers.Core.Test.WebApplication
 {
-    using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
+    using Basics;
     using GenericEndpoint.Contract;
 
     /// <summary>
@@ -12,17 +12,22 @@ namespace SpaceEngineers.Core.Test.WebApplication
     public static class Identity
     {
         /// <summary>
-        /// WebGateway logical name
+        /// TestEndpoint logical name
         /// </summary>
-        public const string LogicalName = "WebGateway";
+        public const string LogicalName = "TestEndpoint";
 
         /// <summary>
-        /// WebGateway assembly
+        /// TestEndpoint assembly
         /// </summary>
-        public static Assembly Assembly { get; } = Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly");
+        public static Assembly Assembly { get; } = AssembliesExtensions.FindRequiredAssembly(
+            AssembliesExtensions.BuildName(
+                nameof(SpaceEngineers),
+                nameof(Core),
+                nameof(Test),
+                nameof(WebApplication)));
 
         /// <summary>
-        /// WebGateway identity
+        /// TestEndpoint identity
         /// </summary>
         public static EndpointIdentity EndpointIdentity { get; } = new EndpointIdentity(LogicalName, Assembly);
     }

@@ -193,10 +193,7 @@ namespace SpaceEngineers.Core.Dynamic
 
         private static string GenerateClassName()
         {
-            return string.Join(
-                "_",
-                nameof(DynamicClass),
-                Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase));
+            return (nameof(DynamicClass), Guid.NewGuid().ToString().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase)).ToString("_");
         }
     }
 }

@@ -47,7 +47,7 @@
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Postgres.Host\GenericEndpoint.DataAccess.Sql.Postgres.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Telemetry.Host\GenericEndpoint.Telemetry.Host.csproj" />
-      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Web.Api.Host\GenericEndpoint.Web.Api.Host.csproj" />
+      <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Web.Host\GenericEndpoint.Web.Host.csproj" />
       <ProjectReference Include="..\..\Endpoints\IntegrationTransport.Host\IntegrationTransport.Host.csproj" />
     </ItemGroup>
 </Project>

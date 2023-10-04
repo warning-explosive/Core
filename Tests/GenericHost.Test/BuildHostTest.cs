@@ -185,10 +185,10 @@
                 .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(
                     TestIdentity.Endpoint10,
-                    (_, builder) => builder.BuildOptions())
+                    builder => builder.BuildOptions())
                 .UseEndpoint(
                     TestIdentity.Endpoint20,
-                    (_, builder) => builder.BuildOptions())
+                    builder => builder.BuildOptions())
                 .BuildHost(settingsDirectory);
 
             var gatewayHost = Fixture
@@ -242,11 +242,12 @@
                 .UseOpenTelemetryLogger(TestIdentity.Endpoint10)
                 .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (configuration, builder) => builder
+                    builder => builder
                         .WithPostgreSqlDataAccess(options => options
                             .ExecuteMigrations())
                         .WithSqlEventSourcing()
-                        .WithAuthorization(configuration)
+                        .WithJwtAuthentication(builder.Context.Configuration)
+                        .WithAuthorization()
                         .WithOpenTelemetry()
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes))
@@ -680,7 +681,7 @@
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options
+                    builder => withEventSourcing(withDataAccess(builder, options => options
                             .ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(startupActions))
@@ -761,7 +762,7 @@
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => withEventSourcing(withDataAccess(builder, options => options
+                    builder => withEventSourcing(withDataAccess(builder, options => options
                             .ExecuteMigrations()))
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
@@ -1352,7 +1353,7 @@
                     var createIndex = (CreateIndex)modelChanges[index];
                     Assert.Equal(createIndex.Schema, schema, ignoreCase: true);
                     Assert.Equal(createIndex.Table, table, ignoreCase: true);
-                    var indexName = string.Join("__", table, string.Join("_", columns));
+                    var indexName = (table, columns.ToString("_")).ToString("__");
                     Assert.Equal(createIndex.Index, indexName, ignoreCase: true);
                     var indexInfo = modelProvider.TablesMap[schema][table].Indexes[createIndex.Index];
                     Assert.True(includedColumns.OrderBy(column => column).SequenceEqual(indexInfo.IncludedColumns.Select(column => column.Name).OrderBy(column => column), StringComparer.OrdinalIgnoreCase));

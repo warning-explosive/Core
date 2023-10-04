@@ -9,25 +9,27 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Registrations
     internal class LoggerFactoryManualRegistration : IManualRegistration
     {
         private readonly EndpointIdentity _endpointIdentity;
-        private readonly IFrameworkDependenciesProvider _frameworkDependenciesProvider;
 
-        public LoggerFactoryManualRegistration(
-            EndpointIdentity endpointIdentity,
-            IFrameworkDependenciesProvider frameworkDependenciesProvider)
+        public LoggerFactoryManualRegistration(EndpointIdentity endpointIdentity)
         {
             _endpointIdentity = endpointIdentity;
-            _frameworkDependenciesProvider = frameworkDependenciesProvider;
         }
 
         public void Register(IManualRegistrationsContainer container)
         {
             container.Advanced.RegisterDelegate(
-                () => _frameworkDependenciesProvider
+                () => container
+                    .Advanced
+                    .DependencyContainer
+                    .Resolve<IFrameworkDependenciesProvider>()
                     .GetRequiredService<ILoggerFactory>(),
                 EnLifestyle.Singleton);
 
             container.Advanced.RegisterDelegate(
-                () => _frameworkDependenciesProvider
+                () => container
+                    .Advanced
+                    .DependencyContainer
+                    .Resolve<IFrameworkDependenciesProvider>()
                     .GetRequiredService<ILoggerFactory>()
                     .CreateLogger(_endpointIdentity.ToString()),
                 EnLifestyle.Singleton);

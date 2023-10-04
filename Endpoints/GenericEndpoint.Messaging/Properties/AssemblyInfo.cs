@@ -6,5 +6,6 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyInformationalVersion("1.0.0.0")]
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Authorization.Web")]
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericHost.Test")]

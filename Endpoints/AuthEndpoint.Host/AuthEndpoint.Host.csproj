@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
         <AssemblyName>SpaceEngineers.Core.AuthEndpoint.Host</AssemblyName>
@@ -29,7 +29,7 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\AuthEndpoint\AuthEndpoint.csproj" />
-        <ProjectReference Include="..\GenericEndpoint.Authorization.Host\GenericEndpoint.Authorization.Host.csproj" />
+        <ProjectReference Include="..\GenericEndpoint.Authorization.Web.Host\GenericEndpoint.Authorization.Web.Host.csproj" />
         <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
     </ItemGroup>
     <ItemGroup>

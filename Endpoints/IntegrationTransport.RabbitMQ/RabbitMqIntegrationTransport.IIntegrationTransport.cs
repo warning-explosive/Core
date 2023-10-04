@@ -83,7 +83,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.RabbitMQ
 
                 var right = message.GetTargetEndpoint();
 
-                var routingKey = string.Join(".", left, right);
+                var routingKey = (left, right).ToString(".");
 
                 return channel.Publish(exchange, routingKey, basicProperties, bodyBytes, outstandingConfirms);
             }

@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.Dynamic.Internals
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
 
     [Component(EnLifestyle.Singleton)]
     internal class DynamicClassProvider : IDynamicClassProvider,
@@ -94,11 +95,7 @@ namespace SpaceEngineers.Core.Dynamic.Internals
 
         private static string GetBackingFieldName(DynamicProperty dynamicProperty)
         {
-            return string.Join(
-                string.Empty,
-                "_",
-                char.ToLowerInvariant(dynamicProperty.Name[0]),
-                dynamicProperty.Name.Substring(1));
+            return ("_", char.ToLowerInvariant(dynamicProperty.Name[0]), dynamicProperty.Name.Substring(1)).ToString(string.Empty);
         }
 
         private static MethodBuilder DefineGetMethod(

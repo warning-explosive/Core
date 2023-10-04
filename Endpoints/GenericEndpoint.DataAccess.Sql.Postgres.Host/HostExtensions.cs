@@ -16,13 +16,15 @@ public static class HostExtensions
     /// <summary>
     /// With PostgreSql data access
     /// </summary>
-    /// <param name="builder">Endpoint builder</param>
+    /// <param name="builder">IEndpointBuilder</param>
     /// <param name="dataAccessOptions">Data access options</param>
-    /// <returns>IEndpointBuilder</returns>
+    /// <returns>Configured IEndpointBuilder</returns>
     public static IEndpointBuilder WithPostgreSqlDataAccess(
         this IEndpointBuilder builder,
         Action<DataAccessOptions>? dataAccessOptions)
     {
+        builder.CheckMultipleCalls(nameof(WithPostgreSqlDataAccess));
+
         var postgreSqlDataAccess = new[]
         {
             AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(DataAccess), nameof(Sql))),

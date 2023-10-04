@@ -99,7 +99,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 nextIndex++;
             }
 
-            var commandText = string.Join(separator, CommandText, nextCommandText);
+            var commandText = (CommandText, nextCommandText).ToString(separator);
 
             var commandParameters = CommandParameters
                 .Concat(nextCommandParameters)

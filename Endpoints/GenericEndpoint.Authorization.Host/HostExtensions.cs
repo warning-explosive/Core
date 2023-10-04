@@ -31,20 +31,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host
         }
 
         /// <summary>
-        /// With authorization
+        /// With jwt authentication
         /// </summary>
         /// <param name="builder">IEndpointBuilder</param>
         /// <param name="configuration">IConfiguration</param>
         /// <returns>Configured IEndpointBuilder</returns>
-        public static IEndpointBuilder WithAuthorization(
+        public static IEndpointBuilder WithJwtAuthentication(
             this IEndpointBuilder builder,
             IConfiguration configuration)
         {
-            // TODO: #225 - builder.CheckDuplicates(); - widespread
+            builder.CheckMultipleCalls(nameof(WithJwtAuthentication));
+
             var assembly = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(JwtAuthentication))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(GenericEndpoint.Authorization)))
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(JwtAuthentication)))
             };
 
             return builder
@@ -53,6 +53,25 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host
                     .WithManualRegistrations(
                         new JwtSecurityTokenHandlerManualRegistration(),
                         new JwtAuthenticationConfigurationManualRegistration(configuration.GetJwtAuthenticationConfiguration())));
+        }
+
+        /// <summary>
+        /// With authorization
+        /// </summary>
+        /// <param name="builder">IEndpointBuilder</param>
+        /// <returns>Configured IEndpointBuilder</returns>
+        public static IEndpointBuilder WithAuthorization(this IEndpointBuilder builder)
+        {
+            builder.CheckMultipleCalls(nameof(WithAuthorization));
+
+            var assembly = new[]
+            {
+                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(GenericEndpoint), nameof(GenericEndpoint.Authorization)))
+            };
+
+            return builder
+                .ModifyContainerOptions(options => options
+                    .WithPluginAssemblies(assembly));
         }
     }
 }

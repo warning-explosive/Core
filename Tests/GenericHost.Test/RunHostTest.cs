@@ -132,7 +132,7 @@
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
+                    builder => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes))
                         .BuildOptions())
@@ -191,7 +191,7 @@
             }
         }
 
-        // TODO: #225 - implement rpc-transport
+        // TODO: #205 - implement rpc-transport
         [SuppressMessage("Analysis", "xUnit1004", Justification = "#225")]
         [Theory(Skip = "#225", Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]
@@ -222,7 +222,7 @@
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
+                    builder => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes))
                         .BuildOptions())
@@ -311,7 +311,7 @@
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
+                    builder => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes))
                         .BuildOptions())
@@ -394,7 +394,7 @@
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
+                    builder => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(additionalOurTypes)
                             .WithOverrides(Fixture.DelegateOverride(container => container
@@ -531,12 +531,12 @@
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport)
                 .UseEndpoint(TestIdentity.Endpoint10,
-                    (_, builder) => builder
+                    builder => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(endpoint1AdditionalOurTypes))
                         .BuildOptions())
                 .UseEndpoint(TestIdentity.Endpoint20,
-                    (_, builder) => builder
+                    builder => builder
                         .ModifyContainerOptions(options => options
                             .WithAdditionalOurTypes(endpoint2AdditionalOurTypes))
                         .BuildOptions())
@@ -607,7 +607,7 @@
             var host = Fixture
                 .CreateHostBuilder()
                 .UseIntegrationTransport(transportIdentity, useTransport)
-                .UseEndpoint(TestIdentity.Endpoint10, (_, builder) => builder.BuildOptions())
+                .UseEndpoint(TestIdentity.Endpoint10, builder => builder.BuildOptions())
                 .BuildHost(settingsDirectory);
 
             await host

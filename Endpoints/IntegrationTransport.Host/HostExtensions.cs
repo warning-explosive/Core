@@ -77,6 +77,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         {
             hostBuilder.CheckEndpointsExistence();
 
+            hostBuilder.CheckDuplicates(transportIdentity);
+
             return hostBuilder.ConfigureServices(serviceCollection =>
             {
                 serviceCollection.AddSingleton(serviceProvider => ConfigureDependencyContainer(serviceProvider, transportIdentity, optionsFactory));
@@ -106,7 +108,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                     .WithManualRegistrations(
                         new TransportIdentityManualRegistration(transportIdentity),
                         new SettingsProviderManualRegistration(settingsDirectoryProvider),
-                        new LoggerFactoryManualRegistration(transportIdentity, frameworkDependenciesProvider),
+                        new FrameworkDependenciesProviderManualRegistration(frameworkDependenciesProvider),
+                        new LoggerFactoryManualRegistration(transportIdentity),
                         new HostedServiceRegistryManualRegistration(hostedServiceRegistry),
                         new IntegrationTransportHostedServiceManualRegistration());
 
@@ -134,6 +137,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
             Func<DependencyContainerOptions, DependencyContainerOptions>? optionsFactory = null)
         {
             hostBuilder.CheckEndpointsExistence();
+
+            hostBuilder.CheckDuplicates(transportIdentity);
 
             return hostBuilder.ConfigureServices(serviceCollection =>
             {
@@ -163,7 +168,8 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                     .WithManualRegistrations(
                         new TransportIdentityManualRegistration(transportIdentity),
                         new SettingsProviderManualRegistration(settingsDirectoryProvider),
-                        new LoggerFactoryManualRegistration(transportIdentity, frameworkDependenciesProvider),
+                        new FrameworkDependenciesProviderManualRegistration(frameworkDependenciesProvider),
+                        new LoggerFactoryManualRegistration(transportIdentity),
                         new HostedServiceRegistryManualRegistration(hostedServiceRegistry),
                         new IntegrationTransportHostedServiceManualRegistration());
 
@@ -198,6 +204,20 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
                 && endpoints.Any())
             {
                 throw new InvalidOperationException(".UseIntegrationTransport() should be called before any endpoint declarations");
+            }
+        }
+
+        private static void CheckDuplicates(this IHostBuilder hostBuilder, TransportIdentity transportIdentity)
+        {
+            if (!hostBuilder.TryGetPropertyValue<Dictionary<string, TransportIdentity>>(nameof(TransportIdentity), out var transports))
+            {
+                transports = new Dictionary<string, TransportIdentity>(StringComparer.OrdinalIgnoreCase);
+                hostBuilder.SetPropertyValue(nameof(TransportIdentity), transports);
+            }
+
+            if (!transports.TryAdd(transportIdentity.ToString(), transportIdentity))
+            {
+                throw new InvalidOperationException($"Transport duplicates was found: {transportIdentity}");
             }
         }
     }

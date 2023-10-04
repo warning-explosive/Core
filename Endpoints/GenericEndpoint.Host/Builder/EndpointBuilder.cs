@@ -8,15 +8,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
 
     internal class EndpointBuilder : IEndpointBuilder
     {
-        internal EndpointBuilder(EndpointIdentity endpointIdentity)
+        private readonly HashSet<string> _set;
+
+        internal EndpointBuilder(
+            EndpointIdentity endpointIdentity,
+            EndpointInitializationContext context)
         {
             Modifiers = Array.Empty<Func<DependencyContainerOptions, DependencyContainerOptions>>();
             EndpointIdentity = endpointIdentity;
+            Context = context;
+
+            _set = new HashSet<string>(StringComparer.Ordinal);
         }
 
-        public IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> Modifiers { get; protected set; }
-
         public EndpointIdentity EndpointIdentity { get; }
+
+        public EndpointInitializationContext Context { get; }
+
+        private IReadOnlyCollection<Func<DependencyContainerOptions, DependencyContainerOptions>> Modifiers { get; set; }
 
         public IEndpointBuilder ModifyContainerOptions(Func<DependencyContainerOptions, DependencyContainerOptions> modifier)
         {
@@ -37,6 +46,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host.Builder
             }
 
             return new EndpointOptions(EndpointIdentity, containerOptions);
+        }
+
+        public void CheckMultipleCalls(string key)
+        {
+            var added = _set.Add(key);
+
+            if (!added)
+            {
+                throw new InvalidOperationException($"Method `{key}` should be used once so as to correctly configure the endpoint instance {EndpointIdentity}");
+            }
         }
     }
 }

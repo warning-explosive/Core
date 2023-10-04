@@ -94,7 +94,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         {
             var message = CreateGeneralMessage(request, typeof(TRequest));
 
-            throw new NotImplementedException("#225");
+            throw new NotImplementedException("#205");
         }
 
         public Task Reply<TRequest, TReply>(TRequest request, TReply reply, CancellationToken token)

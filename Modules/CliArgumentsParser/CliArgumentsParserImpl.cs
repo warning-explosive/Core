@@ -73,7 +73,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
         private static Dictionary<string, string?> Init(string[] args)
         {
-            var cliArguments = string.Join(" ", args);
+            var cliArguments = args.ToString(" ");
 
             var argsDictionary = new Dictionary<string, string?>();
 
@@ -131,7 +131,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
             if (splited.Any())
             {
-                throw new ArgumentException($"Untreated CLI arguments: {string.Join(", ", splited.Select(z => "'" + z + "'"))}");
+                throw new ArgumentException($"Untreated CLI arguments: {splited.Select(z => "'" + z + "'").ToString(", ")}");
             }
 
             return argsDictionary;
@@ -172,7 +172,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
 
                 if (enumType.IsEnumFlags() && flagsValues.Length > 1)
                 {
-                    if (TryParseEnum(enumType, string.Join(", ", flagsValues), out var result))
+                    if (TryParseEnum(enumType, flagsValues.ToString(", "), out var result))
                     {
                         typedValue = result;
                     }
@@ -183,7 +183,7 @@ namespace SpaceEngineers.Core.CliArgumentsParser
                                                                              Success = TryParseEnum(enumType, value, out _),
                                                                              Value = value
                                                                          });
-                        throw new ArgumentException($"Values {string.Join(string.Empty, perValueResult.Where(z => !z.Success).Select(z => "'" + z.Value + "'"))} is not recognized");
+                        throw new ArgumentException($"Values {perValueResult.Where(z => !z.Success).Select(z => "'" + z.Value + "'").ToString(string.Empty)} is not recognized");
                     }
                 }
                 else if (TryParseEnum(enumType, strValue, out var result))

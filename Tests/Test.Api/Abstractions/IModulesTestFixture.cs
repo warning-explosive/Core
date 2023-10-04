@@ -1,11 +1,9 @@
 namespace SpaceEngineers.Core.Test.Api.Abstractions
 {
     using System;
-    using System.Reflection;
     using CompositionRoot;
     using CompositionRoot.Registration;
     using Microsoft.Extensions.Hosting;
-    using Xunit.Abstractions;
 
     /// <summary>
     /// IModulesTestFixture

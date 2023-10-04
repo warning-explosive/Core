@@ -79,7 +79,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                 .CreateHostBuilder()
                 .UseInMemoryIntegrationTransport(transportIdentity)
                 .UseEndpoint(endpointIdentity,
-                    (_, builder) => builder
+                    builder => builder
                         .WithPostgreSqlDataAccess(options => options
                             .ExecuteMigrations())
                         .ModifyContainerOptions(options => options

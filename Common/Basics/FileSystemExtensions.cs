@@ -194,7 +194,9 @@ namespace SpaceEngineers.Core.Basics
 
         private static string Amb(IEnumerable<FileSystemInfo> source)
         {
-            return string.Join(Environment.NewLine, source.Select(info => info.FullName));
+            return source
+                .Select(info => info.FullName)
+                .ToString(Environment.NewLine);
         }
     }
 }

@@ -37,10 +37,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Connection
         private const string DatabaseExistsCommandText = @"select exists(select * from pg_catalog.pg_database where datname = @param_0);";
         private const string TransactionIdCommandText = "select txid_current()";
 
-        private static ConcurrentDictionary<Type, ConcurrentDictionary<int, NullableArrayInfo>> _nullableArrayCache
+        private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<int, NullableArrayInfo>> NullableArrayCache
             = new ConcurrentDictionary<Type, ConcurrentDictionary<int, NullableArrayInfo>>();
 
-        private static MethodInfo _getFieldValueGenericMethod = new MethodFinder(
+        private static readonly MethodInfo GetFieldValueGenericMethod = new MethodFinder(
                 typeof(NpgsqlDataReader),
                 nameof(NpgsqlDataReader.GetFieldValue),
                 BindingFlags.Public | BindingFlags.Instance | BindingFlags.InvokeMethod)
@@ -268,7 +268,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Connection
                         {
                             var name = reader.GetName(ordinal);
 
-                            var nullableArrayInfo = _nullableArrayCache
+                            var nullableArrayInfo = NullableArrayCache
                                 .GetOrAdd(
                                     type,
                                     static (_, _) => new ConcurrentDictionary<int, NullableArrayInfo>(),
@@ -613,7 +613,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Connection
                                        && (sourceType.IsDatabaseArray(out var elementType) || targetType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance).PropertyType.IsDatabaseArray(out elementType))
                                        && elementType != null
                                        && elementType.IsNullable()
-                    ? _getFieldValueGenericMethod.MakeGenericMethod(elementType.MakeArrayType())
+                    ? GetFieldValueGenericMethod.MakeGenericMethod(elementType.MakeArrayType())
                     : null;
             }
 

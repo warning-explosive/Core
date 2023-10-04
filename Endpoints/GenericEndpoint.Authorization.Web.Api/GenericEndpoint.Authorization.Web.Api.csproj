@@ -4,13 +4,13 @@
       <TargetFramework>net7.0</TargetFramework>
       <LangVersion>latest</LangVersion>
       <Nullable>enable</Nullable>
-      <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Authorization.Web</AssemblyName>
-      <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Authorization.Web</RootNamespace>
+      <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api</AssemblyName>
+      <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api</RootNamespace>
       <IsPackable>true</IsPackable>
-      <Title>SpaceEngineers.Core.GenericEndpoint.Authorization.Web</Title>
+      <Title>SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api</Title>
       <Authors>SpaceEngineers</Authors>
       <Company>SpaceEngineers</Company>
-      <PackageDescription>SpaceEngineers.Core.GenericEndpoint.Authorization.Web</PackageDescription>
+      <PackageDescription>SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api</PackageDescription>
       <RepositoryType>git</RepositoryType>
       <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
       <Copyright>Copyright (c) 2019</Copyright>

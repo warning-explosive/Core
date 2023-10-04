@@ -5,6 +5,6 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: AssemblyInformationalVersion("1.0.0.0")]
 
-[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Authorization.Web")]
+[assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api")]
 
 [assembly: InternalsVisibleTo("SpaceEngineers.Core.GenericHost.Test")]

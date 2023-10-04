@@ -1,15 +1,15 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
+namespace SpaceEngineers.Core.GenericEndpoint.Web.Api.Host
 {
     using System.Net.Http.Headers;
-    using Authorization.Host;
-    using Authorization.Web.Handlers;
-    using Basics;
+    using Authorization.Web.Api.Handlers;
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Primitives;
+    using Basics;
+    using SpaceEngineers.Core.GenericEndpoint.Authorization.Host;
 
     /// <summary>
     /// ServiceCollectionExtensions

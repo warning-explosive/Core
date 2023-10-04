@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Web.Host.Registrations
+namespace SpaceEngineers.Core.GenericEndpoint.Web.Api.Host.Registrations
 {
     using Microsoft.Extensions.DependencyInjection;
     using SimpleInjector;

@@ -955,7 +955,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                             .CreateGeneralMessage(
                                 request,
                                 typeof(Request),
-                                new[] { new SentFrom(TestIdentity.Endpoint10) },
+                                Array.Empty<IIntegrationMessageHeader>(),
                                 null);
 
                         var integrationMessage = endpointDependencyContainer
@@ -1081,11 +1081,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        IIntegrationContext integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, GenericEndpoint.Messaging.IntegrationMessage>(initiatorMessage);
-
-                        userAuthenticationResult = await integrationContext
-                           .RpcRequest<AuthenticateUser, UserAuthenticationResult>(request, CancellationToken.None)
-                           .ConfigureAwait(false);
+                        userAuthenticationResult = await endpointDependencyContainer
+                            .Resolve<IIntegrationContext>()
+                            .RpcRequest<AuthenticateUser, UserAuthenticationResult>(request, CancellationToken.None)
+                            .ConfigureAwait(false);
                     }
 
                     output.WriteLine(userAuthenticationResult.Dump(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
@@ -1119,11 +1118,10 @@ namespace SpaceEngineers.Core.GenericHost.Test
 
                     await using (transportDependencyContainer.OpenScopeAsync().ConfigureAwait(false))
                     {
-                        IIntegrationContext integrationContext = transportDependencyContainer.Resolve<IAdvancedIntegrationContext, GenericEndpoint.Messaging.IntegrationMessage>(initiatorMessage);
-
-                        userAuthenticationResult = await integrationContext
-                           .RpcRequest<AuthenticateUser, UserAuthenticationResult>(request, CancellationToken.None)
-                           .ConfigureAwait(false);
+                        userAuthenticationResult = await endpointDependencyContainer
+                            .Resolve<IIntegrationContext>()
+                            .RpcRequest<AuthenticateUser, UserAuthenticationResult>(request, CancellationToken.None)
+                            .ConfigureAwait(false);
                     }
 
                     output.WriteLine(userAuthenticationResult.Dump(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty));
@@ -1242,7 +1240,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
                             collector.WaitUntilMessageIsNotReceived<Reply>(),
                             collector.WaitUntilErrorMessageIsNotReceived<HandlerInvoked>(message => message.HandlerType == typeof(ReplyHandler) && message.EndpointIdentity == TestIdentity.Endpoint10));
 
-                        // TODO: simplify sending
+                        // TODO: #225 - simplify sending
                         var integrationMessage = endpointDependencyContainer
                             .Resolve<IIntegrationMessageFactory>()
                             .CreateGeneralMessage(

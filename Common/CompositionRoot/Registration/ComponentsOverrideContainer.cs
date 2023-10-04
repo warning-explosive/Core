@@ -146,7 +146,7 @@ namespace SpaceEngineers.Core.CompositionRoot.Registration
             IEnumerable<(Type implementation, EnLifestyle lifestyle)> replacements,
             IEnumerable<(Func<object> instanceProducer, EnLifestyle lifestyle)> instanceProducerReplacements)
         {
-            // TODO: #225 review
+            // TODO: #backlog - allow to override single item within a collection registration
             var collection = instanceReplacements
                 .Select(replacement => new InstanceRegistrationInfo(service, replacement))
                 .Cast<IRegistrationInfo>()

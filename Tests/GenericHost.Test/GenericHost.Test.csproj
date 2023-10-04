@@ -44,7 +44,7 @@
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Authorization.Web\GenericEndpoint.Authorization.Web.csproj" />
+        <ProjectReference Include="..\..\Endpoints\GenericEndpoint.Authorization.Web.Api\GenericEndpoint.Authorization.Web.Api.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericEndpoint.DataAccess.Sql.Postgres.Host\GenericEndpoint.DataAccess.Sql.Postgres.Host.csproj" />
         <ProjectReference Include="..\..\Endpoints\GenericHost\GenericHost.csproj" />
         <ProjectReference Include="..\..\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj" />

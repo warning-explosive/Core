@@ -39,11 +39,6 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
 
             _assemblies = new[]
             {
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(Basics))),
-
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(AutoRegistration), nameof(AutoRegistration.Api))),
-                AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CompositionRoot))),
-
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(CrossCuttingConcerns))),
 
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(DataImport))),
@@ -59,24 +54,14 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
 
         /// <summary> CreateExactlyBounded </summary>
         /// <returns>IDependencyContainer</returns>
-        [Benchmark(Description = nameof(CreateExactlyBounded))]
-        public IDependencyContainer CreateExactlyBounded()
+        [Benchmark(Description = nameof(Create))]
+        public IDependencyContainer Create()
         {
             var options = new DependencyContainerOptions()
+                .WithPluginAssemblies(Assemblies)
                 .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(_settingsDirectory!)));
 
-            return DependencyContainer.CreateExactlyBounded(options, Assemblies);
-        }
-
-        /// <summary> CreateBoundedAbove </summary>
-        /// <returns>IDependencyContainer</returns>
-        [Benchmark(Description = nameof(CreateBoundedAbove), Baseline = true)]
-        public IDependencyContainer CreateBoundedAbove()
-        {
-            var options = new DependencyContainerOptions()
-                .WithManualRegistrations(new SettingsDirectoryProviderManualRegistration(new SettingsDirectoryProvider(_settingsDirectory!)));
-
-            return DependencyContainer.CreateBoundedAbove(options, Assemblies);
+            return DependencyContainer.Create(options);
         }
     }
 }

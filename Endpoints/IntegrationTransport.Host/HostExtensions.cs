@@ -69,7 +69,7 @@ namespace SpaceEngineers.Core.IntegrationTransport.Host
         /// <param name="transportIdentity">TransportIdentity</param>
         /// <param name="optionsFactory">Container options factory</param>
         /// <returns>Configured IHostBuilder</returns>
-        // TODO: review InternalVisibleToAttributes
+        // TODO: #225 - review InternalVisibleToAttributes | BeforeAttribute | AfterAttribute
         public static IHostBuilder UseInMemoryIntegrationTransport(
             this IHostBuilder hostBuilder,
             TransportIdentity transportIdentity,

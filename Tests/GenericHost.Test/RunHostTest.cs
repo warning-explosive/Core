@@ -191,7 +191,7 @@
             }
         }
 
-        // TODO: #225
+        // TODO: #225 - implement rpc-transport
         [SuppressMessage("Analysis", "xUnit1004", Justification = "#225")]
         [Theory(Skip = "#225", Timeout = 60_000)]
         [MemberData(nameof(RunHostTestData))]

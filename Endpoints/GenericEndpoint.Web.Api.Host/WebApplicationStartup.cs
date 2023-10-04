@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
+namespace SpaceEngineers.Core.GenericEndpoint.Web.Api.Host
 {
     using System;
     using System.Collections.Generic;
@@ -6,8 +6,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
     using System.IO;
     using System.IO.Compression;
     using System.Reflection;
-    using Authorization.Web.Handlers;
-    using Basics;
+    using Authorization.Web.Api.Handlers;
+    using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc.Authorization;
@@ -15,10 +15,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Contract;
-    using GenericEndpoint.Host.Builder;
-    using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.OpenApi.Models;
+    using Basics;
+    using Contract;
+    using SpaceEngineers.Core.GenericEndpoint.Host.Builder;
 
     /// <summary>
     /// WebApplicationStartup

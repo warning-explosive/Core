@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web
+namespace SpaceEngineers.Core.GenericEndpoint.Web.Api.Host
 {
     using System;
     using System.Threading.Tasks;

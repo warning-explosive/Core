@@ -13,6 +13,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using DataAccess.Orm.Sql.Connection;
     using DataAccess.Orm.Sql.Settings;
     using DataAccess.Orm.Sql.Translation;
+    using Npgsql;
 
     [Component(EnLifestyle.Singleton)]
     internal class RecreatePostgreSqlDatabaseHostedServiceStartupAction : IHostedServiceStartupAction,
@@ -30,7 +31,7 @@ grant all privileges on database ""{0}"" to ""{1}"";";
         private readonly IDependencyContainer _dependencyContainer;
         private readonly IDatabaseConnectionProvider _connectionProvider;
 
-        public RecreatePostgreSqlDatabaseHostStartupAction(
+        public RecreatePostgreSqlDatabaseHostedServiceStartupAction(
             ISettingsProvider<SqlDatabaseSettings> sqlDatabaseSettingsProvider,
             IDependencyContainer dependencyContainer,
             IDatabaseConnectionProvider connectionProvider)

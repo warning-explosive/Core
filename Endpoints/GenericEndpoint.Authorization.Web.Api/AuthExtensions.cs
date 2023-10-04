@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web
+namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api
 {
     using System;
     using System.Net.Http.Headers;

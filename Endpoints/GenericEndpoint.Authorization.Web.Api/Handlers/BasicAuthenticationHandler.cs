@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Handlers
+namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api.Handlers
 {
     using System;
     using System.Net.Http.Headers;
@@ -6,15 +6,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Handlers
     using System.Text.Encodings.Web;
     using System.Threading;
     using System.Threading.Tasks;
-    using Api.Abstractions;
-    using AuthEndpoint.Contract;
     using Basics;
     using CompositionRoot;
+    using GenericEndpoint.Api.Abstractions;
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
+    using SpaceEngineers.Core.AuthEndpoint.Contract;
 
     internal class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {

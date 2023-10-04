@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Handlers
+namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api.Handlers
 {
     using Microsoft.AspNetCore.Authorization;
 

@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using DataAccess.Orm.Sql.Model;
     using DataAccess.Orm.Sql.Transaction;
     using GenericEndpoint.Contract;
-    using GenericEndpoint.DataAccess.Sql.Host;
+    using GenericEndpoint.DataAccess.Sql.Postgres.Host;
     using GenericEndpoint.Host;
     using IntegrationTransport.Host;
     using Test.Api.ClassFixtures;
@@ -41,8 +41,6 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
         {
             _cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
-            var hostBuilder = new TestFixture().CreateHostBuilder();
-
             var solutionFileDirectory = SolutionExtensions.SolutionFile().Directory
                                         ?? throw new InvalidOperationException("Solution directory wasn't found");
 
@@ -64,33 +62,34 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
 
             var startupActions = new[]
             {
-                typeof(RecreatePostgreSqlDatabaseHostStartupAction)
+                typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)
             };
 
             var additionalOurTypes = databaseEntities
                 .Concat(startupActions)
                 .ToArray();
 
+            var transportIdentity = IntegrationTransport.InMemory.Identity.TransportIdentity();
+
             var endpointIdentity = new EndpointIdentity(
                 nameof(DatabaseConnectionProviderBenchmarkSource),
                 Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly"));
 
-            _host = hostBuilder
-                .UseIntegrationTransport((_, builder) => builder
-                    .WithInMemoryIntegrationTransport()
-                    .BuildOptions())
+            _host = new TestFixture()
+                .CreateHostBuilder()
+                .UseInMemoryIntegrationTransport(transportIdentity)
                 .UseEndpoint(endpointIdentity,
                     (_, builder) => builder
-                    .WithPostgreSqlDataAccess(options => options
-                        .ExecuteMigrations())
-                    .ModifyContainerOptions(options => options
-                        .WithAdditionalOurTypes(additionalOurTypes))
-                    .BuildOptions())
+                        .WithPostgreSqlDataAccess(options => options
+                            .ExecuteMigrations())
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(additionalOurTypes))
+                        .BuildOptions())
                 .BuildHost(settingsDirectory);
 
             _host.StartAsync(_cts.Token).Wait(_cts.Token);
 
-            _dependencyContainer = _host.GetEndpointDependencyContainer(nameof(DatabaseConnectionProviderBenchmarkSource));
+            _dependencyContainer = _host.GetEndpointDependencyContainer(endpointIdentity);
         }
 
         /// <summary>

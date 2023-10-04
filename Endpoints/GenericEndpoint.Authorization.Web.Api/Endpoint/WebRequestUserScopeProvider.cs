@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Endpoint
+namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api.Endpoint
 {
     using System.Security.Claims;
     using Basics.Attributes;

@@ -1,20 +1,19 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
+namespace SpaceEngineers.Core.GenericEndpoint.Web.Api.Host
 {
     using System;
-    using Authorization.Host;
-    using Basics;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using SimpleInjector;
-    using CompositionRoot;
-    using Contract;
-    using GenericEndpoint.Host;
-    using GenericEndpoint.Host.Builder;
-    using GenericHost;
     using Registrations;
+    using SimpleInjector;
+    using Basics;
+    using CompositionRoot;
+    using SpaceEngineers.Core.GenericEndpoint.Authorization.Host;
+    using Contract;
+    using SpaceEngineers.Core.GenericEndpoint.Host;
+    using SpaceEngineers.Core.GenericEndpoint.Host.Builder;
 
     /// <summary>
     /// BaseStartup

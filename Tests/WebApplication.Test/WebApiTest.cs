@@ -13,7 +13,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
     using Core.Test.Api.ClassFixtures;
     using Core.Test.WebApplication;
     using GenericEndpoint.Authorization.Host;
-    using GenericEndpoint.Authorization.Web;
+    using GenericEndpoint.Authorization.Web.Api;
     using JwtAuthentication;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;

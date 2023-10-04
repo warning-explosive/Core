@@ -1,4 +1,4 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
+namespace SpaceEngineers.Core.GenericEndpoint.Web.Api.Host
 {
     using System;
     using Microsoft.AspNetCore.Hosting;
@@ -10,12 +10,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
     public static class HostExtensions
     {
         /// <summary>
-        /// Use web-gateway endpoint
+        /// Use web-api gateway endpoint
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
         /// <param name="startupFactory">Web application startup factory</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHostBuilder UseWebGateway(
+        public static IHostBuilder UseWebApiGateway(
             this IHostBuilder hostBuilder,
             Func<IHostBuilder, Func<WebHostBuilderContext, IStartup>> startupFactory)
         {

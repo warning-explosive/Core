@@ -4,13 +4,13 @@
         <TargetFramework>net7.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Web.Host</AssemblyName>
-        <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Web.Host</RootNamespace>
+        <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Web.Api.Host</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Web.Api.Host</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Title>SpaceEngineers.Core.GenericEndpoint.Web.Host</Title>
+        <Title>SpaceEngineers.Core.GenericEndpoint.Web.Api.Host</Title>
         <Authors>SpaceEngineers</Authors>
         <Company>SpaceEngineers</Company>
-        <PackageDescription>SpaceEngineers.Core.GenericEndpoint.Web.Host</PackageDescription>
+        <PackageDescription>SpaceEngineers.Core.GenericEndpoint.Web.Api.Host</PackageDescription>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/warning-explosive/Core</RepositoryUrl>
         <Copyright>Copyright (c) 2019</Copyright>
@@ -30,7 +30,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\Modules\Web.Api\Web.Api.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Authorization.Host\GenericEndpoint.Authorization.Host.csproj" />
-      <ProjectReference Include="..\GenericEndpoint.Authorization.Web\GenericEndpoint.Authorization.Web.csproj" />
+      <ProjectReference Include="..\GenericEndpoint.Authorization.Web.Api\GenericEndpoint.Authorization.Web.Api.csproj" />
       <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj" />
     </ItemGroup>
     <ItemGroup>

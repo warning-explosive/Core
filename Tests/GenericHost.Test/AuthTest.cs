@@ -6,7 +6,7 @@ namespace SpaceEngineers.Core.GenericHost.Test
     using System.Linq;
     using Basics;
     using GenericEndpoint.Authorization.Host;
-    using GenericEndpoint.Authorization.Web;
+    using GenericEndpoint.Authorization.Web.Api;
     using JwtAuthentication;
     using Microsoft.Extensions.Configuration;
     using SpaceEngineers.Core.Test.Api;

@@ -68,8 +68,8 @@ namespace SpaceEngineers.Core.CompositionRoot.Extensions
                 {
                     InstanceRegistrationInfo instanceRegistrationInfo => instanceRegistrationInfo.Instance.GetType(),
                     ServiceRegistrationInfo serviceRegistrationInfo => serviceRegistrationInfo.Implementation,
+                    DelegateRegistrationInfo delegateRegistrationInfo => delegateRegistrationInfo.InstanceProducer().GetType(),
                     DecoratorRegistrationInfo decoratorRegistrationInfo => decoratorRegistrationInfo.Implementation,
-                    DelegateRegistrationInfo delegateRegistrationInfo => default,
                     EmptyCollectionRegistrationInfo emptyCollectionRegistrationInfo => default,
                     _ => throw new NotSupportedException(info.GetType().Name)
                 };

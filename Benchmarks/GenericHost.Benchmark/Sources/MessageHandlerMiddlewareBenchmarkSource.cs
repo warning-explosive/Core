@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
     using GenericEndpoint.Authorization;
     using GenericEndpoint.Authorization.Host;
     using GenericEndpoint.Contract;
-    using GenericEndpoint.DataAccess.Sql.Host;
+    using GenericEndpoint.DataAccess.Sql.Postgres.Host;
     using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.Host;
     using GenericEndpoint.Messaging;
@@ -66,37 +66,35 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                 .StepInto("Settings")
                 .StepInto(nameof(MessageHandlerMiddlewareBenchmarkSource));
 
+            var transportIdentity = IntegrationTransport.InMemory.Identity.TransportIdentity();
+
             var endpointIdentity = new EndpointIdentity(
-                    nameof(MessageHandlerMiddlewareBenchmarkSource),
-                    Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly"));
+                nameof(MessageHandlerMiddlewareBenchmarkSource),
+                Assembly.GetEntryAssembly() ?? throw new InvalidOperationException("Unable to get entry assembly"));
 
             _host = new TestFixture()
                 .CreateHostBuilder()
-                .UseIntegrationTransport((context, builder) => builder
-                    .WithInMemoryIntegrationTransport()
-                    .WithAuthorization(context.Configuration)
-                    .WithOpenTelemetry()
-                    .BuildOptions())
                 .UseOpenTelemetryLogger(endpointIdentity)
+                .UseInMemoryIntegrationTransport(transportIdentity)
                 .UseEndpoint(endpointIdentity,
-                    (context, builder) => builder
-                    .WithPostgreSqlDataAccess(options => options
-                        .ExecuteMigrations())
-                    .WithSqlEventSourcing()
-                    .WithAuthorization(context.Configuration)
-                    .WithOpenTelemetry()
-                    .ModifyContainerOptions(options => options
-                        .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostStartupAction)))
-                    .BuildOptions())
+                    (configuration, builder) => builder
+                        .WithPostgreSqlDataAccess(options => options
+                            .ExecuteMigrations())
+                        .WithSqlEventSourcing()
+                        .WithAuthorization(configuration)
+                        .WithOpenTelemetry()
+                        .ModifyContainerOptions(options => options
+                            .WithAdditionalOurTypes(typeof(RecreatePostgreSqlDatabaseHostedServiceStartupAction)))
+                        .BuildOptions())
                 .BuildHost(settingsDirectory);
 
             _host.StartAsync(_cts.Token).Wait(_cts.Token);
 
-            var transportDependencyContainer = _host.GetTransportDependencyContainer();
+            _dependencyContainer = _host.GetEndpointDependencyContainer(endpointIdentity);
 
             var username = "qwerty";
 
-            var authorizationToken = transportDependencyContainer
+            var authorizationToken = _dependencyContainer
                 .Resolve<ITokenProvider>()
                 .GenerateToken(
                     username,
@@ -106,7 +104,7 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                     },
                     TimeSpan.FromSeconds(300));
 
-            _request = transportDependencyContainer
+            _request = _dependencyContainer
                 .Resolve<IIntegrationMessageFactory>()
                 .CreateGeneralMessage(
                     new Request(),
@@ -116,7 +114,6 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
 
             _messageHandler = static (context, token) => context.Reply((Request)context.Message.Payload, new Reply(), token);
 
-            _dependencyContainer = _host.GetEndpointDependencyContainer(nameof(MessageHandlerMiddlewareBenchmarkSource));
             _messageHandlerMiddleware = _dependencyContainer.Resolve<IMessageHandlerMiddlewareComposite>();
 
             var middlewares = _dependencyContainer.ResolveCollection<IMessageHandlerMiddleware>().ToList();

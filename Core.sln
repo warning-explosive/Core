@@ -61,13 +61,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.EventSourci
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Authorization", "Endpoints\GenericEndpoint.Authorization\GenericEndpoint.Authorization.csproj", "{4EC8E902-24D7-4EC0-B886-AC76E9C73A54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Authorization.Web", "Endpoints\GenericEndpoint.Authorization.Web\GenericEndpoint.Authorization.Web.csproj", "{8B75E379-6E63-44D6-A807-3B0886B4A1F4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Authorization.Web.Api", "Endpoints\GenericEndpoint.Authorization.Web.Api\GenericEndpoint.Authorization.Web.Api.csproj", "{8B75E379-6E63-44D6-A807-3B0886B4A1F4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Telemetry", "Endpoints\GenericEndpoint.Telemetry\GenericEndpoint.Telemetry.csproj", "{29C52BD4-06D5-4C11-93AC-29E88351E05B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Host", "Endpoints\GenericEndpoint.Host\GenericEndpoint.Host.csproj", "{13D73582-68CF-43A1-B340-59BDB56AF69F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Web.Host", "Endpoints\GenericEndpoint.Web.Host\GenericEndpoint.Web.Host.csproj", "{84493FC0-5943-4D6C-90C2-682D4099F500}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.Web.Api.Host", "Endpoints\GenericEndpoint.Web.Api.Host\GenericEndpoint.Web.Api.Host.csproj", "{84493FC0-5943-4D6C-90C2-682D4099F500}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericEndpoint.DataAccess.Sql.Host", "Endpoints\GenericEndpoint.DataAccess.Sql.Host\GenericEndpoint.DataAccess.Sql.Host.csproj", "{1FCF0008-7443-460A-9467-0C1214875405}"
 EndProject

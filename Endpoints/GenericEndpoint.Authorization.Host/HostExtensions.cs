@@ -40,7 +40,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Host
             this IEndpointBuilder builder,
             IConfiguration configuration)
         {
-            // TODO: builder.CheckDuplicates(); - widespread
+            // TODO: #225 - builder.CheckDuplicates(); - widespread
             var assembly = new[]
             {
                 AssembliesExtensions.FindRequiredAssembly(AssembliesExtensions.BuildName(nameof(SpaceEngineers), nameof(Core), nameof(JwtAuthentication))),

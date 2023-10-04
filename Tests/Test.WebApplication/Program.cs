@@ -11,7 +11,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using GenericEndpoint.DataAccess.Sql.Postgres.Host;
     using GenericEndpoint.EventSourcing.Host;
     using GenericEndpoint.Telemetry.Host;
-    using GenericEndpoint.Web.Host;
+    using GenericEndpoint.Web.Api.Host;
     using GenericHost;
     using IntegrationTransport.Host;
     using Microsoft.Extensions.Hosting;
@@ -19,6 +19,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using Migrations;
     using OpenTelemetry.Metrics;
     using OpenTelemetry.Trace;
+    using Registrations;
     using StartupActions;
 
     /// <summary>
@@ -65,17 +66,57 @@ namespace SpaceEngineers.Core.Test.WebApplication
 
             return Host
                 .CreateDefaultBuilder(args)
-                .ConfigureLogging(context => context
-                    .AddConsole()
-                    .SetMinimumLevel(LogLevel.Trace))
-                .UseIntegrationTransport(hostBuilder =>
+
+                /*
+                 * logging
+                 */
+
+                .ConfigureLogging((context, builder) =>
+                {
+                    builder.ClearProviders();
+                    builder.AddConfiguration(context.Configuration.GetSection("Logging"));
+                    builder
+                        .AddJsonConsole(options =>
+                        {
+                            options.JsonWriterOptions = new JsonWriterOptions
+                            {
+                                Indented = true
+                            };
+                            options.IncludeScopes = false;
+                        })
+                        .SetMinimumLevel(LogLevel.Trace);
+                })
+                .UseOpenTelemetryLogger(AuthEndpoint.Contract.Identity.EndpointIdentity)
+
+                /*
+                 * IntegrationTransport
+                 */
+
+                .UseRabbitMqIntegrationTransport(
+                    IntegrationTransport.RabbitMQ.Identity.TransportIdentity(),
+                    options => options.WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration()))
+
+                /*
+                 * AuthEndpoint
+                 */
+
+                .UseAuthEndpoint((_, builder) => builder
+                    .WithPostgreSqlDataAccess(options => options.ExecuteMigrations())
+                    .WithSqlEventSourcing()
+                    .WithOpenTelemetry()
+                    .ModifyContainerOptions(options => options.WithAdditionalOurTypes(additionalOurTypes))
+                    .BuildOptions())
+
+                /*
+                 * WebApiGateway
+                 */
+
+                .UseWebApiGateway(hostBuilder =>
                     context => new WebApplicationStartup(
-                        context,
                         hostBuilder,
                         context.Configuration,
+                        Identity.EndpointIdentity,
                         builder => builder
-                            .WithRabbitMqIntegrationTransport()
-                            .WithWebApi(hostBuilder, context.Configuration)
                             .WithOpenTelemetry(
                                 tracerProviderBuilder => tracerProviderBuilder
                                     .AddAspNetCoreInstrumentation()
@@ -84,20 +125,13 @@ namespace SpaceEngineers.Core.Test.WebApplication
                                     .AddRuntimeInstrumentation()
                                     .AddAspNetCoreInstrumentation()
                                     .AddHttpClientInstrumentation())
-                            .ModifyContainerOptions(options => options
-                                .WithManualRegistrations(new PurgeRabbitMqQueuesManualRegistration()))
-                            .BuildOptions(),
-                        "TransportEndpointGateway"))
-                .UseOpenTelemetryLogger(AuthEndpoint.Contract.Identity.EndpointIdentity)
-                .UseAuthEndpoint(builder => builder
-                    .WithPostgreSqlDataAccess(options => options
-                        .ExecuteMigrations())
-                    .WithSqlEventSourcing()
-                    .WithOpenTelemetry()
-                    .ModifyContainerOptions(options => options
-                        .WithAdditionalOurTypes(additionalOurTypes))
-                    .BuildOptions())
-                .BuildWebHost(settingsDirectory);
+                            .BuildOptions()))
+
+                /*
+                 * Building
+                 */
+
+                .BuildHost(settingsDirectory);
         }
     }
 }

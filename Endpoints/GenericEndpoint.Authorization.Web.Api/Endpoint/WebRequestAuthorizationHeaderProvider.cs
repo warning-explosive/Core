@@ -1,14 +1,13 @@
-namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Endpoint
+namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web.Api.Endpoint
 {
     using Basics;
     using Basics.Attributes;
-    using GenericEndpoint.Authorization;
     using Messaging;
     using Microsoft.AspNetCore.Http;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.AutoRegistration.Api.Enumerations;
-    using Web;
+    using SpaceEngineers.Core.GenericEndpoint.Authorization;
 
     [Component(EnLifestyle.Singleton)]
     [Before(typeof(AuthorizationHeaderProvider))]

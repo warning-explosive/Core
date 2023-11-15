@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <AssemblyName>SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql</RootNamespace>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Modules\DataAccess.Orm.Sql\DataAccess.Orm.Sql.csproj"/>
+        <ProjectReference Include="..\GenericEndpoint\GenericEndpoint.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Model\InboxFactorySpecification.cs">
+            <DependentUpon>InboxFactory.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Deduplication\IntegrationMessageHeader.cs">
+            <DependentUpon>IntegrationMessage.cs</DependentUpon>
+        </Compile>
+        <Compile Update="UnitOfWork\OutboxBackgroundDelivery.cs">
+            <DependentUpon>IOutboxBackgroundDelivery.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+</Project>

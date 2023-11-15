@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <AssemblyName>SpaceEngineers.Core.Basics</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.Basics</RootNamespace>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="ActionExecutionInfo.cs">
+            <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+        </Compile>
+        <Compile Update="StatelessFunctionExecutionInfo.cs">
+            <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MethodExecutionInfo.cs">
+            <DependentUpon>MethodExtensions.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MethodFinder.cs">
+            <DependentUpon>MethodExtensions.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\BinaryHeap.cs">
+            <DependentUpon>IHeap.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\HeapEntry.cs">
+            <DependentUpon>IHeap.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\PriorityQueue.cs">
+            <DependentUpon>IQueue.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\DeferredQueue.cs">
+            <DependentUpon>IAsyncQueue.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\MessageQueue.cs">
+            <DependentUpon>IAsyncQueue.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\IAsyncQueue.cs">
+            <DependentUpon>IQueue.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ISafelyComparable.cs">
+            <DependentUpon>Comparable.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ISafelyEquatable.cs">
+            <DependentUpon>Equatable.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\RootNodeChangedEventArgs.cs">
+            <DependentUpon>IHeap.cs</DependentUpon>
+        </Compile>
+        <Compile Update="StatelessActionExecutionInfo.cs">
+            <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\RecursiveEnumerable.cs">
+            <DependentUpon>IRecursiveEnumerable.cs</DependentUpon>
+        </Compile>
+        <Compile Update="FunctionExecutionInfo.cs">
+            <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+        </Compile>
+        <Compile Update="StatelessAsyncOperationExecutionInfo.cs">
+            <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+        </Compile>
+        <Compile Update="TypeInfo.cs">
+            <DependentUpon>TypeInfoStorage.cs</DependentUpon>
+        </Compile>
+        <Compile Update="TypeNode.cs">
+            <DependentUpon>TypeExtensions.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\CompositeDisposable.cs">
+            <DependentUpon>Disposable.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\EmptyDisposable.cs">
+            <DependentUpon>Disposable.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\DisposableAction.cs">
+            <DependentUpon>Disposable.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\EmptyAsyncDisposable.cs">
+            <DependentUpon>AsyncDisposable.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Primitives\AsyncDisposableAction.cs">
+            <DependentUpon>AsyncDisposable.cs</DependentUpon>
+        </Compile>
+        <Compile Update="AsyncOperationExecutionInfo.cs">
+            <DependentUpon>ExecutionExtensions.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+</Project>

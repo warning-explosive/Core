@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <AssemblyName>SpaceEngineers.Core.Web.Api</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.Web.Api</RootNamespace>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Containers\GenericDataContainer.cs">
+            <DependentUpon>IDataContainer.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Containers\StringDataContainer.cs">
+            <DependentUpon>GenericDataContainer.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Containers\DateTimeDataContainer.cs">
+            <DependentUpon>GenericDataContainer.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Containers\BooleanDataContainer.cs">
+            <DependentUpon>GenericDataContainer.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Containers\NumericDataContainer.cs">
+            <DependentUpon>GenericDataContainer.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Containers\DataContainersProvider.cs">
+            <DependentUpon>IDataContainersProvider.cs</DependentUpon>
+        </Compile>
+        <Compile Update="CollectionResponse.cs">
+            <DependentUpon>BaseResponse.cs</DependentUpon>
+        </Compile>
+        <Compile Update="EmptyResponse.cs">
+            <DependentUpon>BaseResponse.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ScalarResponse.cs">
+            <DependentUpon>BaseResponse.cs</DependentUpon>
+        </Compile>
+        <Compile Update="BaseResponse.cs">
+            <DependentUpon>IResponse.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Common\Basics\Basics.csproj"/>
+        <ProjectReference Include="..\..\Common\AutoRegistration.Api\AutoRegistration.Api.csproj"/>
+    </ItemGroup>
+</Project>

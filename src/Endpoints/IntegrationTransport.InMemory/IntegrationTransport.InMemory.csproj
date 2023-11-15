@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <AssemblyName>SpaceEngineers.Core.IntegrationTransport.InMemory</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.IntegrationTransport.InMemory</RootNamespace>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj"/>
+        <ProjectReference Include="..\IntegrationTransport.Api\IntegrationTransport.Api.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="RoundRobinEndpointInstanceSelectionBehavior.cs">
+            <DependentUpon>IEndpointInstanceSelectionBehavior.cs</DependentUpon>
+        </Compile>
+        <Compile Update="InMemoryTopology.cs">
+            <DependentUpon>IInMemoryTopology.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+</Project>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Messaging</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Messaging</RootNamespace>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Common\Basics\Basics.csproj"/>
+        <ProjectReference Include="..\GenericEndpoint.Contract\GenericEndpoint.Contract.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="System.Text.Json" Version="7.0.3"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="MessageHeaders\SentFrom.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\Id.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\DeferredUntil.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\RetryCounter.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\RejectReason.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\ActualDeliveryDate.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\ReplyTo.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\InitiatorMessageId.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\ConversationId.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\User.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\HandledBy.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="IntegrationMessageFactory.cs">
+            <DependentUpon>IIntegrationMessageFactory.cs</DependentUpon>
+        </Compile>
+        <Compile Update="UserScopeProvider.cs">
+            <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+        </Compile>
+        <Compile Update="AnonymousUserScopeProvider.cs">
+            <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageOriginProvider.cs">
+            <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ConversationIdProvider.cs">
+            <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageInitiatorProvider.cs">
+            <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\ReflectedType.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="MessageHeaders\TraceContext.cs">
+            <DependentUpon>IIntegrationMessageHeader.cs</DependentUpon>
+        </Compile>
+        <Compile Update="ReplyToProvider.cs">
+            <DependentUpon>IIntegrationMessageHeaderProvider.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+</Project>

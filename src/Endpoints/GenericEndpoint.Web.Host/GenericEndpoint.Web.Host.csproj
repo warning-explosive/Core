@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <AssemblyName>SpaceEngineers.Core.GenericEndpoint.Web.Host</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.GenericEndpoint.Web.Host</RootNamespace>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Modules\JwtAuthentication\JwtAuthentication.csproj"/>
+        <ProjectReference Include="..\..\Modules\Web.Api\Web.Api.csproj"/>
+        <ProjectReference Include="..\GenericEndpoint.Authorization.Host\GenericEndpoint.Authorization.Host.csproj"/>
+        <ProjectReference Include="..\GenericEndpoint.Authorization.Web.Host\GenericEndpoint.Authorization.Web.Host.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="WebApplicationStartup.cs">
+            <DependentUpon>IStartup.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Auth\WebApiFeaturesProvider.cs">
+            <DependentUpon>IWebApiFeaturesProvider.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.9"/>
+        <PackageReference Include="SimpleInjector.Integration.AspNetCore" Version="5.5.0"/>
+        <PackageReference Include="SimpleInjector.Integration.AspNetCore.Mvc.Core" Version="5.5.0"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+</Project>

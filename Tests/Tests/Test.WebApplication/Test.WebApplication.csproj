@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <AssemblyName>SpaceEngineers.Core.Test.WebApplication</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.Test.WebApplication</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
+        <ServerGarbageCollection>true</ServerGarbageCollection>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.5.0-beta.1"/>
+        <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.5.0-beta.1"/>
+        <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.5.0"/>
+        <PackageReference Include="RestSharp" Version="110.2.0"/>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\src\Endpoints\AuthEndpoint.Host\AuthEndpoint.Host.csproj"/>
+        <ProjectReference Include="..\..\..\src\Endpoints\GenericEndpoint.DataAccess.Sql.Host\GenericEndpoint.DataAccess.Sql.Host.csproj"/>
+        <ProjectReference Include="..\..\..\src\Endpoints\GenericEndpoint.DataAccess.Sql.Postgres.Host\GenericEndpoint.DataAccess.Sql.Postgres.Host.csproj"/>
+        <ProjectReference Include="..\..\..\src\Endpoints\GenericEndpoint.EventSourcing.Host\GenericEndpoint.EventSourcing.Host.csproj"/>
+        <ProjectReference Include="..\..\..\src\Endpoints\GenericEndpoint.Telemetry.Host\GenericEndpoint.Telemetry.Host.csproj"/>
+        <ProjectReference Include="..\..\..\src\Endpoints\GenericEndpoint.Web.Host\GenericEndpoint.Web.Host.csproj"/>
+        <ProjectReference Include="..\..\..\src\Endpoints\IntegrationTransport.Host\IntegrationTransport.Host.csproj"/>
+    </ItemGroup>
+</Project>

@@ -258,7 +258,7 @@ namespace SpaceEngineers.Core.Basics
                             : type;
                 }
 
-                throw new SecurityException($"Untrusted type {node.Type}");
+                throw new SecurityException($"Unable to find type {node.Type}");
             }
         }
     }

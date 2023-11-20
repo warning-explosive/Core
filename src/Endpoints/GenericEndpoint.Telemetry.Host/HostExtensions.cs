@@ -9,11 +9,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry.Host
     using GenericHost;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Logging;
-    using OpenTelemetry.Logs;
     using OpenTelemetry.Metrics;
     using OpenTelemetry.Resources;
     using OpenTelemetry.Trace;
+    using Registrations;
 
     /// <summary>
     /// HostExtensions
@@ -24,82 +23,76 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry.Host
         /// Configures OpenTelemetry host-wide
         /// </summary>
         /// <param name="hostBuilder">IHostBuilder</param>
-        /// <param name="configureTracingInstrumentation">Configure tracing instrumentation</param>
-        /// <param name="configureMetricsInstrumentation">Configure metrics instrumentation</param>
         /// <returns>Configured IHostBuilder</returns>
-        public static IHostBuilder UseOpenTelemetry(
-            this IHostBuilder hostBuilder,
-            Func<TracerProviderBuilder, TracerProviderBuilder>? configureTracingInstrumentation = default,
-            Func<MeterProviderBuilder, MeterProviderBuilder>? configureMetricsInstrumentation = default)
+        public static IHostBuilder UseOpenTelemetry(this IHostBuilder hostBuilder)
         {
             hostBuilder.CheckMultipleCalls(nameof(UseOpenTelemetry));
 
-            var resourceBuilder = ResourceBuilder.CreateDefault();
+            var tracerProviders = new Dictionary<EndpointIdentity, TracerProvider>();
+            var meterProviders = new Dictionary<EndpointIdentity, MeterProvider>();
 
-            var endpointIdentities = hostBuilder.GetEndpointIdentities();
-
-            foreach (var endpointIdentity in endpointIdentities)
+            foreach (var endpointIdentity in hostBuilder.GetEndpointIdentities())
             {
-                resourceBuilder.AddService(
-                    serviceVersion: endpointIdentity.Version,
-                    serviceName: endpointIdentity.LogicalName,
-                    serviceInstanceId: endpointIdentity.InstanceName,
-                    autoGenerateServiceInstanceId: false);
+                var resourceBuilder = GetResourceBuilder(endpointIdentity);
+                tracerProviders.Add(endpointIdentity, GetTracerProvider(endpointIdentity, resourceBuilder));
+                meterProviders.Add(endpointIdentity, GetMeterProvider(endpointIdentity, resourceBuilder));
             }
 
-            var tracerProviderBuilder = OpenTelemetry.Sdk
-                .CreateTracerProviderBuilder()
-                .SetResourceBuilder(resourceBuilder);
-
-            foreach (var endpointIdentity in endpointIdentities)
-            {
-                tracerProviderBuilder.AddSource(endpointIdentity.LogicalName);
-            }
-
-            if (configureTracingInstrumentation != null)
-            {
-                tracerProviderBuilder = configureTracingInstrumentation(tracerProviderBuilder);
-            }
-
-            var tracerProvider = tracerProviderBuilder
-                .AddOtlpExporter()
-                .Build() !;
-
-            var meterProviderBuilder = OpenTelemetry.Sdk
-                .CreateMeterProviderBuilder()
-                .SetResourceBuilder(resourceBuilder);
-
-            foreach (var endpointIdentity in endpointIdentities)
-            {
-                meterProviderBuilder.AddMeter(endpointIdentity.LogicalName);
-            }
-
-            if (configureMetricsInstrumentation != null)
-            {
-                meterProviderBuilder = configureMetricsInstrumentation(meterProviderBuilder);
-            }
-
-            var meterProvider = meterProviderBuilder
-                .AddOtlpExporter()
-                .Build() !;
+            var telemetryProvider = new TelemetryProvider(tracerProviders, meterProviders);
 
             return hostBuilder
-                .ConfigureLogging(loggingBuilder => loggingBuilder
+                /*.ConfigureLogging(loggingBuilder => loggingBuilder
                     .AddOpenTelemetry(options =>
                     {
-                        options.SetResourceBuilder(resourceBuilder);
+                        // TODO: #200 - setup open telemetry logging
+                        options.SetResourceBuilder(ResourceBuilder.CreateDefault());
 
                         options.IncludeScopes = false;
                         options.IncludeFormattedMessage = true;
                         options.ParseStateValues = false;
 
-                        options.AddOtlpExporter();
-                    }))
-                .ConfigureServices(serviceCollection =>
-                {
-                    serviceCollection.AddSingleton(tracerProvider);
-                    serviceCollection.AddSingleton(meterProvider);
-                });
+                        options.AddOtlpExporter(_ => { });
+                    }))*/
+                .ConfigureServices(serviceCollection => serviceCollection.AddSingleton<ITelemetryProvider>(telemetryProvider));
+
+            static ResourceBuilder GetResourceBuilder(EndpointIdentity endpointIdentity)
+            {
+                return ResourceBuilder
+                    .CreateDefault()
+                    .AddService(
+                        serviceVersion: endpointIdentity.Version,
+                        serviceName: endpointIdentity.LogicalName,
+                        serviceInstanceId: endpointIdentity.InstanceName,
+                        autoGenerateServiceInstanceId: false);
+            }
+
+            static TracerProvider GetTracerProvider(
+                EndpointIdentity endpointIdentity,
+                ResourceBuilder resourceBuilder)
+            {
+                // TODO: #200 - handle exported duplicates
+                return OpenTelemetry.Sdk
+                    .CreateTracerProviderBuilder()
+                    .SetResourceBuilder(resourceBuilder)
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddOtlpExporter()
+                    .Build() !;
+            }
+
+            static MeterProvider GetMeterProvider(
+                EndpointIdentity endpointIdentity,
+                ResourceBuilder resourceBuilder)
+            {
+                return OpenTelemetry.Sdk
+                    .CreateMeterProviderBuilder()
+                    .SetResourceBuilder(resourceBuilder)
+                    .AddRuntimeInstrumentation()
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddOtlpExporter()
+                    .Build() !;
+            }
         }
 
         /// <summary>
@@ -125,7 +118,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry.Host
                     .WithManualRegistrations(new TelemetryManualRegistration()));
         }
 
-        private static IReadOnlyCollection<EndpointIdentity> GetEndpointIdentities(this IHostBuilder hostBuilder)
+        private static IEnumerable<EndpointIdentity> GetEndpointIdentities(this IHostBuilder hostBuilder)
         {
             if (!hostBuilder.TryGetPropertyValue<Dictionary<string, EndpointIdentity>>(nameof(EndpointIdentity), out var endpoints)
                 || !endpoints.Any())

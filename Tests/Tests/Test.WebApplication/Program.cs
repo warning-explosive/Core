@@ -19,8 +19,6 @@ namespace SpaceEngineers.Core.Test.WebApplication
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Migrations;
-    using OpenTelemetry.Metrics;
-    using OpenTelemetry.Trace;
     using Registrations;
     using StartupActions;
 
@@ -125,14 +123,7 @@ namespace SpaceEngineers.Core.Test.WebApplication
                 /*
                  * Telemetry
                  */
-                .UseOpenTelemetry(
-                    tracerProviderBuilder => tracerProviderBuilder
-                        .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation(),
-                    meterProviderBuilder => meterProviderBuilder
-                        .AddRuntimeInstrumentation()
-                        .AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation())
+                .UseOpenTelemetry()
 
                 /*
                  * Building

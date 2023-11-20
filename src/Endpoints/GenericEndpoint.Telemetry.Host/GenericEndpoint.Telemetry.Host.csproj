@@ -11,9 +11,12 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="OpenTelemetry" Version="1.5.1"/>
-        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.5.1"/>
+        <PackageReference Include="OpenTelemetry" Version="1.6.0" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.6.0" />
         <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs" Version="1.5.0-rc.1"/>
+        <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.6.0-beta.3" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.6.0-beta.3" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.5.1" />
         <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -22,5 +25,10 @@
     <ItemGroup>
         <ProjectReference Include="..\GenericEndpoint.Host\GenericEndpoint.Host.csproj"/>
         <ProjectReference Include="..\GenericEndpoint.Telemetry\GenericEndpoint.Telemetry.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Update="TelemetryProvider.cs">
+        <DependentUpon>ITelemetryProvider.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

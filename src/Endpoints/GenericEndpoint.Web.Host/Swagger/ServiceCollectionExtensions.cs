@@ -23,6 +23,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host.Swagger
                 TemplateParser.Parse("/api/index.html"),
                 new RouteValueDictionary()),
             new TemplateMatcher(
+                TemplateParser.Parse("/api/swagger-ui-standalone-preset.js"),
+                new RouteValueDictionary()),
+            new TemplateMatcher(
                 TemplateParser.Parse("api/{documentname}/swagger.json"),
                 new RouteValueDictionary())
         };

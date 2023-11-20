@@ -181,7 +181,24 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                 var typeFullName = (assemblyName, typeName).ToString(" ");
                 const string methodName = "UseWebApiGateway";
 
-                CheckExtensionMethodCall(hostBuilder, typeFullName, typeName, methodName);
+                if (!TypeExtensions.TryFindType(typeFullName, out var type))
+                {
+                    return;
+                }
+
+                var method = new MethodFinder(
+                                 type,
+                                 methodName,
+                                 BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod)
+                             {
+                                 ArgumentTypes = new[] { typeof(IHostBuilder) }
+                             }.FindMethod() ??
+                             throw new InvalidOperationException($"Could not find {typeName}.{methodName}() method");
+
+                if (hostBuilder.TryGetPropertyValue<bool>(method.Name, out _))
+                {
+                    throw new InvalidOperationException($".{method.Name}() should be called after all endpoint declarations");
+                }
             }
 
             static void CheckUseOpenTelemetryExtensionMethodCall(IHostBuilder hostBuilder)
@@ -191,15 +208,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Host
                 var typeFullName = (assemblyName, typeName).ToString(" ");
                 const string methodName = "UseOpenTelemetry";
 
-                CheckExtensionMethodCall(hostBuilder, typeFullName, typeName, methodName);
-            }
-
-            static void CheckExtensionMethodCall(
-                IHostBuilder hostBuilder,
-                string typeFullName,
-                string typeName,
-                string methodName)
-            {
                 if (!TypeExtensions.TryFindType(typeFullName, out var type))
                 {
                     return;

@@ -49,6 +49,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry
                 .Headers
                 .Select(pair => new KeyValuePair<string, object>($"messaging.message.header.{pair.Key.Name.ToLowerInvariant()}", pair.Value.StringValue));
 
+            // TODO: #200 - recode with activity source API
             using (_tracer.StartActiveSpan("MessageHandler", SpanKind.Server, new SpanContext(parentContext.ActivityContext), new SpanAttributes(attributes)))
             {
                 await next(context, token).ConfigureAwait(false);

@@ -2,19 +2,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Reflection;
     using Basics;
-    using CrossCuttingConcerns.Logging;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Http.Extensions;
-    using Microsoft.AspNetCore.Mvc.Controllers;
-    using Microsoft.AspNetCore.Mvc.Routing;
-    using Microsoft.AspNetCore.Routing;
-    using Microsoft.AspNetCore.Routing.Template;
-    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using SimpleInjector;
     using SimpleInjector.Integration.AspNetCore;
@@ -90,15 +82,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
 
         private Container SelectContainer(HttpContext httpContext)
         {
-            var endpoint = httpContext.GetEndpoint()
-                           ?? MatchEndpoint(httpContext)
-                           ?? throw new InvalidOperationException("Unable to find route endpoint in order to select service scope for incoming request");
+            if (!httpContext.TryGetEndpoint(out var endpoint))
+            {
+                throw new InvalidOperationException("Unable to find route endpoint in order to select service scope for incoming request");
+            }
 
-            var controller = endpoint
-                .Metadata
-                .GetMetadata<ControllerActionDescriptor>()
-                .ControllerTypeInfo
-                .AsType();
+            var controller = endpoint.GetControllerType();
 
             if (!_containers.TryGetValue(controller, out var container))
             {
@@ -106,47 +95,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host
             }
 
             return container;
-        }
-
-        private Microsoft.AspNetCore.Http.Endpoint MatchEndpoint(HttpContext httpContext)
-        {
-            var endpoint = httpContext
-                .RequestServices
-                .GetRequiredService<EndpointDataSource>()
-                .Endpoints
-                .OfType<RouteEndpoint>()
-                .Where(Predicate(httpContext))
-                .InformativeSingleOrDefault(Amb);
-
-            _logger.Debug($"route endpoint {endpoint} was successfully matched");
-
-            return endpoint;
-
-            static Func<RouteEndpoint, bool> Predicate(HttpContext httpContext)
-            {
-                return endpoint =>
-                {
-                    var templateMatcher = new TemplateMatcher(
-                        TemplateParser.Parse(endpoint.RoutePattern.RawText!),
-                        new RouteValueDictionary());
-
-                    if (!templateMatcher.TryMatch(httpContext.Request.GetEncodedPathAndQuery(), httpContext.Request.RouteValues))
-                    {
-                        return false;
-                    }
-
-                    var httpMethodAttribute = endpoint.Metadata.GetMetadata<HttpMethodAttribute>();
-
-                    return httpMethodAttribute is not null
-                           && httpMethodAttribute.HttpMethods.Any(requestMethod => requestMethod
-                               .Equals(httpContext.Request.Method, StringComparison.OrdinalIgnoreCase));
-                };
-            }
-
-            static string Amb(IEnumerable<RouteEndpoint> endpoints)
-            {
-                return $"More than one endpoint match to request: {endpoints.ToString(", ")}";
-            }
         }
     }
 }

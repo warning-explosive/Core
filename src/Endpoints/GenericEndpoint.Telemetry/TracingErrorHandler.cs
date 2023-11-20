@@ -20,6 +20,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Telemetry
             Exception exception,
             CancellationToken token)
         {
+            // TODO: #200 - recode with activity source API
             Tracer.CurrentSpan.SetStatus(Status.Error);
             Tracer.CurrentSpan.RecordException(exception);
 

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <AssemblyName>Modules.Benchmark</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.Modules.Benchmark</RootNamespace>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="7.0.3">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3"/>
+        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="xunit" Version="2.5.0"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\src\Common\Basics\Basics.csproj"/>
+        <ProjectReference Include="..\..\..\src\Common\AutoRegistration.Api\AutoRegistration.Api.csproj"/>
+        <ProjectReference Include="..\..\..\src\Common\CompositionRoot\CompositionRoot.csproj"/>
+        <ProjectReference Include="..\..\..\src\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj"/>
+        <ProjectReference Include="..\..\..\src\Modules\CliArgumentsParser\CliArgumentsParser.csproj"/>
+        <ProjectReference Include="..\..\..\src\Modules\DataExport\DataExport.csproj"/>
+        <ProjectReference Include="..\..\..\src\Modules\DataImport\DataImport.csproj"/>
+        <ProjectReference Include="..\..\..\src\Modules\Dynamic\Dynamic.csproj"/>
+        <ProjectReference Include="..\..\Tests\Basics.Test\Basics.Test.csproj"/>
+        <ProjectReference Include="..\..\Tests\Test.Api\Test.Api.csproj"/>
+        <ProjectReference Include="..\Benchmark.Api\Benchmark.Api.csproj"/>
+    </ItemGroup>
+</Project>

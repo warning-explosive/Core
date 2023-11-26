@@ -3,9 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
     using System.Reflection;
-    using System.Runtime.Serialization.Formatters.Binary;
     using EqualityComparers;
 
     /// <summary>
@@ -45,20 +43,6 @@
         }
 
         /// <summary>
-        /// Get deep copy of object (by serialization)
-        /// Copy all internal reference links
-        /// </summary>
-        /// <param name="original">Original object</param>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <returns>Deep copy of original object</returns>
-        /// <remarks>https://docs.microsoft.com/en-us/dotnet/standard/serialization/binary-serialization</remarks>
-        public static T DeepCopyBySerialization<T>(this T original)
-            where T : class, new()
-        {
-            return (T)DeepCopyBySerialization((object)original);
-        }
-
-        /// <summary>
         /// Get shallow copy of object
         /// Dont copy internal reference links
         /// </summary>
@@ -67,26 +51,6 @@
         public static object ShallowCopy(this object original)
         {
             return ShallowCopyMethod.Invoke(original, null);
-        }
-
-        /// <summary>
-        /// Get deep copy of object (by serialization)
-        /// Copy all internal reference links
-        /// </summary>
-        /// <param name="original">Original object</param>
-        /// <returns>Deep copy of original object</returns>
-        /// <remarks>https://docs.microsoft.com/en-us/dotnet/standard/serialization/binary-serialization</remarks>
-        public static object DeepCopyBySerialization(this object original)
-        {
-            original.GetType().GetRequiredAttribute<SerializableAttribute>();
-
-            using (var stream = new MemoryStream())
-            {
-                var binaryFormatter = new BinaryFormatter();
-                binaryFormatter.Serialize(stream, original);
-                stream.Seek(0, SeekOrigin.Begin);
-                return binaryFormatter.Deserialize(stream);
-            }
         }
 
         private static object? DeepCopyInternal(this object? original, IDictionary<object, object> visited)

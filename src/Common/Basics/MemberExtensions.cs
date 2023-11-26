@@ -14,7 +14,7 @@ namespace SpaceEngineers.Core.Basics
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Public;
 
-        private const string NullableAttributeFullName = "System.Runtime.CompilerServices.NullableAttribute";
+        private static readonly Type NullableAttributeType = TypeExtensions.FindType("System.Private.CoreLib System.Runtime.CompilerServices.NullableAttribute");
 
         private static readonly Type[] IsExternalInitTypes =
             new[]
@@ -353,10 +353,7 @@ namespace SpaceEngineers.Core.Basics
                 return true;
             }
 
-            var typeName = $"{memberInfo.ReflectedType.Assembly.GetName().Name} {NullableAttributeFullName}";
-
-            return TypeExtensions.TryFindType(typeName, out var nullableAttributeType)
-                && attributesAccessor(memberInfo).Any(nullableAttributeType.IsInstanceOfType);
+            return attributesAccessor(memberInfo).Any(NullableAttributeType.IsInstanceOfType);
         }
     }
 }

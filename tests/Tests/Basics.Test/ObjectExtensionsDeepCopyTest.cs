@@ -49,23 +49,6 @@ namespace SpaceEngineers.Core.Basics.Test
             AssertTestReferenceTypeWithTypes(original, clone, false);
         }
 
-        [Fact]
-        internal void DeepCopyBySerializationThrowsTest()
-        {
-            var original = TestReferenceWithSystemTypes.Create();
-
-            Assert.Throws<SerializationException>(() => original.DeepCopyBySerialization());
-        }
-
-        [Fact]
-        internal void DeepCopyBySerializationTest()
-        {
-            var original = TestReferenceWithoutSystemTypes.CreateOrInit();
-            var clone = original.DeepCopyBySerialization();
-
-            AssertTestReferenceTypeWithOutTypes(original, clone, true);
-        }
-
         private static void AssertTestReferenceTypeWithTypes(TestReferenceWithSystemTypes original,
                                                              TestReferenceWithSystemTypes clone,
                                                              bool bySerialization)

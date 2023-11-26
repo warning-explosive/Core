@@ -28,7 +28,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Authorization.Web
             }
 
             var schema = AuthenticationHeaderValue
-                .Parse(context.Request.Headers.Authorization)
+                .Parse(context.Request.Headers.Authorization.ToString())
                 .Scheme;
 
             return schema.Equals(JwtBearerDefaults.AuthenticationScheme, StringComparison.OrdinalIgnoreCase)

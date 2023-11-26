@@ -24,9 +24,8 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host.Auth
             ITokenProvider tokenProvider,
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
-            UrlEncoder encoder,
-            ISystemClock clock)
-            : base(options, logger, encoder, clock)
+            UrlEncoder encoder)
+            : base(options, logger, encoder)
         {
             _tokenProvider = tokenProvider;
             /*_dependencyContainer = dependencyContainer;*/
@@ -46,7 +45,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host.Auth
                 return AuthenticateResult.Fail("Missing authorization header");
             }
 
-            var authenticationHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
+            var authenticationHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"].ToString());
 
             if (!authenticationHeader.Scheme.Equals(BasicDefaults.AuthenticationScheme, StringComparison.OrdinalIgnoreCase))
             {

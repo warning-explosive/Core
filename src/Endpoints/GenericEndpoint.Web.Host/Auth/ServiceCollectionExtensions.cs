@@ -32,7 +32,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Web.Host.Auth
                 {
                     options.ForwardDefaultSelector = context =>
                     {
-                        var header = context.Request.Headers["Authorization"];
+                        var header = context.Request.Headers["Authorization"].ToString();
 
                         return !StringValues.IsNullOrEmpty(header)
                             ? AuthenticationHeaderValue

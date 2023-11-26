@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>SpaceEngineers.Core.Test.Api</AssemblyName>
         <RootNamespace>SpaceEngineers.Core.Test.Api</RootNamespace>
         <IsPackable>true</IsPackable>

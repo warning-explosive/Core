@@ -86,6 +86,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Connection
             };
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionStringBuilder.ConnectionString)
+                .EnableUnmappedTypes()
                 .EnableParameterLogging()
                 .UseLoggerFactory(loggerFactory);
 

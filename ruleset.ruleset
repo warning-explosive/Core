@@ -1428,6 +1428,7 @@
     <Rule Id="xUnit1014" Action="Error" />
     <Rule Id="xUnit1021" Action="Error" />
     <Rule Id="xUnit1025" Action="Error" />
+    <Rule Id="xUnit1030" Action="None" />
     <Rule Id="xUnit1026" Action="Error" />
     <Rule Id="xUnit2000" Action="Error" />
     <Rule Id="xUnit2001" Action="Error" />

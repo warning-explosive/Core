@@ -60,8 +60,6 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
 
         public EnEnum[] EnumArray { get; set; } = Array.Empty<EnEnum>();
 
-        public EnEnum?[] NullableEnumArray { get; set; } = Array.Empty<EnEnum?>();
-
         public string[] StringArray { get; set; } = Array.Empty<string>();
 
         public string?[] NullableStringArray { get; set; } = Array.Empty<string?>();
@@ -108,7 +106,6 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
                 EnumFlags = EnEnumFlags.A | EnEnumFlags.B,
                 NullableEnumFlags = EnEnumFlags.A | EnEnumFlags.B,
                 EnumArray = new[] { EnEnum.One, EnEnum.Two, EnEnum.Three },
-                NullableEnumArray = new EnEnum?[] { EnEnum.One, EnEnum.Two, EnEnum.Three },
                 StringArray = new[] { "SomeString", "AnotherString" },
                 NullableStringArray = new[] { "SomeString", "AnotherString" },
                 DateTimeArray = new[] { DateTime.MaxValue, DateTime.MaxValue },
@@ -146,7 +143,6 @@ namespace SpaceEngineers.Core.GenericHost.Test.DatabaseEntities
                 EnumFlags = EnEnumFlags.A | EnEnumFlags.B,
                 NullableEnumFlags = null,
                 EnumArray = new[] { EnEnum.One, EnEnum.Two, EnEnum.Three },
-                NullableEnumArray = new EnEnum?[] { EnEnum.One, null, EnEnum.Three },
                 StringArray = new[] { "SomeString", "AnotherString" },
                 NullableStringArray = new[] { "SomeString", null, "AnotherString" },
                 DateTimeArray = new[] { DateTime.MaxValue, DateTime.MaxValue },

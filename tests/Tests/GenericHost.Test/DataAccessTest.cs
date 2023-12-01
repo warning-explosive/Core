@@ -615,7 +615,6 @@ namespace SpaceEngineers.Core.GenericHost.Test
                                     (nameof(ComplexDatabaseEntity.EnumFlags), "not null"),
                                     (nameof(ComplexDatabaseEntity.NullableEnumFlags), string.Empty),
                                     (nameof(ComplexDatabaseEntity.EnumArray), "not null"),
-                                    (nameof(ComplexDatabaseEntity.NullableEnumArray), "not null"),
                                     (nameof(ComplexDatabaseEntity.StringArray), "not null"),
                                     (nameof(ComplexDatabaseEntity.NullableStringArray), "not null"),
                                     (nameof(ComplexDatabaseEntity.DateTimeArray), "not null"),

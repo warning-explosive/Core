@@ -17,7 +17,7 @@
         {
             if (!column.IsSupportedColumn)
             {
-                throw new NotSupportedException($"Unsupported column type: {column.Type}");
+                throw new NotSupportedException($"Column {column} has unsupported type: {column.Type}");
             }
 
             if (TryGetPrimitiveDataType(column.Type, column.Table.Schema, column.ColumnLength, column.IsJsonColumn, out var dataType))
@@ -25,7 +25,7 @@
                 return dataType;
             }
 
-            throw new NotSupportedException($"Unsupported column type: {column.Type}");
+            throw new NotSupportedException($"Column {column} has unsupported data type: {column.Type}");
         }
 
         private static bool TryGetPrimitiveDataType(
@@ -35,9 +35,9 @@
             bool isJsonColumn,
             [NotNullWhen(true)] out string? dataType)
         {
-            type = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
+            var nullType = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
-            if (type == typeof(short))
+            if (nullType == typeof(short))
             {
                 /*
                  * smallint
@@ -48,7 +48,7 @@
                 return true;
             }
 
-            if (type == typeof(int))
+            if (nullType == typeof(int))
             {
                 /*
                  * integer
@@ -59,7 +59,7 @@
                 return true;
             }
 
-            if (type == typeof(long))
+            if (nullType == typeof(long))
             {
                 /*
                  * bigint
@@ -70,7 +70,7 @@
                 return true;
             }
 
-            if (type == typeof(float))
+            if (nullType == typeof(float))
             {
                 /*
                  * real
@@ -87,7 +87,7 @@
                 return true;
             }
 
-            if (type == typeof(double))
+            if (nullType == typeof(double))
             {
                 /*
                  * double precision
@@ -104,7 +104,7 @@
                 return true;
             }
 
-            if (type == typeof(decimal))
+            if (nullType == typeof(decimal))
             {
                 /*
                  * numeric
@@ -120,13 +120,13 @@
                 return true;
             }
 
-            if (type == typeof(Guid))
+            if (nullType == typeof(Guid))
             {
                 dataType = NpgsqlDbType.Uuid.ToString();
                 return true;
             }
 
-            if (type == typeof(bool))
+            if (nullType == typeof(bool))
             {
                 /*
                  * boolean
@@ -137,7 +137,7 @@
                 return true;
             }
 
-            if (type == typeof(string))
+            if (nullType == typeof(string))
             {
                 /*
                  * character type
@@ -158,13 +158,13 @@
                 return true;
             }
 
-            if (type == typeof(byte[]))
+            if (nullType == typeof(byte[]))
             {
                 dataType = NpgsqlDbType.Bytea.ToString();
                 return true;
             }
 
-            if (type == typeof(DateTime))
+            if (nullType == typeof(DateTime))
             {
                 /*
                  * 4713 BC to 294276 AD
@@ -175,7 +175,7 @@
                 return true;
             }
 
-            if (type == typeof(TimeSpan))
+            if (nullType == typeof(TimeSpan))
             {
                 /*
                  * time interval
@@ -187,7 +187,7 @@
                 return true;
             }
 
-            if (type == TypeExtensions.FindType("System.Private.CoreLib System.DateOnly"))
+            if (nullType == TypeExtensions.FindType("System.Private.CoreLib System.DateOnly"))
             {
                 /*
                  * POSGRES:
@@ -203,7 +203,7 @@
                 return true;
             }
 
-            if (type == TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly"))
+            if (nullType == TypeExtensions.FindType("System.Private.CoreLib System.TimeOnly"))
             {
                 /*
                  * POSTGRES:
@@ -219,28 +219,31 @@
                 return true;
             }
 
-            if (type.IsEnum)
+            if (nullType.IsEnum)
             {
-                var enumDataType = new EnumTypeInfo(schema, type).Name;
+                var enumDataType = new EnumTypeInfo(schema, nullType).Name;
 
-                dataType = type.IsEnumFlags()
+                dataType = nullType.IsEnumFlags()
                     ? $"{enumDataType}[]"
                     : enumDataType;
 
                 return true;
             }
 
-            if (type.IsDatabaseArray(out var arrayElementColumn)
-                && arrayElementColumn != null
-                && TryGetPrimitiveDataType(arrayElementColumn, schema, null, false, out var arrayElementDataType))
+            if (nullType.IsDatabaseArray(out var itemType)
+                && itemType != null
+                && TryGetPrimitiveDataType(itemType, schema, null, false, out var itemDataType))
             {
-                dataType = $"{arrayElementDataType}[]";
+                var nullItemType = itemType.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
 
-                if (arrayElementColumn.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).IsEnumFlags())
+                if (itemType != nullItemType
+                    && nullItemType.IsEnum)
                 {
-                    throw new InvalidOperationException($"Unsupported column type: {dataType}");
+                    dataType = default;
+                    return false;
                 }
 
+                dataType = $"{itemDataType}[]";
                 return true;
             }
 

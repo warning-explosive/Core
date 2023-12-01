@@ -34,8 +34,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Connection
                                                 IResolvable<IDatabaseConnectionProvider>,
                                                 IDisposable
     {
-        private const string DatabaseExistsCommandText = @"select exists(select * from pg_catalog.pg_database where datname = @param_0);";
+        private const string DatabaseExistsCommandText = "select exists(select * from pg_catalog.pg_database where datname = @param_0);";
         private const string TransactionIdCommandText = "select txid_current()";
+
+        private static readonly ConcurrentDictionary<Type, ConstructorInfo> EnumFlagsCache
+            = new ConcurrentDictionary<Type, ConstructorInfo>();
 
         private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<int, NullableArrayInfo>> NullableArrayCache
             = new ConcurrentDictionary<Type, ConcurrentDictionary<int, NullableArrayInfo>>();
@@ -532,24 +535,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Connection
 
                 if (nullType.IsEnum)
                 {
-                    string enumDataTypeName;
-                    object? enumValue;
-
                     if (nullType.IsEnumFlags())
                     {
-                        enumValue = value is Enum @enum
-                            ? @enum.EnumFlagsValues()
-                            : null;
+                        if (value == null)
+                        {
+                            npgsqlParameter = new NpgsqlParameter(name, DBNull.Value) { DataTypeName = nullType.Name + "[]" };
+                            return true;
+                        }
 
-                        enumDataTypeName = nullType.Name + "[]";
-                    }
-                    else
-                    {
-                        enumValue = value;
-                        enumDataTypeName = nullType.Name;
+                        var flagsValue = ((Enum)value).EnumFlagsValues();
+                        var cctor = EnumFlagsCache.GetOrAdd(flagsValue.GetType(), GetGenericNpgsqlParameterCctor);
+                        npgsqlParameter = (NpgsqlParameter)cctor.Invoke(new object?[] { name, flagsValue });
+                        npgsqlParameter.DataTypeName = nullType.Name + "[]";
+                        return true;
                     }
 
-                    npgsqlParameter = new NpgsqlParameter(name, enumValue ?? DBNull.Value) { DataTypeName = enumDataTypeName };
+                    npgsqlParameter = new NpgsqlParameter(name, value ?? DBNull.Value) { DataTypeName = nullType.Name };
                     return true;
                 }
 
@@ -562,16 +563,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Connection
                 if (nullType.IsCollection()
                     && TryInfer(name, null, nullType.ExtractGenericArgumentAt(typeof(IEnumerable<>)), jsonSerializer, out var itemNpgsqlParameter))
                 {
-                    npgsqlParameter = itemNpgsqlParameter.DataTypeName == null
-                        ? new NpgsqlParameter(name, NpgsqlDbType.Array | itemNpgsqlParameter.NpgsqlDbType) { Value = value ?? DBNull.Value }
-                        : new NpgsqlParameter(name, value ?? DBNull.Value) { DataTypeName = itemNpgsqlParameter.DataTypeName + "[]" };
-
+                    npgsqlParameter = new NpgsqlParameter(name, value ?? DBNull.Value) { DataTypeName = itemNpgsqlParameter.DataTypeName + "[]" };
                     return true;
                 }
 
                 npgsqlParameter = null;
                 return false;
             }
+        }
+
+        private static ConstructorInfo GetGenericNpgsqlParameterCctor(Type type)
+        {
+            return typeof(NpgsqlParameter<>)
+                .MakeGenericType(type)
+                .GetConstructor(
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.CreateInstance,
+                    new[] { typeof(string), type })
+                ?? throw new InvalidOperationException("Unable to find NpgsqlParameter<T> .cctor");
         }
 
         private static void ValidateNestedCall(IDependencyContainer dependencyContainer)

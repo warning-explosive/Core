@@ -30,19 +30,21 @@ namespace SpaceEngineers.Core.DataImport.Excel
 
             string? value;
 
-            switch (cell.DataType?.Value ?? CellValues.String)
+            var cellValue = cell.DataType?.Value ?? CellValues.String;
+
+            if (cellValue.Equals(CellValues.InlineString))
             {
-                case CellValues.InlineString:
-                    value = cell.InnerText;
-                    break;
-                case CellValues.SharedString:
-                    value = cell.CellValue != null
-                        ? sharedStrings[int.Parse(cell.CellValue.Text, CultureInfo.InvariantCulture)]
-                        : null;
-                    break;
-                default:
-                    value = cell.CellValue?.Text;
-                    break;
+                value = cell.InnerText;
+            }
+            else if (cellValue.Equals(CellValues.SharedString))
+            {
+                value = cell.CellValue != null
+                    ? sharedStrings[int.Parse(cell.CellValue.Text, CultureInfo.InvariantCulture)]
+                    : null;
+            }
+            else
+            {
+                value = cell.CellValue?.Text;
             }
 
             if (value != null)

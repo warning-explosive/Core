@@ -25,11 +25,6 @@ namespace SpaceEngineers.Core.Modules.Benchmark.Sources
             _original = TestReferenceWithoutSystemTypes.CreateOrInit();
         }
 
-        /// <summary> DeepCopyBySerialization </summary>
-        /// <returns>Copy</returns>
-        [Benchmark(Description = nameof(DeepCopyBySerialization), Baseline = true)]
-        public TestReferenceWithoutSystemTypes DeepCopyBySerialization() => Original.DeepCopyBySerialization();
-
         /// <summary> DeepCopyByReflection </summary>
         /// <returns>Copy</returns>
         [Benchmark(Description = nameof(DeepCopyByReflection))]

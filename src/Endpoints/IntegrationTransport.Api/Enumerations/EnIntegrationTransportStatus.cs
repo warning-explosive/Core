@@ -8,16 +8,16 @@ namespace SpaceEngineers.Core.IntegrationTransport.Api.Enumerations
         /// <summary>
         /// Stopped
         /// </summary>
-        Stopped,
+        Stopped = 0,
 
         /// <summary>
         /// Starting
         /// </summary>
-        Starting,
+        Starting = 1,
 
         /// <summary>
         /// Running
         /// </summary>
-        Running
+        Running = 2
     }
 }

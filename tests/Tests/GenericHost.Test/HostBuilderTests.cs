@@ -21,6 +21,7 @@
     using GenericEndpoint.Contract;
     using GenericEndpoint.DataAccess.Sql.Host.BackgroundWorkers;
     using GenericEndpoint.DataAccess.Sql.Host.StartupActions;
+    using GenericEndpoint.DataAccess.Sql.Pipeline;
     using GenericEndpoint.DataAccess.Sql.Postgres.Host;
     using GenericEndpoint.DataAccess.Sql.Postgres.Host.StartupActions;
     using GenericEndpoint.EventSourcing.Host;
@@ -420,6 +421,7 @@
                             typeof(AuthorizationMiddleware),
                             typeof(UnitOfWorkMiddleware),
                             typeof(HandledByEndpointMiddleware),
+                            typeof(DatabaseChangesMiddleware),
                             typeof(RequestReplyMiddleware)
                         };
 

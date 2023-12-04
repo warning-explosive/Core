@@ -15,17 +15,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
                                            IIntegrationUnitOfWork,
                                            IResolvable<IIntegrationUnitOfWork>
     {
-        private readonly IOutboxDelivery _outboxDelivery;
+        private readonly ITransactionalOutbox _outbox;
 
-        public IntegrationUnitOfWork(
-            IOutboxStorage outboxStorage,
-            IOutboxDelivery outboxDelivery)
+        public IntegrationUnitOfWork(ITransactionalOutbox outbox)
         {
-            _outboxDelivery = outboxDelivery;
-            OutboxStorage = outboxStorage;
+            _outbox = outbox;
         }
-
-        public IOutboxStorage OutboxStorage { get; }
 
         protected override Task<EnUnitOfWorkBehavior> Start(IAdvancedIntegrationContext context, CancellationToken token)
         {
@@ -36,16 +31,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
             IAdvancedIntegrationContext context,
             CancellationToken token)
         {
-            try
-            {
-                await _outboxDelivery
-                   .DeliverMessages(OutboxStorage.All(), token)
-                   .ConfigureAwait(false);
-            }
-            finally
-            {
-                OutboxStorage.Clear();
-            }
+            await _outbox
+                .DeliverMessages(token)
+                .ConfigureAwait(false);
         }
 
         protected override Task Rollback(
@@ -53,7 +41,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
             Exception? exception,
             CancellationToken token)
         {
-            OutboxStorage.Clear();
             return Task.CompletedTask;
         }
     }

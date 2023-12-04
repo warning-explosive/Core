@@ -243,7 +243,7 @@
 
         #endregion
 
-        #region IDissposable
+        #region IDisposable
 
         public void Dispose()
         {

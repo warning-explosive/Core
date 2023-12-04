@@ -22,7 +22,9 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
         public Task Handle(Event message, CancellationToken token)
         {
-            return _context.Delay(new Command(message.Id), DateTime.UtcNow + TimeSpan.FromDays(message.Id), token);
+            _context.Delay(new Command(message.Id), DateTime.UtcNow + TimeSpan.FromDays(message.Id));
+
+            return Task.CompletedTask;
         }
     }
 }

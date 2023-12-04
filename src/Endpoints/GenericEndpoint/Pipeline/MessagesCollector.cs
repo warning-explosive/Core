@@ -1,7 +1,5 @@
 namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
 {
-    using System.Threading;
-    using System.Threading.Tasks;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -12,16 +10,16 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
     internal class MessagesCollector : IMessagesCollector,
                                        IResolvable<IMessagesCollector>
     {
-        private readonly IIntegrationUnitOfWork _unitOfWork;
+        private readonly ITransactionalOutbox _outbox;
 
-        public MessagesCollector(IIntegrationUnitOfWork unitOfWork)
+        public MessagesCollector(ITransactionalOutbox outbox)
         {
-            _unitOfWork = unitOfWork;
+            _outbox = outbox;
         }
 
-        public Task Collect(IntegrationMessage message, CancellationToken token)
+        public void Collect(IntegrationMessage message)
         {
-            return _unitOfWork.OutboxStorage.Add(message, token);
+            _outbox.Add(message);
         }
     }
 }

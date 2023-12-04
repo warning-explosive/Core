@@ -27,8 +27,8 @@
         <Compile Update="Deduplication\IntegrationMessageHeader.cs">
             <DependentUpon>IntegrationMessage.cs</DependentUpon>
         </Compile>
-        <Compile Update="UnitOfWork\OutboxBackgroundDelivery.cs">
-            <DependentUpon>IOutboxBackgroundDelivery.cs</DependentUpon>
+        <Compile Update="Deduplication\EnInboxMessageState.cs">
+          <DependentUpon>InboxMessage.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 </Project>

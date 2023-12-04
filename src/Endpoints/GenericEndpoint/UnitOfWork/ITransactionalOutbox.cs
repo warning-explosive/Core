@@ -6,17 +6,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
     using Messaging;
 
     /// <summary>
-    /// IOutboxStorage
+    /// ITransactionalOutbox
     /// </summary>
-    public interface IOutboxStorage
+    public interface ITransactionalOutbox
     {
         /// <summary>
         /// Adds message to the outbox storage
         /// </summary>
         /// <param name="message">Integration message</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task Add(IntegrationMessage message, CancellationToken token);
+        void Add(IntegrationMessage message);
 
         /// <summary>
         /// Gets all outgoing messages that are ready to be delivered
@@ -25,8 +23,10 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
         IReadOnlyCollection<IntegrationMessage> All();
 
         /// <summary>
-        /// Clears outbox storage
+        /// Delivers messages
         /// </summary>
-        void Clear();
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Ongoing operation</returns>
+        Task DeliverMessages(CancellationToken token);
     }
 }

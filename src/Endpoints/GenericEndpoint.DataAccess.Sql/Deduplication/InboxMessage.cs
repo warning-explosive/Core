@@ -17,22 +17,19 @@
         /// <param name="message">Message</param>
         /// <param name="endpointLogicalName">Endpoint logical name</param>
         /// <param name="endpointInstanceName">Endpoint instance name</param>
-        /// <param name="isError">IsError</param>
-        /// <param name="handled">Handled</param>
+        /// <param name="state">State</param>
         public InboxMessage(
             Guid primaryKey,
             IntegrationMessage message,
             string endpointLogicalName,
             string endpointInstanceName,
-            bool isError,
-            bool handled)
+            EnInboxMessageState state)
             : base(primaryKey)
         {
             Message = message;
             EndpointLogicalName = endpointLogicalName;
             EndpointInstanceName = endpointInstanceName;
-            IsError = isError;
-            Handled = handled;
+            State = state;
         }
 
         /// <summary>
@@ -52,13 +49,8 @@
         public string EndpointInstanceName { get; set; }
 
         /// <summary>
-        /// IsError
+        /// State
         /// </summary>
-        public bool IsError { get; set; }
-
-        /// <summary>
-        /// Handled
-        /// </summary>
-        public bool Handled { get; set; }
+        public EnInboxMessageState State { get; set; }
     }
 }

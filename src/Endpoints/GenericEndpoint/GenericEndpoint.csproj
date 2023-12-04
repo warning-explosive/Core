@@ -30,12 +30,6 @@
         <Compile Update="Pipeline\AdvancedIntegrationContext.cs">
             <DependentUpon>IAdvancedIntegrationContext.cs</DependentUpon>
         </Compile>
-        <Compile Update="UnitOfWork\OutboxStorage.cs">
-            <DependentUpon>IOutboxStorage.cs</DependentUpon>
-        </Compile>
-        <Compile Update="UnitOfWork\OutboxDelivery.cs">
-            <DependentUpon>IOutboxDelivery.cs</DependentUpon>
-        </Compile>
         <Compile Update="Pipeline\RetryErrorHandler.cs">
             <DependentUpon>IErrorHandler.cs</DependentUpon>
         </Compile>
@@ -51,17 +45,20 @@
         <Compile Update="Pipeline\MessageHandlerMiddlewareComposite.cs">
             <DependentUpon>IMessageHandlerMiddlewareComposite.cs</DependentUpon>
         </Compile>
-        <Compile Update="Pipeline\1_ErrorHandlingMiddleware.cs">
+        <Compile Update="Pipeline\ErrorHandlingMiddleware.cs">
             <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
         </Compile>
-        <Compile Update="Pipeline\2_UnitOfWorkMiddleware.cs">
+        <Compile Update="Pipeline\UnitOfWorkMiddleware.cs">
             <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
         </Compile>
-        <Compile Update="Pipeline\3_HandledByEndpointMiddleware.cs">
+        <Compile Update="Pipeline\HandledByEndpointMiddleware.cs">
             <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
         </Compile>
-        <Compile Update="Pipeline\4_RequestReplyMiddleware.cs">
+        <Compile Update="Pipeline\RequestReplyMiddleware.cs">
             <DependentUpon>IMessageHandlerMiddleware.cs</DependentUpon>
+        </Compile>
+        <Compile Update="UnitOfWork\TransactionalOutbox.cs">
+          <DependentUpon>ITransactionalOutbox.cs</DependentUpon>
         </Compile>
     </ItemGroup>
     <ItemGroup>

@@ -27,7 +27,9 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
                 return context.Retry(dueTime, token);
             }
 
-            return context.Reject(exception, token);
+            context.Reject(exception);
+
+            return Task.CompletedTask;
         }
     }
 }

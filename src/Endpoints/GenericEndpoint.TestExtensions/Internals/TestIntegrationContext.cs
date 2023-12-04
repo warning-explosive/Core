@@ -3,7 +3,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
     using Api.Abstractions;
     using AutoRegistration.Api.Abstractions;
@@ -53,55 +52,47 @@ namespace SpaceEngineers.Core.GenericEndpoint.TestExtensions.Internals
         }
 
         /// <inheritdoc />
-        public Task Send<TCommand>(TCommand command, CancellationToken token)
+        public void Send<TCommand>(TCommand command)
             where TCommand : IIntegrationCommand
         {
-            return Collect(command);
+            Collect(command);
         }
 
         /// <inheritdoc />
-        public Task Delay<TCommand>(TCommand command, TimeSpan dueTime, CancellationToken token)
+        public void Delay<TCommand>(TCommand command, TimeSpan dueTime)
             where TCommand : IIntegrationCommand
         {
-            return CollectDelayed(command, DateTime.UtcNow + dueTime);
+            CollectDelayed(command, DateTime.UtcNow + dueTime);
         }
 
         /// <inheritdoc />
-        public Task Delay<TCommand>(TCommand command, DateTime dateTime, CancellationToken token)
+        public void Delay<TCommand>(TCommand command, DateTime dateTime)
             where TCommand : IIntegrationCommand
         {
-            return CollectDelayed(command, dateTime.ToUniversalTime());
+            CollectDelayed(command, dateTime.ToUniversalTime());
         }
 
         /// <inheritdoc />
-        public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
+        public void Publish<TEvent>(TEvent integrationEvent)
             where TEvent : IIntegrationEvent
         {
-            return Collect(integrationEvent);
+            Collect(integrationEvent);
         }
 
         /// <inheritdoc />
-        public Task Request<TRequest, TReply>(TRequest request, CancellationToken token)
+        public void Request<TRequest, TReply>(TRequest request)
             where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
-            return Collect(request);
+            Collect(request);
         }
 
         /// <inheritdoc />
-        public Task<TReply> RpcRequest<TRequest, TReply>(TRequest request, CancellationToken token)
+        public void Reply<TRequest, TReply>(TRequest request, TReply reply)
             where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
-            throw new NotImplementedException("#205");
-        }
-
-        /// <inheritdoc />
-        public Task Reply<TRequest, TReply>(TRequest request, TReply reply, CancellationToken token)
-            where TRequest : IIntegrationRequest<TReply>
-            where TReply : IIntegrationReply
-        {
-            return Collect(reply);
+            Collect(reply);
         }
 
         private Task Collect<TMessage>(TMessage message)

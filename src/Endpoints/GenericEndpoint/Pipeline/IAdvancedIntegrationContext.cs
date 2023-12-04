@@ -31,9 +31,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
         /// Rejects further message processing and moves message to errors
         /// </summary>
         /// <param name="exception">Processing error</param>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Ongoing operation</returns>
-        Task Reject(Exception exception, CancellationToken token);
+        void Reject(Exception exception);
 
         /// <summary>
         /// Retries integration message processing using specified retry policy

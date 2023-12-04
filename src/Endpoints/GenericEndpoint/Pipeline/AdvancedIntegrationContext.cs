@@ -46,64 +46,59 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             _message = message;
         }
 
-        public Task Send<TCommand>(TCommand command, CancellationToken token)
+        public void Send<TCommand>(TCommand command)
             where TCommand : IIntegrationCommand
         {
             var message = CreateGeneralMessage(command, typeof(TCommand));
 
-            return _messagesCollector.Collect(message, token);
+            _messagesCollector.Collect(message);
         }
 
-        public Task Delay<TCommand>(TCommand command, TimeSpan dueTime, CancellationToken token)
+        public void Delay<TCommand>(TCommand command, TimeSpan dueTime)
             where TCommand : IIntegrationCommand
         {
-            return Delay(command, DateTime.UtcNow + dueTime, token);
+            Delay(command, DateTime.UtcNow + dueTime);
         }
 
-        public Task Delay<TCommand>(TCommand command, DateTime dateTime, CancellationToken token)
+        public void Delay<TCommand>(TCommand command, DateTime dateTime)
             where TCommand : IIntegrationCommand
         {
             var message = CreateGeneralMessage(command, typeof(TCommand), new DeferredUntil(dateTime.ToUniversalTime()));
 
-            return _messagesCollector.Collect(message, token);
+            _messagesCollector.Collect(message);
         }
 
-        public Task Publish<TEvent>(TEvent integrationEvent, CancellationToken token)
+        public void Publish<TEvent>(TEvent integrationEvent)
             where TEvent : IIntegrationEvent
         {
             var isOwnedByCurrentEndpoint = typeof(TEvent).IsOwnedByEndpoint(_endpointIdentity);
 
-            if (isOwnedByCurrentEndpoint)
+            if (!isOwnedByCurrentEndpoint)
             {
-                return _messagesCollector.Collect(CreateGeneralMessage(integrationEvent, typeof(TEvent)), token);
+                throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Required owner: {_endpointIdentity.LogicalName}; Actual owner: {typeof(TEvent).GetAttribute<OwnedByAttribute>().EndpointName};");
             }
 
-            throw new InvalidOperationException($"You can't publish events are owned by another endpoint. Event: {typeof(TEvent).FullName}; Required owner: {_endpointIdentity.LogicalName}; Actual owner: {typeof(TEvent).GetAttribute<OwnedByAttribute>().EndpointName};");
+            var message = CreateGeneralMessage(integrationEvent, typeof(TEvent));
+
+            _messagesCollector.Collect(message);
         }
 
-        public Task Request<TRequest, TReply>(TRequest request, CancellationToken token)
-            where TRequest : IIntegrationRequest<TReply>
-            where TReply : IIntegrationReply
-        {
-            return _messagesCollector.Collect(CreateGeneralMessage(request, typeof(TRequest)), token);
-        }
-
-        public Task<TReply> RpcRequest<TRequest, TReply>(TRequest request, CancellationToken token)
+        public void Request<TRequest, TReply>(TRequest request)
             where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
             var message = CreateGeneralMessage(request, typeof(TRequest));
 
-            throw new NotImplementedException("#205");
+            _messagesCollector.Collect(message);
         }
 
-        public Task Reply<TRequest, TReply>(TRequest request, TReply reply, CancellationToken token)
+        public void Reply<TRequest, TReply>(TRequest request, TReply reply)
             where TRequest : IIntegrationRequest<TReply>
             where TReply : IIntegrationReply
         {
             var message = CreateGeneralMessage(reply, typeof(TReply));
 
-            return _messagesCollector.Collect(message, token);
+            _messagesCollector.Collect(message);
         }
 
         public Task<bool> SendMessage(IntegrationMessage message, CancellationToken token)
@@ -111,11 +106,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             return _transport.Enqueue(message, token);
         }
 
-        public Task Reject(Exception exception, CancellationToken token)
+        public void Reject(Exception exception)
         {
             Message.WriteHeader(new RejectReason(exception));
-
-            return Task.CompletedTask;
         }
 
         public Task Retry(TimeSpan dueTime, CancellationToken token)

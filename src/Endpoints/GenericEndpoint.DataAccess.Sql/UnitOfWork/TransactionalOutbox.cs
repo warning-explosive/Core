@@ -5,54 +5,55 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using CompositionRoot;
+    using Core.DataAccess.Orm.Sql.Linq;
+    using Core.DataAccess.Orm.Sql.Transaction;
     using Deduplication;
+    using GenericEndpoint.UnitOfWork;
     using Messaging.MessageHeaders;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
-    using SpaceEngineers.Core.DataAccess.Orm.Sql.Linq;
-    using SpaceEngineers.Core.DataAccess.Orm.Sql.Transaction;
-    using SpaceEngineers.Core.GenericEndpoint.UnitOfWork;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
-    using IntegrationMessage = Messaging.IntegrationMessage;
 
     [ComponentOverride]
-    internal class OutboxDelivery : IOutboxDelivery,
-                                    IResolvable<IOutboxDelivery>
+    internal class TransactionalOutbox : ITransactionalOutbox,
+                                         IResolvable<ITransactionalOutbox>,
+                                         IDisposable
     {
-        private readonly IDependencyContainer _dependencyContainer;
         private readonly IIntegrationTransport _transport;
+        private readonly IAdvancedDatabaseTransaction _transaction;
 
-        public OutboxDelivery(
-            IDependencyContainer dependencyContainer,
-            IIntegrationTransport transport)
+        private readonly List<Messaging.IntegrationMessage> _outgoingMessages;
+
+        public TransactionalOutbox(
+            IIntegrationTransport transport,
+            IAdvancedDatabaseTransaction transaction)
         {
-            _dependencyContainer = dependencyContainer;
             _transport = transport;
+            _transaction = transaction;
+
+            _outgoingMessages = new List<Messaging.IntegrationMessage>();
         }
 
-        public async Task DeliverMessages(
-            IReadOnlyCollection<IntegrationMessage> messages,
-            CancellationToken token)
+        public void Dispose()
         {
-            if (!messages.Any())
-            {
-                return;
-            }
-
-            await _dependencyContainer
-                .InvokeWithinTransaction(true, messages, DeliverMessages, token)
-                .ConfigureAwait(false);
+            _outgoingMessages.Clear();
         }
 
-        private async Task DeliverMessages(
-            IAdvancedDatabaseTransaction transaction,
-            IReadOnlyCollection<IntegrationMessage> messages,
-            CancellationToken token)
+        public void Add(Messaging.IntegrationMessage message)
         {
-            var sent = new List<Guid>(messages.Count);
+            _outgoingMessages.Add(message);
+        }
 
-            foreach (var message in messages)
+        public IReadOnlyCollection<Messaging.IntegrationMessage> All()
+        {
+            return _outgoingMessages;
+        }
+
+        public async Task DeliverMessages(CancellationToken token)
+        {
+            var sent = new List<Guid>(_outgoingMessages.Count);
+
+            foreach (var message in _outgoingMessages)
             {
                 var wasSent = await _transport
                     .Enqueue(message, token)
@@ -69,7 +70,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
                 return;
             }
 
-            await transaction
+            await _transaction
                 .Update<OutboxMessage>()
                 .Set(outbox => outbox.Sent.Assign(true))
                 .Where(message => sent.Contains(message.PrimaryKey))

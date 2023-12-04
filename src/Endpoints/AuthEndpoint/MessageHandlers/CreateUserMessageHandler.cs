@@ -44,9 +44,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
                 .Invoke(token)
                 .ConfigureAwait(false);
 
-            await _context
-               .Publish(new UserWasCreated(message.Username), token)
-               .ConfigureAwait(false);
+            _context.Publish(new UserWasCreated(message.Username));
         }
     }
 }

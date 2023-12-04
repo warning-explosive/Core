@@ -24,7 +24,9 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
         public Task Handle(Event message, CancellationToken token)
         {
-            return _context.Publish(new HandlerInvoked(typeof(EventHandler), _endpointIdentity), token);
+            _context.Publish(new HandlerInvoked(typeof(EventHandler), _endpointIdentity));
+
+            return Task.CompletedTask;
         }
     }
 }

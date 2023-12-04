@@ -21,9 +21,12 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
 
         public Task Handle(Request message, CancellationToken token)
         {
-            return message.Id % 2 == 0
-                ? Task.CompletedTask
-                : _context.Reply(message, new Reply(message.Id), token);
+            if (message.Id % 2 != 0)
+            {
+                _context.Reply(message, new Reply(message.Id));
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

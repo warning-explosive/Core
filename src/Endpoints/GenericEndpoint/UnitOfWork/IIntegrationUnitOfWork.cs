@@ -8,9 +8,5 @@ namespace SpaceEngineers.Core.GenericEndpoint.UnitOfWork
     /// </summary>
     public interface IIntegrationUnitOfWork : IAsyncUnitOfWork<IAdvancedIntegrationContext>
     {
-        /// <summary>
-        /// Transactional outbox storage
-        /// </summary>
-        IOutboxStorage OutboxStorage { get; }
     }
 }

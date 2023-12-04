@@ -16,7 +16,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             Exception exception,
             CancellationToken token)
         {
-            return context.Reject(exception, token);
+            context.Reject(exception);
+
+            return Task.CompletedTask;
         }
     }
 }

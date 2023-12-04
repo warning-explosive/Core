@@ -22,17 +22,16 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
             _context = context;
         }
 
-        public async Task Handle(MakeRpcRequestCommand message, CancellationToken token)
+        public Task Handle(MakeRpcRequestCommand message, CancellationToken token)
         {
-            var request = new Request(message.Id);
+            // TODO: #205 - recode back
+            /*var reply = await _context
+                .RpcRequest<Request, Reply>(new Request(message.Id), token)
+                .ConfigureAwait(false);*/
 
-            var reply = await _context
-                .RpcRequest<Request, Reply>(request, token)
-                .ConfigureAwait(false);
+            _context.Publish(new HandlerInvoked(typeof(MakeRpcRequestCommandHandler), _endpointIdentity));
 
-            await _context
-                .Publish(new HandlerInvoked(typeof(MakeRpcRequestCommandHandler), _endpointIdentity), token)
-                .ConfigureAwait(false);
+            return Task.CompletedTask;
         }
     }
 }

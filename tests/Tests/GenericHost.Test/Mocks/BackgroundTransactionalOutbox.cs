@@ -11,23 +11,31 @@ namespace SpaceEngineers.Core.GenericHost.Test.Mocks
     using IntegrationUnitOfWork = GenericEndpoint.DataAccess.Sql.UnitOfWork.IntegrationUnitOfWork;
 
     [ComponentOverride]
-    internal class BackgroundOutboxDelivery : IOutboxDelivery,
-                                              IDecorator<IOutboxDelivery>
+    internal class BackgroundTransactionalOutbox : ITransactionalOutbox,
+                                                   IDecorator<ITransactionalOutbox>
     {
-        public BackgroundOutboxDelivery(IOutboxDelivery decoratee)
+        public BackgroundTransactionalOutbox(ITransactionalOutbox decoratee)
         {
             Decoratee = decoratee;
         }
 
-        public IOutboxDelivery Decoratee { get; }
+        public ITransactionalOutbox Decoratee { get; }
 
-        public Task DeliverMessages(
-            IReadOnlyCollection<IntegrationMessage> messages,
-            CancellationToken token)
+        public void Add(IntegrationMessage message)
+        {
+            Decoratee.Add(message);
+        }
+
+        public IReadOnlyCollection<IntegrationMessage> All()
+        {
+            return Decoratee.All();
+        }
+
+        public Task DeliverMessages(CancellationToken token)
         {
             return Environment.StackTrace.Contains(nameof(IntegrationUnitOfWork), StringComparison.OrdinalIgnoreCase)
                 ? Task.CompletedTask
-                : Decoratee.DeliverMessages(messages, token);
+                : Decoratee.DeliverMessages(token);
         }
     }
 }

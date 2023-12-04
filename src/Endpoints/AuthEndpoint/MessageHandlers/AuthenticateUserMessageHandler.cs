@@ -58,9 +58,7 @@ namespace SpaceEngineers.Core.AuthEndpoint.MessageHandlers
                     token)
                .ConfigureAwait(false);
 
-            await _context
-                .Reply(message, reply, token)
-                .ConfigureAwait(false);
+            _context.Reply(message, reply);
         }
 
         private async Task<UserAuthenticationResult> AuthenticateUser(

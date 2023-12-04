@@ -8,11 +8,11 @@ namespace SpaceEngineers.Core.Basics.Enumerations
         /// <summary>
         /// Ascending
         /// </summary>
-        Asc,
+        Asc = 0,
 
         /// <summary>
         /// Descending
         /// </summary>
-        Desc
+        Desc = 1
     }
 }

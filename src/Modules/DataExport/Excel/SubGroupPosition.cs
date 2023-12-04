@@ -8,11 +8,11 @@
         /// <summary>
         /// Top
         /// </summary>
-        Top,
+        Top = 0,
 
         /// <summary>
         /// Bottom
         /// </summary>
-        Bottom
+        Bottom = 1
     }
 }

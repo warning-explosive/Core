@@ -42,7 +42,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.Pipeline
             if (context.Message.IsRequest())
             {
                 var repliesCount = _dependencyContainer
-                   .Resolve<IOutboxStorage>()
+                   .Resolve<ITransactionalOutbox>()
                    .All()
                    .Count(message => message.IsReplyOnRequest(context.Message));
 

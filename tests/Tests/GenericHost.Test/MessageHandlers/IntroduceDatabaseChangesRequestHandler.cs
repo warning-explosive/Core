@@ -34,9 +34,7 @@ namespace SpaceEngineers.Core.GenericHost.Test.MessageHandlers
                .Invoke(token)
                .ConfigureAwait(false);
 
-            await _context
-               .Reply(message, new Reply(message.Id), token)
-               .ConfigureAwait(false);
+            _context.Reply(message, new Reply(message.Id));
         }
     }
 }

@@ -114,7 +114,11 @@ namespace SpaceEngineers.Core.GenericHost.Benchmark.Sources
                     new[] { new Authorization(authorizationToken) },
                     null);
 
-            _messageHandler = static (context, token) => context.Reply((Request)context.Message.Payload, new Reply(), token);
+            _messageHandler = static (context, _) =>
+            {
+                context.Reply((Request)context.Message.Payload, new Reply());
+                return Task.CompletedTask;
+            };
 
             _messageHandlerMiddleware = _dependencyContainer.Resolve<IMessageHandlerMiddlewareComposite>();
 

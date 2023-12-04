@@ -1,13 +1,20 @@
 ﻿namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Host.BackgroundWorkers
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Basics;
     using Basics.Attributes;
-    using Basics.Primitives;
+    using CompositionRoot;
+    using Contract;
+    using Core.DataAccess.Orm.Sql.Linq;
+    using Core.DataAccess.Orm.Sql.Transaction;
     using CrossCuttingConcerns.Logging;
+    using Deduplication;
     using GenericEndpoint.Host.StartupActions;
+    using GenericEndpoint.UnitOfWork;
     using GenericHost;
     using Microsoft.Extensions.Logging;
     using Settings;
@@ -16,7 +23,6 @@
     using SpaceEngineers.Core.CrossCuttingConcerns.Settings;
     using SpaceEngineers.Core.IntegrationTransport.Api.Abstractions;
     using SpaceEngineers.Core.IntegrationTransport.Api.Enumerations;
-    using UnitOfWork;
 
     [ManuallyRegisteredComponent("Hosting dependency that implicitly participates in composition")]
     [After(typeof(GenericEndpointHostedServiceStartupAction))]
@@ -25,21 +31,23 @@
                                                                             ICollectionResolvable<IHostedServiceBackgroundWorker>,
                                                                             IResolvable<GenericEndpointDataAccessHostedServiceBackgroundWorker>
     {
-        private readonly OutboxSettings _outboxSetting;
+        private readonly OutboxSettings _outboxSettings;
+        private readonly EndpointIdentity _endpointIdentity;
+        private readonly IDependencyContainer _dependencyContainer;
         private readonly IExecutableIntegrationTransport _transport;
-        private readonly IOutboxBackgroundDelivery _outboxDelivery;
         private readonly ILogger _logger;
 
         public GenericEndpointDataAccessHostedServiceBackgroundWorker(
-            ISettingsProvider<OutboxSettings> outboxSettingProvider,
+            ISettingsProvider<OutboxSettings> outboxSettingsProvider,
+            EndpointIdentity endpointIdentity,
+            IDependencyContainer dependencyContainer,
             IExecutableIntegrationTransport transport,
-            IOutboxBackgroundDelivery outboxDelivery,
             ILogger logger)
         {
-            _outboxSetting = outboxSettingProvider.Get();
-
+            _outboxSettings = outboxSettingsProvider.Get();
+            _endpointIdentity = endpointIdentity;
+            _dependencyContainer = dependencyContainer;
             _transport = transport;
-            _outboxDelivery = outboxDelivery;
             _logger = logger;
         }
 
@@ -49,83 +57,98 @@
             {
                 try
                 {
-                    await Task.Delay(_outboxSetting.OutboxDeliveryInterval, token).ConfigureAwait(false);
+                    await Task.Delay(_outboxSettings.OutboxDeliveryInterval, token).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
                     return;
                 }
 
-                await DeliverMessages(_transport, _outboxDelivery, token)
+                await DeliverMessagesUnsafe(token)
                    .TryAsync()
                    .Catch<Exception>(OnError(_logger))
                    .Invoke(token)
                    .ConfigureAwait(false);
             }
+
+            static Func<Exception, CancellationToken, Task> OnError(ILogger logger)
+            {
+                return (exception, _) =>
+                {
+                    logger.Error(exception, "Background outbox delivery error");
+                    return Task.CompletedTask;
+                };
+            }
         }
 
-        private static async Task DeliverMessages(
-            IExecutableIntegrationTransport transport,
-            IOutboxBackgroundDelivery outboxBackgroundDelivery,
-            CancellationToken token)
+        private async Task DeliverMessagesUnsafe(CancellationToken token)
         {
-            var transportIsRunning = WaitUntilTransportIsRunning(transport);
-            var outboxDelivery = outboxBackgroundDelivery.DeliverMessages(token);
+            if (((IIntegrationTransport)_transport).Status != EnIntegrationTransportStatus.Running)
+            {
+                return;
+            }
 
             try
             {
-                await Task
-                   .WhenAny(transportIsRunning, outboxDelivery)
-                   .Unwrap()
-                   .ConfigureAwait(false);
+                await _dependencyContainer
+                    .InvokeWithinTransaction(true, ReadAndDeliverMessages(_outboxSettings, _endpointIdentity, _dependencyContainer), token)
+                    .ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
             }
         }
 
-        private static Func<Exception, CancellationToken, Task> OnError(ILogger logger)
+        private static Func<IAdvancedDatabaseTransaction, CancellationToken, Task> ReadAndDeliverMessages(
+            OutboxSettings outboxSettings,
+            EndpointIdentity endpointIdentity,
+            IDependencyContainer dependencyContainer)
         {
-            return (exception, _) =>
+            return async (transaction, token) =>
             {
-                logger.Error(exception, "Background outbox delivery error");
-                return Task.CompletedTask;
+                var outbox = dependencyContainer.Resolve<ITransactionalOutbox>();
+
+                var messages = await ReadMessages(transaction, outboxSettings, endpointIdentity, token).ConfigureAwait(false);
+
+                foreach (var message in messages)
+                {
+                    outbox.Add(message);
+                }
+
+                await outbox
+                    .DeliverMessages(token)
+                    .ConfigureAwait(false);
             };
         }
 
-        private static async Task WaitUntilTransportIsRunning(IExecutableIntegrationTransport transport)
+        private static async Task<IReadOnlyCollection<Messaging.IntegrationMessage>> ReadMessages(
+            IDatabaseTransaction transaction,
+            OutboxSettings settings,
+            EndpointIdentity endpointIdentity,
+            CancellationToken token)
         {
-            var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var cutOff = DateTime.UtcNow - settings.OutboxDeliveryInterval;
 
-            var subscription = MakeSubscription(tcs);
+            return (await transaction
+                    .All<OutboxMessage>()
+                    .Where(outbox => outbox.EndpointLogicalName == endpointIdentity.LogicalName
+                                     && !outbox.Sent
+                                     && outbox.Timestamp <= cutOff)
+                    .Select(outbox => outbox.Message)
+                    .CachedExpression("8270884D-CAB5-46DF-A541-7C0CEEFC9FA1")
+                    .ToListAsync(token)
+                    .ConfigureAwait(false))
+                .Select(BuildIntegrationMessage)
+                .ToList();
 
-            using (Disposable.Create((transport, subscription), Subscribe, Unsubscribe))
+            static Messaging.IntegrationMessage BuildIntegrationMessage(IntegrationMessage message)
             {
-                await tcs.Task.ConfigureAwait(false);
-            }
+                var headers = message
+                    .Headers
+                    .Select(header => header.Payload)
+                    .ToDictionary(header => header.GetType());
 
-            static EventHandler<IntegrationTransportStatusChangedEventArgs> MakeSubscription(
-                TaskCompletionSource<object?> tcs)
-            {
-                return (_, args) =>
-                {
-                    if (args.CurrentStatus != EnIntegrationTransportStatus.Running)
-                    {
-                        _ = tcs.TrySetResult(default);
-                    }
-                };
-            }
-
-            static void Subscribe((IExecutableIntegrationTransport, EventHandler<IntegrationTransportStatusChangedEventArgs>) state)
-            {
-                var (transport, subscription) = state;
-                transport.StatusChanged += subscription;
-            }
-
-            static void Unsubscribe((IExecutableIntegrationTransport, EventHandler<IntegrationTransportStatusChangedEventArgs>) state)
-            {
-                var (transport, subscription) = state;
-                transport.StatusChanged -= subscription;
+                return new Messaging.IntegrationMessage(message.Payload, TypeNode.FromString(message.ReflectedType), headers);
             }
         }
     }

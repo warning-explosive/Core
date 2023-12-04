@@ -87,7 +87,6 @@
         {
             return (_, args) =>
             {
-                // TODO: #217 - make async callback / append to collection and insert on commit
                 dependencyContainer
                     .Resolve<IEventStore>()
                     .Append(args, token)

@@ -8,7 +8,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Host.Overrides
         public void RegisterOverrides(IRegisterComponentsOverrideContainer container)
         {
             container.Override<SpaceEngineers.Core.GenericEndpoint.UnitOfWork.IIntegrationUnitOfWork, SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork.IntegrationUnitOfWork>(EnLifestyle.Scoped);
-            container.Override<SpaceEngineers.Core.GenericEndpoint.UnitOfWork.IOutboxDelivery, SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork.OutboxDelivery>(EnLifestyle.Singleton);
+            container.Override<SpaceEngineers.Core.GenericEndpoint.UnitOfWork.ITransactionalOutbox, SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork.TransactionalOutbox>(EnLifestyle.Scoped);
         }
     }
 }

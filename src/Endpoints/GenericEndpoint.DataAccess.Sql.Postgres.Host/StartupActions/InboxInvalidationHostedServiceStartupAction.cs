@@ -73,13 +73,10 @@
             IntegrationMessage message,
             CancellationToken token)
         {
-            return dependencyContainer.InvokeWithinTransaction(true,
-                message,
-                HandleErrorMessage,
-                token);
+            return dependencyContainer.InvokeWithinTransaction(true, message, MarkInboxAsFailed, token);
         }
 
-        private static async Task HandleErrorMessage(
+        private static async Task MarkInboxAsFailed(
             IDatabaseTransaction transaction,
             IntegrationMessage integrationMessage,
             CancellationToken token)
@@ -90,8 +87,8 @@
 
             await transaction
                 .Update<InboxMessage>()
-                .Set(message => message.IsError.Assign(true))
-                .Where(message => message.PrimaryKey == id)
+                .Set(inbox => inbox.State.Assign(EnInboxMessageState.Failed))
+                .Where(inbox => inbox.Message.PrimaryKey == id)
                 .CachedExpression("5A3B2946-028C-4CA8-9E8D-1E9C3BBB1EEB")
                 .Invoke(token)
                 .ConfigureAwait(false);

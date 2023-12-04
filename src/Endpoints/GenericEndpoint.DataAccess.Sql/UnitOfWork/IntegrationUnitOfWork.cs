@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -11,10 +10,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
     using Basics.Primitives;
     using CrossCuttingConcerns.Logging;
     using Deduplication;
-    using Messaging;
+    using GenericEndpoint.Pipeline;
     using Messaging.MessageHeaders;
     using Microsoft.Extensions.Logging;
-    using Pipeline;
     using SpaceEngineers.Core.AutoRegistration.Api.Abstractions;
     using SpaceEngineers.Core.AutoRegistration.Api.Attributes;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Linq;
@@ -30,25 +28,20 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
     {
         private readonly EndpointIdentity _endpointIdentity;
         private readonly IAdvancedDatabaseTransaction _transaction;
-        private readonly IOutboxDelivery _outboxDelivery;
+        private readonly ITransactionalOutbox _outbox;
         private readonly ILogger _logger;
 
         public IntegrationUnitOfWork(
             EndpointIdentity endpointIdentity,
             IAdvancedDatabaseTransaction transaction,
-            IOutboxDelivery outboxDelivery,
-            IOutboxStorage outboxStorage,
+            ITransactionalOutbox outbox,
             ILogger logger)
         {
             _endpointIdentity = endpointIdentity;
             _transaction = transaction;
-            _outboxDelivery = outboxDelivery;
+            _outbox = outbox;
             _logger = logger;
-
-            OutboxStorage = outboxStorage;
         }
-
-        public IOutboxStorage OutboxStorage { get; }
 
         private InboxMessage? Inbox { get; set; }
 
@@ -60,37 +53,26 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
 
             Inbox = await ReadInbox(context, _transaction, _endpointIdentity, token).ConfigureAwait(false);
 
-            return Inbox != null && (Inbox.Handled || Inbox.IsError)
-                ? EnUnitOfWorkBehavior.SkipProducer
-                : EnUnitOfWorkBehavior.Regular;
+            return Inbox == null || Inbox.State == EnInboxMessageState.Processing
+                ? EnUnitOfWorkBehavior.Regular
+                : EnUnitOfWorkBehavior.SkipProducer;
         }
 
         protected override async Task Commit(
             IAdvancedIntegrationContext context,
             CancellationToken token)
         {
-            try
+            await (Inbox == null
+                ? PersistInbox(context, _transaction, _endpointIdentity, EnInboxMessageState.Handled, token)
+                : MarkInboxAsHandled(_transaction, Inbox.PrimaryKey, token)).ConfigureAwait(false);
+
+            await PersistOutgoingMessages(_transaction, _endpointIdentity, _outbox.All(), token).ConfigureAwait(false);
+
+            await _transaction.Close(true, token).ConfigureAwait(false);
+
+            await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))
             {
-                if (IsTransactionValid(context, _transaction, out var exception))
-                {
-                    await PersistInbox(context, _transaction, _endpointIdentity, Inbox, token).ConfigureAwait(false);
-
-                    await PersistOutgoingMessages(_transaction, _endpointIdentity, OutboxStorage.All(), token).ConfigureAwait(false);
-
-                    await _transaction.Close(true, token).ConfigureAwait(false);
-                }
-                else
-                {
-                    await _transaction.Close(false, token).ConfigureAwait(false);
-
-                    throw exception.Rethrow();
-                }
-
-                await DeliverOutgoingMessages(_logger, _outboxDelivery, OutboxStorage.All(), token).ConfigureAwait(false);
-            }
-            finally
-            {
-                OutboxStorage.Clear();
+                await DeliverOutgoingMessages(_outbox, _logger, token).ConfigureAwait(false);
             }
         }
 
@@ -99,14 +81,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
             Exception? exception,
             CancellationToken token)
         {
-            try
-            {
-                await _transaction.Close(false, token).ConfigureAwait(false);
-            }
-            finally
-            {
-                OutboxStorage.Clear();
-            }
+            await _transaction.Close(false, token).ConfigureAwait(false);
         }
 
         private static Task<InboxMessage?> ReadInbox(
@@ -116,61 +91,45 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
             CancellationToken token)
         {
             return databaseContext
-               .All<InboxMessage>()
-               .Where(message => message.Message.PrimaryKey == context.Message.ReadRequiredHeader<Id>().Value
-                              && message.EndpointLogicalName == endpointIdentity.LogicalName
-                              && message.EndpointInstanceName == endpointIdentity.InstanceName)
-               .CachedExpression("71E74566-4D9F-4767-9CC4-56F04EB76245")
-               .SingleOrDefaultAsync(token);
+                .All<InboxMessage>()
+                .Where(inbox => inbox.Message.PrimaryKey == context.Message.ReadRequiredHeader<Id>().Value
+                                && inbox.EndpointLogicalName == endpointIdentity.LogicalName
+                                && inbox.EndpointInstanceName == endpointIdentity.InstanceName)
+                .CachedExpression("71E74566-4D9F-4767-9CC4-56F04EB76245")
+                .SingleOrDefaultAsync(token);
         }
 
-        private static bool IsTransactionValid(
-            IAdvancedIntegrationContext context,
-            IAdvancedDatabaseTransaction transaction,
-            [NotNullWhen(false)] out Exception? exception)
-        {
-            if (transaction.HasChanges && !context.Message.IsCommand())
-            {
-                exception = new InvalidOperationException("Only commands can introduce changes in the database. Message handlers should send commands for that purpose.");
-                return false;
-            }
-
-            exception = null;
-            return true;
-        }
-
-        private static async Task PersistInbox(
+        private static Task PersistInbox(
             IAdvancedIntegrationContext context,
             IDatabaseContext databaseContext,
             EndpointIdentity endpointIdentity,
-            InboxMessage? inbox,
+            EnInboxMessageState state,
             CancellationToken token)
         {
-            if (inbox == null)
-            {
-                inbox = new InboxMessage(Guid.NewGuid(),
-                    new Deduplication.IntegrationMessage(context.Message),
-                    endpointIdentity.LogicalName,
-                    endpointIdentity.InstanceName,
-                    false,
-                    true);
+            var inbox = new InboxMessage(
+                Guid.NewGuid(),
+                new Deduplication.IntegrationMessage(context.Message),
+                endpointIdentity.LogicalName,
+                endpointIdentity.InstanceName,
+                state);
 
-                await databaseContext
-                   .Insert(new[] { inbox }, EnInsertBehavior.DoNothing)
-                   .CachedExpression($"{nameof(PersistInbox)}:{inbox.Message.Headers.Count}")
-                   .Invoke(token)
-                   .ConfigureAwait(false);
-            }
-            else
-            {
-                await databaseContext
-                    .Update<InboxMessage>()
-                    .Set(message => message.Handled.Assign(true))
-                    .Where(message => message.PrimaryKey == inbox.PrimaryKey)
-                    .CachedExpression("45A2D69C-BB68-403C-9A12-037D60959BC2")
-                    .Invoke(token)
-                    .ConfigureAwait(false);
-            }
+            return databaseContext
+                .Insert(new[] { inbox }, EnInsertBehavior.DoNothing)
+                .CachedExpression($"{nameof(PersistInbox)}:{inbox.Message.Headers.Count}:585AA6A8-17F4-44EE-9747-55D504E33299")
+                .Invoke(token);
+        }
+
+        private static Task MarkInboxAsHandled(
+            IDatabaseContext databaseContext,
+            Guid primaryKey,
+            CancellationToken token)
+        {
+            return databaseContext
+                .Update<InboxMessage>()
+                .Set(inbox => inbox.State.Assign(EnInboxMessageState.Handled))
+                .Where(inbox => inbox.PrimaryKey == primaryKey)
+                .CachedExpression("45A2D69C-BB68-403C-9A12-037D60959BC2")
+                .Invoke(token);
         }
 
         private static async Task PersistOutgoingMessages(
@@ -196,32 +155,31 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
             {
                 await databaseContext
                     .Insert(new[] { outboxMessage }, EnInsertBehavior.Default)
-                    .CachedExpression($"{nameof(PersistOutgoingMessages)}:{outboxMessage.Message.Headers.Count}")
+                    .CachedExpression($"{nameof(PersistOutgoingMessages)}:{outboxMessage.Message.Headers.Count}:6C9A240C-A104-4712-87FA-8631A273C57D")
                     .Invoke(token)
                     .ConfigureAwait(false);
             }
         }
 
         private static Task DeliverOutgoingMessages(
+            ITransactionalOutbox outbox,
             ILogger logger,
-            IOutboxDelivery outboxDelivery,
-            IReadOnlyCollection<IntegrationMessage> messages,
             CancellationToken token)
         {
-            return outboxDelivery
-                .DeliverMessages(messages, token)
+            return outbox
+                .DeliverMessages(token)
                 .TryAsync()
                 .Catch<Exception>(OnCatch(logger))
                 .Invoke(token);
-        }
 
-        private static Func<Exception, CancellationToken, Task> OnCatch(ILogger logger)
-        {
-            return (exception, _) =>
+            static Func<Exception, CancellationToken, Task> OnCatch(ILogger logger)
             {
-                logger.Error(exception, "Outbox delivery error");
-                return Task.CompletedTask;
-            };
+                return (exception, _) =>
+                {
+                    logger.Error(exception, "Outbox delivery error");
+                    return Task.CompletedTask;
+                };
+            }
         }
     }
 }

@@ -8,11 +8,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations.Model
         /// <summary>
         /// Before
         /// </summary>
-        Before,
+        Before = 0,
 
         /// <summary>
         /// After
         /// </summary>
-        After
+        After = 1
     }
 }

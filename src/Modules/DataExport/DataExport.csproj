@@ -11,6 +11,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
         <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -22,14 +23,38 @@
         <ProjectReference Include="..\..\Common\AutoRegistration.Api\AutoRegistration.Api.csproj"/>
     </ItemGroup>
     <ItemGroup>
+        <Compile Update="Excel\PivotTableSheetExporter.cs">
+          <DependentUpon>IExcelSheetExporter.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Excel\FlatTableSheetExporter.cs">
+          <DependentUpon>IExcelSheetExporter.cs</DependentUpon>
+        </Compile>
         <Compile Update="Excel\ExcelExporter.cs">
-            <DependentUpon>IExcelExporter.cs</DependentUpon>
+          <DependentUpon>IExcelExporter.cs</DependentUpon>
         </Compile>
         <Compile Update="Excel\FlatTableSheetInfo.cs">
-            <DependentUpon>BaseSheetInfo.cs</DependentUpon>
+          <DependentUpon>ISheetInfo.cs</DependentUpon>
         </Compile>
-        <Compile Update="Excel\BaseSheetInfo.cs">
-            <DependentUpon>ISheetInfo.cs</DependentUpon>
+        <Compile Update="Excel\PivotTableSheetInfo.cs">
+          <DependentUpon>ISheetInfo.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Excel\SharedStringIndexCounter.cs">
+          <DependentUpon>ExcelExporter.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Excel\SheetMetadata.cs">
+          <DependentUpon>ExcelExporter.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Excel\SubGroupInfo.cs">
+          <DependentUpon>PivotTableSheetInfo.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Excel\SubGroupPosition.cs">
+          <DependentUpon>PivotTableSheetInfo.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Excel\ColumnNameProducer.cs">
+          <DependentUpon>ExcelExporter.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Excel\DocumentInfo.cs">
+          <DependentUpon>ExcelExporter.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 </Project>

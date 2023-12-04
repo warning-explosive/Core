@@ -1,10 +1,7 @@
 namespace SpaceEngineers.Core.DataExport.Excel
 {
     using System;
-    using System.Collections.Generic;
-    using System.Globalization;
     using System.IO;
-    using System.Linq;
     using System.Reflection;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -18,15 +15,31 @@ namespace SpaceEngineers.Core.DataExport.Excel
     internal class ExcelExporter : IExcelExporter,
                                    IResolvable<IExcelExporter>
     {
-        private const string DateTimeFormatString = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff";
+        private static readonly MethodInfo FillFlatTableGenericMethod = new MethodFinder(
+            typeof(ExcelExporter),
+            nameof(FillFlatTableGeneric),
+            BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.InvokeMethod)
+        {
+            TypeArguments = new[] { typeof(ISheetInfo) },
+            ArgumentTypes = new[] { typeof(FlatTableSheetInfo<ISheetInfo>), typeof(SheetMetadata), typeof(SheetData) }
+        }.FindMethod() ?? throw new InvalidOperationException($"Could not find {nameof(ExcelExporter)}.{nameof(FillFlatTableGeneric)}() method");
 
-        public MemoryStream ExportXlsx(ISheetInfo[] infos)
+        private static readonly MethodInfo FillPivotTableGenericMethod = new MethodFinder(
+            typeof(ExcelExporter),
+            nameof(FillPivotTableGeneric),
+            BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.InvokeMethod)
+        {
+            TypeArguments = new[] { typeof(ISheetInfo) },
+            ArgumentTypes = new[] { typeof(PivotTableSheetInfo<ISheetInfo>), typeof(SheetMetadata), typeof(SheetData) }
+        }.FindMethod() ?? throw new InvalidOperationException($"Could not find {nameof(ExcelExporter)}.{nameof(FillPivotTableGeneric)}() method");
+
+        public Stream ExportXlsx(ISheetInfo[] sheets)
         {
             var stream = new MemoryStream();
 
             try
             {
-                FillStream(infos, stream);
+                FillStream(stream, sheets);
 
                 stream.Seek(0, SeekOrigin.Begin);
                 return stream;
@@ -38,60 +51,66 @@ namespace SpaceEngineers.Core.DataExport.Excel
             }
         }
 
-        private static void FillStream(ISheetInfo[] infos, MemoryStream stream)
+        private static void FillStream(MemoryStream stream, ISheetInfo[] sheets)
         {
-            using (var spreadsheetDocument = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook))
+            using var spreadsheetDocument = SpreadsheetDocument.Create(stream, SpreadsheetDocumentType.Workbook);
+            var workbookPart = spreadsheetDocument.AddWorkbookPart();
+            workbookPart.Workbook = new Workbook();
+
+            var workbookSheets = workbookPart.Workbook.AppendChild(new Sheets());
+
+            var sharedStringTable = workbookPart.AddNewPart<SharedStringTablePart>();
+            sharedStringTable.SharedStringTable = new SharedStringTable();
+
+            var workbookStyles = workbookPart.AddNewPart<WorkbookStylesPart>();
+            workbookStyles.Stylesheet = InitializeStylesheet(
+                out var defaultCellFormatIndex,
+                out var decimalCellFormatIndex,
+                out var dateCellFormatIndex);
+
+            var documentInfo = new DocumentInfo(
+                sharedStringTable.SharedStringTable,
+                workbookStyles.Stylesheet,
+                defaultCellFormatIndex,
+                decimalCellFormatIndex,
+                dateCellFormatIndex);
+
+            for (uint i = 0; i < sheets.Length; i++)
             {
-                var workbookPart = spreadsheetDocument.AddWorkbookPart();
-                workbookPart.Workbook = new Workbook();
+                var sheetInfo = sheets[i];
+                var sheetMetadata = new SheetMetadata(documentInfo);
 
-                var sheets = workbookPart.Workbook.AppendChild(new Sheets());
+                var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+                var sheetData = new SheetData();
+                worksheetPart.Worksheet = new Worksheet();
 
-                var sharedStringTable = workbookPart.AddNewPart<SharedStringTablePart>();
-                sharedStringTable.SharedStringTable = new SharedStringTable();
-
-                var workbookStyles = workbookPart.AddNewPart<WorkbookStylesPart>();
-                workbookStyles.Stylesheet = InitializeStylesheet(
-                    out var defaultCellFormatIndex,
-                    out var decimalCellFormatIndex,
-                    out var dateCellFormatIndex);
-
-                var documentInfo = new DocumentInfo(
-                    sharedStringTable.SharedStringTable,
-                    workbookStyles.Stylesheet,
-                    defaultCellFormatIndex,
-                    decimalCellFormatIndex,
-                    dateCellFormatIndex);
-
-                for (uint i = 0; i < infos.Length; i++)
+                var workbookSheet = new Sheet
                 {
-                    var info = infos[i];
-                    var sheetInfo = new SheetInfo(documentInfo);
+                    Id = workbookPart.GetIdOfPart(worksheetPart),
+                    SheetId = i + 1,
+                    Name = sheetInfo.SheetName
+                };
 
-                    var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
-                    var sheetData = new SheetData();
-                    worksheetPart.Worksheet = new Worksheet(sheetData);
+                workbookSheets.AppendChild(workbookSheet);
 
-                    var sheet = new Sheet
-                    {
-                        Id = workbookPart.GetIdOfPart(worksheetPart),
-                        SheetId = i + 1,
-                        Name = info.SheetName
-                    };
+                var type = sheetInfo.GetType();
 
-                    sheets.AppendChild(sheet);
-
-                    var type = info.GetType();
-
-                    if (type.IsSubclassOfOpenGeneric(typeof(FlatTableSheetInfo<>)))
-                    {
-                        FillFlatTable(sheetInfo, info, sheetData);
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(type.FullName);
-                    }
+                if (type.IsGenericType
+                    && type.GetGenericTypeDefinition() == typeof(FlatTableSheetInfo<>))
+                {
+                    FillFlatTable(sheetInfo, sheetMetadata, sheetData);
                 }
+                else if (type.IsGenericType
+                         && type.GetGenericTypeDefinition() == typeof(PivotTableSheetInfo<>))
+                {
+                    FillPivotTable(sheetInfo, sheetMetadata, sheetData);
+                }
+                else
+                {
+                    throw new NotSupportedException(type.FullName);
+                }
+
+                worksheetPart.Worksheet.Append(sheetData);
             }
         }
 
@@ -214,355 +233,39 @@ namespace SpaceEngineers.Core.DataExport.Excel
         }
 
         private static void FillFlatTable(
-            SheetInfo sheetInfo,
-            ISheetInfo info,
+            ISheetInfo sheetInfo,
+            SheetMetadata sheetMetadata,
             SheetData sheetData)
         {
-            _ = typeof(ExcelExporter)
-               .CallMethod(nameof(FillFlatTableGeneric))
-               .WithTypeArguments(info.GetType().GetGenericArguments())
-               .WithArguments(sheetInfo, info, sheetData)
-               .Invoke();
+            _ = FillFlatTableGenericMethod
+                .MakeGenericMethod(sheetInfo.GetType().GetGenericArguments())
+                .Invoke(null, new object?[] { sheetInfo, sheetMetadata, sheetData });
         }
 
         private static void FillFlatTableGeneric<TRow>(
-            SheetInfo sheetInfo,
-            FlatTableSheetInfo<TRow> flatTableSheetInfo,
+            FlatTableSheetInfo<TRow> sheetInfo,
+            SheetMetadata sheetMetadata,
             SheetData sheetData)
         {
-            var (properties, cellValuesMap) = GetProperties(typeof(TRow), Array.Empty<string>());
-            InsertFlatHeader(sheetInfo, sheetData, properties);
-            InsertData(sheetInfo, sheetData, properties, flatTableSheetInfo.FlatTable, cellValuesMap);
+            new FlatTableSheetExporter<TRow>().Fill(sheetInfo, sheetMetadata, sheetData);
         }
 
-        private static (PropertyInfo[], IReadOnlyDictionary<PropertyInfo, CellValues>) GetProperties(
-            Type type,
-            IReadOnlyCollection<string> columnsOrder)
+        private static void FillPivotTable(
+            ISheetInfo sheetInfo,
+            SheetMetadata sheetMetadata,
+            SheetData sheetData)
         {
-            var columnsPriorities = columnsOrder
-               .Select((value, index) => (value, index))
-               .ToDictionary(
-                    it => it.value,
-                    it => it.index,
-                    StringComparer.OrdinalIgnoreCase);
-
-            var properties = type
-               .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty)
-               .Where(property => property.GetIsAccessible())
-               .Where(property => !property.PropertyType.IsCollection())
-               .OrderBy(property => columnsPriorities.TryGetValue(GetPropertyName(property), out var priority)
-                    ? priority
-                    : int.MaxValue)
-               .ThenBy(GetPropertyName)
-               .ToArray();
-
-            var cellValuesMap = properties
-               .ToDictionary(
-                    it => it,
-                    it => GetDataType(it.PropertyType));
-
-            return (properties, cellValuesMap);
+            _ = FillPivotTableGenericMethod
+                .MakeGenericMethod(sheetInfo.GetType().GetGenericArguments())
+                .Invoke(null, new object?[] { sheetInfo, sheetMetadata, sheetData });
         }
 
-        private static void InsertData<T>(
-            SheetInfo sheetInfo,
-            SheetData sheetData,
-            PropertyInfo[] properties,
-            IReadOnlyCollection<T> data,
-            IReadOnlyDictionary<PropertyInfo, CellValues> cellValuesMap)
+        private static void FillPivotTableGeneric<TRow>(
+            PivotTableSheetInfo<TRow> sheetInfo,
+            SheetMetadata sheetMetadata,
+            SheetData sheetData)
         {
-            data.Each((item, i) =>
-            {
-                var row = new Row
-                {
-                    RowIndex = (uint)(i + 2)
-                };
-
-                FillRowCells(sheetInfo,
-                    properties,
-                    row,
-                    it => ConvertValue(it.GetValue(item)),
-                    it => cellValuesMap[it],
-                    0);
-
-                sheetData.AppendChild(row);
-            });
-        }
-
-        private static void InsertFlatHeader(
-            SheetInfo sheetInfo,
-            SheetData sheetData,
-            PropertyInfo[] properties)
-        {
-            var row = new Row
-            {
-                RowIndex = 1
-            };
-
-            FillRowCells(sheetInfo,
-                properties,
-                row,
-                GetPropertyName,
-                _ => CellValues.SharedString,
-                0);
-
-            sheetData.AppendChild(row);
-        }
-
-        private static void FillRowCells(
-            SheetInfo sheetInfo,
-            PropertyInfo[] properties,
-            Row row,
-            Func<PropertyInfo, string> valueAccessor,
-            Func<PropertyInfo, CellValues> dataTypeAccessor,
-            int startFromColumn)
-        {
-            for (var i = 0; i < properties.Length; i++)
-            {
-                var property = properties[i];
-
-                var value = valueAccessor(property);
-                var dataType = dataTypeAccessor(property);
-
-                var cell = GetCellValue(sheetInfo, value, dataType, row.RowIndex!, i + startFromColumn);
-
-                row.AppendChild(cell);
-            }
-        }
-
-        private static Cell GetCellValue(
-            SheetInfo sheetInfo,
-            string value,
-            CellValues dataType,
-            uint rowIndex,
-            int columnIndex)
-        {
-            var cellReference = $"{sheetInfo.ColumnNameProducer.GetColumnName(columnIndex)}{rowIndex}";
-
-            if (dataType == CellValues.SharedString)
-            {
-                if (!sheetInfo.DocumentInfo.SharedStringIndexCounter.TryGetIndex(value, out var index))
-                {
-                    _ = sheetInfo
-                       .DocumentInfo
-                       .SharedStringTable
-                       .AppendChild(new SharedStringItem(new Text(value)));
-
-                    index = sheetInfo.DocumentInfo.SharedStringIndexCounter.Next(value);
-                }
-
-                return new Cell
-                {
-                    CellReference = cellReference,
-                    DataType = new EnumValue<CellValues>(dataType),
-                    CellValue = new CellValue(index),
-                    StyleIndex = sheetInfo.DocumentInfo.DefaultCellFormatIndex
-                };
-            }
-
-            if (dataType == CellValues.InlineString)
-            {
-                return new Cell
-                {
-                    CellReference = cellReference,
-                    DataType = new EnumValue<CellValues>(dataType),
-                    InlineString = new InlineString(new Text(value)),
-                    StyleIndex = sheetInfo.DocumentInfo.DefaultCellFormatIndex
-                };
-            }
-
-            if (dataType == CellValues.Number)
-            {
-                return new Cell
-                {
-                    CellReference = cellReference,
-                    DataType = new EnumValue<CellValues>(dataType),
-                    CellValue = new CellValue(value),
-                    StyleIndex = sheetInfo.DocumentInfo.DecimalCellFormatIndex
-                };
-            }
-
-            if (dataType == CellValues.Date)
-            {
-                return new Cell
-                {
-                    CellReference = cellReference,
-                    DataType = new EnumValue<CellValues>(dataType),
-                    CellValue = new CellValue(value),
-                    StyleIndex = sheetInfo.DocumentInfo.DateCellFormatIndex
-                };
-            }
-
-            return new Cell
-            {
-                CellReference = cellReference,
-                DataType = new EnumValue<CellValues>(dataType),
-                CellValue = new CellValue(value),
-                StyleIndex = sheetInfo.DocumentInfo.DefaultCellFormatIndex
-            };
-        }
-
-        private static CellValues GetDataType(Type type)
-        {
-            type = type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
-
-            if (type.IsNumeric())
-            {
-                return CellValues.Number;
-            }
-
-            if (type == typeof(DateTime))
-            {
-                return CellValues.Date;
-            }
-
-            return CellValues.SharedString;
-        }
-
-        private static string GetPropertyName(PropertyInfo property)
-        {
-            return property.Name;
-        }
-
-        private static string ConvertValue(object? value)
-        {
-            if (value == null)
-            {
-                return string.Empty;
-            }
-
-            var type = value
-               .GetType()
-               .ExtractGenericArgumentAtOrSelf(typeof(Nullable<>));
-
-            if (type.IsNumeric())
-            {
-                return Convert
-                   .ToDouble(value, CultureInfo.InvariantCulture)
-                   .ToString(CultureInfo.InvariantCulture);
-            }
-
-            if (type == typeof(DateTime))
-            {
-                return ((DateTime)value).ToString(DateTimeFormatString, CultureInfo.InvariantCulture);
-            }
-
-            return value.ToString() ?? string.Empty;
-        }
-
-        private class DocumentInfo
-        {
-            public DocumentInfo(
-                SharedStringTable sharedStringTable,
-                Stylesheet stylesheet,
-                uint defaultCellFormatIndex,
-                uint decimalCellFormatIndex,
-                uint dateCellFormatIndex)
-                : this(sharedStringTable,
-                    stylesheet,
-                    new SharedStringIndexCounter(),
-                    defaultCellFormatIndex,
-                    decimalCellFormatIndex,
-                    dateCellFormatIndex)
-            {
-            }
-
-            private DocumentInfo(
-                SharedStringTable sharedStringTable,
-                Stylesheet stylesheet,
-                SharedStringIndexCounter sharedStringIndexCounter,
-                uint defaultCellFormatIndex,
-                uint decimalCellFormatIndex,
-                uint dateCellFormatIndex)
-            {
-                SharedStringTable = sharedStringTable;
-                Stylesheet = stylesheet;
-                SharedStringIndexCounter = sharedStringIndexCounter;
-                DefaultCellFormatIndex = defaultCellFormatIndex;
-                DecimalCellFormatIndex = decimalCellFormatIndex;
-                DateCellFormatIndex = dateCellFormatIndex;
-            }
-
-            public SharedStringTable SharedStringTable { get; }
-
-            public Stylesheet Stylesheet { get; }
-
-            public SharedStringIndexCounter SharedStringIndexCounter { get; }
-
-            public uint DefaultCellFormatIndex { get; }
-
-            public uint DecimalCellFormatIndex { get; }
-
-            public uint DateCellFormatIndex { get; }
-        }
-
-        private class SharedStringIndexCounter
-        {
-            private readonly Dictionary<string, int> _map;
-
-            private int _counter;
-
-            public SharedStringIndexCounter()
-            {
-                _map = new Dictionary<string, int>(StringComparer.Ordinal);
-                _counter = 0;
-            }
-
-            public int Next(string stringValue)
-            {
-                var index = _counter;
-                _map.Add(stringValue, index);
-                _counter++;
-                return index;
-            }
-
-            public bool TryGetIndex(string stringValue, out int index)
-            {
-                return _map.TryGetValue(stringValue, out index);
-            }
-        }
-
-        private class SheetInfo
-        {
-            public SheetInfo(DocumentInfo documentInfo)
-                : this(documentInfo, new ColumnNameProducer())
-            {
-            }
-
-            private SheetInfo(
-                DocumentInfo documentInfo,
-                ColumnNameProducer columnNameProducer)
-            {
-                DocumentInfo = documentInfo;
-                ColumnNameProducer = columnNameProducer;
-            }
-
-            public DocumentInfo DocumentInfo { get; }
-
-            public ColumnNameProducer ColumnNameProducer { get; }
-        }
-
-        private class ColumnNameProducer
-        {
-            private readonly IDictionary<int, string> _map;
-
-            public ColumnNameProducer()
-            {
-                _map = new Dictionary<int, string>();
-            }
-
-            public string GetColumnName(int index)
-            {
-                if (_map.TryGetValue(index, out var value))
-                {
-                    return value;
-                }
-
-                value = index.AlphabetIndex();
-                _map[index] = value;
-
-                return value;
-            }
+            new PivotTableSheetExporter<TRow>().Fill(sheetInfo, sheetMetadata, sheetData);
         }
     }
 }

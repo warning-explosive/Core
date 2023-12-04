@@ -10,8 +10,8 @@ namespace SpaceEngineers.Core.DataExport.Excel
         /// <summary>
         /// Export datasets to *.xlsx file
         /// </summary>
-        /// <param name="infos">Sheet infos</param>
+        /// <param name="sheets">Sheet infos</param>
         /// <returns>*.xlsx file represented as stream</returns>
-        public MemoryStream ExportXlsx(ISheetInfo[] infos);
+        public Stream ExportXlsx(ISheetInfo[] sheets);
     }
 }

@@ -9,6 +9,23 @@ namespace SpaceEngineers.Core.Basics
     public static class Deconstruction
     {
         /// <summary>
+        /// Deconstructs IGrouping
+        /// </summary>
+        /// <param name="grouping">IGrouping</param>
+        /// <param name="key">Key</param>
+        /// <param name="values">Values</param>
+        /// <typeparam name="TKey">TKey type-argument</typeparam>
+        /// <typeparam name="TValue">TValue type-argument</typeparam>
+        public static void Deconstruct<TKey, TValue>(
+            this IGrouping<TKey, TValue> grouping,
+            out TKey key,
+            out IEnumerable<TValue> values)
+        {
+            key = grouping.Key;
+            values = grouping;
+        }
+
+        /// <summary>
         /// Deconstructs source collection
         /// </summary>
         /// <param name="source">Source</param>

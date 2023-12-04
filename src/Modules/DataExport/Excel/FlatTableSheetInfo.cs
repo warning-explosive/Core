@@ -6,14 +6,21 @@ namespace SpaceEngineers.Core.DataExport.Excel
     /// FlatTableSheetInfo
     /// </summary>
     /// <typeparam name="TRow">TRow type-argument</typeparam>
-    public class FlatTableSheetInfo<TRow> : BaseSheetInfo
+    public sealed class FlatTableSheetInfo<TRow> : ISheetInfo
     {
         /// <summary> .cctor </summary>
-        /// <param name="flatTable">Flat table</param>
-        public FlatTableSheetInfo(IReadOnlyCollection<TRow> flatTable)
+        /// <param name="sheetName">sheetName</param>
+        /// <param name="flatTable">flatTable</param>
+        public FlatTableSheetInfo(string sheetName, IReadOnlyCollection<TRow> flatTable)
         {
+            SheetName = sheetName;
             FlatTable = flatTable;
         }
+
+        /// <summary>
+        /// Sheet name
+        /// </summary>
+        public string SheetName { get; }
 
         /// <summary>
         /// Flat table

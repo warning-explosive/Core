@@ -4,6 +4,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Collections;
     using System.Text;
     using Basics;
+    using Linq;
 
     /// <summary>
     /// SqlCommandParameter
@@ -65,7 +66,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 ? "NULL"
                 : Value.GetType().IsCollection()
                     ? $"[{((IEnumerable)Value).AsEnumerable<object>().ToString(", ")}]"
-                    : Value.ToString();
+                    : Value is string str && string.Equals(str, string.Empty, StringComparison.OrdinalIgnoreCase)
+                        ? "empty_string"
+                        : Value.ToString();
 
             sb.Append(value);
 
@@ -73,7 +76,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 ? Type.Name
                 : Type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)).Name + "?";
 
-            if (!Type.IsPrimitive() && !Type.IsCollection())
+            if (typeof(DatabaseJsonObject).IsAssignableFrom(Type))
             {
                 sb.Append($"({type}, JSON)");
             }

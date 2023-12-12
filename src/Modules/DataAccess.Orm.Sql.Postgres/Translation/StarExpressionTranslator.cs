@@ -9,20 +9,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
 
     [Component(EnLifestyle.Singleton)]
 
-    internal class SpecialExpressionTranslator : ISqlExpressionTranslator<SpecialExpression>,
-                                                 IResolvable<ISqlExpressionTranslator<SpecialExpression>>,
-                                                 ICollectionResolvable<ISqlExpressionTranslator>
+    internal class StarExpressionTranslator : ISqlExpressionTranslator<StarExpression>,
+                                              IResolvable<ISqlExpressionTranslator<StarExpression>>,
+                                              ICollectionResolvable<ISqlExpressionTranslator>
     {
         public string Translate(ISqlExpression expression, int depth)
         {
-            return expression is SpecialExpression specialExpression
-                ? Translate(specialExpression, depth)
+            return expression is StarExpression starExpression
+                ? Translate(starExpression, depth)
                 : throw new NotSupportedException($"Unsupported sql expression type {expression.GetType()}");
         }
 
-        public string Translate(SpecialExpression expression, int depth)
+        public string Translate(StarExpression expression, int depth)
         {
-            return expression.Text;
+            return "*";
         }
     }
 }

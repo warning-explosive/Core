@@ -29,7 +29,11 @@
                 {
                     context.WithinScope(
                         new BinaryExpression(typeof(bool), BinaryOperator.Contains),
-                        () => visitor.Visit(methodCallExpression.Arguments));
+                        () =>
+                        {
+                            visitor.Visit(methodCallExpression.Arguments[1]);
+                            visitor.Visit(methodCallExpression.Arguments[0]);
+                        });
 
                     return true;
                 }
@@ -40,8 +44,8 @@
                         new BinaryExpression(typeof(bool), BinaryOperator.Contains),
                         () =>
                         {
+                            visitor.Visit(methodCallExpression.Arguments[0]);
                             visitor.Visit(methodCallExpression.Object);
-                            visitor.Visit(methodCallExpression.Arguments);
                         });
 
                     return true;

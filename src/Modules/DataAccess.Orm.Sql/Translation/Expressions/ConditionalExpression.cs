@@ -14,8 +14,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                          IApplicable<UnaryExpression>,
                                          IApplicable<ParameterExpression>,
                                          IApplicable<QueryParameterExpression>,
-                                         IApplicable<SpecialExpression>,
-                                         IApplicable<MethodCallExpression>
+                                         IApplicable<MethodCallExpression>,
+                                         IApplicable<NullExpression>
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -108,13 +108,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SpecialExpression expression)
+        public void Apply(TranslationContext context, MethodCallExpression expression)
         {
             ApplySource(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, MethodCallExpression expression)
+        public void Apply(TranslationContext context, NullExpression expression)
         {
             ApplySource(expression);
         }

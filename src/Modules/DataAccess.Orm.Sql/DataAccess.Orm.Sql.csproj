@@ -117,9 +117,6 @@
         <Compile Update="Translation\Expressions\RowsFetchLimitExpression.cs">
             <DependentUpon>ISqlExpression.cs</DependentUpon>
         </Compile>
-        <Compile Update="Translation\Expressions\SpecialExpression.cs">
-            <DependentUpon>ISqlExpression.cs</DependentUpon>
-        </Compile>
         <Compile Update="Translation\ObjectEqualsUnknownExpressionTranslator.cs">
             <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
         </Compile>
@@ -221,9 +218,6 @@
         </Compile>
         <Compile Update="Translation\ExtractUpdateQueryRootExpressionVisitor.cs">
             <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Translation\CommandParameterExtractorContext.cs">
-            <DependentUpon>TranslationContext.cs</DependentUpon>
         </Compile>
         <Compile Update="Translation\Expressions\RenameExpression.cs">
             <DependentUpon>ISqlExpression.cs</DependentUpon>
@@ -368,6 +362,12 @@
         </Compile>
         <Compile Update="Translation\Expressions\ParenthesesExpression.cs">
             <DependentUpon>ISqlExpression.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Translation\Expressions\StarExpression.cs">
+          <DependentUpon>ISqlExpression.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Translation\CommandParameterExtractionContext.cs">
+          <DependentUpon>ExpressionTranslator.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 </Project>

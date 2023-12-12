@@ -14,8 +14,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                                     IApplicable<UnaryExpression>,
                                     IApplicable<ParameterExpression>,
                                     IApplicable<QueryParameterExpression>,
-                                    IApplicable<SpecialExpression>,
                                     IApplicable<MethodCallExpression>,
+                                    IApplicable<NullExpression>,
                                     IApplicable<ProjectionExpression>,
                                     IApplicable<FilterExpression>
     {
@@ -110,13 +110,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, SpecialExpression expression)
+        public void Apply(TranslationContext context, MethodCallExpression expression)
         {
             ApplySource(expression);
         }
 
         /// <inheritdoc />
-        public void Apply(TranslationContext context, MethodCallExpression expression)
+        public void Apply(TranslationContext context, NullExpression expression)
         {
             ApplySource(expression);
         }
@@ -135,14 +135,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 
         private void ApplySource(ISqlExpression expression)
         {
-            if (expression is QueryParameterExpression
-                && Operator == BinaryOperator.Contains
-                && Right == null)
-            {
-                Right = expression;
-                return;
-            }
-
             if (Left == null)
             {
                 Left = expression;

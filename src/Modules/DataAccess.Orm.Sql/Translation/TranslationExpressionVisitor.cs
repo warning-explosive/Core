@@ -189,7 +189,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (method == LinqMethods.RepositoryAll())
             {
                 _context.WithinConditionalScope(
-                    parent => parent is not JoinExpression,
+                    outer => outer is not JoinExpression,
                     action => _context.WithoutScopeDuplication(
                         () => new ProjectionExpression(itemType),
                         action),
@@ -205,7 +205,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                                     _context.ReverseLambdaParametersNames();
                                 }));
 
-                        SelectAll(_context.Parent!);
+                        SelectAll();
                     });
 
                 return node;
@@ -214,7 +214,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (method == LinqMethods.QueryableSelect())
             {
                 _context.WithinConditionalScope(
-                    parent => parent is ProjectionExpression || parent is JoinExpression,
+                    outer => outer is ProjectionExpression || outer is JoinExpression,
                     action => _context.WithoutScopeDuplication(
                         () => new NamedSourceExpression(itemType, _context),
                         action),
@@ -242,7 +242,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 || method == LinqMethods.RepositoryDeleteWhere())
             {
                 _context.WithinConditionalScope(
-                    parent => parent is ProjectionExpression || parent is JoinExpression,
+                    outer => outer is ProjectionExpression || outer is JoinExpression,
                     action => _context.WithoutScopeDuplication(
                         () => new NamedSourceExpression(itemType, _context),
                         action),
@@ -271,7 +271,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 || method == LinqMethods.QueryableThenByDescending())
             {
                 _context.WithinConditionalScope(
-                    parent => parent is ProjectionExpression || parent is JoinExpression,
+                    outer => outer is ProjectionExpression || outer is JoinExpression,
                     action => _context.WithoutScopeDuplication(
                         () => new NamedSourceExpression(itemType, _context),
                         action),
@@ -364,7 +364,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                             typeof(int),
                             nameof(Queryable.Count),
                             null,
-                            new[] { new SpecialExpression("*") });
+                            new[] { new StarExpression() });
 
                         var binaryExpression = new Expressions.BinaryExpression(
                             typeof(bool),
@@ -373,7 +373,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                             new QueryParameterExpression(
                                 _context,
                                 typeof(int),
-                                static (_, _) => Expression.Constant(0, typeof(int))));
+                                static _ => Expression.Constant(0, typeof(int))));
 
                         _context.Apply(new RenameExpression(typeof(bool), method.Name, binaryExpression));
 
@@ -409,8 +409,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                                                     () =>
                                                     {
                                                         _ = Visit(node.Arguments[1]);
-                                                        _context.Apply(new QueryParameterExpression(_context, typeof(int), static (_, _) => Expression.Constant(1, typeof(int))));
-                                                        _context.Apply(new SpecialExpression("NULL"));
+                                                        _context.Apply(new QueryParameterExpression(_context, typeof(int), static _ => Expression.Constant(1, typeof(int))));
+                                                        _context.Apply(new NullExpression());
                                                     });
                                             });
 
@@ -418,7 +418,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                                             typeof(int),
                                             nameof(Queryable.Count),
                                             null,
-                                            new[] { new SpecialExpression("*") }));
+                                            new[] { new StarExpression() }));
                                     });
                             });
                     });
@@ -437,7 +437,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                             typeof(int),
                             nameof(Queryable.Count),
                             null,
-                            new[] { new SpecialExpression("*") });
+                            new[] { new StarExpression() });
 
                         _context.Apply(new RenameExpression(typeof(int), method.Name, countAllMethodCall));
 
@@ -455,21 +455,29 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     {
                         _ = Visit(node.Arguments[1]);
 
-                        if (node.Arguments[0] is ConstantExpression constantExpression
-                            && constantExpression.Value is IQueryable subQuery)
+                        if (node.Arguments[0] is not ConstantExpression constantExpression
+                            || constantExpression.Value is not IQueryable subQuery)
                         {
-                            using (_context.WithinPathScope(constantExpression))
-                            {
-                                _context.Apply(TranslateSubQuery(subQuery.Expression).Expression);
-                            }
+                            throw new InvalidOperationException("Unable to translate sub-query");
                         }
-                        else
+
+                        using (_context.WithinPathScope(constantExpression))
                         {
-                            _context.Apply(TranslateSubQuery(node.Arguments[0]).Expression);
+                            _context.Apply(TranslateSubQuery(subQuery.Expression).Expression);
                         }
                     });
 
                 return node;
+
+                SqlExpression TranslateSubQuery(Expression expression)
+                {
+                    return Translate(
+                        _context.Clone(),
+                        _modelProvider,
+                        _preprocessor,
+                        _unknownExpressionTranslators,
+                        expression);
+                }
             }
 
             if (method == LinqMethods.QueryableDistinct())
@@ -579,15 +587,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         protected override Expression VisitParameter(ParameterExpression node)
         {
-            if (_context.Expression != null
-                && (ExtractUpdateQueryRootExpressionVisitor.IsUpdateQuery(_context.Expression)
-                    || ExtractDeleteQueryRootExpressionVisitor.IsDeleteQuery(_context.Expression)))
+            if (ExtractUpdateQueryRootExpressionVisitor.IsUpdateQuery(_context.OriginalExpression)
+                || ExtractDeleteQueryRootExpressionVisitor.IsDeleteQuery(_context.OriginalExpression))
             {
                 return node;
             }
 
             _context.WithinScope(
-                ExtractParametersVisitor.TryExtractParameter(_context.Outer!, node.Type, out var outerParameterExpression)
+                ExtractParametersVisitor.TryExtractParameter(_context.Outer, node.Type, out var outerParameterExpression)
                     ? outerParameterExpression
                     : new Expressions.ParameterExpression(_context, node.Type),
                 () => base.VisitParameter(node));
@@ -617,11 +624,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return node;
         }
 
-        private void SelectAll(ISqlExpression expression)
+        private void SelectAll()
         {
-            if (expression is not ProjectionExpression projection)
+            if (_context.Outer is not ProjectionExpression projection)
             {
-                return;
+                throw new InvalidOperationException("Unable to get outer projection expression");
             }
 
             if (!projection.IsProjectionToClass
@@ -702,7 +709,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     {
                         BuildJoinExpressionRecursive(_context, _modelProvider, recursiveEnumerable, () => Visit(source));
 
-                        SelectAll(_context.Parent!);
+                        SelectAll();
                     });
             }
 
@@ -757,11 +764,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         new ColumnExpression(
                             relation.Target.Column(nameof(IUniqueIdentified.PrimaryKey)).Reflected,
                             targetPrimaryKeyColumn.Type,
-                            ExtractParametersVisitor.ExtractParameter(context.Outer!, relation.Target)),
+                            ExtractParametersVisitor.ExtractParameter(context.Outer, relation.Target)),
                         new ColumnExpression(
                             relation.Property.Reflected,
                             targetPrimaryKeyColumn.Type,
-                            ExtractParametersVisitor.ExtractParameter(context.Outer!, relation.Source))));
+                            ExtractParametersVisitor.ExtractParameter(context.Outer, relation.Source))));
                 }
             }
         }
@@ -824,16 +831,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     pair => pair.name,
                     pair => pair.expression,
                     StringComparer.OrdinalIgnoreCase);
-        }
-
-        private SqlExpression TranslateSubQuery(Expression expression)
-        {
-            return Translate(
-                _context.Clone(),
-                _modelProvider,
-                _preprocessor,
-                _unknownExpressionTranslators,
-                expression);
         }
     }
 }

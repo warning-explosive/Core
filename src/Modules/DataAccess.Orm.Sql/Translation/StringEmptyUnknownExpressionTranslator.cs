@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 && memberExpression.Member == LinqMethods.StringEmpty())
             {
                 context.WithinScope(
-                    new QueryParameterExpression(context, typeof(string), static (_, _) => Expression.Constant(string.Empty, typeof(string))),
+                    new QueryParameterExpression(context, typeof(string), static _ => Expression.Constant(string.Empty, typeof(string))),
                     () => visitor.Visit(memberExpression.Expression));
 
                 return true;

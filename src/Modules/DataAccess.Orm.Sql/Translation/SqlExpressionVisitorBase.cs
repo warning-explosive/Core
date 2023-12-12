@@ -30,7 +30,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 QuerySourceExpression querySourceExpression => VisitQuerySource(querySourceExpression),
                 JoinExpression joinExpression => VisitJoinExpression(joinExpression),
                 RowsFetchLimitExpression rowsFetchLimitExpression => VisitRowsFetchLimitExpression(rowsFetchLimitExpression),
-                SpecialExpression specialExpression => VisitSpecialExpression(specialExpression),
+                StarExpression starExpression => VisitStarExpression(starExpression),
+                NullExpression nullExpression => VisitNullExpression(nullExpression),
                 _ => expression
             };
         }
@@ -244,13 +245,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         }
 
         /// <summary>
-        /// Visit SpecialExpression
+        /// Visit StarExpression
         /// </summary>
-        /// <param name="specialExpression">SpecialExpression</param>
+        /// <param name="starExpression">StarExpression</param>
         /// <returns>Visited result</returns>
-        protected virtual ISqlExpression VisitSpecialExpression(SpecialExpression specialExpression)
+        protected virtual ISqlExpression VisitStarExpression(StarExpression starExpression)
         {
-            return specialExpression;
+            return starExpression;
+        }
+
+        /// <summary>
+        /// Visit NullExpression
+        /// </summary>
+        /// <param name="nullExpression">NullExpression</param>
+        /// <returns>Visited result</returns>
+        protected virtual ISqlExpression VisitNullExpression(NullExpression nullExpression)
+        {
+            return nullExpression;
         }
     }
 }

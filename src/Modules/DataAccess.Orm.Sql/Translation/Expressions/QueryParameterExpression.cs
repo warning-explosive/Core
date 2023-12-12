@@ -15,7 +15,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public QueryParameterExpression(
             TranslationContext context,
             Type type,
-            Func<CommandParameterExtractorContext, string, ConstantExpression>? extractor = null)
+            Func<CommandParameterExtractionContext, ConstantExpression>? extractor = null)
         {
             var name = context.NextCommandParameterName();
 

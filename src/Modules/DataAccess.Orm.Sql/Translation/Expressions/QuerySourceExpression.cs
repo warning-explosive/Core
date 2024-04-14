@@ -8,15 +8,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     public class QuerySourceExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
-        /// <param name="type">Type</param>
-        public QuerySourceExpression(Type type)
+        /// <param name="itemType">ItemType</param>
+        public QuerySourceExpression(Type itemType)
         {
-            Type = type;
+            ItemType = itemType;
         }
 
         /// <summary>
         /// Type
         /// </summary>
-        public Type Type { get; }
+        public Type ItemType { get; }
     }
 }

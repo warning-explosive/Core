@@ -5,25 +5,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ParameterExpression
     /// </summary>
-    public class ParameterExpression : ITypedSqlExpression
+    public class ParameterExpression : ISqlExpression
     {
-        private readonly Func<string> _nameProducer;
-
         /// <summary> .cctor </summary>
-        /// <param name="context">TranslationContext</param>
         /// <param name="type">Type</param>
-        public ParameterExpression(TranslationContext context, Type type)
+        /// <param name="name">Name</param>
+        public ParameterExpression(Type type, string name)
         {
-            _nameProducer = context.NextLambdaParameterName();
             Type = type;
+            Name = name;
         }
+
+        /// <summary>
+        /// Type
+        /// </summary>
+        public Type Type { get; }
 
         /// <summary>
         /// Name
         /// </summary>
-        public string Name => _nameProducer();
-
-        /// <inheritdoc />
-        public Type Type { get; }
+        public string Name { get; }
     }
 }

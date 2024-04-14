@@ -56,9 +56,6 @@
         <Compile Update="StatelessActionExecutionInfo.cs">
             <DependentUpon>ExecutionExtensions.cs</DependentUpon>
         </Compile>
-        <Compile Update="Primitives\RecursiveEnumerable.cs">
-            <DependentUpon>IRecursiveEnumerable.cs</DependentUpon>
-        </Compile>
         <Compile Update="FunctionExecutionInfo.cs">
             <DependentUpon>ExecutionExtensions.cs</DependentUpon>
         </Compile>

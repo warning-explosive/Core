@@ -7,100 +7,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// OrderByExpression
     /// </summary>
-    public class OrderByExpression : ISqlExpression,
-                                     IApplicable<OrderByExpression>,
-                                     IApplicable<NamedSourceExpression>,
-                                     IApplicable<QuerySourceExpression>,
-                                     IApplicable<FilterExpression>,
-                                     IApplicable<ProjectionExpression>,
-                                     IApplicable<JoinExpression>,
-                                     IApplicable<OrderByExpressionExpression>
+    public class OrderByExpression : ISqlExpression
     {
-        private readonly List<ISqlExpression> _expressions;
-
         /// <summary> .cctor </summary>
         /// <param name="source">Source expression</param>
         /// <param name="expressions">Order by expressions</param>
         public OrderByExpression(
             ISqlExpression source,
-            IReadOnlyCollection<ISqlExpression> expressions)
+            IReadOnlyCollection<OrderByExpressionExpression> expressions)
         {
-            Source = source;
-            _expressions = expressions.ToList();
-        }
-
-        internal OrderByExpression(Type type)
-            : this(null!, Array.Empty<ISqlExpression>())
-        {
-        }
-
-        /// <summary>
-        /// Source expression
-        /// </summary>
-        public ISqlExpression Source { get; private set; }
-
-        /// <summary>
-        /// Order by expressions
-        /// </summary>
-        public IReadOnlyCollection<ISqlExpression> Expressions => _expressions;
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, OrderByExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, NamedSourceExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QuerySourceExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JoinExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, OrderByExpressionExpression expression)
-        {
-            ApplyExpression(expression);
-        }
-
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (Source != null)
+            if (source is not FilterExpression
+                && source is not JoinExpression
+                && source is not NamedSourceExpression
+                && source is not ProjectionExpression)
             {
-                throw new InvalidOperationException("Source expression has already been set");
+                throw new ArgumentException($"{nameof(OrderByExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
             }
 
-            Source = expression;
-        }
+            Source = source;
+            Expressions = expressions.ToList();
 
-        private void ApplyExpression(ISqlExpression expression)
-        {
-            if (Source is JoinExpression join)
+            // TODO: simplify to assigment
+            /*if (Source is JoinExpression join)
             {
                 expression = ReplaceJoinParameterExpressionsVisitor.Replace(expression, join);
             }
@@ -114,9 +42,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                 }
             }
 
-            _expressions.Add(expression);
+            _expressions.Add(expression);*/
         }
 
-        #endregion
+        /// <summary>
+        /// Source expression
+        /// </summary>
+        public ISqlExpression Source { get; }
+
+        /// <summary>
+        /// Order by expressions
+        /// </summary>
+        public IReadOnlyCollection<ISqlExpression> Expressions { get; }
     }
 }

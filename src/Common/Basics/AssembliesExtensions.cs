@@ -28,7 +28,6 @@ namespace SpaceEngineers.Core.Basics
         {
             "SpaceEngineers.Core.Basics",
             "SpaceEngineers.Core.AutoRegistration.Api",
-            "SpaceEngineers.Core.CompositionRoot.Api",
             "SpaceEngineers.Core.CompositionRoot",
 
             "SpaceEngineers.Core.Analyzers.Api",

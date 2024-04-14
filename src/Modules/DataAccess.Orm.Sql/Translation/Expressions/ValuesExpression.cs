@@ -5,30 +5,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ValuesExpression
     /// </summary>
-    public class ValuesExpression : ISqlExpression,
-                                    IApplicable<QueryParameterExpression>
+    public class ValuesExpression : ISqlExpression
     {
-        private readonly List<QueryParameterExpression> _values;
-
         /// <summary> .cctor </summary>
-        public ValuesExpression()
+        /// <param name="values">Values</param>
+        public ValuesExpression(IReadOnlyCollection<QueryParameterExpression> values)
         {
-            _values = new List<QueryParameterExpression>();
+            Values = values;
         }
 
         /// <summary>
         /// Values
         /// </summary>
-        public IReadOnlyCollection<QueryParameterExpression> Values => _values;
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QueryParameterExpression expression)
-        {
-            _values.Add(expression);
-        }
-
-        #endregion
+        public IReadOnlyCollection<QueryParameterExpression> Values { get; }
     }
 }

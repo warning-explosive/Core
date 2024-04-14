@@ -1,5 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
+    using System;
     using System.Linq.Expressions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -19,9 +20,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (expression is MemberExpression memberExpression
                 && memberExpression.Member == LinqMethods.StringEmpty())
             {
-                context.WithinScope(
-                    new QueryParameterExpression(context, typeof(string), static _ => Expression.Constant(string.Empty, typeof(string))),
-                    () => visitor.Visit(memberExpression.Expression));
+                var name = context.NextCommandParameterName();
+                var extractor = new Func<CommandParameterExtractionContext, ConstantExpression>(static _ => Expression.Constant(string.Empty, typeof(string)));
+                context.CaptureCommandParameterExtractor(name, extractor);
+                var queryParameterExpression = new QueryParameterExpression(typeof(string), name);
+                context.Remember(queryParameterExpression);
 
                 return true;
             }

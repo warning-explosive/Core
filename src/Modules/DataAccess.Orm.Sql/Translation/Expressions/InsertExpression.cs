@@ -8,11 +8,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// InsertExpression
     /// </summary>
-    public class InsertExpression : ISqlExpression,
-                                    IApplicable<ValuesExpression>
+    public class InsertExpression : ISqlExpression
     {
-        private readonly List<ValuesExpression> _values;
-
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
         /// <param name="insertBehavior">Insert behavior</param>
@@ -24,13 +21,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             Type = type;
             InsertBehavior = insertBehavior;
-
-            _values = values.ToList();
-        }
-
-        internal InsertExpression(Type type, EnInsertBehavior insertBehavior)
-            : this(type, insertBehavior, new List<ValuesExpression>())
-        {
+            Values = values.ToList();
         }
 
         /// <summary>
@@ -39,23 +30,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public Type Type { get; }
 
         /// <summary>
-        /// Values
-        /// </summary>
-        public IReadOnlyCollection<ValuesExpression> Values => _values;
-
-        /// <summary>
         /// Insert behavior
         /// </summary>
         public EnInsertBehavior InsertBehavior { get; }
 
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ValuesExpression expression)
-        {
-            _values.Add(expression);
-        }
-
-        #endregion
+        /// <summary>
+        /// Values
+        /// </summary>
+        public IReadOnlyCollection<ValuesExpression> Values { get; }
     }
 }

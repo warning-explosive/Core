@@ -2,12 +2,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Linq.Expressions;
     using Basics;
     using Basics.Primitives;
     using Expressions;
+    using Linq;
 
     /// <summary>
     /// TranslationContext
@@ -21,49 +21,35 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         private Dictionary<string, Func<CommandParameterExtractionContext, ConstantExpression>> _extractors;
         private Stack<Expression> _path;
+        private ISqlExpression? _sqlExpression;
 
         private int _commandParameterIndex;
-
-        private Stack<ISqlExpression> _stack;
-
         private int _lambdaParameterIndex;
-        private int _lambdaParametersCount;
-
-        private ISqlExpression? _sqlSqlExpression;
 
         /// <summary> .cctor </summary>
         internal TranslationContext()
         {
             _extractors = new Dictionary<string, Func<CommandParameterExtractionContext, ConstantExpression>>();
             _path = new Stack<Expression>();
+            _sqlExpression = null;
 
-            _commandParameterIndex = -1;
-
-            _stack = new Stack<ISqlExpression>();
-
-            _lambdaParameterIndex = -1;
-            _lambdaParametersCount = 0;
+            _commandParameterIndex = 0;
+            _lambdaParameterIndex = 0;
         }
 
-        internal ISqlExpression? SqlExpression
+        /// <summary>
+        /// ParameterExpression
+        /// </summary>
+        public Expressions.ParameterExpression? ParameterExpression { get; private set; }
+
+        internal ISqlExpression SqlExpression => _sqlExpression ?? throw new InvalidOperationException("sql expression is empty");
+
+        /// <summary> Remember </summary>
+        /// <param name="expression">ISqlExpression</param>
+        public void Remember(ISqlExpression expression)
         {
-            get => _sqlSqlExpression;
-
-            private set
-            {
-                ReverseLambdaParametersNames();
-                _sqlSqlExpression = value;
-            }
+            _sqlExpression = expression;
         }
-
-        internal ISqlExpression? Outer => _stack
-        internal Expression OriginalExpression => _path.Last();
-
-            .FirstOrDefault(expression => expression is NamedSourceExpression
-                or FilterExpression
-                or ProjectionExpression
-                or JoinExpression
-                or OrderByExpression);
 
         /// <inheritdoc />
         public TranslationContext Clone()
@@ -74,11 +60,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 _path = _path,
 
                 _commandParameterIndex = _commandParameterIndex,
-
-                _stack = new Stack<ISqlExpression>(),
-
-                _lambdaParameterIndex = -1,
-                _lambdaParametersCount = 0
+                _lambdaParameterIndex = 0
             };
         }
 
@@ -89,115 +71,43 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
         }
 
         /// <summary>
+        /// OpenParameterScope
+        /// </summary>
+        /// <param name="parameter">ParameterExpression</param>
+        /// <returns>Opened scope</returns>
+        public IDisposable OpenParameterScope(Expressions.ParameterExpression parameter)
+        {
+            var previous = ParameterExpression;
+
+            return Disposable.Create(parameter, Open, Close);
+
+            void Open(Expressions.ParameterExpression parameterExpression)
+            {
+                ParameterExpression = parameterExpression;
+            }
+
+            void Close(Expressions.ParameterExpression parameterExpression)
+            {
+                ParameterExpression = previous;
+            }
+        }
+
+        /// <summary>
         /// Gets next command parameter name
         /// </summary>
         /// <returns>Command parameter name</returns>
         public string NextCommandParameterName()
         {
-            return CommandParameterFormat.Format(++_commandParameterIndex);
+            return CommandParameterFormat.Format(_commandParameterIndex++);
         }
 
         /// <summary>
         /// Gets next lambda parameter name
         /// </summary>
         /// <returns>Lambda parameter name</returns>
-        public Func<string> NextLambdaParameterName()
+        public string NextLambdaParameterName()
         {
-            var capturedLambdaParameterIndex = ++_lambdaParameterIndex;
-
-            return () =>
-            {
-                ReverseLambdaParametersNames();
-                return (_lambdaParametersCount - capturedLambdaParameterIndex - 1).AlphabetIndex();
-            };
-        }
-
-        internal void ReverseLambdaParametersNames()
-        {
-            if (_lambdaParametersCount == 0)
-            {
-                _lambdaParametersCount = _lambdaParameterIndex + 1;
-            }
-        }
-
-        internal void WithinScope(ISqlExpression expression, Action action)
-        {
-            using (Disposable.Create(_stack, Push, Pop))
-            {
-                action.Invoke();
-            }
-
-            void Push(Stack<ISqlExpression> stack)
-            {
-                stack.Push(expression);
-            }
-
-            void Pop(Stack<ISqlExpression> stack)
-            {
-                var sqlExpression = stack.Pop();
-
-                if (_stack.TryPeek(out var outer))
-                {
-                    Apply(outer, sqlExpression);
-                }
-                else
-                {
-                    SqlExpression = sqlExpression;
-                }
-            }
-        }
-
-        internal void WithoutScopeDuplication<TExpression>(Func<TExpression> sqlExpressionProducer, Action action)
-            where TExpression : class, ISqlExpression
-        {
-            if (_stack.TryPeek(out var outer)
-                && outer is TExpression)
-            {
-                action.Invoke();
-            }
-            else
-            {
-                WithinScope(sqlExpressionProducer(), action);
-            }
-        }
-
-        [SuppressMessage("Analysis", "CA1822", Justification = "should be presented as instance method")]
-        internal void WithinConditionalScope(
-            Func<ISqlExpression?, bool> condition,
-            Action<Action> conditionalAction,
-            Action action)
-        {
-            _ = _stack.TryPeek(out var outer);
-
-            if (condition(outer ?? default))
-            {
-                conditionalAction(action);
-            }
-            else
-            {
-                action.Invoke();
-            }
-        }
-
-        internal void Apply(ISqlExpression expression)
-        {
-            if (_stack.TryPeek(out var outer))
-            {
-                Apply(outer, expression);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Could not apply {expression.GetType().Name}. There is no parent expression.");
-            }
-        }
-
-        internal void Apply(ISqlExpression outer, ISqlExpression inner)
-        {
-            outer
-                .CallMethod(nameof(IApplicable<ISqlExpression>.Apply))
-                .WithArgument(this)
-                .WithArgument(inner)
-                .Invoke();
+            return (_lambdaParameterIndex++).AlphabetIndex();
         }
 
         internal Func<Expression, IReadOnlyCollection<SqlCommandParameter>> BuildCommandParametersExtractor(
@@ -222,6 +132,34 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             Expression expression)
         {
             return Disposable.Create(expression, PushPath, PopPath);
+        }
+
+        internal bool IsOuterExpression()
+        {
+            if (_path.Count == 1)
+            {
+                return true;
+            }
+
+            if (_path.Count == 2
+                && _path.Last() is System.Linq.Expressions.MethodCallExpression expression)
+            {
+                var method = expression.Method.GenericMethodDefinitionOrSelf();
+
+                return method == LinqMethods.CachedExpression()
+                       || method == LinqMethods.CachedInsertExpression()
+                       || method == LinqMethods.CachedUpdateExpression()
+                       || method == LinqMethods.CachedDeleteExpression()
+                       || method == LinqMethods.WithDependencyContainer()
+                       || method == LinqMethods.QueryableSingle()
+                       || method == LinqMethods.QueryableSingleOrDefault()
+                       || method == LinqMethods.QueryableFirst()
+                       || method == LinqMethods.QueryableFirstOrDefault()
+                       || method == LinqMethods.QueryableAny()
+                       || method == LinqMethods.QueryableCount();
+            }
+
+            return false;
         }
 
         private void PushPath(Expression expression)

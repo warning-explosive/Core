@@ -44,12 +44,12 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Postgres.Host.Trans
         {
             var sb = new StringBuilder();
 
-            if (!MigrationsWasApplied() && expression.Type.IsSqlView())
+            if (!MigrationsWasApplied() && expression.ItemType.IsSqlView())
             {
                 sb.AppendLine("(");
 
                 var sqlViewQueryRows = _sqlViewQueryProvider
-                    .GetQuery(expression.Type)
+                    .GetQuery(expression.ItemType)
                     .Split(new[] { "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (var row in sqlViewQueryRows)
@@ -64,11 +64,11 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Postgres.Host.Trans
             else
             {
                 sb.Append('"');
-                sb.Append(_modelProvider.SchemaName(expression.Type));
+                sb.Append(_modelProvider.SchemaName(expression.ItemType));
                 sb.Append('"');
                 sb.Append('.');
                 sb.Append('"');
-                sb.Append(_modelProvider.TableName(expression.Type));
+                sb.Append(_modelProvider.TableName(expression.ItemType));
                 sb.Append('"');
             }
 

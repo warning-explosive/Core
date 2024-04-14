@@ -27,17 +27,11 @@
         <Compile Update="Translation\TranslationContext.cs">
             <DependentUpon>ExpressionTranslator.cs</DependentUpon>
         </Compile>
-        <Compile Update="Translation\ReplaceProjectionExpressionVisitor.cs">
-            <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
-        </Compile>
         <Compile Update="Translation\StringEmptyUnknownExpressionTranslator.cs">
             <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
         </Compile>
         <Compile Update="Translation\StringLengthUnknownExpressionTranslator.cs">
             <DependentUpon>IUnknownExpressionTranslator.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Translation\SqlExpressionVisitorBase.cs">
-            <DependentUpon>ISqlExpressionVisitor.cs</DependentUpon>
         </Compile>
         <Compile Update="Translation\TranslationExpressionVisitor.cs">
             <DependentUpon>ExpressionTranslator.cs</DependentUpon>
@@ -108,12 +102,6 @@
         <Compile Update="Translation\ExtractRelationsExpressionVisitor.cs">
             <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
         </Compile>
-        <Compile Update="Translation\ReplaceJoinParameterExpressionsVisitor.cs">
-            <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
-        </Compile>
-        <Compile Update="Translation\ExtractParametersVisitor.cs">
-            <DependentUpon>SqlExpressionVisitorBase.cs</DependentUpon>
-        </Compile>
         <Compile Update="Translation\Expressions\RowsFetchLimitExpression.cs">
             <DependentUpon>ISqlExpression.cs</DependentUpon>
         </Compile>
@@ -150,16 +138,16 @@
         <Compile Update="Translation\LinqExpressionPreprocessorComposite.cs">
             <DependentUpon>ILinqExpressionPreprocessor.cs</DependentUpon>
         </Compile>
-        <Compile Update="Translation\1_UnwrapScalarQueryableMethodsExpressionVisitor.cs">
+        <Compile Update="Translation\UnwrapScalarQueryableMethodsExpressionVisitor.cs">
             <DependentUpon>LinqExpressionPreprocessorComposite.cs</DependentUpon>
         </Compile>
-        <Compile Update="Translation\2_CollapseConstantsExpressionVisitor.cs">
+        <Compile Update="Translation\CollapseConstantsExpressionVisitor.cs">
             <DependentUpon>LinqExpressionPreprocessorComposite.cs</DependentUpon>
         </Compile>
-        <Compile Update="Translation\3_BinaryExpressionVisitor.cs">
+        <Compile Update="Translation\ComparisonWithNullExpressionVisitor.cs">
             <DependentUpon>LinqExpressionPreprocessorComposite.cs</DependentUpon>
         </Compile>
-        <Compile Update="Translation\4_SubQueryExpressionVisitor.cs">
+        <Compile Update="Translation\SubQueryExpressionVisitor.cs">
             <DependentUpon>LinqExpressionPreprocessorComposite.cs</DependentUpon>
         </Compile>
         <Compile Update="Translation\TranslatedSqlExpression.cs">
@@ -368,6 +356,9 @@
         </Compile>
         <Compile Update="Translation\CommandParameterExtractionContext.cs">
           <DependentUpon>ExpressionTranslator.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Translation\Expressions\NullExpression.cs">
+          <DependentUpon>ISqlExpression.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 </Project>

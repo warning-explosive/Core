@@ -5,27 +5,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// RowsFetchLimitExpression
     /// </summary>
-    public class RowsFetchLimitExpression : ISqlExpression,
-                                            IApplicable<ProjectionExpression>,
-                                            IApplicable<FilterExpression>,
-                                            IApplicable<JoinExpression>,
-                                            IApplicable<NamedSourceExpression>
+    public class RowsFetchLimitExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
-        /// <param name="rowsFetchLimit">Rows fetch limit</param>
-        /// <param name="source">Source expression</param>
-        public RowsFetchLimitExpression(
-            uint rowsFetchLimit,
-            ISqlExpression source)
+        /// <param name="source">ISqlExpression</param>
+        /// <param name="rowsFetchLimit">Limit</param>
+        public RowsFetchLimitExpression(ISqlExpression source, uint rowsFetchLimit)
         {
+            if (source is not FilterExpression
+                && source is not JoinExpression
+                && source is not NamedSourceExpression
+                && source is not ProjectionExpression)
+            {
+                throw new ArgumentException($"{nameof(RowsFetchLimitExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
+            }
+
             RowsFetchLimit = rowsFetchLimit;
             Source = source;
-        }
-
-        internal RowsFetchLimitExpression(uint rowsFetchLimit)
-            : this(rowsFetchLimit, null!)
-        {
-            RowsFetchLimit = rowsFetchLimit;
         }
 
         /// <summary>
@@ -36,44 +32,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source
         /// </summary>
-        public ISqlExpression Source { get; private set; }
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JoinExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, NamedSourceExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (Source != null)
-            {
-                throw new InvalidOperationException("Source expression has already been set");
-            }
-
-            Source = expression;
-        }
-
-        #endregion
+        public ISqlExpression Source { get; }
     }
 }

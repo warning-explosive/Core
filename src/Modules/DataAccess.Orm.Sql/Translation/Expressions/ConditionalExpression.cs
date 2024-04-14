@@ -5,17 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ConditionalExpression
     /// </summary>
-    public class ConditionalExpression : ITypedSqlExpression,
-                                         IApplicable<ColumnExpression>,
-                                         IApplicable<JsonAttributeExpression>,
-                                         IApplicable<ConditionalExpression>,
-                                         IApplicable<ParenthesesExpression>,
-                                         IApplicable<BinaryExpression>,
-                                         IApplicable<UnaryExpression>,
-                                         IApplicable<ParameterExpression>,
-                                         IApplicable<QueryParameterExpression>,
-                                         IApplicable<MethodCallExpression>,
-                                         IApplicable<NullExpression>
+    public class ConditionalExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -28,120 +18,72 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ISqlExpression then,
             ISqlExpression @else)
         {
+            if (when is not BinaryExpression
+                && when is not ColumnExpression
+                && when is not ConditionalExpression
+                && when is not JsonAttributeExpression
+                && when is not MethodCallExpression
+                && when is not NullExpression
+                && when is not ParameterExpression
+                && when is not ParenthesesExpression
+                && when is not QueryParameterExpression
+                && when is not UnaryExpression)
+            {
+                throw new ArgumentException($"{nameof(ConditionalExpression)} doesn't support {when.GetType().Name} as {nameof(when)} argument");
+            }
+
+            if (then is not BinaryExpression
+                && then is not ColumnExpression
+                && then is not ConditionalExpression
+                && then is not JsonAttributeExpression
+                && then is not MethodCallExpression
+                && then is not NullExpression
+                && then is not ParameterExpression
+                && then is not ParenthesesExpression
+                && then is not QueryParameterExpression
+                && then is not UnaryExpression)
+            {
+                throw new ArgumentException($"{nameof(ConditionalExpression)} doesn't support {then.GetType().Name} as {nameof(then)} argument");
+            }
+
+            if (@else is not BinaryExpression
+                && @else is not ColumnExpression
+                && @else is not ConditionalExpression
+                && @else is not JsonAttributeExpression
+                && @else is not MethodCallExpression
+                && @else is not NullExpression
+                && @else is not ParameterExpression
+                && @else is not ParenthesesExpression
+                && @else is not QueryParameterExpression
+                && @else is not UnaryExpression)
+            {
+                throw new ArgumentException($"{nameof(ConditionalExpression)} doesn't support {@else.GetType().Name} as {nameof(@else)} argument");
+            }
+
             Type = type;
             When = when;
             Then = then;
             Else = @else;
         }
 
-        internal ConditionalExpression(Type type)
-            : this(type, null!, null!, null!)
-        {
-        }
-
-        /// <inheritdoc />
+        /// <summary>
+        /// Type
+        /// </summary>
         public Type Type { get; }
 
         /// <summary>
         /// When condition
         /// </summary>
-        public ISqlExpression When { get; private set; }
+        public ISqlExpression When { get; }
 
         /// <summary>
         /// Then expression
         /// </summary>
-        public ISqlExpression Then { get; private set; }
+        public ISqlExpression Then { get; }
 
         /// <summary>
         /// Then expression
         /// </summary>
-        public ISqlExpression Else { get; private set; }
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ColumnExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JsonAttributeExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ConditionalExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParenthesesExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, BinaryExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, UnaryExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParameterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QueryParameterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, MethodCallExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, NullExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (When == null)
-            {
-                When = expression;
-                return;
-            }
-
-            if (Then == null)
-            {
-                Then = expression;
-                return;
-            }
-
-            if (Else == null)
-            {
-                Else = expression;
-                return;
-            }
-
-            throw new InvalidOperationException("Source expression has already been set");
-        }
-
-        #endregion
+        public ISqlExpression Else { get; }
     }
 }

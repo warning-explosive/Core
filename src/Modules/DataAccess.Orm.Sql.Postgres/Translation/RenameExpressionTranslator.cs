@@ -31,19 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
         {
             var sb = new StringBuilder();
 
-            var parentheses = expression.Source is not ColumnExpression;
-
-            if (parentheses)
-            {
-                sb.Append('(');
-            }
-
             sb.Append(_translator.Translate(expression.Source, depth));
-
-            if (parentheses)
-            {
-                sb.Append(')');
-            }
 
             sb.Append(" AS ");
             sb.Append('"');

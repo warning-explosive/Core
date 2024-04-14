@@ -5,23 +5,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ExplainExpression
     /// </summary>
-    public class ExplainExpression : ISqlExpression,
-                                     IApplicable<ProjectionExpression>,
-                                     IApplicable<FilterExpression>,
-                                     IApplicable<OrderByExpression>
+    public class ExplainExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
-        /// <param name="analyze">Analyze</param>
         /// <param name="source">Source</param>
-        public ExplainExpression(bool analyze, ISqlExpression source)
+        /// <param name="analyze">Analyze</param>
+        public ExplainExpression(ISqlExpression source, bool analyze)
         {
+            if (source is not FilterExpression
+                && source is not JoinExpression
+                && source is not NamedSourceExpression
+                && source is not OrderByExpression
+                && source is not ProjectionExpression
+                && source is not RowsFetchLimitExpression)
+            {
+                throw new ArgumentException($"{nameof(ExplainExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
+            }
+
             Analyze = analyze;
             Source = source;
-        }
-
-        internal ExplainExpression(bool analyze)
-            : this(analyze, null!)
-        {
         }
 
         /// <summary>
@@ -32,34 +34,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source
         /// </summary>
-        public ISqlExpression Source { get; private set; }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, OrderByExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (Source != null)
-            {
-                throw new InvalidOperationException("Source expression has already been set");
-            }
-
-            Source = expression;
-        }
+        public ISqlExpression Source { get; }
     }
 }

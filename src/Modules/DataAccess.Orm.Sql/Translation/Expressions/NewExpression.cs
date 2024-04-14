@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// NewExpression
@@ -9,14 +10,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
-        public NewExpression(Type type)
+        /// <param name="parameters">Parameters</param>
+        public NewExpression(Type type, IReadOnlyCollection<ISqlExpression> parameters)
         {
             Type = type;
+            Parameters = parameters;
         }
 
         /// <summary>
         /// Type
         /// </summary>
         public Type Type { get; }
+
+        /// <summary>
+        /// Parameters
+        /// </summary>
+        public IReadOnlyCollection<ISqlExpression> Parameters { get; }
     }
 }

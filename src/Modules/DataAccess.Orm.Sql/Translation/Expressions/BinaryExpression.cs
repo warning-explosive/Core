@@ -5,19 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// BinaryExpression
     /// </summary>
-    public class BinaryExpression : ITypedSqlExpression,
-                                    IApplicable<ColumnExpression>,
-                                    IApplicable<JsonAttributeExpression>,
-                                    IApplicable<ConditionalExpression>,
-                                    IApplicable<ParenthesesExpression>,
-                                    IApplicable<BinaryExpression>,
-                                    IApplicable<UnaryExpression>,
-                                    IApplicable<ParameterExpression>,
-                                    IApplicable<QueryParameterExpression>,
-                                    IApplicable<MethodCallExpression>,
-                                    IApplicable<NullExpression>,
-                                    IApplicable<ProjectionExpression>,
-                                    IApplicable<FilterExpression>
+    public class BinaryExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -30,18 +18,43 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ISqlExpression left,
             ISqlExpression right)
         {
+            if (left is not BinaryExpression
+                && left is not ColumnExpression
+                && left is not ConditionalExpression
+                && left is not JsonAttributeExpression
+                && left is not MethodCallExpression
+                && left is not NullExpression
+                && left is not ParameterExpression
+                && left is not ParenthesesExpression
+                && left is not QueryParameterExpression
+                && left is not UnaryExpression)
+            {
+                throw new ArgumentException($"{nameof(BinaryExpression)} doesn't support {left.GetType().Name} as {nameof(left)} argument");
+            }
+
+            if (right is not BinaryExpression
+                && right is not ColumnExpression
+                && right is not ConditionalExpression
+                && right is not JsonAttributeExpression
+                && right is not MethodCallExpression
+                && right is not NullExpression
+                && right is not ParameterExpression
+                && right is not ParenthesesExpression
+                && right is not QueryParameterExpression
+                && right is not UnaryExpression)
+            {
+                throw new ArgumentException($"{nameof(BinaryExpression)} doesn't support {right.GetType().Name} as {nameof(right)} argument");
+            }
+
             Type = type;
             Operator = @operator;
             Left = left;
             Right = right;
         }
 
-        internal BinaryExpression(Type type, BinaryOperator @operator)
-            : this(type, @operator, null!, null!)
-        {
-        }
-
-        /// <inheritdoc />
+        /// <summary>
+        /// Type
+        /// </summary>
         public Type Type { get; }
 
         /// <summary>
@@ -52,104 +65,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Left expression
         /// </summary>
-        public ISqlExpression Left { get; private set; }
+        public ISqlExpression Left { get; }
 
         /// <summary>
         /// Right expression
         /// </summary>
-        public ISqlExpression Right { get; private set; }
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ColumnExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JsonAttributeExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ConditionalExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParenthesesExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, BinaryExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, UnaryExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParameterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QueryParameterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, MethodCallExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, NullExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (Left == null)
-            {
-                Left = expression;
-                return;
-            }
-
-            if (Right == null)
-            {
-                Right = expression;
-                return;
-            }
-
-            throw new InvalidOperationException("Source expression has already been set");
-        }
-
-        #endregion
+        public ISqlExpression Right { get; }
     }
 }

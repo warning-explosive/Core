@@ -24,22 +24,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             {
                 if (methodCallExpression.Method == LinqMethods.ObjectEquals())
                 {
-                    context.WithinScope(
-                        new BinaryExpression(typeof(bool), BinaryOperator.Equal),
-                        () => visitor.Visit(methodCallExpression.Arguments));
+                    visitor.Visit(methodCallExpression.Arguments[0]);
+                    var left = context.SqlExpression;
+                    visitor.Visit(methodCallExpression.Arguments[1]);
+                    var right = context.SqlExpression;
+                    var binaryExpression = new BinaryExpression(typeof(bool), BinaryOperator.Equal, left, right);
+                    context.Remember(binaryExpression);
 
                     return true;
                 }
 
                 if (IsInstanceEquals(methodCallExpression.Method))
                 {
-                    context.WithinScope(
-                        new BinaryExpression(typeof(bool), BinaryOperator.Equal),
-                        () =>
-                        {
-                            visitor.Visit(methodCallExpression.Object);
-                            visitor.Visit(methodCallExpression.Arguments);
-                        });
+                    visitor.Visit(methodCallExpression.Object);
+                    var left = context.SqlExpression;
+                    visitor.Visit(methodCallExpression.Arguments[0]);
+                    var right = context.SqlExpression;
+                    var binaryExpression = new BinaryExpression(typeof(bool), BinaryOperator.Equal, left, right);
+                    context.Remember(binaryExpression);
 
                     return true;
                 }

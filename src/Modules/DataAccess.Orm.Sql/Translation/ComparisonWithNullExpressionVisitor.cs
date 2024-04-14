@@ -10,9 +10,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
     [Component(EnLifestyle.Singleton)]
     [After(typeof(CollapseConstantsExpressionVisitor))]
-    internal class BinaryExpressionVisitor : ExpressionVisitor,
-                                             ILinqExpressionPreprocessor,
-                                             ICollectionResolvable<ILinqExpressionPreprocessor>
+    internal class ComparisonWithNullExpressionVisitor : ExpressionVisitor,
+                                                         ILinqExpressionPreprocessor,
+                                                         ICollectionResolvable<ILinqExpressionPreprocessor>
     {
         protected override Expression VisitBinary(BinaryExpression node)
         {

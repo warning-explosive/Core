@@ -247,18 +247,6 @@ namespace SpaceEngineers.Core.Basics
         }
 
         /// <summary>
-        /// Gets IRecursiveEnumerable
-        /// </summary>
-        /// <param name="source">Source collection</param>
-        /// <typeparam name="T">T type-argument</typeparam>
-        /// <returns>IRecursiveEnumerable</returns>
-        public static IRecursiveEnumerable<T> MoveNext<T>(this IEnumerable<T> source)
-            where T : class
-        {
-            return new RecursiveEnumerable<T>(source.GetEnumerator());
-        }
-
-        /// <summary>
         /// Enqueue ordered collection into queue instance
         /// First the queue is cleared
         /// </summary>

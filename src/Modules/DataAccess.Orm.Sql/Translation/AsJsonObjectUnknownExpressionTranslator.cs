@@ -20,7 +20,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (expression is MethodCallExpression methodCallExpression
                 && methodCallExpression.Method.GenericMethodDefinitionOrSelf() == LinqMethods.AsJsonObject())
             {
-                visitor.Visit(methodCallExpression.Arguments);
+                visitor.Visit(methodCallExpression.Arguments[0]);
 
                 return true;
             }

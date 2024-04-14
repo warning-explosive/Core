@@ -5,20 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// NamedSourceExpression
     /// </summary>
-    public class NamedSourceExpression : ISqlExpression,
-                                         IApplicable<FilterExpression>,
-                                         IApplicable<ProjectionExpression>,
-                                         IApplicable<OrderByExpression>,
-                                         IApplicable<QuerySourceExpression>,
-                                         IApplicable<NewExpression>,
-                                         IApplicable<ColumnExpression>,
-                                         IApplicable<JsonAttributeExpression>,
-                                         IApplicable<RenameExpression>,
-                                         IApplicable<ParenthesesExpression>,
-                                         IApplicable<BinaryExpression>,
-                                         IApplicable<ConditionalExpression>,
-                                         IApplicable<MethodCallExpression>,
-                                         IApplicable<ParameterExpression>
+    public class NamedSourceExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -27,16 +14,26 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public NamedSourceExpression(
             Type type,
             ISqlExpression source,
-            ISqlExpression parameter)
+            ParameterExpression parameter)
         {
+            if (source is not FilterExpression
+                && source is not JoinExpression
+                && source is not OrderByExpression
+                && source is not ParenthesesExpression
+                && source is not ProjectionExpression
+                && source is not QuerySourceExpression)
+            {
+                throw new ArgumentException($"{nameof(NamedSourceExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
+            }
+
             Type = type;
             Source = source;
             Parameter = parameter;
-        }
 
-        internal NamedSourceExpression(Type type, TranslationContext context)
-            : this(type, null!, new ParameterExpression(context, type))
-        {
+            // TODO: remove forwarding - isn't obvious
+            /*context.Apply(
+                Source is FilterExpression filterExpression ? filterExpression.Source : Source,
+                expression);*/
         }
 
         /// <summary>
@@ -47,110 +44,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression
         /// </summary>
-        public ISqlExpression Source { get; private set; }
+        public ISqlExpression Source { get; }
 
         /// <summary>
         /// Parameter expression
         /// </summary>
-        public ISqlExpression Parameter { get; }
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ProjectionExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, OrderByExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QuerySourceExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, NewExpression expression)
-        {
-            ForwardExpression(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ColumnExpression expression)
-        {
-            ForwardExpression(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JsonAttributeExpression expression)
-        {
-            ForwardExpression(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, RenameExpression expression)
-        {
-            ForwardExpression(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParenthesesExpression expression)
-        {
-            ForwardExpression(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, BinaryExpression expression)
-        {
-            ForwardExpression(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ConditionalExpression expression)
-        {
-            ForwardExpression(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, MethodCallExpression expression)
-        {
-            ForwardExpression(context, expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParameterExpression expression)
-        {
-            ForwardExpression(context, expression);
-        }
-
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (Source != null)
-            {
-                throw new InvalidOperationException("Source expression has already been set");
-            }
-
-            Source = expression;
-        }
-
-        private void ForwardExpression(TranslationContext context, ISqlExpression expression)
-        {
-            context.Apply(
-                Source is FilterExpression filterExpression ? filterExpression.Source : Source,
-                expression);
-        }
-
-        #endregion
+        public ParameterExpression Parameter { get; }
     }
 }

@@ -2,18 +2,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
 
     /// <summary>
     /// MethodCallExpression
     /// </summary>
-    public class MethodCallExpression : ITypedSqlExpression,
-                                        IApplicable<ColumnExpression>,
-                                        IApplicable<JsonAttributeExpression>,
-                                        IApplicable<ConditionalExpression>
+    public class MethodCallExpression : ISqlExpression
     {
-        private readonly List<ISqlExpression> _arguments;
-
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
         /// <param name="name">Name</param>
@@ -23,15 +17,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Type type,
             string name,
             ISqlExpression? source,
-            IEnumerable<ISqlExpression> arguments)
+            IReadOnlyCollection<ISqlExpression> arguments)
         {
+            if (source is not null
+                && source is not BinaryExpression
+                && source is not ColumnExpression
+                && source is not ConditionalExpression
+                && source is not JsonAttributeExpression
+                && source is not MethodCallExpression
+                && source is not NullExpression
+                && source is not ParameterExpression
+                && source is not ParenthesesExpression
+                && source is not QueryParameterExpression
+                && source is not UnaryExpression)
+            {
+                throw new ArgumentException($"{nameof(MethodCallExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
+            }
+
             Type = type;
             Name = name;
             Source = source;
-            _arguments = arguments.ToList();
+            Arguments = arguments;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Type
+        /// </summary>
         public Type Type { get; }
 
         /// <summary>
@@ -47,33 +58,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Expression
         /// </summary>
-        public IReadOnlyCollection<ISqlExpression> Arguments => _arguments;
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ColumnExpression expression)
-        {
-            ApplyInternal(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JsonAttributeExpression expression)
-        {
-            ApplyInternal(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ConditionalExpression expression)
-        {
-            ApplyInternal(expression);
-        }
-
-        private void ApplyInternal(ISqlExpression expression)
-        {
-            _arguments.Add(expression);
-        }
-
-        #endregion
+        public IReadOnlyCollection<ISqlExpression> Arguments { get; }
     }
 }

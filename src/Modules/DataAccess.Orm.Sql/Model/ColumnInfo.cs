@@ -111,6 +111,7 @@
 
         public uint? ColumnLength => _property.Declared.GetAttribute<ColumnLenghtAttribute>()?.Length;
 
+        [NotNullIfNotNull(nameof(IsRelation))]
         public Relation? Relation
         {
             get
@@ -165,19 +166,6 @@
             }
         }
 
-        public bool IsMultipleRelation
-        {
-            get
-            {
-                return _isMultipleRelation ??= InitIsMultipleRelation(_property);
-
-                static bool InitIsMultipleRelation(ColumnProperty property)
-                {
-                    return property.PropertyType.IsMultipleRelation(out _);
-                }
-            }
-        }
-
         [NotNullIfNotNull(nameof(IsMultipleRelation))]
         public Type? MultipleRelationTable
         {
@@ -190,6 +178,19 @@
                 static Type InitMultipleRelationTable(ColumnProperty[] chain)
                 {
                     return chain.Last().ReflectedType;
+                }
+            }
+        }
+
+        public bool IsMultipleRelation
+        {
+            get
+            {
+                return _isMultipleRelation ??= InitIsMultipleRelation(_property);
+
+                static bool InitIsMultipleRelation(ColumnProperty property)
+                {
+                    return property.PropertyType.IsMultipleRelation(out _);
                 }
             }
         }

@@ -1,12 +1,10 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using System.Linq.Expressions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
-    using Expressions;
     using Linq;
     using MethodCallExpression = Expressions.MethodCallExpression;
 
@@ -23,9 +21,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (expression is MemberExpression memberExpression
                 && memberExpression.Member == LinqMethods.StringLength())
             {
-                context.WithinScope(
-                    new MethodCallExpression(typeof(int), nameof(string.Length).ToLowerInvariant(), null, Enumerable.Empty<ISqlExpression>()),
-                    () => visitor.Visit(memberExpression.Expression));
+                visitor.Visit(memberExpression.Expression);
+                var argument = context.SqlExpression;
+                var methodCallExpression = new MethodCallExpression(typeof(int), nameof(string.Length).ToLowerInvariant(), null, new[] { argument });
+                context.Remember(methodCallExpression);
 
                 return true;
             }

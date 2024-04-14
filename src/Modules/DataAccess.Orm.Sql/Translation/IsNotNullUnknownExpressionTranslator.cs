@@ -21,9 +21,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (expression is MethodCallExpression methodCallExpression
                 && methodCallExpression.Method == LinqMethods.IsNotNull())
             {
-                context.WithinScope(
-                    new BinaryExpression(typeof(bool), BinaryOperator.IsNot, default!, new NullExpression()),
-                    () => visitor.Visit(methodCallExpression.Arguments));
+                visitor.Visit(methodCallExpression.Arguments[0]);
+                var left = context.SqlExpression;
+                var binaryExpression = new BinaryExpression(typeof(bool), BinaryOperator.IsNot, left, new NullExpression());
+                context.Remember(binaryExpression);
 
                 return true;
             }

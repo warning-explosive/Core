@@ -5,36 +5,39 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// UnaryExpression
     /// </summary>
-    public class UnaryExpression : ITypedSqlExpression,
-                                   IApplicable<ColumnExpression>,
-                                   IApplicable<JsonAttributeExpression>,
-                                   IApplicable<ConditionalExpression>,
-                                   IApplicable<BinaryExpression>,
-                                   IApplicable<UnaryExpression>,
-                                   IApplicable<ParameterExpression>,
-                                   IApplicable<QueryParameterExpression>,
-                                   IApplicable<MethodCallExpression>
+    public class UnaryExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
         /// <param name="operator">Operator</param>
-        /// <param name="source">Source expression</param>
+        /// <param name="source">Source</param>
         public UnaryExpression(
             Type type,
             UnaryOperator @operator,
             ISqlExpression source)
         {
+            if (source is not BinaryExpression
+                && source is not ColumnExpression
+                && source is not ConditionalExpression
+                && source is not JsonAttributeExpression
+                && source is not MethodCallExpression
+                && source is not NullExpression
+                && source is not ParameterExpression
+                && source is not ParenthesesExpression
+                && source is not QueryParameterExpression
+                && source is not UnaryExpression)
+            {
+                throw new ArgumentException($"{nameof(UnaryExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
+            }
+
             Type = type;
             Operator = @operator;
             Source = source;
         }
 
-        internal UnaryExpression(Type type, UnaryOperator @operator)
-            : this(type, @operator, null!)
-        {
-        }
-
-        /// <inheritdoc />
+        /// <summary>
+        /// Type
+        /// </summary>
         public Type Type { get; }
 
         /// <summary>
@@ -45,68 +48,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source expression
         /// </summary>
-        public ISqlExpression Source { get; private set; }
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ColumnExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JsonAttributeExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ConditionalExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, BinaryExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, UnaryExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParameterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QueryParameterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, MethodCallExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (Source != null)
-            {
-                throw new InvalidOperationException("Source expression has already been set");
-            }
-
-            Source = expression;
-        }
-
-        #endregion
+        public ISqlExpression Source { get; }
     }
 }

@@ -23,33 +23,18 @@
             Expression expression,
             ExpressionVisitor visitor)
         {
-            if (expression is MethodCallExpression methodCallExpression)
+            if (expression is MethodCallExpression methodCallExpression
+                && (methodCallExpression.Method.GenericMethodDefinitionOrSelf() == LinqMethods.EnumerableContains()
+                    || IsCollectionContains(methodCallExpression.Method)))
             {
-                if (methodCallExpression.Method.GenericMethodDefinitionOrSelf() == LinqMethods.EnumerableContains())
-                {
-                    context.WithinScope(
-                        new BinaryExpression(typeof(bool), BinaryOperator.Contains),
-                        () =>
-                        {
-                            visitor.Visit(methodCallExpression.Arguments[1]);
-                            visitor.Visit(methodCallExpression.Arguments[0]);
-                        });
+                visitor.Visit(methodCallExpression.Arguments[1]);
+                var left = context.SqlExpression;
+                visitor.Visit(methodCallExpression.Arguments[0]);
+                var right = context.SqlExpression;
+                var binaryExpression = new BinaryExpression(typeof(bool), BinaryOperator.Contains, left, right);
+                context.Remember(binaryExpression);
 
-                    return true;
-                }
-
-                if (IsCollectionContains(methodCallExpression.Method))
-                {
-                    context.WithinScope(
-                        new BinaryExpression(typeof(bool), BinaryOperator.Contains),
-                        () =>
-                        {
-                            visitor.Visit(methodCallExpression.Arguments[0]);
-                            visitor.Visit(methodCallExpression.Object);
-                        });
-
-                    return true;
-                }
+                return true;
             }
 
             return false;

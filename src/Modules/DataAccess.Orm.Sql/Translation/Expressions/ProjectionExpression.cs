@@ -2,158 +2,39 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using Basics;
 
     /// <summary>
     /// ProjectionExpression
     /// </summary>
-    public class ProjectionExpression : ISqlExpression,
-                                        IApplicable<FilterExpression>,
-                                        IApplicable<JoinExpression>,
-                                        IApplicable<NamedSourceExpression>,
-                                        IApplicable<NewExpression>,
-                                        IApplicable<ColumnExpression>,
-                                        IApplicable<JsonAttributeExpression>,
-                                        IApplicable<RenameExpression>,
-                                        IApplicable<ParenthesesExpression>,
-                                        IApplicable<BinaryExpression>,
-                                        IApplicable<UnaryExpression>,
-                                        IApplicable<ConditionalExpression>,
-                                        IApplicable<MethodCallExpression>
+    public class ProjectionExpression : ISqlExpression
     {
-        private readonly List<ISqlExpression> _expressions;
-
         /// <summary> .cctor </summary>
-        /// <param name="type">Type</param>
+        /// <param name="itemType">ItemType</param>
         /// <param name="source">Source expression</param>
         /// <param name="expressions">Expressions</param>
         public ProjectionExpression(
-            Type type,
+            Type itemType,
             ISqlExpression source,
-            IEnumerable<ISqlExpression> expressions)
+            IReadOnlyCollection<ISqlExpression> expressions)
         {
-            Type = type;
+            if (source is not NamedSourceExpression)
+            {
+                throw new ArgumentException($"{nameof(ProjectionExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
+            }
+
+            ItemType = itemType;
             Source = source;
-            IsProjectionToClass = type.IsClass && !type.IsPrimitive() && !type.IsCollection();
-            IsAnonymousProjection = type.IsCompilerGenerated();
+            IsProjectionToClass = itemType.IsClass && !itemType.IsPrimitive() && !itemType.IsCollection();
+            IsAnonymousProjection = itemType.IsCompilerGenerated();
+            Expressions = expressions;
 
-            _expressions = expressions.ToList();
-        }
+            // todo: new expression
+            /*IsProjectionToClass = true;
+            IsAnonymousProjection = expression.Type.IsCompilerGenerated();*/
 
-        internal ProjectionExpression(Type type)
-            : this(type, null!, Array.Empty<ISqlExpression>())
-        {
-        }
-
-        /// <summary>
-        /// Type
-        /// </summary>
-        public Type Type { get; }
-
-        /// <summary>
-        /// Is projection creates anonymous or user defined class
-        /// </summary>
-        public bool IsProjectionToClass { get; private set; }
-
-        /// <summary>
-        /// Is projection creates anonymous class
-        /// </summary>
-        public bool IsAnonymousProjection { get; private set; }
-
-        /// <summary>
-        /// Is projection takes distinct values
-        /// </summary>
-        public bool IsDistinct { get; set; }
-
-        /// <summary>
-        /// Source expression
-        /// </summary>
-        public ISqlExpression Source { get; private set; }
-
-        /// <summary>
-        /// Expressions
-        /// </summary>
-        public IReadOnlyCollection<ISqlExpression> Expressions => _expressions;
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, NewExpression expression)
-        {
-            IsProjectionToClass = true;
-            IsAnonymousProjection = expression.Type.IsCompilerGenerated();
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ColumnExpression expression)
-        {
-            ApplyExpression(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JsonAttributeExpression expression)
-        {
-            ApplyExpression(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, RenameExpression expression)
-        {
-            ApplyExpression(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParenthesesExpression expression)
-        {
-            ApplyExpression(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, BinaryExpression expression)
-        {
-            ApplyExpression(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, UnaryExpression expression)
-        {
-            ApplyExpression(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ConditionalExpression expression)
-        {
-            ApplyExpression(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, MethodCallExpression expression)
-        {
-            ApplyExpression(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, FilterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JoinExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, NamedSourceExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        private void ApplyExpression(ISqlExpression expression)
-        {
-            if (Source is JoinExpression join)
+            // TODO: simplify to assigment
+            /*if (Source is JoinExpression join)
             {
                 expression = ReplaceJoinParameterExpressionsVisitor.Replace(expression, join);
             }
@@ -163,19 +44,37 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                 return;
             }
 
-            _expressions.Add(expression);
+            _expressions.Add(expression);*/
         }
 
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (Source != null)
-            {
-                throw new InvalidOperationException("Source expression has already been set");
-            }
+        /// <summary>
+        /// Type
+        /// </summary>
+        public Type ItemType { get; }
 
-            Source = expression;
-        }
+        /// <summary>
+        /// Is projection creates anonymous or user defined class
+        /// </summary>
+        public bool IsProjectionToClass { get; }
 
-        #endregion
+        /// <summary>
+        /// Is projection creates anonymous class
+        /// </summary>
+        public bool IsAnonymousProjection { get; }
+
+        /// <summary>
+        /// Is projection takes distinct values
+        /// </summary>
+        public bool IsDistinct { get; set; }
+
+        /// <summary>
+        /// Source expression
+        /// </summary>
+        public ISqlExpression Source { get; }
+
+        /// <summary>
+        /// Expressions
+        /// </summary>
+        public IReadOnlyCollection<ISqlExpression> Expressions { get; }
     }
 }

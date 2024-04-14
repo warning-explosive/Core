@@ -5,51 +5,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// ParenthesesExpression
     /// </summary>
-    public class ParenthesesExpression : ISqlExpression,
-                                         IApplicable<BinaryExpression>,
-                                         IApplicable<JsonAttributeExpression>
+    public class ParenthesesExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
         /// <param name="source">Source</param>
         public ParenthesesExpression(ISqlExpression source)
         {
-            Source = source;
-        }
+            if (source is not BinaryExpression
+                && source is not ConditionalExpression
+                && source is not FilterExpression
+                && source is not JoinExpression
+                && source is not NamedSourceExpression
+                && source is not OrderByExpression
+                && source is not ProjectionExpression
+                && source is not UnaryExpression)
+            {
+                throw new ArgumentException($"{nameof(ParenthesesExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
+            }
 
-        internal ParenthesesExpression()
-            : this(null!)
-        {
+            Source = source;
         }
 
         /// <summary>
         /// Source
         /// </summary>
-        public ISqlExpression Source { get; private set; }
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, BinaryExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JsonAttributeExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (Source != null)
-            {
-                throw new InvalidOperationException("Source expression has already been set");
-            }
-
-            Source = expression;
-        }
-
-        #endregion
+        public ISqlExpression Source { get; }
     }
 }

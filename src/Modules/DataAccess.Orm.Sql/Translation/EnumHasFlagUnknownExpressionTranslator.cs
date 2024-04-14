@@ -20,13 +20,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             if (expression is MethodCallExpression methodCallExpression
                 && methodCallExpression.Method == LinqMethods.EnumHasFlag())
             {
-                context.WithinScope(
-                    new Expressions.BinaryExpression(typeof(bool), BinaryOperator.ArrayIntersection),
-                    () =>
-                    {
-                        visitor.Visit(methodCallExpression.Object);
-                        visitor.Visit(methodCallExpression.Arguments);
-                    });
+                visitor.Visit(methodCallExpression.Object);
+                var left = context.SqlExpression;
+                visitor.Visit(methodCallExpression.Arguments[0]);
+                var right = context.SqlExpression;
+                var binaryExpression = new Expressions.BinaryExpression(typeof(bool), BinaryOperator.ArrayIntersection, left, right);
+                context.Remember(binaryExpression);
 
                 return true;
             }

@@ -5,12 +5,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     /// <summary>
     /// JsonAttributeExpression
     /// </summary>
-    public class JsonAttributeExpression : ISqlExpression,
-                                           IApplicable<ColumnExpression>,
-                                           IApplicable<JsonAttributeExpression>,
-                                           IApplicable<ParenthesesExpression>,
-                                           IApplicable<ParameterExpression>,
-                                           IApplicable<QueryParameterExpression>
+    public class JsonAttributeExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
@@ -21,14 +16,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ISqlExpression source,
             ISqlExpression accessor)
         {
+            if (source is not ColumnExpression
+                && source is not JsonAttributeExpression
+                && source is not ParameterExpression
+                && source is not ParenthesesExpression
+                && source is not QueryParameterExpression)
+            {
+                throw new ArgumentException($"{nameof(JsonAttributeExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
+            }
+
             Type = type;
             Source = source;
             Accessor = accessor;
-        }
 
-        internal JsonAttributeExpression(Type type)
-            : this(type, null!, null!)
-        {
+            // TODO:
+            throw new ArgumentException($"{nameof(JsonAttributeExpression)} doesn't support {accessor.GetType().Name} as {nameof(accessor)} argument");
         }
 
         /// <summary>
@@ -39,62 +41,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Source
         /// </summary>
-        public ISqlExpression Source { get; private set; }
+        public ISqlExpression Source { get; }
 
         /// <summary>
         /// Json attribute accessor
         /// </summary>
-        public ISqlExpression Accessor { get; private set; }
-
-        #region IApplicable
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ColumnExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, JsonAttributeExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParenthesesExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, ParameterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        /// <inheritdoc />
-        public void Apply(TranslationContext context, QueryParameterExpression expression)
-        {
-            ApplySource(expression);
-        }
-
-        private void ApplySource(ISqlExpression expression)
-        {
-            if (Source == null)
-            {
-                Source = expression;
-                return;
-            }
-
-            if (Accessor == null)
-            {
-                Accessor = expression;
-                return;
-            }
-
-            throw new InvalidOperationException("Source expression has already been set");
-        }
-
-        #endregion
+        public ISqlExpression Accessor { get; }
     }
 }

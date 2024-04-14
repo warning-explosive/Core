@@ -1,31 +1,24 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
-    using System.Linq.Expressions;
 
     /// <summary>
     /// QueryParameterExpression
     /// </summary>
-    public class QueryParameterExpression : ITypedSqlExpression
+    public class QueryParameterExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
-        /// <param name="context">TranslationContext</param>
         /// <param name="type">Type</param>
-        /// <param name="extractor">Extractor</param>
-        public QueryParameterExpression(
-            TranslationContext context,
-            Type type,
-            Func<CommandParameterExtractionContext, ConstantExpression>? extractor = null)
+        /// <param name="name">Name</param>
+        public QueryParameterExpression(Type type, string name)
         {
-            var name = context.NextCommandParameterName();
-
-            Type = type;
             Name = name;
-
-            context.CaptureCommandParameterExtractor(name, extractor);
+            Type = type;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Type
+        /// </summary>
         public Type Type { get; }
 
         /// <summary>

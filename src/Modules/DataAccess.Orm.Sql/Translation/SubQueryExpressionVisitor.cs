@@ -9,7 +9,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using CompositionRoot;
 
     [Component(EnLifestyle.Singleton)]
-    [After(typeof(BinaryExpressionVisitor))]
+    [After(typeof(ComparisonWithNullExpressionVisitor))]
     internal class SubQueryExpressionVisitor : ExpressionVisitor,
                                                ILinqExpressionPreprocessor,
                                                ICollectionResolvable<ILinqExpressionPreprocessor>

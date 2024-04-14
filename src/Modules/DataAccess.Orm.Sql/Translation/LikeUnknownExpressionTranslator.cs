@@ -21,9 +21,12 @@
             if (expression is MethodCallExpression methodCallExpression
                 && methodCallExpression.Method == LinqMethods.Like())
             {
-                context.WithinScope(
-                    new BinaryExpression(typeof(bool), BinaryOperator.Like),
-                    () => visitor.Visit(methodCallExpression.Arguments));
+                visitor.Visit(methodCallExpression.Arguments[0]);
+                var left = context.SqlExpression;
+                visitor.Visit(methodCallExpression.Arguments[1]);
+                var right = context.SqlExpression;
+                var binaryExpression = new BinaryExpression(typeof(bool), BinaryOperator.Like, left, right);
+                context.Remember(binaryExpression);
 
                 return true;
             }

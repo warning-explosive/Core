@@ -62,6 +62,7 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
             IAdvancedIntegrationContext context,
             CancellationToken token)
         {
+            // TODO: #205 - test it
             await (Inbox == null
                 ? PersistInbox(context, _transaction, _endpointIdentity, EnInboxMessageState.Handled, token)
                 : MarkInboxAsHandled(_transaction, Inbox.PrimaryKey, token)).ConfigureAwait(false);
@@ -82,6 +83,15 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.UnitOfWork
             CancellationToken token)
         {
             await _transaction.Close(false, token).ConfigureAwait(false);
+
+            // TODO: #205 - test it
+            if (Inbox == null)
+            {
+                await using (await _transaction.OpenScope(true, token).ConfigureAwait(false))
+                {
+                    await PersistInbox(context, _transaction, _endpointIdentity, EnInboxMessageState.Processing, token).ConfigureAwait(false);
+                }
+            }
         }
 
         private static Task<InboxMessage?> ReadInbox(

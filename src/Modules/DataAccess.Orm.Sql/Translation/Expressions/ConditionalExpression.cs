@@ -19,6 +19,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ISqlExpression @else)
         {
             if (when is not BinaryExpression
+                && when is not ColumnsChainExpression
                 && when is not ColumnExpression
                 && when is not ConditionalExpression
                 && when is not JsonAttributeExpression
@@ -33,6 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             }
 
             if (then is not BinaryExpression
+                && then is not ColumnsChainExpression
                 && then is not ColumnExpression
                 && then is not ConditionalExpression
                 && then is not JsonAttributeExpression
@@ -47,6 +49,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             }
 
             if (@else is not BinaryExpression
+                && @else is not ColumnsChainExpression
                 && @else is not ColumnExpression
                 && @else is not ConditionalExpression
                 && @else is not JsonAttributeExpression

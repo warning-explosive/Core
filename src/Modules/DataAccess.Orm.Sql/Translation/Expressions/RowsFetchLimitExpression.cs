@@ -12,8 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="rowsFetchLimit">Limit</param>
         public RowsFetchLimitExpression(ISqlExpression source, uint rowsFetchLimit)
         {
-            if (source is not FilterExpression
-                && source is not JoinExpression
+            if (source is not JoinExpression
                 && source is not NamedSourceExpression
                 && source is not ProjectionExpression)
             {

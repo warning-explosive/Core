@@ -21,6 +21,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
 
         public string Translate(ParameterExpression expression, int depth)
         {
+            if (expression.SkipInSql)
+            {
+                return string.Empty;
+            }
+
             return expression.Name;
         }
     }

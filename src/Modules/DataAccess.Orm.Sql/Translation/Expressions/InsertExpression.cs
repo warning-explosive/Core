@@ -11,15 +11,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     public class InsertExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
-        /// <param name="type">Type</param>
+        /// <param name="itemType">ItemType</param>
         /// <param name="insertBehavior">Insert behavior</param>
         /// <param name="values">Values</param>
         public InsertExpression(
-            Type type,
+            Type itemType,
             EnInsertBehavior insertBehavior,
             IReadOnlyCollection<ValuesExpression> values)
         {
-            Type = type;
+            ItemType = itemType;
             InsertBehavior = insertBehavior;
             Values = values.ToList();
         }
@@ -27,7 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <summary>
         /// Type
         /// </summary>
-        public Type Type { get; }
+        public Type ItemType { get; }
 
         /// <summary>
         /// Insert behavior

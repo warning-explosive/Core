@@ -12,8 +12,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="analyze">Analyze</param>
         public ExplainExpression(ISqlExpression source, bool analyze)
         {
-            if (source is not FilterExpression
-                && source is not JoinExpression
+            if (source is not JoinExpression
                 && source is not NamedSourceExpression
                 && source is not OrderByExpression
                 && source is not ProjectionExpression

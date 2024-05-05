@@ -7,26 +7,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics;
     using Expressions;
     using Linq;
-    using BinaryExpression = Expressions.BinaryExpression;
-    using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
 
     [Component(EnLifestyle.Singleton)]
-    internal class AssignUnknownExpressionTranslator : IUnknownExpressionTranslator,
-                                                       ICollectionResolvable<IUnknownExpressionTranslator>
+    internal class HasJsonAttributeLinqExpressionVisitor : ILinqExpressionVisitor,
+                                                           ICollectionResolvable<ILinqExpressionVisitor>
     {
-        public bool TryTranslate(
+        public bool TryVisit(
+            ExpressionVisitor visitor,
             TranslationContext context,
-            Expression expression,
-            ExpressionVisitor visitor)
+            Expression expression)
         {
-            if (expression is MethodCallExpression methodCallExpression
-                && methodCallExpression.Method.GenericMethodDefinitionOrSelf() == LinqMethods.Assign())
+            if (expression is not System.Linq.Expressions.MethodCallExpression methodCallExpression)
+            {
+                return false;
+            }
+
+            var method = methodCallExpression.Method.GenericMethodDefinitionOrSelf();
+
+            if (method == LinqMethods.HasJsonAttribute())
             {
                 visitor.Visit(methodCallExpression.Arguments[0]);
                 var left = context.SqlExpression;
                 visitor.Visit(methodCallExpression.Arguments[1]);
                 var right = context.SqlExpression;
-                var binaryExpression = new BinaryExpression(typeof(void), BinaryOperator.Assign, left, right);
+                var binaryExpression = new Expressions.BinaryExpression(typeof(void), BinaryOperator.HasJsonAttribute, left, right);
                 context.Remember(binaryExpression);
 
                 return true;

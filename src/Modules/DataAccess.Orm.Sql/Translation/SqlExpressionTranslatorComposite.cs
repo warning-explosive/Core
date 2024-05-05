@@ -7,27 +7,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using Basics;
-    using CompositionRoot;
     using Expressions;
 
     [Component(EnLifestyle.Singleton)]
     internal class SqlExpressionTranslatorComposite : ISqlExpressionTranslatorComposite,
                                                       IResolvable<ISqlExpressionTranslatorComposite>
     {
-        private readonly IDependencyContainer _dependencyContainer;
+        private readonly IEnumerable<ISqlExpressionTranslator> _sqlExpressionTranslators;
 
         private IReadOnlyDictionary<Type, ISqlExpressionTranslator>? _map;
 
-        public SqlExpressionTranslatorComposite(IDependencyContainer dependencyContainer)
+        public SqlExpressionTranslatorComposite(IEnumerable<ISqlExpressionTranslator> sqlExpressionTranslators)
         {
-            _dependencyContainer = dependencyContainer;
+            _sqlExpressionTranslators = sqlExpressionTranslators;
         }
 
         public string Translate(ISqlExpression expression, int depth)
         {
-            _map ??= _dependencyContainer
-                .ResolveCollection<ISqlExpressionTranslator>()
-                .ToDictionary(static translator => translator.GetType().ExtractGenericArgumentAt(typeof(ISqlExpressionTranslator<>)));
+            _map ??= _sqlExpressionTranslators.ToDictionary(static translator => translator.GetType().ExtractGenericArgumentAt(typeof(ISqlExpressionTranslator<>)));
 
             return _map.TryGetValue(expression.GetType(), out var translator)
                 ? translator.Translate(expression, depth)

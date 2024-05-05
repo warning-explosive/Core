@@ -25,5 +25,10 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// Name
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// SkipInSql
+        /// </summary>
+        public bool SkipInSql { get; set; }
     }
 }

@@ -33,7 +33,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine(_translator.Translate(expression.Source, depth));
+            sb.Append(new string('\t', depth));
             sb.AppendLine("ORDER BY");
             sb.Append(new string('\t', depth + 1));
 

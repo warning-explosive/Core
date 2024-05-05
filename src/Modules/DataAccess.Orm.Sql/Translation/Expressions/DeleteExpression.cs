@@ -8,15 +8,24 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     public class DeleteExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
-        /// <param name="type">Type</param>
-        public DeleteExpression(Type type)
+        /// <param name="itemType">ItemType</param>
+        /// <param name="filterExpression">FilterExpression</param>
+        public DeleteExpression(
+            Type itemType,
+            FilterExpression? filterExpression)
         {
-            Type = type;
+            ItemType = itemType;
+            FilterExpression = filterExpression;
         }
 
         /// <summary>
         /// Type
         /// </summary>
-        public Type Type { get; }
+        public Type ItemType { get; }
+
+        /// <summary>
+        /// FilterExpression
+        /// </summary>
+        public FilterExpression? FilterExpression { get; set; }
     }
 }

@@ -69,13 +69,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
             {
                 sb.Append(_translator.Translate(expression.Left, depth));
                 sb.Append(" = ANY");
-                sb.Append('(');
                 sb.Append(_translator.Translate(expression.Right, depth + 1));
-                sb.Append(')');
             }
-            else if (FunctionalOperators.ContainsKey(expression.Operator))
+            else if (FunctionalOperators.TryGetValue(expression.Operator, out var @operator))
             {
-                sb.Append(FunctionalOperators[expression.Operator]);
+                sb.Append(@operator);
                 sb.Append('(');
                 sb.Append(_translator.Translate(expression.Left, depth));
                 sb.Append(", ");

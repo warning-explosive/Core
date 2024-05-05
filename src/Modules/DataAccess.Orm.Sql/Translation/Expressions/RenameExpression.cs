@@ -17,6 +17,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ISqlExpression source)
         {
             if (source is not BinaryExpression
+                && source is not ColumnsChainExpression
                 && source is not ColumnExpression
                 && source is not ConditionalExpression
                 && source is not JsonAttributeExpression

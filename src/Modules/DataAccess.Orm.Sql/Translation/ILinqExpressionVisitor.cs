@@ -3,20 +3,20 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Linq.Expressions;
 
     /// <summary>
-    /// IMemberInfoTranslator
+    /// IMethodCallExpressionTranslator
     /// </summary>
-    public interface IUnknownExpressionTranslator
+    public interface ILinqExpressionVisitor
     {
         /// <summary>
         /// Translates sql expression
         /// </summary>
+        /// <param name="visitor">Visitor</param>
         /// <param name="context">TranslationContext</param>
         /// <param name="expression">Expression</param>
-        /// <param name="visitor">Visitor</param>
         /// <returns>Recognition result</returns>
-        bool TryTranslate(
+        bool TryVisit(
+            ExpressionVisitor visitor,
             TranslationContext context,
-            Expression expression,
-            ExpressionVisitor visitor);
+            Expression expression);
     }
 }

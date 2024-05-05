@@ -31,7 +31,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
         {
             var sb = new StringBuilder();
 
-            if (expression.Source != null)
+            if (expression.Source is not ParameterExpression { SkipInSql: true })
             {
                 sb.Append(_translator.Translate(expression.Source, depth));
                 sb.Append('.');

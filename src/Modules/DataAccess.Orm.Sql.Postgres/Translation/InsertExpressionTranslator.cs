@@ -46,7 +46,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
         {
             var sb = new StringBuilder();
 
-            var table = _modelProvider.Tables[expression.Type];
+            var table = _modelProvider.Tables[expression.ItemType];
 
             sb.Append(CultureInfo.InvariantCulture, $@"INSERT INTO ""{table.Schema}"".""{table.Name}"" ");
 

@@ -13,11 +13,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         {
             if (source is not BinaryExpression
                 && source is not ConditionalExpression
-                && source is not FilterExpression
                 && source is not JoinExpression
+                && source is not JsonAttributeExpression
                 && source is not NamedSourceExpression
                 && source is not OrderByExpression
                 && source is not ProjectionExpression
+                && source is not QueryParameterExpression
                 && source is not UnaryExpression)
             {
                 throw new ArgumentException($"{nameof(ParenthesesExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");

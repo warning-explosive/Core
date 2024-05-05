@@ -289,7 +289,7 @@
 
             if (Relation != null)
             {
-                return new ColumnExpression(Relation.Property.Reflected, Type, parameter);
+                return new ColumnExpression(Type, Relation.Property.Reflected, parameter);
             }
 
             _sqlExpressionExtractor ??= GetValueExtractor<ISqlExpression>(_chain, AggregateColumns);
@@ -298,7 +298,7 @@
 
             static ISqlExpression AggregateColumns(PropertyInfo property, ISqlExpression source)
             {
-                return new ColumnExpression(property, property.PropertyType, source);
+                return new ColumnExpression(property.PropertyType, property, source);
             }
         }
 

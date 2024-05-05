@@ -16,6 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             EnOrderingDirection orderingDirection)
         {
             if (expression is not BinaryExpression
+                && expression is not ColumnsChainExpression
                 && expression is not ColumnExpression
                 && expression is not ConditionalExpression
                 && expression is not JsonAttributeExpression

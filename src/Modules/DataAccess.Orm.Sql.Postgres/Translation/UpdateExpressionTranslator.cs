@@ -1,9 +1,12 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
 {
     using System;
+    using System.Linq;
+    using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
+    using Basics;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Translation;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions;
@@ -14,10 +17,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
                                                 ICollectionResolvable<ISqlExpressionTranslator>
     {
         private readonly IModelProvider _modelProvider;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public UpdateExpressionTranslator(IModelProvider modelProvider)
+        public UpdateExpressionTranslator(
+            IModelProvider modelProvider,
+            ISqlExpressionTranslatorComposite translator)
         {
             _modelProvider = modelProvider;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -29,9 +36,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
 
         public string Translate(UpdateExpression expression, int depth)
         {
-            var table = _modelProvider.Tables[expression.Type];
+            var sb = new StringBuilder();
 
-            return $@"UPDATE ""{table.Schema}"".""{table.Name}""";
+            var table = _modelProvider.Tables[expression.ItemType];
+
+            sb.Append(new string('\t', depth));
+            sb.AppendLine($@"UPDATE ""{table.Schema}"".""{table.Name}""");
+
+            sb.Append(new string('\t', depth));
+            sb.Append("SET ");
+
+            var assignments = expression
+                .Assignments
+                .Select(assignment => new string('\t', depth) + _translator.Translate(assignment, depth))
+                .ToString(", ");
+
+            if (expression.FilterExpression != null)
+            {
+                sb.AppendLine(assignments);
+                sb.Append(_translator.Translate(expression.FilterExpression, depth));
+            }
+            else
+            {
+                sb.Append(assignments);
+            }
+
+            return sb.ToString();
         }
     }
 }

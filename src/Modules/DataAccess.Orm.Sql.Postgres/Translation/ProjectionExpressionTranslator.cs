@@ -46,7 +46,37 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
             sb.Append(new string('\t', depth));
             sb.AppendLine("FROM");
             sb.Append(new string('\t', depth + 1));
-            sb.Append(_translator.Translate(expression.Source, depth + 1));
+
+            var sourceExpression = _translator.Translate(expression.Source, depth + 1);
+
+            if (expression.FilterExpression != null
+                || expression.OrderByExpression != null)
+            {
+                sb.AppendLine(sourceExpression);
+            }
+            else
+            {
+                sb.Append(sourceExpression);
+            }
+
+            if (expression.FilterExpression != null)
+            {
+                var filterExpression = _translator.Translate(expression.FilterExpression, depth);
+
+                if (expression.OrderByExpression != null)
+                {
+                    sb.AppendLine(filterExpression);
+                }
+                else
+                {
+                    sb.Append(filterExpression);
+                }
+            }
+
+            if (expression.OrderByExpression != null)
+            {
+                sb.Append(_translator.Translate(expression.OrderByExpression, depth));
+            }
 
             return sb.ToString();
         }

@@ -6,19 +6,22 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Enumerations;
     using Expressions;
     using Linq;
-    using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
 
     [Component(EnLifestyle.Singleton)]
-    internal class EnumHasFlagUnknownExpressionTranslator : IUnknownExpressionTranslator,
-                                                            ICollectionResolvable<IUnknownExpressionTranslator>
+    internal class EnumHasFlagLinqExpressionVisitor : ILinqExpressionVisitor,
+                                                      ICollectionResolvable<ILinqExpressionVisitor>
     {
-        public bool TryTranslate(
+        public bool TryVisit(
+            ExpressionVisitor visitor,
             TranslationContext context,
-            Expression expression,
-            ExpressionVisitor visitor)
+            Expression expression)
         {
-            if (expression is MethodCallExpression methodCallExpression
-                && methodCallExpression.Method == LinqMethods.EnumHasFlag())
+            if (expression is not System.Linq.Expressions.MethodCallExpression methodCallExpression)
+            {
+                return false;
+            }
+
+            if (methodCallExpression.Method == LinqMethods.EnumHasFlag())
             {
                 visitor.Visit(methodCallExpression.Object);
                 var left = context.SqlExpression;

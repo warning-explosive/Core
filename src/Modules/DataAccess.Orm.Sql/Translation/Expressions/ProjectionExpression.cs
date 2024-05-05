@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
     using System.Collections.Generic;
-    using Basics;
 
     /// <summary>
     /// ProjectionExpression
@@ -13,54 +12,32 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// <param name="itemType">ItemType</param>
         /// <param name="source">Source expression</param>
         /// <param name="expressions">Expressions</param>
+        /// <param name="filterExpression">FilterExpression</param>
+        /// <param name="orderByExpression">OrderByExpression</param>
         public ProjectionExpression(
             Type itemType,
             ISqlExpression source,
-            IReadOnlyCollection<ISqlExpression> expressions)
+            IReadOnlyCollection<ISqlExpression> expressions,
+            FilterExpression? filterExpression,
+            OrderByExpression? orderByExpression)
         {
-            if (source is not NamedSourceExpression)
+            if (source is not NamedSourceExpression
+                && source is not JoinExpression)
             {
                 throw new ArgumentException($"{nameof(ProjectionExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
             }
 
             ItemType = itemType;
             Source = source;
-            IsProjectionToClass = itemType.IsClass && !itemType.IsPrimitive() && !itemType.IsCollection();
-            IsAnonymousProjection = itemType.IsCompilerGenerated();
             Expressions = expressions;
-
-            // todo: new expression
-            /*IsProjectionToClass = true;
-            IsAnonymousProjection = expression.Type.IsCompilerGenerated();*/
-
-            // TODO: simplify to assigment
-            /*if (Source is JoinExpression join)
-            {
-                expression = ReplaceJoinParameterExpressionsVisitor.Replace(expression, join);
-            }
-
-            if (expression is ParameterExpression)
-            {
-                return;
-            }
-
-            _expressions.Add(expression);*/
+            FilterExpression = filterExpression;
+            OrderByExpression = orderByExpression;
         }
 
         /// <summary>
         /// Type
         /// </summary>
         public Type ItemType { get; }
-
-        /// <summary>
-        /// Is projection creates anonymous or user defined class
-        /// </summary>
-        public bool IsProjectionToClass { get; }
-
-        /// <summary>
-        /// Is projection creates anonymous class
-        /// </summary>
-        public bool IsAnonymousProjection { get; }
 
         /// <summary>
         /// Is projection takes distinct values
@@ -76,5 +53,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         /// Expressions
         /// </summary>
         public IReadOnlyCollection<ISqlExpression> Expressions { get; }
+
+        /// <summary>
+        /// FilterExpression
+        /// </summary>
+        public FilterExpression? FilterExpression { get; set; }
+
+        /// <summary>
+        /// OrderByExpression
+        /// </summary>
+        public OrderByExpression? OrderByExpression { get; set; }
     }
 }

@@ -16,7 +16,8 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ISqlExpression source,
             ISqlExpression accessor)
         {
-            if (source is not ColumnExpression
+            if (source is not ColumnsChainExpression
+                && source is not ColumnExpression
                 && source is not JsonAttributeExpression
                 && source is not ParameterExpression
                 && source is not ParenthesesExpression
@@ -28,9 +29,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             Type = type;
             Source = source;
             Accessor = accessor;
-
-            // TODO:
-            throw new ArgumentException($"{nameof(JsonAttributeExpression)} doesn't support {accessor.GetType().Name} as {nameof(accessor)} argument");
         }
 
         /// <summary>

@@ -9,13 +9,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Linq;
 
     [Component(EnLifestyle.Singleton)]
-    internal class StringEmptyUnknownExpressionTranslator : IUnknownExpressionTranslator,
-                                                            ICollectionResolvable<IUnknownExpressionTranslator>
+    internal class StringEmptyLinqExpressionVisitor : ILinqExpressionVisitor,
+                                                      ICollectionResolvable<ILinqExpressionVisitor>
     {
-        public bool TryTranslate(
+        public bool TryVisit(
+            ExpressionVisitor visitor,
             TranslationContext context,
-            Expression expression,
-            ExpressionVisitor visitor)
+            Expression expression)
         {
             if (expression is MemberExpression memberExpression
                 && memberExpression.Member == LinqMethods.StringEmpty())

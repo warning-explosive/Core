@@ -91,25 +91,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
 
             var multipleRelationValues = InitializeMultipleRelations(type, values);
 
+            var arrangedValues = ArrangeValues(type, values);
+
             object? built;
 
             if (type.IsDatabaseEntity()
-                && TryGetValue(transaction, type, values[nameof(IUniqueIdentified.PrimaryKey)] !, out var stored))
+                && TryGetValueFromTransaction(transaction, type, values[nameof(IUniqueIdentified.PrimaryKey)] !, out var stored))
             {
-                _objectBuilder.Fill(type, stored, ArrangeValues(type, values));
+                // TODO: why refill from query results?
+                _objectBuilder.Fill(type, stored, arrangedValues);
                 built = stored;
             }
             else
             {
-                built = _objectBuilder.Build(type, ArrangeValues(type, values)) !;
+                built = _objectBuilder.Build(type, arrangedValues) !;
             }
 
-            if (built is IUniqueIdentified uniqueIdentified)
-            {
-                Store(transaction, uniqueIdentified);
-            }
+            StoreInTransaction(transaction, built);
 
-            await MaterializeRelations(transaction, built, relationValues, token).ConfigureAwait(false);
+            MaterializeRelations(transaction, built, relationValues);
 
             await MaterializeMultipleRelations(transaction, built, type, multipleRelationValues, token).ConfigureAwait(false);
 
@@ -245,14 +245,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             }
         }
 
-        private bool TryGetValue(
+        private bool TryGetValueFromTransaction(
             IAdvancedDatabaseTransaction transaction,
             Type entity,
             object key,
             [NotNullWhen(true)] out object? stored)
         {
             stored = GetType()
-               .CallMethod(nameof(TryGetValue))
+               .CallMethod(nameof(TryGetValueFromTransaction))
                .WithTypeArguments(entity)
                .WithArguments(transaction.Store, key)
                .Invoke();
@@ -260,7 +260,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             return stored != default;
         }
 
-        private static TEntity? TryGetValue<TEntity>(
+        private static TEntity? TryGetValueFromTransaction<TEntity>(
             ITransactionalStore transactionalStore,
             object key)
             where TEntity : IUniqueIdentified
@@ -270,14 +270,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                 : default;
         }
 
-        private static void Store(
+        private static void StoreInTransaction(
             IAdvancedDatabaseTransaction transaction,
-            IUniqueIdentified built)
+            object built)
         {
-            transaction.Store.Store(built);
+            if (built is IUniqueIdentified uniqueIdentified)
+            {
+                transaction.Store.Store(uniqueIdentified);
+            }
         }
 
-        private IReadOnlyDictionary<ColumnInfo, object?> InitializeRelations(
+        private IReadOnlyDictionary<ColumnInfo, (object? PrimaryKey, IDictionary<string, object?> Values)> InitializeRelations(
             Type type,
             IDictionary<string, object?> values)
         {
@@ -289,22 +292,43 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
                     column => column,
                     column =>
                     {
-                        var value = values[column.Name];
+                        /*
+                         * initialize database entity with null relation and set it later
+                         */
+
+                        var primaryKey = values[column.Name];
 
                         values[column.Name] = column.Relation.Target.DefaultValue();
 
-                        return value;
+                        var relationKeys = values
+                            .Select(pair => pair.Key)
+                            .Where(key => key.StartsWith($"{column.Name}_"))
+                            .ToList();
+
+                        var relationValues = new Dictionary<string, object?>();
+
+                        foreach (var relationKey in relationKeys)
+                        {
+                            if (values.Remove(relationKey, out var value))
+                            {
+                                var cleanRelationKey = relationKey.Substring(column.Name.Length + 1);
+                                relationValues[cleanRelationKey] = value;
+                            }
+                        }
+
+                        return (primaryKey, (IDictionary<string, object?>)relationValues);
                     });
         }
 
-        private static async Task MaterializeRelations(
+        private void MaterializeRelations(
             IAdvancedDatabaseTransaction transaction,
             object? built,
-            IReadOnlyDictionary<ColumnInfo, object?> relationValues,
-            CancellationToken token)
+            IReadOnlyDictionary<ColumnInfo, (object?, IDictionary<string, object?>)> relationValues)
         {
-            foreach (var (column, primaryKey) in relationValues)
+            foreach (var (column, pair) in relationValues)
             {
+                var (primaryKey, arrangedValues) = pair;
+
                 if (primaryKey is null or DBNull)
                 {
                     continue;
@@ -312,43 +336,28 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
 
                 var relation = column.Table.IsMtmTable
                     ? primaryKey
-                    : await MaterializeRelation(transaction, column.Relation.Target, primaryKey, token).ConfigureAwait(false);
+                    : MaterializeRelation(transaction, column.Relation.Target, primaryKey, arrangedValues);
 
                 column.Relation.Property.Declared.SetValue(built, relation);
             }
         }
 
-        private static async Task<object?> MaterializeRelation(
+        private object MaterializeRelation(
             IAdvancedDatabaseTransaction transaction,
             Type type,
             object primaryKey,
-            CancellationToken token)
+            IDictionary<string, object?> values)
         {
-            var keyType = type.ExtractGenericArgumentAt(typeof(IUniqueIdentified<>));
-
-            return await typeof(SqlCommandMaterializer)
-                .CallMethod(nameof(MaterializeRelation))
-                .WithTypeArguments(type, keyType)
-                .WithArguments(transaction, primaryKey, token)
-                .Invoke<Task<object?>>()
-                .ConfigureAwait(false);
-        }
-
-        private static async Task<object?> MaterializeRelation<TEntity, TKey>(
-            IAdvancedDatabaseTransaction transaction,
-            TKey primaryKey,
-            CancellationToken token)
-            where TEntity : IDatabaseEntity<TKey>
-            where TKey : notnull
-        {
-            if (transaction.Store.TryGetValue<TEntity>(primaryKey, out var entity))
+            if (TryGetValueFromTransaction(transaction, type, primaryKey, out var relation))
             {
-                return entity;
+                return relation;
             }
 
-            return await transaction
-                .SingleOrDefault<TEntity, TKey>(primaryKey, token)
-                .ConfigureAwait(false);
+            relation = _objectBuilder.Build(type, values) !;
+
+            StoreInTransaction(transaction, relation);
+
+            return relation;
         }
 
         private IReadOnlyDictionary<ColumnInfo, ICollection> InitializeMultipleRelations(

@@ -5,9 +5,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using System.Linq.Expressions;
     using Expressions;
 
-    internal class SqlExpression
+    /// <summary>
+    /// SqlExpression
+    /// </summary>
+    public class SqlExpression
     {
-        public SqlExpression(
+        internal SqlExpression(
             ISqlExpression expression,
             Func<Expression, IReadOnlyCollection<SqlCommandParameter>> commandParametersExtractor)
         {
@@ -15,8 +18,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             CommandParametersExtractor = commandParametersExtractor;
         }
 
+        /// <summary>
+        /// Expression
+        /// </summary>
         public ISqlExpression Expression { get; }
 
+        /// <summary>
+        /// CommandParametersExtractor
+        /// </summary>
         public Func<Expression, IReadOnlyCollection<SqlCommandParameter>> CommandParametersExtractor { get; }
     }
 }

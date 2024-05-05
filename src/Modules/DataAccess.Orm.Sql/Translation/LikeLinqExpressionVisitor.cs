@@ -6,26 +6,28 @@
     using AutoRegistration.Api.Enumerations;
     using Expressions;
     using Linq;
-    using BinaryExpression = Expressions.BinaryExpression;
-    using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
 
     [Component(EnLifestyle.Singleton)]
-    internal class LikeUnknownExpressionTranslator : IUnknownExpressionTranslator,
-                                                     ICollectionResolvable<IUnknownExpressionTranslator>
+    internal class LikeLinqExpressionVisitor : ILinqExpressionVisitor,
+                                               ICollectionResolvable<ILinqExpressionVisitor>
     {
-        public bool TryTranslate(
+        public bool TryVisit(
+            ExpressionVisitor visitor,
             TranslationContext context,
-            Expression expression,
-            ExpressionVisitor visitor)
+            Expression expression)
         {
-            if (expression is MethodCallExpression methodCallExpression
-                && methodCallExpression.Method == LinqMethods.Like())
+            if (expression is not System.Linq.Expressions.MethodCallExpression methodCallExpression)
+            {
+                return false;
+            }
+
+            if (methodCallExpression.Method == LinqMethods.Like())
             {
                 visitor.Visit(methodCallExpression.Arguments[0]);
                 var left = context.SqlExpression;
                 visitor.Visit(methodCallExpression.Arguments[1]);
                 var right = context.SqlExpression;
-                var binaryExpression = new BinaryExpression(typeof(bool), BinaryOperator.Like, left, right);
+                var binaryExpression = new Expressions.BinaryExpression(typeof(bool), BinaryOperator.Like, left, right);
                 context.Remember(binaryExpression);
 
                 return true;

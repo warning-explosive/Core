@@ -12,6 +12,7 @@
     using Basics;
     using Dynamic;
     using Dynamic.Abstractions;
+    using Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class ModelProvider : IModelProvider,

@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
 {
     using System;
+    using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
@@ -14,10 +15,14 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
                                                 ICollectionResolvable<ISqlExpressionTranslator>
     {
         private readonly IModelProvider _modelProvider;
+        private readonly ISqlExpressionTranslatorComposite _translator;
 
-        public DeleteExpressionTranslator(IModelProvider modelProvider)
+        public DeleteExpressionTranslator(
+            IModelProvider modelProvider,
+            ISqlExpressionTranslatorComposite translator)
         {
             _modelProvider = modelProvider;
+            _translator = translator;
         }
 
         public string Translate(ISqlExpression expression, int depth)
@@ -29,9 +34,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
 
         public string Translate(DeleteExpression expression, int depth)
         {
-            var table = _modelProvider.Tables[expression.Type];
+            var sb = new StringBuilder();
 
-            return $@"DELETE FROM ""{table.Schema}"".""{table.Name}""";
+            var table = _modelProvider.Tables[expression.ItemType];
+
+            sb.Append(new string('\t', depth));
+
+            if (expression.FilterExpression != null)
+            {
+                sb.AppendLine($@"DELETE FROM ""{table.Schema}"".""{table.Name}""");
+                sb.Append(_translator.Translate(expression.FilterExpression, depth));
+            }
+            else
+            {
+                sb.Append($@"DELETE FROM ""{table.Schema}"".""{table.Name}""");
+            }
+
+            return sb.ToString();
         }
     }
 }

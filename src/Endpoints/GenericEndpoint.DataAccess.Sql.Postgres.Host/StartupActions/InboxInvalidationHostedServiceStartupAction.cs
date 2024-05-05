@@ -85,6 +85,14 @@
                 .ReadRequiredHeader<Id>()
                 .Value;
 
+            /* TODO: #205 - test it
+               update "Deduplication"."InboxMessage" a
+               set "State" = 'failed'::"Deduplication"."EnInboxMessageState"
+               from "Deduplication"."IntegrationMessage" b
+               where a."Message" = b."PrimaryKey"
+               and b."PrimaryKey" = '502a235e-82b3-432e-9fe0-f7f2b1bb545e'
+             */
+
             await transaction
                 .Update<InboxMessage>()
                 .Set(inbox => inbox.State.Assign(EnInboxMessageState.Failed))

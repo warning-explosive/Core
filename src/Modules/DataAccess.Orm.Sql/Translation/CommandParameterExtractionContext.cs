@@ -176,13 +176,13 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 case ConstantExpression constantExpression:
                 {
                     if (next is MethodCallExpression methodCallExpression
-                        && methodCallExpression.Method == TranslationExpressionVisitor.GetInsertValuesMethod
+                        && methodCallExpression.Method == InsertLinqExpressionVisitor.GetInsertValuesMethod
                         && methodCallExpression.Arguments[0] is ConstantExpression firstArgument
                         && firstArgument.Value is IModelProvider modelProvider)
                     {
                         extractor = context =>
                         {
-                            var insertValuesMap = (IReadOnlyDictionary<string, ConstantExpression>)TranslationExpressionVisitor.GetInsertValuesMethod.Invoke(
+                            var insertValuesMap = (IReadOnlyDictionary<string, ConstantExpression>)InsertLinqExpressionVisitor.GetInsertValuesMethod.Invoke(
                                 null,
                                 new[]
                                 {

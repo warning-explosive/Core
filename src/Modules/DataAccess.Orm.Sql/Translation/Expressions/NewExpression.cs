@@ -9,18 +9,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     public class NewExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
-        /// <param name="type">Type</param>
+        /// <param name="itemType">ItemType</param>
         /// <param name="parameters">Parameters</param>
-        public NewExpression(Type type, IReadOnlyCollection<ISqlExpression> parameters)
+        public NewExpression(Type itemType, IReadOnlyCollection<ISqlExpression> parameters)
         {
-            Type = type;
+            ItemType = itemType;
             Parameters = parameters;
         }
 
         /// <summary>
         /// Type
         /// </summary>
-        public Type Type { get; }
+        public Type ItemType { get; }
 
         /// <summary>
         /// Parameters

@@ -8,16 +8,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     public class NamedSourceExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
-        /// <param name="type">Type</param>
+        /// <param name="itemType">ItemType</param>
         /// <param name="source">Source</param>
         /// <param name="parameter">Parameter</param>
         public NamedSourceExpression(
-            Type type,
+            Type itemType,
             ISqlExpression source,
             ParameterExpression parameter)
         {
-            if (source is not FilterExpression
-                && source is not JoinExpression
+            if (source is not JoinExpression
                 && source is not OrderByExpression
                 && source is not ParenthesesExpression
                 && source is not ProjectionExpression
@@ -26,20 +25,15 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
                 throw new ArgumentException($"{nameof(NamedSourceExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
             }
 
-            Type = type;
+            ItemType = itemType;
             Source = source;
             Parameter = parameter;
-
-            // TODO: remove forwarding - isn't obvious
-            /*context.Apply(
-                Source is FilterExpression filterExpression ? filterExpression.Source : Source,
-                expression);*/
         }
 
         /// <summary>
         /// Type
         /// </summary>
-        public Type Type { get; }
+        public Type ItemType { get; }
 
         /// <summary>
         /// Source expression

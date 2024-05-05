@@ -2,7 +2,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Collections.Generic;
     using System.Linq.Expressions;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -12,32 +11,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Exceptions;
     using Linq;
     using Microsoft.Extensions.Logging;
-    using Model;
 
     [Component(EnLifestyle.Singleton)]
     internal class ExpressionTranslator : IExpressionTranslator,
                                           IResolvable<IExpressionTranslator>
     {
-        private readonly IModelProvider _modelProvider;
-        private readonly ILinqExpressionPreprocessorComposite _preprocessor;
+        private readonly TranslationExpressionVisitor _translationExpressionVisitor;
         private readonly ISqlExpressionTranslatorComposite _translator;
-        private readonly IEnumerable<IUnknownExpressionTranslator> _unknownExpressionTranslators;
         private readonly ILogger _logger;
 
         private readonly ConcurrentDictionary<string, TranslatedSqlExpression> _cache;
         private readonly Func<string, Expression, TranslatedSqlExpression> _factory;
 
         public ExpressionTranslator(
-            IModelProvider modelProvider,
-            ILinqExpressionPreprocessorComposite preprocessor,
+            TranslationExpressionVisitor translationExpressionVisitor,
             ISqlExpressionTranslatorComposite translator,
-            IEnumerable<IUnknownExpressionTranslator> unknownExpressionTranslators,
             ILogger logger)
         {
-            _modelProvider = modelProvider;
-            _preprocessor = preprocessor;
+            _translationExpressionVisitor = translationExpressionVisitor;
             _translator = translator;
-            _unknownExpressionTranslators = unknownExpressionTranslators;
             _logger = logger;
 
             _cache = new ConcurrentDictionary<string, TranslatedSqlExpression>(StringComparer.Ordinal);
@@ -79,12 +71,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
         private TranslatedSqlExpression TranslateUnsafe(Expression expression)
         {
-            var sqlExpression = TranslationExpressionVisitor.Translate(
-                new TranslationContext(),
-                _modelProvider,
-                _preprocessor,
-                _unknownExpressionTranslators,
-                expression);
+            var sqlExpression = _translationExpressionVisitor.Translate(new TranslationContext(), expression);
 
             return new TranslatedSqlExpression(
                 sqlExpression.Expression,

@@ -5,7 +5,7 @@
     using AutoRegistration.Api.Attributes;
     using AutoRegistration.Api.Enumerations;
     using SpaceEngineers.Core.DataAccess.Orm.Sql.Migrations.Model;
-    using SpaceEngineers.Core.DataAccess.Orm.Sql.Model;
+    using Translation;
 
     [Component(EnLifestyle.Singleton)]
     internal class DatabaseSchemaViewQueryProvider : ISqlViewQueryProvider<DatabaseSchema, Guid>,

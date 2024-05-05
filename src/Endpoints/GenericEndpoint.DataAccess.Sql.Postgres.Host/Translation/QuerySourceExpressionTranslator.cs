@@ -63,13 +63,9 @@ namespace SpaceEngineers.Core.GenericEndpoint.DataAccess.Sql.Postgres.Host.Trans
             }
             else
             {
-                sb.Append('"');
-                sb.Append(_modelProvider.SchemaName(expression.ItemType));
-                sb.Append('"');
-                sb.Append('.');
-                sb.Append('"');
-                sb.Append(_modelProvider.TableName(expression.ItemType));
-                sb.Append('"');
+                var table = _modelProvider.Tables[expression.ItemType];
+
+                sb.Append($@"""{table.Schema}"".""{table.Name}""");
             }
 
             return sb.ToString();

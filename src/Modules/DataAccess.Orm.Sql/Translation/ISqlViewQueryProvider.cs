@@ -1,6 +1,7 @@
-namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Model
+namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
+    using Model;
 
     /// <summary>
     /// ISqlViewQueryProvider

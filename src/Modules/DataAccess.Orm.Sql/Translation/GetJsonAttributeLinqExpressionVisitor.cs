@@ -7,25 +7,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using Basics;
     using Expressions;
     using Linq;
-    using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
 
     [Component(EnLifestyle.Singleton)]
-    internal class GetJsonAttributeUnknownExpressionTranslator : IUnknownExpressionTranslator,
-                                                                 ICollectionResolvable<IUnknownExpressionTranslator>
+    internal class GetJsonAttributeLinqExpressionVisitor : ILinqExpressionVisitor,
+                                                           ICollectionResolvable<ILinqExpressionVisitor>
     {
-        public bool TryTranslate(
+        public bool TryVisit(
+            ExpressionVisitor visitor,
             TranslationContext context,
-            Expression expression,
-            ExpressionVisitor visitor)
+            Expression expression)
         {
-            if (expression is MethodCallExpression methodCallExpression
-                && methodCallExpression.Method.GenericMethodDefinitionOrSelf() == LinqMethods.GetJsonAttribute())
+            if (expression is not System.Linq.Expressions.MethodCallExpression methodCallExpression)
+            {
+                return false;
+            }
+
+            var method = methodCallExpression.Method.GenericMethodDefinitionOrSelf();
+
+            if (method == LinqMethods.GetJsonAttribute())
             {
                 visitor.Visit(methodCallExpression.Arguments[0]);
                 var source = context.SqlExpression;
                 visitor.Visit(methodCallExpression.Arguments[1]);
                 var accessor = context.SqlExpression;
-                var jsonAttributeExpression = new JsonAttributeExpression(expression.Type, source, accessor);
+                var jsonAttributeExpression = new JsonAttributeExpression(methodCallExpression.Type, source, accessor);
                 var parenthesesExpression = new ParenthesesExpression(jsonAttributeExpression);
                 context.Remember(parenthesesExpression);
 

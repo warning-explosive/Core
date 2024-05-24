@@ -1,6 +1,7 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
 {
     using System;
+    using System.Linq;
     using System.Text;
     using AutoRegistration.Api.Abstractions;
     using AutoRegistration.Api.Attributes;
@@ -38,7 +39,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
             }
 
             sb.Append('"');
-            sb.Append(expression.Name);
+            sb.Append(string.Join("_", expression.Members.Select(member => member.Name)));
             sb.Append('"');
 
             return sb.ToString();

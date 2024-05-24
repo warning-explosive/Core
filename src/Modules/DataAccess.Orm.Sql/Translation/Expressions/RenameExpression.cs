@@ -1,6 +1,8 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
 {
     using System;
+    using System.Collections.Generic;
+    using System.Reflection;
 
     /// <summary>
     /// RenameExpression
@@ -9,11 +11,11 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
     {
         /// <summary> .cctor </summary>
         /// <param name="type">Type</param>
-        /// <param name="name">Name</param>
+        /// <param name="members">MemberInfo</param>
         /// <param name="source">Source expression</param>
         public RenameExpression(
             Type type,
-            string name,
+            IReadOnlyCollection<MemberInfo> members,
             ISqlExpression source)
         {
             if (source is not BinaryExpression
@@ -32,7 +34,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             }
 
             Type = type;
-            Name = name;
+            Members = members;
             Source = source;
         }
 
@@ -42,9 +44,9 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         public Type Type { get; }
 
         /// <summary>
-        /// Name
+        /// Members
         /// </summary>
-        public string Name { get; }
+        public IReadOnlyCollection<MemberInfo> Members { get; }
 
         /// <summary>
         /// Source

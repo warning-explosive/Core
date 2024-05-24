@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
                 var source = new NamedSourceExpression(itemType, context.SqlExpression, parameterExpression);
 
-                using (context.OpenParameterScope(parameterExpression))
+                using (context.OpenParametersScope(parameterExpression))
                 {
                     visitor.Visit(methodCallExpression.Arguments[1]);
                 }
@@ -54,7 +54,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 var right = new Expressions.MethodCallExpression(typeof(int), nameof(Queryable.Count), null, new[] { new StarExpression() });
                 var binaryExpression = new Expressions.BinaryExpression(typeof(bool), BinaryOperator.Equal, left, right);
                 var parenthesesExpression = new ParenthesesExpression(binaryExpression);
-                var renameExpression = new RenameExpression(typeof(bool), method.Name, parenthesesExpression);
+                var renameExpression = new RenameExpression(typeof(bool), new[] { method }, parenthesesExpression);
                 var projectionExpression = new ProjectionExpression(itemType, source, new[] { renameExpression }, null, null);
                 context.Remember(projectionExpression);
 

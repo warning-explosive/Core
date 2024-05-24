@@ -44,7 +44,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 var right = new QueryParameterExpression(typeof(int), name);
                 var binaryExpression = new Expressions.BinaryExpression(typeof(bool), BinaryOperator.GreaterThan, left, right);
                 var parenthesesExpression = new ParenthesesExpression(binaryExpression);
-                var renameExpression = new RenameExpression(typeof(bool), method.Name, parenthesesExpression);
+                var renameExpression = new RenameExpression(typeof(bool), new[] { method }, parenthesesExpression);
                 var projectionExpression = new ProjectionExpression(itemType, source, new[] { renameExpression }, null, null);
                 context.Remember(projectionExpression);
 

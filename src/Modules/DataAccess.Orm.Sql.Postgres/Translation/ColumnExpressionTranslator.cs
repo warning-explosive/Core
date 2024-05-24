@@ -38,7 +38,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Postgres.Translation
             }
 
             sb.Append('"');
-            sb.Append(expression.Name);
+            sb.Append(expression.Member.Name);
             sb.Append('"');
 
             return sb.ToString();

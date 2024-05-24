@@ -23,7 +23,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <summary>
-        /// Type
+        /// ItemType
         /// </summary>
         public Type ItemType { get; }
 

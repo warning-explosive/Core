@@ -37,7 +37,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
                 var source = new NamedSourceExpression(itemType, new ParenthesesExpression(context.SqlExpression), parameterExpression);
                 var countAllMethodCall = new Expressions.MethodCallExpression(typeof(int), nameof(Queryable.Count), null, new[] { new StarExpression() });
-                var renameExpression = new RenameExpression(typeof(int), method.Name, countAllMethodCall);
+                var renameExpression = new RenameExpression(typeof(int), new[] { method }, countAllMethodCall);
                 var projectionExpression = new ProjectionExpression(itemType, source, new[] { renameExpression }, null, null);
                 context.Remember(projectionExpression);
 

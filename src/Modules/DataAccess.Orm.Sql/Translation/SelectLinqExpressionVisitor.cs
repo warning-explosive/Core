@@ -2,6 +2,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Linq.Expressions;
     using AutoRegistration.Api.Abstractions;
@@ -43,12 +44,12 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 var source = context.SqlExpression;
                 var sourceItemType = GetSourceItemType(source);
                 var parameterExpression = new Expressions.ParameterExpression(sourceItemType, context.NextLambdaParameterName());
-                var unnamedSource = source is QuerySourceExpression ? source : new ParenthesesExpression(context.SqlExpression);
+                var unnamedSource = source is QuerySourceExpression ? source : new ParenthesesExpression(source);
                 var namedSourceExpression = new NamedSourceExpression(sourceItemType, unnamedSource, parameterExpression);
 
                 IReadOnlyCollection<ISqlExpression> expressions;
 
-                using (context.OpenParameterScope(namedSourceExpression.Parameter))
+                using (context.OpenParametersScope(parameterExpression))
                 {
                     visitor.Visit(methodCallExpression.Arguments[1]);
                     expressions = context.SqlExpression is Expressions.NewExpression newExpression
@@ -56,31 +57,18 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         : new[] { context.SqlExpression };
                 }
 
-                if (expressions.Count == 1
-                    && expressions.Single() is ColumnExpression columnExpression
-                    && columnExpression.Type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
-                {
-                    /*
-                     * handle relation selector
-                     */
+                var relations = RelationsExpressionVisitor.ExtractRelations(_modelProvider, methodCallExpression.Arguments[1]);
 
-                    // TODO: try to remove
-                    /*var relationParameterExpression = new Expressions.ParameterExpression(columnExpression.Type, namedSourceExpression.Parameter.Name);
-                    expressions = RepositoryAllLinqExpressionVisitor
-                        .SelectAll(_modelProvider, columnExpression.Type, relationParameterExpression)
-                        .Select(it =>
-                        {
-                            var relationColumnExpression = new ColumnExpression(it.Type, it.Member, it.Source, $"{columnExpression.Name}_{it.Name}");
-                            return new RenameExpression(it.Type, it.Name, relationColumnExpression);
-                        })
-                        .ToList();*/
+                ProjectionExpression projectionExpression;
+
+                if (TryBuildJoinExpression(context, _modelProvider, namedSourceExpression, relations, out var joinExpression, out var relationExpressions, out _))
+                {
+                    expressions = expressions.Concat(relationExpressions).ToList();
+                    projectionExpression = new ProjectionExpression(itemType, joinExpression, expressions, null, null);
                 }
-
-                var projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, null, null);
-
-                if (BuildJoinExpression(context, _modelProvider, projectionExpression) is { } joinProjectionExpression)
+                else
                 {
-                    projectionExpression = joinProjectionExpression;
+                    projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, null, null);
                 }
 
                 context.Remember(projectionExpression);
@@ -91,7 +79,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             return false;
         }
 
-        // TODO: private
         internal static ISqlExpression? GetSource(ISqlExpression source)
         {
             return source switch
@@ -106,7 +93,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             };
         }
 
-        // TODO: private
         internal static Type GetSourceItemType(ISqlExpression source)
         {
             return source switch
@@ -120,96 +106,73 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             };
         }
 
-        // TODO: private
-        internal static ProjectionExpression? BuildJoinExpression(
+        internal static IReadOnlyCollection<ColumnExpression> SelectAll(
+            IModelProvider modelProvider,
+            Type type,
+            Expressions.ParameterExpression parameterExpression)
+        {
+            if (!type.IsClass
+                || type.IsPrimitive()
+                || type.IsCollection())
+            {
+                throw new InvalidOperationException(nameof(SelectAll));
+            }
+
+            return modelProvider
+                .Columns(type)
+                .Values
+                .Where(column => !column.IsMultipleRelation)
+                .Select(column => column.BuildExpression(parameterExpression))
+                .ToList();
+        }
+
+        internal static bool TryBuildJoinExpression(
             TranslationContext context,
             IModelProvider modelProvider,
-            ISqlExpression sourceExpression)
+            NamedSourceExpression sourceExpression,
+            IReadOnlyCollection<Relation> relations,
+            [NotNullWhen(true)] out JoinExpression? joinExpression,
+            [NotNullWhen(true)] out IReadOnlyCollection<ISqlExpression>? relationExpressions,
+            [NotNullWhen(true)] out IReadOnlyCollection<Expressions.ParameterExpression>? joinParameterExpressions)
         {
-            var sourceItemType = GetSourceItemType(sourceExpression);
-
-            if (!sourceItemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
-            {
-                return null;
-            }
-
-            var relations = modelProvider
-                .Tables[sourceItemType]
-                .Columns
-                .Select(it => it.Value)
-                .Where(column => column.IsRelation)
-                .Select(column => column.Relation)
-                .ToList();
-
             if (!relations.Any())
             {
-                return null;
+                joinExpression = null;
+                relationExpressions = null;
+                joinParameterExpressions = null;
+                return false;
             }
 
-            var sourceParameterExpression = new Expressions.ParameterExpression(sourceItemType, context.NextLambdaParameterName());
-            NamedSourceExpression sourceNamedSourceExpression;
-            IReadOnlyCollection<ISqlExpression> sourceExpressions;
-            FilterExpression? filterExpression;
-            OrderByExpression? orderByExpression;
-
-            switch (sourceExpression)
+            ISqlExpression joinAccumulator = sourceExpression;
+            IEnumerable<ISqlExpression> expressions = Array.Empty<ISqlExpression>();
+            var parameterExpressions = new List<Expressions.ParameterExpression>
             {
-                case ProjectionExpression sourceProjectionExpression:
-                {
-                    filterExpression = sourceProjectionExpression.FilterExpression != null
-                        ? new FilterExpression(sourceProjectionExpression.FilterExpression.ItemType, WhereLinqExpressionVisitor.ReplaceParameterSqlExpressionVisitor.Replace(sourceProjectionExpression.FilterExpression.Predicate, sourceParameterExpression))
-                        : null;
-                    sourceProjectionExpression.FilterExpression = null;
-                    orderByExpression = sourceProjectionExpression.OrderByExpression != null
-                        ? new OrderByExpression(sourceProjectionExpression.OrderByExpression.Expressions.Select(orderByExpressionExpression => (OrderByExpressionExpression)WhereLinqExpressionVisitor.ReplaceParameterSqlExpressionVisitor.Replace(orderByExpressionExpression, sourceParameterExpression)).ToList())
-                        : null;
-                    sourceProjectionExpression.OrderByExpression = null;
-                    var sourceParenthesesExpression = new ParenthesesExpression(sourceProjectionExpression);
-                    sourceNamedSourceExpression = new NamedSourceExpression(sourceItemType, sourceParenthesesExpression, sourceParameterExpression);
-                    sourceExpressions = RepositoryAllLinqExpressionVisitor.SelectAll(modelProvider, sourceItemType, sourceParameterExpression);
-
-                    break;
-                }
-
-                case QuerySourceExpression querySourceExpression:
-                {
-                    filterExpression = null;
-                    orderByExpression = null;
-                    sourceNamedSourceExpression = new NamedSourceExpression(sourceItemType, querySourceExpression, sourceParameterExpression);
-                    sourceExpressions = RepositoryAllLinqExpressionVisitor.SelectAll(modelProvider, sourceItemType, sourceParameterExpression);
-                    break;
-                }
-
-                default:
-                {
-                    throw new NotSupportedException(sourceExpression.GetType().FullName);
-                }
-            }
-
-            ISqlExpression joinAccumulator = sourceNamedSourceExpression;
-            IEnumerable<ISqlExpression> expressions = sourceExpressions.ToList();
+                sourceExpression.Parameter
+            };
 
             foreach (var relation in relations)
             {
                 var targetItemType = relation.Target;
                 var targetQuerySourceExpression = new QuerySourceExpression(targetItemType);
                 var targetParameterExpression = new Expressions.ParameterExpression(targetItemType, context.NextLambdaParameterName());
+                parameterExpressions.Add(targetParameterExpression);
                 var targetNamedSourceExpression = new NamedSourceExpression(targetItemType, targetQuerySourceExpression, targetParameterExpression);
-                var targetExpressions = RepositoryAllLinqExpressionVisitor
-                    .SelectAll(modelProvider, targetItemType, targetParameterExpression)
-                    .Select(sqlExpression => sqlExpression is ColumnExpression columnExpression
-                        ? new RenameExpression(columnExpression.Type, $"{relation.Property.Reflected.Name}_{columnExpression.Name}", columnExpression)
-                        : sqlExpression)
+                var targetExpressions = SelectAll(modelProvider, targetItemType, targetParameterExpression)
+                    .Select(columnExpression => new RenameExpression(
+                        columnExpression.Type,
+                        new[] { relation.Property.Reflected, columnExpression.Member },
+                        columnExpression))
                     .ToList();
-                var onExpression = BuildJoinOnExpression(modelProvider, relation, sourceParameterExpression, targetParameterExpression);
-                joinAccumulator = new JoinExpression(joinAccumulator, targetNamedSourceExpression, onExpression);
+                var onExpression = BuildJoinOnExpression(modelProvider, relation, sourceExpression.Parameter, targetParameterExpression);
+                joinAccumulator = new JoinExpression(sourceExpression.ItemType, joinAccumulator, targetNamedSourceExpression, onExpression);
 
                 expressions = expressions.Concat(targetExpressions);
             }
 
-            var projectionExpression = new ProjectionExpression(null!, joinAccumulator, expressions.ToList(), filterExpression, orderByExpression);
-
-            return projectionExpression;
+            joinExpression = (JoinExpression)joinAccumulator;
+            relationExpressions = expressions.ToList();
+            joinParameterExpressions = parameterExpressions;
+            return true;
 
             static Expressions.BinaryExpression BuildJoinOnExpression(
                 IModelProvider modelProvider,

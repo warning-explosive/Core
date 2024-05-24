@@ -8,10 +8,12 @@
     public class JoinExpression : ISqlExpression
     {
         /// <summary> .cctor </summary>
+        /// <param name="itemType">ItemType</param>
         /// <param name="leftSource">Left source expression</param>
         /// <param name="rightSource">Right source expression</param>
         /// <param name="on">On expression</param>
         public JoinExpression(
+            Type itemType,
             ISqlExpression leftSource,
             ISqlExpression rightSource,
             BinaryExpression on)
@@ -28,10 +30,16 @@
                 throw new ArgumentException($"{nameof(JoinExpression)} doesn't support {rightSource.GetType().Name} as {nameof(rightSource)} argument");
             }
 
+            ItemType = itemType;
             LeftSource = leftSource;
             RightSource = rightSource;
             On = on;
         }
+
+        /// <summary>
+        /// ItemType
+        /// </summary>
+        public Type ItemType { get; }
 
         /// <summary>
         /// Left source expression

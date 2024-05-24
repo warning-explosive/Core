@@ -16,10 +16,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
             ISqlExpression source,
             ParameterExpression parameter)
         {
-            if (source is not JoinExpression
-                && source is not OrderByExpression
-                && source is not ParenthesesExpression
-                && source is not ProjectionExpression
+            if (source is not ParenthesesExpression
                 && source is not QuerySourceExpression)
             {
                 throw new ArgumentException($"{nameof(NamedSourceExpression)} doesn't support {source.GetType().Name} as {nameof(source)} argument");
@@ -31,7 +28,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation.Expressions
         }
 
         /// <summary>
-        /// Type
+        /// ItemType
         /// </summary>
         public Type ItemType { get; }
 

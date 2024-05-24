@@ -1,7 +1,6 @@
 namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Linq.Expressions;
     using AutoRegistration.Api.Abstractions;
@@ -58,21 +57,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                          * select made a projection
                          */
 
-                        var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
-
-                        ISqlExpression predicateExpression;
-
-                        using (context.OpenParameterScope(parameterExpression))
-                        {
-                            visitor.Visit(methodCallExpression.Arguments[1]);
-                            predicateExpression = context.SqlExpression;
-                        }
-
                         if (itemType.IsPrimitive())
                         {
                             /*
-                             * propagate primitive source projection selector
+                             * propagate primitive from source projection selector
                              */
+
+                            var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
+
+                            ISqlExpression predicateExpression;
+
+                            using (context.OpenParametersScope(parameterExpression))
+                            {
+                                visitor.Visit(methodCallExpression.Arguments[1]);
+                                predicateExpression = context.SqlExpression;
+                            }
 
                             var namedSourceExpression = new NamedSourceExpression(itemType, new ParenthesesExpression(sourceProjectionExpression), parameterExpression);
                             var sourceProjectionSelector = sourceProjectionExpression.Expressions.Single();
@@ -81,27 +80,96 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                             var replacedPredicateExpression = ReplaceParameterSqlExpressionVisitor.Replace(predicateExpression, replacedSourceProjectionSelector);
                             var filterExpression = new FilterExpression(itemType, replacedPredicateExpression);
                             var projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, filterExpression, null);
+                            context.Remember(projectionExpression);
+                        }
+                        else if (itemType.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>)))
+                        {
+                            /*
+                             * propagate relation from source projection selector
+                             */
 
-                            if (SelectLinqExpressionVisitor.BuildJoinExpression(context, _modelProvider, projectionExpression) is { } joinProjectionExpression)
+                            var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
+
+                            ISqlExpression predicateExpression;
+
+                            using (context.OpenParametersScope(parameterExpression))
                             {
-                                projectionExpression = joinProjectionExpression;
+                                visitor.Visit(methodCallExpression.Arguments[1]);
+                                predicateExpression = context.SqlExpression;
                             }
 
+                            var namedSourceExpression = new NamedSourceExpression(itemType, new ParenthesesExpression(sourceProjectionExpression), parameterExpression);
+                            var expressions = sourceProjectionExpression
+                                .Expressions
+                                .Select(sqlExpression => ReplaceParameterSqlExpressionVisitor.Replace(sqlExpression, parameterExpression))
+                                .Select(sqlExpression =>
+                                {
+                                    return sqlExpression switch
+                                    {
+                                        ColumnExpression columnExpression => new ColumnExpression(columnExpression.Type, columnExpression.Member, parameterExpression),
+                                        ColumnsChainExpression columnsChainExpression => (ISqlExpression)new ColumnsChainExpression(columnsChainExpression.Type, columnsChainExpression.Members, parameterExpression),
+                                        RenameExpression renameExpression => new ColumnsChainExpression(renameExpression.Type, renameExpression.Members, parameterExpression),
+                                        _ => throw new NotSupportedException(sqlExpression.GetType().FullName)
+                                    };
+                                })
+                                .ToList();
+                            var filterExpression = new FilterExpression(itemType, predicateExpression);
+                            var projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, filterExpression, null);
+                            context.Remember(projectionExpression);
+                        }
+                        else if (sourceProjectionExpression.Expressions.OfType<RenameExpression>().Any())
+                        {
+                            /*
+                             * propagate anonymous type renames
+                             */
+
+                            var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
+
+                            ISqlExpression predicateExpression;
+
+                            using (context.OpenParametersScope(parameterExpression))
+                            {
+                                visitor.Visit(methodCallExpression.Arguments[1]);
+                                predicateExpression = context.SqlExpression;
+                            }
+
+                            var namedSourceExpression = new NamedSourceExpression(itemType, new ParenthesesExpression(sourceProjectionExpression), parameterExpression);
+                            var expressions = sourceProjectionExpression
+                                .Expressions
+                                .Select(sqlExpression => ReplaceParameterSqlExpressionVisitor.Replace(sqlExpression, parameterExpression))
+                                .Select(sqlExpression =>
+                                {
+                                    return sqlExpression switch
+                                    {
+                                        ColumnExpression columnExpression => new ColumnExpression(columnExpression.Type, columnExpression.Member, parameterExpression),
+                                        ColumnsChainExpression columnsChainExpression => (ISqlExpression)new ColumnsChainExpression(columnsChainExpression.Type, columnsChainExpression.Members, parameterExpression),
+                                        RenameExpression renameExpression => new ColumnsChainExpression(renameExpression.Type, renameExpression.Members, parameterExpression),
+                                        _ => throw new NotSupportedException(sqlExpression.GetType().FullName)
+                                    };
+                                })
+                                .ToList();
+                            var filterExpression = new FilterExpression(itemType, predicateExpression);
+                            var projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, filterExpression, null);
                             context.Remember(projectionExpression);
                         }
                         else
                         {
-                            var namedSourceExpression = new NamedSourceExpression(itemType, new ParenthesesExpression(sourceProjectionExpression), parameterExpression);
-                            var expressions = RepositoryAllLinqExpressionVisitor.SelectAll(_modelProvider, itemType, parameterExpression);
-                            var filterExpression = new FilterExpression(itemType, predicateExpression);
-                            var projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, filterExpression, null);
-
-                            if (SelectLinqExpressionVisitor.BuildJoinExpression(context, _modelProvider, projectionExpression) is { } joinProjectionExpression)
+                            var parameterExpression = sourceProjectionExpression.Source switch
                             {
-                                projectionExpression = joinProjectionExpression;
+                                NamedSourceExpression namedSourceExpression => namedSourceExpression.Parameter,
+                                _ => throw new NotSupportedException(sourceProjectionExpression.Source.GetType().FullName)
+                            };
+
+                            ISqlExpression predicateExpression;
+
+                            using (context.OpenParametersScope(parameterExpression))
+                            {
+                                visitor.Visit(methodCallExpression.Arguments[1]);
+                                predicateExpression = context.SqlExpression;
                             }
 
-                            context.Remember(projectionExpression);
+                            sourceProjectionExpression.FilterExpression = new FilterExpression(itemType, predicateExpression);
+                            context.Remember(sourceProjectionExpression);
                         }
 
                         break;
@@ -117,7 +185,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                         ISqlExpression predicateExpression;
 
-                        using (context.OpenParameterScope(parameterExpression))
+                        using (context.OpenParametersScope(parameterExpression))
                         {
                             visitor.Visit(methodCallExpression.Arguments[1]);
                             predicateExpression = context.SqlExpression;
@@ -135,61 +203,42 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                         break;
                     }
 
-                    case ProjectionExpression { Source: JoinExpression joinExpression } sourceProjectionExpression:
+                    case ProjectionExpression { Source: JoinExpression } sourceProjectionExpression:
                     {
                         /*
                          * apply filter to joined source
                          */
 
-                        if (!TryGetJoinExpressionParameter(joinExpression, itemType, out var parameterExpression))
-                        {
-                            throw new InvalidOperationException("Unable to find suitable parameter expression");
-                        }
+                        var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
 
                         ISqlExpression predicateExpression;
 
-                        using (context.OpenParameterScope(parameterExpression))
+                        using (context.OpenParametersScope(parameterExpression))
                         {
                             visitor.Visit(methodCallExpression.Arguments[1]);
                             predicateExpression = context.SqlExpression;
                         }
 
-                        // TODO: replace parameter
+                        var namedSourceExpression = new NamedSourceExpression(itemType, new ParenthesesExpression(sourceProjectionExpression), parameterExpression);
+                        var expressions = sourceProjectionExpression
+                            .Expressions
+                            .Select(sqlExpression => ReplaceParameterSqlExpressionVisitor.Replace(sqlExpression, parameterExpression))
+                            .Select(sqlExpression =>
+                            {
+                                return sqlExpression switch
+                                {
+                                    ColumnExpression columnExpression => new ColumnExpression(columnExpression.Type, columnExpression.Member, parameterExpression),
+                                    ColumnsChainExpression columnsChainExpression => (ISqlExpression)new ColumnsChainExpression(columnsChainExpression.Type, columnsChainExpression.Members, parameterExpression),
+                                    RenameExpression renameExpression => new ColumnsChainExpression(renameExpression.Type, renameExpression.Members, parameterExpression),
+                                    _ => throw new NotSupportedException(sqlExpression.GetType().FullName)
+                                };
+                            })
+                            .ToList();
                         var filterExpression = new FilterExpression(itemType, predicateExpression);
-                        sourceProjectionExpression.FilterExpression = filterExpression;
-                        context.Remember(sourceProjectionExpression);
+                        var projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, filterExpression, null);
+                        context.Remember(projectionExpression);
 
                         break;
-
-                        static bool TryGetJoinExpressionParameter(
-                            JoinExpression joinExpression,
-                            Type itemType,
-                            [NotNullWhen(true)] out Expressions.ParameterExpression? parameterExpression)
-                        {
-                            return TryGetJoinExpressionBranchParameter(joinExpression.LeftSource, itemType, out parameterExpression)
-                                   || TryGetJoinExpressionBranchParameter(joinExpression.RightSource, itemType, out parameterExpression);
-                        }
-
-                        static bool TryGetJoinExpressionBranchParameter(
-                            ISqlExpression sourceExpression,
-                            Type itemType,
-                            [NotNullWhen(true)] out Expressions.ParameterExpression? parameterExpression)
-                        {
-                            if (sourceExpression is JoinExpression leftSourceJoinExpression
-                                && TryGetJoinExpressionParameter(leftSourceJoinExpression, itemType, out parameterExpression))
-                            {
-                                return true;
-                            }
-
-                            if (sourceExpression is NamedSourceExpression namedSourceExpression)
-                            {
-                                parameterExpression = namedSourceExpression.Parameter;
-                                return true;
-                            }
-
-                            parameterExpression = null;
-                            return false;
-                        }
                     }
 
                     case QuerySourceExpression querySourceExpression:
@@ -199,49 +248,45 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                          */
 
                         var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
-
-                        ISqlExpression predicateExpression;
-
-                        using (context.OpenParameterScope(parameterExpression))
-                        {
-                            visitor.Visit(methodCallExpression.Arguments[1]);
-                            predicateExpression = context.SqlExpression;
-                        }
-
                         var namedSourceExpression = new NamedSourceExpression(itemType, querySourceExpression, parameterExpression);
-                        var expressions = RepositoryAllLinqExpressionVisitor.SelectAll(_modelProvider, itemType, parameterExpression);
-                        var filterExpression = new FilterExpression(itemType, predicateExpression);
-                        var projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, filterExpression, null);
+                        var expressions = SelectLinqExpressionVisitor
+                            .SelectAll(_modelProvider, itemType, parameterExpression)
+                            .Cast<ISqlExpression>()
+                            .ToList();
 
-                        if (SelectLinqExpressionVisitor.BuildJoinExpression(context, _modelProvider, projectionExpression) is { } joinProjectionExpression)
+                        var relations = RelationsExpressionVisitor.ExtractRelations(_modelProvider, methodCallExpression.Arguments[1]);
+
+                        ProjectionExpression projectionExpression;
+
+                        if (SelectLinqExpressionVisitor.TryBuildJoinExpression(context, _modelProvider, namedSourceExpression, relations, out var joinExpression, out var relationExpressions, out var joinParameterExpressions))
                         {
-                            projectionExpression = joinProjectionExpression;
+                            ISqlExpression predicateExpression;
+
+                            using (context.OpenParametersScope(joinParameterExpressions))
+                            {
+                                visitor.Visit(methodCallExpression.Arguments[1]);
+                                predicateExpression = context.SqlExpression;
+                            }
+
+                            expressions = expressions.Concat(relationExpressions).ToList();
+                            var filterExpression = new FilterExpression(itemType, predicateExpression);
+                            projectionExpression = new ProjectionExpression(itemType, joinExpression, expressions, filterExpression, null);
+                        }
+                        else
+                        {
+                            ISqlExpression predicateExpression;
+
+                            using (context.OpenParametersScope(parameterExpression))
+                            {
+                                visitor.Visit(methodCallExpression.Arguments[1]);
+                                predicateExpression = context.SqlExpression;
+                            }
+
+                            var filterExpression = new FilterExpression(itemType, predicateExpression);
+                            projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, filterExpression, null);
                         }
 
                         context.Remember(projectionExpression);
-
-                        break;
-                    }
-
-                    case DeleteExpression deleteExpression:
-                    {
-                        /*
-                         * filter delete expression
-                         */
-
-                        var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
-
-                        ISqlExpression predicateExpression;
-
-                        using (context.OpenParameterScope(parameterExpression))
-                        {
-                            visitor.Visit(methodCallExpression.Arguments[1]);
-                            predicateExpression = context.SqlExpression;
-                        }
-
-                        var filterExpression = new FilterExpression(itemType, predicateExpression);
-                        deleteExpression.FilterExpression = filterExpression;
-                        context.Remember(deleteExpression);
 
                         break;
                     }
@@ -256,15 +301,40 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                         ISqlExpression predicateExpression;
 
-                        using (context.OpenParameterScope(parameterExpression))
+                        using (context.OpenParametersScope(parameterExpression))
                         {
                             visitor.Visit(methodCallExpression.Arguments[1]);
                             predicateExpression = context.SqlExpression;
                         }
 
+                        // TODO: support join expression in update predicate and test it
                         var filterExpression = new FilterExpression(itemType, predicateExpression);
                         updateExpression.FilterExpression = filterExpression;
                         context.Remember(updateExpression);
+
+                        break;
+                    }
+
+                    case DeleteExpression deleteExpression:
+                    {
+                        /*
+                         * filter delete expression
+                         */
+
+                        var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
+
+                        ISqlExpression predicateExpression;
+
+                        using (context.OpenParametersScope(parameterExpression))
+                        {
+                            visitor.Visit(methodCallExpression.Arguments[1]);
+                            predicateExpression = context.SqlExpression;
+                        }
+
+                        // TODO: support join expression in delete predicate and test it
+                        var filterExpression = new FilterExpression(itemType, predicateExpression);
+                        deleteExpression.FilterExpression = filterExpression;
+                        context.Remember(deleteExpression);
 
                         break;
                     }
@@ -318,6 +388,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     NullExpression nullExpression => nullExpression,
                     Expressions.ParameterExpression => replacement,
                     ParenthesesExpression parenthesesExpression => new ParenthesesExpression(Replace(parenthesesExpression.Source, replacement)),
+                    RenameExpression renameExpression => new RenameExpression(renameExpression.Type, renameExpression.Members, Replace(renameExpression.Source, replacement)),
                     QueryParameterExpression queryParameterExpression => queryParameterExpression,
                     Expressions.UnaryExpression unaryExpression => new Expressions.UnaryExpression(
                         unaryExpression.Type,

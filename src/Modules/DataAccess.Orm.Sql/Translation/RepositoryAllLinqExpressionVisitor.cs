@@ -42,81 +42,46 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 if (context.IsOuterExpression() && !itemType.IsSqlView())
                 {
                     var querySourceExpression = new QuerySourceExpression(itemType);
+                    var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
+                    var namedSourceExpression = new NamedSourceExpression(itemType, querySourceExpression, parameterExpression);
+                    var expressions = SelectLinqExpressionVisitor
+                        .SelectAll(_modelProvider, itemType, parameterExpression)
+                        .Cast<ISqlExpression>()
+                        .ToList();
 
-                    if (SelectLinqExpressionVisitor.BuildJoinExpression(context, _modelProvider, querySourceExpression) is { } joinProjectionExpression)
+                    IReadOnlyCollection<Relation> relations = itemType.IsMtmTable()
+                        ? Array.Empty<Relation>()
+                        : _modelProvider
+                            .Columns(itemType)
+                            .Select(it => it.Value)
+                            .Where(column => column.IsRelation)
+                            .Select(column => column.Relation!)
+                            .ToList();
+
+                    ProjectionExpression projectionExpression;
+
+                    if (SelectLinqExpressionVisitor.TryBuildJoinExpression(context, _modelProvider, namedSourceExpression, relations, out var joinExpression, out var relationExpressions, out _))
                     {
-                        var projectionExpression = joinProjectionExpression;
-                        context.Remember(projectionExpression);
+                        expressions = expressions.Concat(relationExpressions).ToList();
+                        projectionExpression = new ProjectionExpression(itemType, joinExpression, expressions, null, null);
                     }
                     else
                     {
-                        var parameterExpression = new Expressions.ParameterExpression(itemType, context.NextLambdaParameterName());
-                        var namedSourceExpression = new NamedSourceExpression(itemType, querySourceExpression, parameterExpression);
-                        var expressions = SelectAll(_modelProvider, itemType, parameterExpression);
-                        var projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, null, null);
-                        context.Remember(projectionExpression);
+                        projectionExpression = new ProjectionExpression(itemType, namedSourceExpression, expressions, null, null);
                     }
+
+                    context.Remember(projectionExpression);
                 }
                 else
                 {
                     var querySourceExpression = new QuerySourceExpression(itemType);
-
-                    if (SelectLinqExpressionVisitor.BuildJoinExpression(context, _modelProvider, querySourceExpression) is { } projectionExpression)
-                    {
-                        context.Remember(projectionExpression);
-                    }
-                    else
-                    {
-                        context.Remember(querySourceExpression);
-                    }
+                    context.Remember(querySourceExpression);
                 }
 
                 return true;
             }
 
             return false;
-        }
-
-        internal static IReadOnlyCollection<ISqlExpression> SelectAll(
-            IModelProvider modelProvider,
-            Type type,
-            Expressions.ParameterExpression parameterExpression)
-        {
-            if (!type.IsClass
-                || type.IsPrimitive()
-                || type.IsCollection())
-            {
-                throw new InvalidOperationException(nameof(SelectAll));
-            }
-
-            return modelProvider
-                .Columns(type)
-                .Values
-                .Where(column => !column.IsMultipleRelation)
-                .Select(column => column.BuildExpression(parameterExpression))
-                .ToList();
-
-                /*.return columns
-                    .Select(column => column.BuildExpression(parameterExpression))
-
-                    // TODO: do we need to select relations?
-                    Concat(columns
-                        .Where(column => column.IsRelation
-                                         && !modelProvider.Tables[column.Relation.Target].IsMtmTable)
-                        .SelectMany(column => modelProvider
-                            .Columns(column.Relation.Target)
-                            .Values
-                            .Where(targetColumn => !targetColumn.IsMultipleRelation)
-                            .Select(targetColumn => (column, targetColumn)))
-                        .Select(pair =>
-                        {
-                            var (column, targetColumn) = pair;
-
-                            var targetParameterExpression = new Expressions.ParameterExpression(targetColumn.Table.Type, parameterExpression.Name);
-                            var columnExpression = targetColumn.BuildExpression(targetParameterExpression);
-                            return (ISqlExpression)new RenameExpression(columnExpression.Type, $"{column.Relation.Property.Reflected.Name}_{columnExpression.Name}", columnExpression);
-                        }))
-                .ToList();*/
         }
     }
 }

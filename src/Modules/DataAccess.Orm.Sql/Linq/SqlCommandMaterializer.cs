@@ -87,7 +87,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             IDictionary<string, object?> values,
             CancellationToken token)
         {
-            var relationValues = InitializeRelations(type, values);
+            MaterializeRelations(transaction, type, values);
 
             var multipleRelationValues = InitializeMultipleRelations(type, values);
 
@@ -96,7 +96,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             object? built;
 
             if (type.IsDatabaseEntity()
-                && TryGetValueFromTransaction(transaction, type, values[nameof(IUniqueIdentified.PrimaryKey)] !, out var stored))
+                && TryGetValueFromTransaction(transaction, type, arrangedValues[nameof(IUniqueIdentified.PrimaryKey)] !, out var stored))
             {
                 // TODO: why refill from query results?
                 _objectBuilder.Fill(type, stored, arrangedValues);
@@ -108,8 +108,6 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             }
 
             StoreInTransaction(transaction, built);
-
-            MaterializeRelations(transaction, built, relationValues);
 
             await MaterializeMultipleRelations(transaction, built, type, multipleRelationValues, token).ConfigureAwait(false);
 
@@ -280,65 +278,39 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Linq
             }
         }
 
-        private IReadOnlyDictionary<ColumnInfo, (object? PrimaryKey, IDictionary<string, object?> Values)> InitializeRelations(
+        private void MaterializeRelations(
+            IAdvancedDatabaseTransaction transaction,
             Type type,
             IDictionary<string, object?> values)
         {
-            return _modelProvider
+            var relations = _modelProvider
                 .Columns(type)
                 .Values
-                .Where(column => column.IsRelation)
-                .ToDictionary(
-                    column => column,
-                    column =>
-                    {
-                        /*
-                         * initialize database entity with null relation and set it later
-                         */
+                .Where(column => column.IsRelation);
 
-                        var primaryKey = values[column.Name];
-
-                        values[column.Name] = column.Relation.Target.DefaultValue();
-
-                        var relationKeys = values
-                            .Select(pair => pair.Key)
-                            .Where(key => key.StartsWith($"{column.Name}_"))
-                            .ToList();
-
-                        var relationValues = new Dictionary<string, object?>();
-
-                        foreach (var relationKey in relationKeys)
-                        {
-                            if (values.Remove(relationKey, out var value))
-                            {
-                                var cleanRelationKey = relationKey.Substring(column.Name.Length + 1);
-                                relationValues[cleanRelationKey] = value;
-                            }
-                        }
-
-                        return (primaryKey, (IDictionary<string, object?>)relationValues);
-                    });
-        }
-
-        private void MaterializeRelations(
-            IAdvancedDatabaseTransaction transaction,
-            object? built,
-            IReadOnlyDictionary<ColumnInfo, (object?, IDictionary<string, object?>)> relationValues)
-        {
-            foreach (var (column, pair) in relationValues)
+            foreach (var column in relations)
             {
-                var (primaryKey, arrangedValues) = pair;
+                var primaryKey = values[column.Name];
 
-                if (primaryKey is null or DBNull)
+                var relationKeys = values
+                    .Select(pair => pair.Key)
+                    .Where(key => key.StartsWith($"{column.Name}_"))
+                    .ToList();
+
+                var relationValues = new Dictionary<string, object?>();
+
+                foreach (var relationKey in relationKeys)
                 {
-                    continue;
+                    if (values.Remove(relationKey, out var value))
+                    {
+                        var cleanRelationKey = relationKey.Substring(column.Name.Length + 1);
+                        relationValues[cleanRelationKey] = value;
+                    }
                 }
 
-                var relation = column.Table.IsMtmTable
+                values[column.Name] = column.Table.IsMtmTable
                     ? primaryKey
-                    : MaterializeRelation(transaction, column.Relation.Target, primaryKey, arrangedValues);
-
-                column.Relation.Property.Declared.SetValue(built, relation);
+                    : MaterializeRelation(transaction, column.Relation.Target, primaryKey!, relationValues);
             }
         }
 

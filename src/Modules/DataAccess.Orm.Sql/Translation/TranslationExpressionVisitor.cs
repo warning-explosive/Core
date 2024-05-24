@@ -10,6 +10,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     using AutoRegistration.Api.Enumerations;
     using Basics;
     using Expressions;
+    using Model;
     using BinaryExpression = System.Linq.Expressions.BinaryExpression;
     using ConditionalExpression = System.Linq.Expressions.ConditionalExpression;
     using MethodCallExpression = System.Linq.Expressions.MethodCallExpression;
@@ -21,19 +22,23 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
     /// TranslationExpressionVisitor
     /// </summary>
     [Component(EnLifestyle.Singleton)]
-    public class TranslationExpressionVisitor : ExpressionVisitor,
+    internal class TranslationExpressionVisitor : ExpressionVisitor, // TODO: visibility (make public)
                                                 IResolvable<TranslationExpressionVisitor>
     {
+        private readonly IModelProvider _modelProvider;
         private readonly ILinqExpressionPreprocessorComposite _preprocessor;
         private readonly IEnumerable<ILinqExpressionVisitor> _linqExpressionVisitors;
 
         /// <summary> .cctor </summary>
+        /// <param name="modelProvider">IModelProvider</param>
         /// <param name="preprocessor">ILinqExpressionPreprocessorComposite</param>
         /// <param name="linqExpressionVisitors">ILinqExpressionVisitor</param>
         public TranslationExpressionVisitor(
+            IModelProvider modelProvider,
             ILinqExpressionPreprocessorComposite preprocessor,
             IEnumerable<ILinqExpressionVisitor> linqExpressionVisitors)
         {
+            _modelProvider = modelProvider;
             _preprocessor = preprocessor;
             _linqExpressionVisitors = linqExpressionVisitors;
         }
@@ -48,22 +53,25 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             TranslationContext context,
             Expression expression)
         {
-            var visitor = new InternalTranslationExpressionVisitor(this, context, expression);
+            var visitor = new InternalTranslationExpressionVisitor(_modelProvider, this, context, expression);
 
             return visitor.Translate();
         }
 
         private class InternalTranslationExpressionVisitor : ExpressionVisitor
         {
+            private readonly IModelProvider _modelProvider;
             private readonly TranslationExpressionVisitor _visitor;
             private readonly TranslationContext _context;
             private readonly Expression _expression;
 
             internal InternalTranslationExpressionVisitor(
+                IModelProvider modelProvider,
                 TranslationExpressionVisitor visitor,
                 TranslationContext context,
                 Expression expression)
             {
+                _modelProvider = modelProvider;
                 _visitor = visitor;
                 _context = context;
                 _expression = expression;
@@ -108,11 +116,17 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                 Visit(node.Expression);
                 var source = _context.SqlExpression;
 
+                if (node.Member is not PropertyInfo property)
+                {
+                    throw new NotSupportedException($"member {node.Member} is not supported");
+                }
+
                 ISqlExpression expression = source switch
                 {
-                    ColumnExpression columnExpression => new ColumnsChainExpression(node.Type, new[] { columnExpression.Member, node.Member }, columnExpression.Source),
-                    ColumnsChainExpression columnsChainExpression => new ColumnsChainExpression(node.Type, columnsChainExpression.Members.Concat(new[] { node.Member }).ToArray(), columnsChainExpression.Source),
-                    _ => new ColumnExpression(node.Type, node.Member, source)
+                    // TODO: test long relations chain
+                    ColumnExpression columnExpression => new ColumnsChainExpression(node.Type, new[] { columnExpression.Member, property }, columnExpression.Source),
+                    ColumnsChainExpression columnsChainExpression => new ColumnsChainExpression(node.Type, columnsChainExpression.Members.Concat(new[] { property }).ToArray(), columnsChainExpression.Source),
+                    _ => new ColumnExpression(node.Type, property, source)
                 };
 
                 _context.Remember(expression);
@@ -126,21 +140,21 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
                 foreach (var (memberInfo, argument) in node.Members.Zip(node.Arguments, (memberInfo, argument) => (memberInfo, argument)))
                 {
+                    Visit(argument);
+
                     if (argument is MemberExpression memberExpression
                         && memberExpression.Member.MemberType == MemberTypes.Property
-                        && memberExpression.Member.Name.Equals(memberInfo.Name, StringComparison.OrdinalIgnoreCase))
+                        && memberExpression.Member.Name.Equals(memberInfo.Name, StringComparison.OrdinalIgnoreCase)
+                        && _context.SqlExpression is not ColumnsChainExpression)
                     {
-                        Visit(argument);
-                        var expression = _context.SqlExpression;
-                        parameters.Add(expression);
+                        parameters.Add(_context.SqlExpression);
                     }
                     else
                     {
-                        Visit(argument);
-                        var expression = _context.SqlExpression is ColumnExpression
+                        var expression = _context.SqlExpression is ColumnExpression or ColumnsChainExpression
                             ? _context.SqlExpression
                             : new ParenthesesExpression(_context.SqlExpression);
-                        var renameExpression = new RenameExpression(argument.Type, memberInfo.Name, expression);
+                        var renameExpression = new RenameExpression(argument.Type, new[] { memberInfo }, expression);
                         parameters.Add(renameExpression);
                     }
                 }
@@ -203,7 +217,30 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
 
             protected override Expression VisitParameter(ParameterExpression node)
             {
-                var parameterExpression = _context.ParameterExpression ?? new Expressions.ParameterExpression(node.Type, _context.NextLambdaParameterName());
+                var memberExpression = _context
+                    .Path
+                    .Skip(1)
+                    .FirstOrDefault() as MemberExpression;
+
+                Type type;
+
+                if (node.Type.IsSubclassOfOpenGeneric(typeof(IUniqueIdentified<>))
+                    && _modelProvider
+                        .Columns(node.Type)
+                        .TryGetValue(memberExpression.Member.Name, out var columnInfo)
+                    && columnInfo.IsRelation)
+                {
+                    type = memberExpression.Type;
+                }
+                else
+                {
+                    type = node.Type;
+                }
+
+                var parameterExpression = _context
+                        .ParameterExpressions
+                        .SingleOrDefault(it => it.Type == type)
+                    ?? throw new InvalidOperationException($"Unable to find parameter for type {type.FullName}");
 
                 if (ExtractUpdateQueryRootExpressionVisitor.IsUpdateQuery(_expression)
                     || ExtractDeleteQueryRootExpressionVisitor.IsDeleteQuery(_expression))

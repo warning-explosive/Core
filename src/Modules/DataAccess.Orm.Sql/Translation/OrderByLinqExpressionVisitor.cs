@@ -27,9 +27,7 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
             var method = methodCallExpression.Method.GenericMethodDefinitionOrSelf();
 
             if (method == LinqMethods.QueryableOrderBy()
-                || method == LinqMethods.QueryableOrderByDescending()
-                || method == LinqMethods.QueryableThenBy()
-                || method == LinqMethods.QueryableThenByDescending())
+                || method == LinqMethods.QueryableOrderByDescending())
             {
                 visitor.Visit(methodCallExpression.Arguments[0]);
                 var source = context.SqlExpression;
@@ -39,19 +37,48 @@ namespace SpaceEngineers.Core.DataAccess.Orm.Sql.Translation
                     var parameterExpression = namedSourceExpression.Parameter;
                     ISqlExpression orderByExpressionAccessor;
 
-                    using (context.OpenParameterScope(parameterExpression))
+                    using (context.OpenParametersScope(parameterExpression))
                     {
                         visitor.Visit(methodCallExpression.Arguments[1]);
                         orderByExpressionAccessor = context.SqlExpression;
                     }
 
-                    var direction = method == LinqMethods.QueryableOrderBy() || method == LinqMethods.QueryableThenBy()
+                    var direction = method == LinqMethods.QueryableOrderBy()
+                        ? EnOrderingDirection.Asc
+                        : EnOrderingDirection.Desc;
+
+                    projectionExpression.OrderByExpression = new OrderByExpression(new List<OrderByExpressionExpression>());
+                    var orderByExpressionExpression = new OrderByExpressionExpression(orderByExpressionAccessor, direction);
+                    ((ICollection<ISqlExpression>)projectionExpression.OrderByExpression.Expressions).Add(orderByExpressionExpression);
+                    context.Remember(projectionExpression);
+
+                    return true;
+                }
+            }
+
+            if (method == LinqMethods.QueryableThenBy()
+                || method == LinqMethods.QueryableThenByDescending())
+            {
+                visitor.Visit(methodCallExpression.Arguments[0]);
+                var source = context.SqlExpression;
+
+                if (source is ProjectionExpression { Source: NamedSourceExpression namedSourceExpression, OrderByExpression: { } orderByExpression } projectionExpression)
+                {
+                    var parameterExpression = namedSourceExpression.Parameter;
+                    ISqlExpression orderByExpressionAccessor;
+
+                    using (context.OpenParametersScope(parameterExpression))
+                    {
+                        visitor.Visit(methodCallExpression.Arguments[1]);
+                        orderByExpressionAccessor = context.SqlExpression;
+                    }
+
+                    var direction = method == LinqMethods.QueryableThenBy()
                         ? EnOrderingDirection.Asc
                         : EnOrderingDirection.Desc;
 
                     var orderByExpressionExpression = new OrderByExpressionExpression(orderByExpressionAccessor, direction);
-                    projectionExpression.OrderByExpression ??= new OrderByExpression(new List<OrderByExpressionExpression>());
-                    ((ICollection<OrderByExpressionExpression>)projectionExpression.OrderByExpression.Expressions).Add(orderByExpressionExpression);
+                    ((ICollection<ISqlExpression>)orderByExpression.Expressions).Add(orderByExpressionExpression);
                     context.Remember(projectionExpression);
 
                     return true;

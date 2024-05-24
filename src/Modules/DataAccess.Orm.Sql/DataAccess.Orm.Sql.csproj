@@ -414,5 +414,8 @@
         <Compile Update="Translation\Expressions\ColumnsChainExpression.cs">
           <DependentUpon>ISqlExpression.cs</DependentUpon>
         </Compile>
+        <Compile Update="Translation\RelationsExpressionVisitor.cs">
+          <DependentUpon>TranslationExpressionVisitor.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 </Project>

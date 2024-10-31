@@ -222,7 +222,7 @@ namespace SpaceEngineers.Core.WebApplication.Test
                 {
                     request.AddHeader("Cache-Control", "no-cache");
 
-                    request.Timeout = TestCase.Timeout;
+                    request.Timeout = TimeSpan.FromMilliseconds(TestCase.Timeout);
 
                     var awaiter = Task.WhenAny(
                         hostShutdown,

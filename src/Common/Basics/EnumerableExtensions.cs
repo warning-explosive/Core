@@ -6,7 +6,6 @@ namespace SpaceEngineers.Core.Basics
     using System.Linq;
     using System.Reflection;
     using Exceptions;
-    using Primitives;
 
     /// <summary>
     /// Enumerable extensions

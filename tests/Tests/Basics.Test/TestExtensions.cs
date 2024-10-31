@@ -1,24 +1,16 @@
-namespace SpaceEngineers.Core.Basics.Test
+namespace SpaceEngineers.Core.Basics.Test;
+
+using Xunit.Sdk;
+
+public static class TestExtensions
 {
-    using Xunit.Sdk;
-
-    /// <summary>
-    /// extensions for tests
-    /// </summary>
-    public static class TestExtensions
+    public static FalseException FalseException()
     {
-        /// <summary> Create FalseException </summary>
-        /// <returns>FalseException</returns>
-        public static FalseException FalseException()
-        {
-            return Xunit.Sdk.FalseException.ForNonFalseValue(nameof(FalseException), null);
-        }
+        return Xunit.Sdk.FalseException.ForNonFalseValue(nameof(FalseException), null);
+    }
 
-        /// <summary> Create TrueException </summary>
-        /// <returns>TrueException</returns>
-        public static TrueException TrueException()
-        {
-            return Xunit.Sdk.TrueException.ForNonTrueValue(nameof(TrueException), null);
-        }
+    public static TrueException TrueException()
+    {
+        return Xunit.Sdk.TrueException.ForNonTrueValue(nameof(TrueException), null);
     }
 }

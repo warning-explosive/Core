@@ -1,7 +1,6 @@
-namespace SpaceEngineers.Core.Basics.Test
+namespace SpaceEngineers.Core.Basics.Test;
+
+internal record TestRecord
 {
-    internal record TestRecord
-    {
-        public string StringValue { get; init; } = default!;
-    }
+    public string StringValue { get; init; } = default!;
 }

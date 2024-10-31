@@ -1,22 +1,13 @@
-namespace SpaceEngineers.Core.Basics.Test
+namespace SpaceEngineers.Core.Basics.Test;
+
+using Xunit.Abstractions;
+
+public abstract class BasicsTestBase
 {
-    using Xunit.Abstractions;
-
-    /// <summary>
-    /// Unit test base class
-    /// </summary>
-    public abstract class BasicsTestBase
+    protected BasicsTestBase(ITestOutputHelper output)
     {
-        /// <summary> .ctor </summary>
-        /// <param name="output">ITestOutputHelper</param>
-        protected BasicsTestBase(ITestOutputHelper output)
-        {
-            Output = output;
-        }
-
-        /// <summary>
-        /// ITestOutputHelper
-        /// </summary>
-        protected ITestOutputHelper Output { get; }
+        Output = output;
     }
+
+    protected ITestOutputHelper Output { get; }
 }

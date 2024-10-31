@@ -1,19 +1,11 @@
-namespace SpaceEngineers.Core.Basics.Exceptions
-{
-    using System;
+namespace SpaceEngineers.Core.Basics.Exceptions;
 
-    /// <summary>
-    /// TypeMismatchException
-    /// Type is not accessible from expected type
-    /// </summary>
-    public sealed class TypeMismatchException : Exception
+using System;
+
+public sealed class TypeMismatchException : Exception
+{
+    public TypeMismatchException(Type expectedType, Type actualType)
+        : base($"{expectedType.FullName} is not accessible from {actualType.FullName}")
     {
-        /// <summary> .ctor </summary>
-        /// <param name="expectedType">Expected type</param>
-        /// <param name="actualType">Actual type</param>
-        public TypeMismatchException(Type expectedType, Type actualType)
-            : base($"{expectedType.FullName} is not accessible from {actualType.FullName}")
-        {
-        }
     }
 }

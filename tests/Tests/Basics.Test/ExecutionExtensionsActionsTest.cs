@@ -1,113 +1,107 @@
-namespace SpaceEngineers.Core.Basics.Test
+namespace SpaceEngineers.Core.Basics.Test;
+
+using System;
+using Basics;
+using Xunit;
+using Xunit.Abstractions;
+using Xunit.Sdk;
+
+public class ExecutionExtensionsActionsTest : BasicsTestBase
 {
-    using System;
-    using Basics;
-    using Xunit;
-    using Xunit.Abstractions;
-    using Xunit.Sdk;
-
-    /// <summary>
-    /// ExecutionExtensions class tests
-    /// </summary>
-    public class ExecutionExtensionsActionsTest : BasicsTestBase
+    public ExecutionExtensionsActionsTest(ITestOutputHelper output)
+        : base(output)
     {
-        /// <summary> .ctor </summary>
-        /// <param name="output">ITestOutputHelper</param>
-        public ExecutionExtensionsActionsTest(ITestOutputHelper output)
-            : base(output)
-        {
-        }
+    }
 
-        [Fact]
-        internal void HandleCaughtExceptionsTest()
-        {
-            Action action = () => throw TestExtensions.TrueException();
+    [Fact]
+    internal void HandleCaughtExceptionsTest()
+    {
+        Action action = () => throw TestExtensions.TrueException();
 
-            ExecutionExtensions.Try(action).Catch<TrueException>().Invoke();
-            ExecutionExtensions.Try(action).Catch<TrueException>(ex => { }).Invoke();
+        ExecutionExtensions.Try(action).Catch<TrueException>().Invoke();
+        ExecutionExtensions.Try(action).Catch<TrueException>(ex => { }).Invoke();
 
-            void HandleCaught() => ExecutionExtensions
-                .Try(action)
-                .Catch<TrueException>(ex => throw ex)
-                .Invoke();
+        void HandleCaught() => ExecutionExtensions
+            .Try(action)
+            .Catch<TrueException>(ex => throw ex)
+            .Invoke();
 
-            Assert.Throws<TrueException>(HandleCaught);
+        Assert.Throws<TrueException>(HandleCaught);
 
-            void Rethrow() => ExecutionExtensions
-                .Try(action)
-                .Catch<TrueException>(ex => throw TestExtensions.FalseException())
-                .Invoke();
+        void Rethrow() => ExecutionExtensions
+            .Try(action)
+            .Catch<TrueException>(ex => throw TestExtensions.FalseException())
+            .Invoke();
 
-            Assert.Throws<FalseException>(Rethrow);
+        Assert.Throws<FalseException>(Rethrow);
 
-            void Unhandled() => ExecutionExtensions
-                .Try(action)
-                .Catch<FalseException>(_ => throw TestExtensions.FalseException())
-                .Invoke();
+        void Unhandled() => ExecutionExtensions
+            .Try(action)
+            .Catch<FalseException>(_ => throw TestExtensions.FalseException())
+            .Invoke();
 
-            Assert.Throws<TrueException>(Unhandled);
-        }
+        Assert.Throws<TrueException>(Unhandled);
+    }
 
-        [Fact]
-        internal void SimpleTest()
-        {
-            Action action = () => { };
+    [Fact]
+    internal void SimpleTest()
+    {
+        Action action = () => { };
 
-            ExecutionExtensions
-                .Try(action)
-                .Catch<FalseException>()
-                .Catch<TrueException>()
-                .Invoke();
-        }
+        ExecutionExtensions
+            .Try(action)
+            .Catch<FalseException>()
+            .Catch<TrueException>()
+            .Invoke();
+    }
 
-        [Fact]
-        internal void HandledExceptionTest()
-        {
-            Action action = () => throw TestExtensions.FalseException();
+    [Fact]
+    internal void HandledExceptionTest()
+    {
+        Action action = () => throw TestExtensions.FalseException();
 
-            ExecutionExtensions
-                .Try(action)
-                .Catch<FalseException>()
-                .Invoke();
-        }
+        ExecutionExtensions
+            .Try(action)
+            .Catch<FalseException>()
+            .Invoke();
+    }
 
-        [Fact]
-        internal void SeveralCatchBlocksTest()
-        {
-            Action action = () => throw TestExtensions.FalseException();
+    [Fact]
+    internal void SeveralCatchBlocksTest()
+    {
+        Action action = () => throw TestExtensions.FalseException();
 
-            ExecutionExtensions
-                .Try(action)
-                .Catch<TrueException>(ex => throw ex)
-                .Catch<FalseException>()
-                .Invoke();
-        }
+        ExecutionExtensions
+            .Try(action)
+            .Catch<TrueException>(ex => throw ex)
+            .Catch<FalseException>()
+            .Invoke();
+    }
 
-        [Fact]
-        internal void ThrowInCatchBlockTest()
-        {
-            Action action = () => throw TestExtensions.FalseException();
+    [Fact]
+    internal void ThrowInCatchBlockTest()
+    {
+        Action action = () => throw TestExtensions.FalseException();
 
-            void TestAction() => ExecutionExtensions
-                .Try(action)
-                .Catch<FalseException>(ex => throw TestExtensions.TrueException())
-                .Invoke();
+        void TestAction() => ExecutionExtensions
+            .Try(action)
+            .Catch<FalseException>(ex => throw TestExtensions.TrueException())
+            .Invoke();
 
-            Assert.Throws<TrueException>(TestAction);
-        }
+        Assert.Throws<TrueException>(TestAction);
+    }
 
-        [Fact]
-        internal void ThrowInFinallyBlockTest()
-        {
-            Action action = () => throw TestExtensions.FalseException();
+    [Fact]
+    internal void ThrowInFinallyBlockTest()
+    {
+        Action action = () => throw TestExtensions.FalseException();
 
-            void TestAction() => ExecutionExtensions
-                .Try(action)
-                .Catch<FalseException>(ex => throw ex)
-                .Finally(() => throw TestExtensions.TrueException())
-                .Invoke();
+        void TestAction() => ExecutionExtensions
+            .Try(action)
+            .Catch<FalseException>(ex => throw ex)
+            .Finally(() => throw TestExtensions.TrueException())
+            .Invoke();
 
-            Assert.Throws<TrueException>(TestAction);
-        }
+        Assert.Throws<TrueException>(TestAction);
     }
 }

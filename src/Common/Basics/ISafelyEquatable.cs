@@ -1,16 +1,6 @@
-namespace SpaceEngineers.Core.Basics
+namespace SpaceEngineers.Core.Basics;
+
+public interface ISafelyEquatable<T>
 {
-    /// <summary>
-    /// ISafelyEquatable
-    /// </summary>
-    /// <typeparam name="T">T type-argument</typeparam>
-    public interface ISafelyEquatable<T>
-    {
-        /// <summary>
-        /// Non nullable analog of Equals
-        /// </summary>
-        /// <param name="other">Other</param>
-        /// <returns>Comparison result</returns>
-        bool SafeEquals(T other);
-    }
+    bool SafeEquals(T other);
 }

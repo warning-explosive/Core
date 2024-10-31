@@ -1,17 +1,11 @@
-namespace SpaceEngineers.Core.Basics.Exceptions
-{
-    using System;
+namespace SpaceEngineers.Core.Basics.Exceptions;
 
-    /// <summary>
-    /// NotFoundException
-    /// </summary>
-    public sealed class NotFoundException : Exception
+using System;
+
+public sealed class NotFoundException : Exception
+{
+    public NotFoundException(string message)
+        : base(message)
     {
-        /// <summary> .ctor </summary>
-        /// <param name="message">Exception message</param>
-        public NotFoundException(string message)
-            : base(message)
-        {
-        }
     }
 }

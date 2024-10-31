@@ -1,132 +1,94 @@
-namespace SpaceEngineers.Core.Basics
+namespace SpaceEngineers.Core.Basics;
+
+using System;
+using System.Threading;
+using Disposables;
+
+public static class SynchronizationPrimitivesExtensions
 {
-    using System;
-    using System.Threading;
-    using Primitives;
-
-    /// <summary>
-    /// Synchronization primitives extensions
-    /// </summary>
-    public static class SynchronizationPrimitivesExtensions
+    public static IDisposable WithinReadLock(this ReaderWriterLockSlim sync)
     {
-        /// <summary>
-        /// Opens read-lock scope
-        /// </summary>
-        /// <param name="sync">ReaderWriterLockSlim</param>
-        /// <returns>Opened scope and its cancellation</returns>
-        public static IDisposable WithinReadLock(this ReaderWriterLockSlim sync)
+        if (sync.IsReadLockHeld)
         {
-            if (sync.IsReadLockHeld)
-            {
-                return Disposable.Empty;
-            }
-
-            sync.EnterReadLock();
-
-            return Disposable.Create(sync.ExitReadLock);
+            return Disposable.Empty;
         }
 
-        /// <summary>
-        /// Invoke action within read-lock
-        /// </summary>
-        /// <param name="sync">ReaderWriterLockSlim</param>
-        /// <param name="action">Action</param>
-        public static void WithinReadLock(this ReaderWriterLockSlim sync, Action action)
+        sync.EnterReadLock();
+
+        return Disposable.Create(sync.ExitReadLock);
+    }
+
+    public static void WithinReadLock(this ReaderWriterLockSlim sync, Action action)
+    {
+        if (sync.IsReadLockHeld)
         {
-            if (sync.IsReadLockHeld)
-            {
-                action.Invoke();
-                return;
-            }
-
-            sync.EnterReadLock();
-
-            try
-            {
-                action.Invoke();
-            }
-            finally
-            {
-                sync.ExitReadLock();
-            }
+            action.Invoke();
+            return;
         }
 
-        /// <summary>
-        /// Invoke function within read-lock
-        /// </summary>
-        /// <param name="sync">ReaderWriterLockSlim</param>
-        /// <param name="func">Function</param>
-        /// <typeparam name="T">Return value type-argument</typeparam>
-        /// <returns>Function result</returns>
-        public static T WithinReadLock<T>(this ReaderWriterLockSlim sync, Func<T> func)
+        sync.EnterReadLock();
+
+        try
         {
-            if (sync.IsReadLockHeld)
-            {
-                return func.Invoke();
-            }
+            action.Invoke();
+        }
+        finally
+        {
+            sync.ExitReadLock();
+        }
+    }
 
-            sync.EnterReadLock();
-
-            try
-            {
-                return func.Invoke();
-            }
-            finally
-            {
-                sync.ExitReadLock();
-            }
+    public static T WithinReadLock<T>(this ReaderWriterLockSlim sync, Func<T> func)
+    {
+        if (sync.IsReadLockHeld)
+        {
+            return func.Invoke();
         }
 
-        /// <summary>
-        /// Opens write-lock scope
-        /// </summary>
-        /// <param name="sync">ReaderWriterLockSlim</param>
-        /// <returns>Opened scope and its cancellation</returns>
-        public static IDisposable WithinWriteLock(this ReaderWriterLockSlim sync)
-        {
-            sync.EnterWriteLock();
+        sync.EnterReadLock();
 
-            return Disposable.Create(sync.ExitWriteLock);
+        try
+        {
+            return func.Invoke();
         }
-
-        /// <summary>
-        /// Invoke action within write-lock
-        /// </summary>
-        /// <param name="sync">ReaderWriterLockSlim</param>
-        /// <param name="action">Action</param>
-        public static void WithinWriteLock(this ReaderWriterLockSlim sync, Action action)
+        finally
         {
-            sync.EnterWriteLock();
-
-            try
-            {
-                action.Invoke();
-            }
-            finally
-            {
-                sync.ExitWriteLock();
-            }
+            sync.ExitReadLock();
         }
+    }
 
-        /// <summary>
-        /// Invoke function within write-lock
-        /// </summary>
-        /// <param name="sync">ReaderWriterLockSlim</param>
-        /// <param name="func">Function</param>
-        /// <typeparam name="T">Return value type-argument</typeparam>
-        /// <returns>Function result</returns>
-        public static T WithinWriteLock<T>(this ReaderWriterLockSlim sync, Func<T> func)
+    public static IDisposable WithinWriteLock(this ReaderWriterLockSlim sync)
+    {
+        sync.EnterWriteLock();
+
+        return Disposable.Create(sync.ExitWriteLock);
+    }
+
+    public static void WithinWriteLock(this ReaderWriterLockSlim sync, Action action)
+    {
+        sync.EnterWriteLock();
+
+        try
         {
-            sync.EnterWriteLock();
+            action.Invoke();
+        }
+        finally
+        {
+            sync.ExitWriteLock();
+        }
+    }
 
-            try
-            {
-                return func.Invoke();
-            }
-            finally
-            {
-                sync.ExitWriteLock();
-            }
+    public static T WithinWriteLock<T>(this ReaderWriterLockSlim sync, Func<T> func)
+    {
+        sync.EnterWriteLock();
+
+        try
+        {
+            return func.Invoke();
+        }
+        finally
+        {
+            sync.ExitWriteLock();
         }
     }
 }

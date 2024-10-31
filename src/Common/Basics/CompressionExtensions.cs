@@ -1,50 +1,36 @@
-namespace SpaceEngineers.Core.Basics
+namespace SpaceEngineers.Core.Basics;
+
+using System;
+using System.IO;
+using System.IO.Compression;
+
+public static class CompressionExtensions
 {
-    using System;
-    using System.IO;
-    using System.IO.Compression;
-
-    /// <summary>
-    /// Compression extensions
-    /// </summary>
-    public static class CompressionExtensions
+    public static ReadOnlyMemory<byte> Compress(this ReadOnlySpan<byte> bytes)
     {
-        /// <summary>
-        /// Compresses data
-        /// </summary>
-        /// <param name="bytes">Decompressed data</param>
-        /// <returns>Compressed data</returns>
-        public static ReadOnlyMemory<byte> Compress(this ReadOnlySpan<byte> bytes)
+        using (var to = new MemoryStream())
+        using (var zipStream = new GZipStream(to, CompressionMode.Compress, leaveOpen: false))
         {
-            using (var to = new MemoryStream())
-            using (var zipStream = new GZipStream(to, CompressionMode.Compress, leaveOpen: false))
-            {
-                zipStream.Write(bytes);
+            zipStream.Write(bytes);
 
-                zipStream.Close(); // committing changes into underlying stream
+            zipStream.Close(); // committing changes into underlying stream
 
-                return to.AsBytes();
-            }
+            return to.AsBytes();
         }
+    }
 
-        /// <summary>
-        /// Decompresses data
-        /// </summary>
-        /// <param name="bytes">Compressed data</param>
-        /// <returns>Decompressed data</returns>
-        public static ReadOnlyMemory<byte> Decompress(this ReadOnlySpan<byte> bytes)
+    public static ReadOnlyMemory<byte> Decompress(this ReadOnlySpan<byte> bytes)
+    {
+        using (var from = bytes.AsMemoryStream())
+        using (var zipStream = new GZipStream(from, CompressionMode.Decompress, leaveOpen: false))
         {
-            using (var from = bytes.AsMemoryStream())
-            using (var zipStream = new GZipStream(from, CompressionMode.Decompress, leaveOpen: false))
+            try
             {
-                try
-                {
-                    return zipStream.AsBytes();
-                }
-                finally
-                {
-                    zipStream.Close();
-                }
+                return zipStream.AsBytes();
+            }
+            finally
+            {
+                zipStream.Close();
             }
         }
     }

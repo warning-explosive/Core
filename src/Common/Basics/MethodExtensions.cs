@@ -1,32 +1,25 @@
-namespace SpaceEngineers.Core.Basics
+namespace SpaceEngineers.Core.Basics;
+
+using System;
+using System.Reflection;
+using Reflection;
+
+public static class MethodExtensions
 {
-    using System;
-
-    /// <summary>
-    /// System.Type.MethodInfo extensions
-    /// </summary>
-    public static class MethodExtensions
+    public static MethodExecutionInfo CallMethod(this Type declaringType, string methodName)
     {
-        /// <summary>
-        /// Call method by reflection
-        /// </summary>
-        /// <param name="declaringType">Type that declare the method</param>
-        /// <param name="methodName">Method name</param>
-        /// <returns>MethodExecutionInfo</returns>
-        public static MethodExecutionInfo CallMethod(this Type declaringType, string methodName)
-        {
-            return new MethodExecutionInfo(declaringType, methodName);
-        }
+        return new MethodExecutionInfo(declaringType, methodName);
+    }
 
-        /// <summary>
-        /// Call method by reflection
-        /// </summary>
-        /// <param name="target">Target instance of method call</param>
-        /// <param name="methodName">Method name</param>
-        /// <returns>MethodExecutionInfo</returns>
-        public static MethodExecutionInfo CallMethod(this object target, string methodName)
-        {
-            return new MethodExecutionInfo(target.GetType(), methodName).ForInstance(target);
-        }
+    public static MethodExecutionInfo CallMethod(this object target, string methodName)
+    {
+        return new MethodExecutionInfo(target.GetType(), methodName).ForInstance(target);
+    }
+
+    public static MethodInfo GenericMethodDefinitionOrSelf(this MethodInfo method)
+    {
+        return method.IsGenericMethod
+            ? method.GetGenericMethodDefinition()
+            : method;
     }
 }

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <AssemblyName>SpaceEngineers.Core.DependencyInjection.Test</AssemblyName>
+        <RootNamespace>SpaceEngineers.Core.DependencyInjection.Test</RootNamespace>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" />
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" />
+        <PackageReference Include="StyleCop.Analyzers" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="coverlet.msbuild" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\src\Common\DependencyInjection\DependencyInjection.csproj" />
+        <ProjectReference Include="..\..\..\src\Common\DependencyInjection.SourceGenerators\DependencyInjection.SourceGenerators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\..\..\src\Modules\CliArgumentsParser\CliArgumentsParser.csproj" />
+        <ProjectReference Include="..\Test.Api\Test.Api.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Update="Dependencies\WithInjectedDependencyContainer.cs">
+            <DependentUpon>IWithInjectedDependencyContainer.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\WiredTestService.cs">
+            <DependentUpon>IWiredTestService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\SingletonService.cs">
+            <DependentUpon>ISingletonService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\ScopedService.cs">
+            <DependentUpon>IScopedService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\CollectionResolvableTestServiceImpl1.cs">
+            <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\CollectionResolvableTestServiceImpl2.cs">
+            <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\CollectionResolvableTestServiceImpl3.cs">
+            <DependentUpon>ICollectionResolvableTestService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\DecorableService.cs">
+            <DependentUpon>IDecorableService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\DecorableServiceDecorator1.cs">
+            <DependentUpon>IDecorableService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\DecorableServiceDecorator2.cs">
+            <DependentUpon>IDecorableService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\DecorableServiceDecorator3.cs">
+            <DependentUpon>IDecorableService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\IndependentTestService.cs">
+            <DependentUpon>IIndependentTestService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\ManuallyRegisteredService.cs">
+            <DependentUpon>IManuallyRegisteredService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\OpenGenericDecorableServiceDecorator1.cs">
+            <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\OpenGenericDecorableServiceDecorator2.cs">
+            <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\OpenGenericDecorableServiceDecorator3.cs">
+            <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\OpenGenericTestService.cs">
+            <DependentUpon>IOpenGenericTestService.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Dependencies\OpenGenericDecorableService.cs">
+            <DependentUpon>IOpenGenericDecorableService.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+</Project>

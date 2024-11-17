@@ -4,22 +4,18 @@
         <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>SpaceEngineers.Core.Test.Api</AssemblyName>
         <RootNamespace>SpaceEngineers.Core.Test.Api</RootNamespace>
-        <IsPackable>true</IsPackable>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\..\src\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" />
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" />
+        <PackageReference Include="StyleCop.Analyzers" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="xunit.abstractions" Version="2.0.3"/>
-        <PackageReference Include="xunit.extensibility.core" Version="2.6.2" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" />
+        <PackageReference Include="xunit.abstractions" />
+        <PackageReference Include="xunit.extensibility.core" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\src\Common\DependencyInjection\DependencyInjection.csproj" />
     </ItemGroup>
 </Project>

@@ -31,8 +31,8 @@ public static class AssemblyExtensions
         "SpaceEngineers.Core.Benchmark.Api"
     };
 
-    private static readonly Lazy<(Assembly[] OurAssemblies, Assembly[] AllAssemblies)> AllAssembliesLoadedInCurrentAppDomain
-        = new Lazy<(Assembly[] OurAssemblies, Assembly[] AllAssemblies)>(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
+    private static readonly Lazy<Assembly[]> AllAssembliesLoadedInCurrentAppDomain
+        = new Lazy<Assembly[]>(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
 
     public static string GetAssemblyVersion(this Assembly assembly)
     {
@@ -61,64 +61,7 @@ public static class AssemblyExtensions
 
     public static Assembly[] AllAssembliesFromCurrentDomain()
     {
-        return AllAssembliesLoadedInCurrentAppDomain.Value.AllAssemblies;
-    }
-
-    public static Assembly[] AllOurAssembliesFromCurrentDomain()
-    {
-        return AllAssembliesLoadedInCurrentAppDomain.Value.OurAssemblies;
-    }
-
-    // TODO: remove "our" references
-    public static Func<Assembly, bool> IsOurReference(
-        IEnumerable<Assembly> assemblies,
-        IEnumerable<Assembly> rootAssemblies)
-    {
-        var map = assemblies.ToDictionary(assembly => assembly.GetName().FullName);
-
-        var visited = rootAssemblies
-            .Distinct(new AssemblyByNameEqualityComparer())
-            .ToDictionary(root => root.GetName().FullName, _ => true);
-
-        return assembly => IsOurReferenceInternal(assembly, map, visited);
-
-        static bool IsOurReferenceInternal(
-            Assembly assembly,
-            IReadOnlyDictionary<string, Assembly> map,
-            IDictionary<string, bool> visited)
-        {
-            var key = string.Intern(assembly.GetName().FullName);
-
-            if (visited.ContainsKey(key) && visited[key])
-            {
-                return true;
-            }
-
-            var exclusiveReferences = assembly.GetReferencedAssemblies();
-
-            var isReferencedDirectly = exclusiveReferences
-                .Any(assemblyName =>
-                    visited.ContainsKey(assemblyName.FullName)
-                    && visited[assemblyName.FullName]
-                    && ExcludedAssemblies.All(ex => !assemblyName.FullName.StartsWith(ex, StringComparison.OrdinalIgnoreCase)));
-
-            if (isReferencedDirectly)
-            {
-                visited[key] = true;
-                return true;
-            }
-
-            var isIndirectlyReferenced = exclusiveReferences
-                .Where(unknownReference =>
-                    !visited.ContainsKey(unknownReference.FullName)
-                    && ExcludedAssemblies.All(ex => !unknownReference.FullName.StartsWith(ex, StringComparison.OrdinalIgnoreCase)))
-                .Any(unknownReference =>
-                    map.TryGetValue(unknownReference.FullName, out var unknownAssembly)
-                    && IsOurReferenceInternal(unknownAssembly, map, visited));
-
-            visited[key] = isIndirectlyReferenced;
-            return isIndirectlyReferenced;
-        }
+        return AllAssembliesLoadedInCurrentAppDomain.Value;
     }
 
     public static Assembly[] Below(this Assembly[] allAssemblies, Assembly assembly)
@@ -156,7 +99,7 @@ public static class AssemblyExtensions
                 .SelectMany(name => BelowReference(name, all, visited)));
     }
 
-    private static (Assembly[] OurAssemblies, Assembly[] AllAssemblies) WarmUpAppDomain()
+    private static Assembly[] WarmUpAppDomain()
     {
         var loaded = new HashSet<string>();
 
@@ -166,22 +109,11 @@ public static class AssemblyExtensions
             .SelectMany(name => LoadReferences(name, loaded))
             .ToList();
 
-        var allAssemblies = AppDomain.CurrentDomain
+        return AppDomain.CurrentDomain
             .GetAssemblies()
             .GroupBy(assembly => assembly.GetName().Name)
             .SelectMany(RemoveDuplicates)
             .ToArray();
-
-        var rootAssemblies = RootAssemblies
-            .Select(optionalAssemblyName => allAssemblies
-                .SingleOrDefault(a => a.GetName().Name.Equals(optionalAssemblyName, StringComparison.OrdinalIgnoreCase)))
-            .Where(optionalAssembly => optionalAssembly != null);
-
-        var isOurReference = IsOurReference(allAssemblies, rootAssemblies);
-
-        var ourAssemblies = allAssemblies.Where(isOurReference).ToArray();
-
-        return (ourAssemblies, allAssemblies);
     }
 
     private static IEnumerable<Assembly> LoadReferences(AssemblyName assemblyName, HashSet<string> loaded)

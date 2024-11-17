@@ -6,10 +6,13 @@
         <RootNamespace>SpaceEngineers.Core.Basics.Test</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="coverlet.msbuild" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" />
         <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="StyleCop.Analyzers" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="coverlet.msbuild" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio" />
     </ItemGroup>

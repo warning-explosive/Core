@@ -198,22 +198,29 @@ public static class TypeExtensions
                && !typeof(Delegate).IsAssignableFrom(type);
     }
 
-    public static bool IsDecorator(this ConstructorInfo cctor, Type dependency)
+    public static bool IsDecorator(this Type candidate, Type decoratee)
     {
-        return cctor
-            .SelfDependencies(dependency)
-            .Any(type => ContainsDecorateeParameters(cctor, type));
+        return candidate
+            .GetConstructors()
+            .Any(cctor => IsCctorDecoratesDependency(cctor, decoratee));
 
-        static bool ContainsDecorateeParameters(ConstructorInfo cctor, Type dependency)
+        static bool IsCctorDecoratesDependency(ConstructorInfo cctor, Type dependency)
         {
             return cctor
-                .GetParameters()
-                .Any(parameter => IsDecorateeParameter(parameter, dependency));
-        }
+                .SelfDependencies(dependency)
+                .Any(type => ContainsDecorateeParameters(cctor, type));
 
-        static bool IsDecorateeParameter(ParameterInfo parameter, Type dependency)
-        {
-            return parameter.ParameterType == dependency;
+            static bool ContainsDecorateeParameters(ConstructorInfo cctor, Type dependency)
+            {
+                return cctor
+                    .GetParameters()
+                    .Any(parameter => IsDecorateeParameter(parameter, dependency));
+            }
+
+            static bool IsDecorateeParameter(ParameterInfo parameter, Type dependency)
+            {
+                return parameter.ParameterType == dependency;
+            }
         }
     }
 

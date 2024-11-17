@@ -1,26 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
         <AssemblyName>SpaceEngineers.Core.CliArgumentsParser</AssemblyName>
         <RootNamespace>SpaceEngineers.Core.CliArgumentsParser</RootNamespace>
         <IsPackable>true</IsPackable>
-        <Library/>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="StyleCop.Analyzers" Version="1.1.118"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" />
+        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" />
+        <PackageReference Include="StyleCop.Analyzers" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Common\Basics\Basics.csproj"/>
-        <ProjectReference Include="..\..\Common\AutoRegistration.Api\AutoRegistration.Api.csproj"/>
+        <ProjectReference Include="..\..\Common\DependencyInjection\DependencyInjection.csproj" />
+        <ProjectReference Include="..\..\Common\DependencyInjection.SourceGenerators\DependencyInjection.SourceGenerators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Update="CliArgumentsParserImpl.cs">
-            <DependentUpon>ICliArgumentsParser.cs</DependentUpon>
-        </Compile>
+      <Compile Update="CliArgumentsParserImpl.cs">
+        <DependentUpon>ICliArgumentsParser.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

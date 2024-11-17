@@ -1,0 +1,5 @@
+namespace SpaceEngineers.Core.DependencyInjection.Registration;
+
+public interface IDependencyInjectionDependencyRegistrationInfo : IDependencyInjectionRegistrationInfo
+{
+}

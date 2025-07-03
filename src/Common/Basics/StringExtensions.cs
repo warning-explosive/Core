@@ -19,7 +19,7 @@ public static class StringExtensions
             static (buffer, source) =>
             {
                 buffer[0] = char.ToUpper(source[0], CultureInfo.InvariantCulture);
-                source.AsSpan(1).ToLowerInvariant(buffer.Slice(1));
+                source.AsSpan(1).ToLowerInvariant(buffer[1..]);
             });
     }
 

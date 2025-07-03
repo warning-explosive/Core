@@ -1,22 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>SpaceEngineers.Core.Basics.Test</AssemblyName>
         <RootNamespace>SpaceEngineers.Core.Basics.Test</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" />
-        <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" />
-        <PackageReference Include="StyleCop.Analyzers" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="coverlet.msbuild" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="xunit" />
-        <PackageReference Include="xunit.runner.visualstudio" />
-    </ItemGroup>
-    <ItemGroup>
         <ProjectReference Include="..\..\..\src\Common\Basics\Basics.csproj"/>
+        <ProjectReference Include="..\..\..\src\Common\Basics.SourceGenerators\Basics.SourceGenerators.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false" />
     </ItemGroup>
 </Project>

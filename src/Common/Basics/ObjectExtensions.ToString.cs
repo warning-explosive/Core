@@ -12,8 +12,9 @@ public static partial class ObjectExtensions
         this IEnumerable<TSource> source,
         string separator,
         Func<TSource, string>? projection = null)
+        where TSource : notnull
     {
-        projection ??= static item => item as string ?? item.ToString();
+        projection ??= static item => item as string ?? item.ToString() ?? item.GetType().Name;
 
         return string.Join(separator, source.Select(projection));
     }
@@ -32,6 +33,7 @@ public static partial class ObjectExtensions
         this (TSource first, TSource second) source,
         string separator,
         Func<TSource, string>? projection = null)
+        where TSource : notnull
     {
         return source
             .ConstructEnumerable()
@@ -42,6 +44,7 @@ public static partial class ObjectExtensions
         this (TSource first, TSource second, TSource third) source,
         string separator,
         Func<TSource, string>? projection = null)
+        where TSource : notnull
     {
         return source
             .ConstructEnumerable()
@@ -61,7 +64,7 @@ public static partial class ObjectExtensions
     // TODO: remove or move to test API
     public static string Dump(this object instance, BindingFlags flags)
     {
-        return DumpValue(instance, flags, 0, new HashSet<object>()).ToString(Environment.NewLine);
+        return DumpValue(instance, flags, 0, []).ToString(Environment.NewLine);
 
         static IEnumerable<string> DumpValue(
             object? value,

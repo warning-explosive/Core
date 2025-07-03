@@ -8,30 +8,21 @@ using Disposables;
 using Heap;
 using SynchronizationPrimitives;
 
-public class DeferredQueue<TElement> : IQueue<TElement>,
-                                       IAsyncQueue<TElement>
+public class DeferredQueue<TElement>(
+    IHeap<HeapEntry<TElement, DateTime>> heap,
+    Func<TElement, DateTime> prioritySelector)
+    : IQueue<TElement>, IAsyncQueue<TElement>
     where TElement : IEquatable<TElement>, IComparable<TElement>, IComparable
 {
-    private readonly Exclusive _exclusive = new Exclusive();
+    private readonly Exclusive _exclusive = new();
 
     private readonly TimeSpan _high = TimeSpan.FromMilliseconds(42);
     private readonly TimeSpan _low = TimeSpan.FromMilliseconds(1);
 
-    private readonly IHeap<HeapEntry<TElement, DateTime>> _heap;
-    private readonly PriorityQueue<TElement, DateTime> _priorityQueue;
-    private readonly Func<TElement, DateTime> _prioritySelector;
+    private readonly PriorityQueue<TElement, DateTime> _priorityQueue = new(heap, prioritySelector);
 
     private Task? _delay;
     private CancellationTokenSource? _cts;
-
-    public DeferredQueue(
-        IHeap<HeapEntry<TElement, DateTime>> heap,
-        Func<TElement, DateTime> prioritySelector)
-    {
-        _heap = heap;
-        _prioritySelector = prioritySelector;
-        _priorityQueue = new PriorityQueue<TElement, DateTime>(heap, prioritySelector);
-    }
 
     #region IQueue
 
@@ -100,8 +91,8 @@ public class DeferredQueue<TElement> : IQueue<TElement>,
         using (await _exclusive.Run(token).ConfigureAwait(false))
         using (Disposable.Create(
                    new EventHandler<RootNodeChangedEventArgs<HeapEntry<TElement, DateTime>>>(CancelScheduleOnRootNodeChanged),
-                   subscription => _heap.RootNodeChanged += subscription,
-                   subscription => _heap.RootNodeChanged -= subscription))
+                   subscription => heap.RootNodeChanged += subscription,
+                   subscription => heap.RootNodeChanged -= subscription))
         {
             while (!token.IsCancellationRequested)
             {
@@ -117,7 +108,7 @@ public class DeferredQueue<TElement> : IQueue<TElement>,
                 }
 
                 var args = DequeueSync();
-                var planned = _prioritySelector(args);
+                var planned = prioritySelector(args);
 
                 try
                 {
@@ -134,7 +125,7 @@ public class DeferredQueue<TElement> : IQueue<TElement>,
         await CancelSchedule().ConfigureAwait(false);
         token.ThrowIfCancellationRequested();
 
-        async void CancelScheduleOnRootNodeChanged(object sender, RootNodeChangedEventArgs<HeapEntry<TElement, DateTime>> args)
+        async void CancelScheduleOnRootNodeChanged(object? sender, RootNodeChangedEventArgs<HeapEntry<TElement, DateTime>> args)
         {
             await CancelSchedule().ConfigureAwait(false);
         }
@@ -176,7 +167,7 @@ public class DeferredQueue<TElement> : IQueue<TElement>,
         CancellationTokenSource? cts;
 
         var now = DateTime.UtcNow;
-        var planned = _prioritySelector(element).ToUniversalTime();
+        var planned = prioritySelector(element).ToUniversalTime();
 
         if (planned <= now)
         {
@@ -208,7 +199,10 @@ public class DeferredQueue<TElement> : IQueue<TElement>,
 
             try
             {
-                await _delay.ConfigureAwait(false);
+                if (_delay != null)
+                {
+                    await _delay.ConfigureAwait(false);
+                }
             }
             catch (OperationCanceledException)
             {

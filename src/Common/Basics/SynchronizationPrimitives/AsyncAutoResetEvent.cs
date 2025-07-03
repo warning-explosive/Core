@@ -9,8 +9,7 @@ public class AsyncAutoResetEvent
     private static readonly TaskCompletionSource<bool> CompletedSource
         = CreateCompletedCompletionSource(true);
 
-    private readonly ConcurrentQueue<TaskCompletionSource<bool>> _waits
-        = new ConcurrentQueue<TaskCompletionSource<bool>>();
+    private readonly ConcurrentQueue<TaskCompletionSource<bool>> _waits = new();
 
     private int _completed;
 

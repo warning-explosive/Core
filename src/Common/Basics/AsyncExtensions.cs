@@ -6,6 +6,23 @@ using System.Threading.Tasks;
 
 public static class AsyncExtensions
 {
+    public static async Task WaitAsync(this Task task, CancellationToken token)
+    {
+        if (!token.CanBeCanceled)
+        {
+            await task.ConfigureAwait(false);
+            return;
+        }
+
+        using (var tcs = new TaskCancellationCompletionSource<object?>(token))
+        {
+            await Task
+                .WhenAny(task, tcs.Task)
+                .Unwrap()
+                .ConfigureAwait(false);
+        }
+    }
+
     public static Task WhenAll(this IEnumerable<Task> source)
     {
         return Task.WhenAll(source);

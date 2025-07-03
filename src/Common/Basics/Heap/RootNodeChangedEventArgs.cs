@@ -1,14 +1,8 @@
 namespace SpaceEngineers.Core.Basics.Heap;
 
-public class RootNodeChangedEventArgs<TElement>
+public class RootNodeChangedEventArgs<TElement>(TElement? originalValue, TElement? currentValue)
 {
-    public RootNodeChangedEventArgs(TElement? originalValue, TElement? currentValue)
-    {
-        OriginalValue = originalValue;
-        CurrentValue = currentValue;
-    }
+    public TElement? OriginalValue { get; } = originalValue;
 
-    public TElement? OriginalValue { get; }
-
-    public TElement? CurrentValue { get; }
+    public TElement? CurrentValue { get; } = currentValue;
 }

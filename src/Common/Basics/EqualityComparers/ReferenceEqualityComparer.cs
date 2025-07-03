@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class ReferenceEqualityComparer<T> : EqualityComparer<T>
     where T : class
 {
-    public override bool Equals(T x, T y)
+    public override bool Equals(T? x, T? y)
     {
         return ReferenceEquals(x, y);
     }

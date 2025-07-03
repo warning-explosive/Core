@@ -7,13 +7,13 @@ using Delegates;
 
 public static class ExecutionExtensions
 {
-    private static readonly Type[] ExceptionTypesForSkip = new[]
-    {
+    private static readonly Type[] ExceptionTypesForSkip =
+    [
         typeof(StackOverflowException),
         typeof(OutOfMemoryException),
         typeof(OperationCanceledException),
         typeof(AccessViolationException)
-    };
+    ];
 
     public static StatelessActionExecutionInfo Try(
         this Action clientAction)

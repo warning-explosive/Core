@@ -10,13 +10,8 @@ using Xunit.Abstractions;
 using SynchronizationPrimitives;
 
 [SuppressMessage("Analysis", "SA1201", Justification = "For test reasons")]
-public class TypeExtensionsTest : BasicsTestBase
+public class TypeExtensionsTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
-    public TypeExtensionsTest(ITestOutputHelper output)
-        : base(output)
-    {
-    }
-
     [Theory]
     [InlineData(typeof(object), false)]
     [InlineData(typeof(string), false)]
@@ -62,8 +57,8 @@ public class TypeExtensionsTest : BasicsTestBase
         var nullableString = (string?)string.Empty;
         var nullableObject = (object?)string.Empty;
 
-        Assert.False(nullableString.GetType().IsNullable());
-        Assert.False(nullableObject.GetType().IsNullable());
+        Assert.False(nullableString!.GetType().IsNullable());
+        Assert.False(nullableObject!.GetType().IsNullable());
     }
 
     [Fact]
@@ -209,47 +204,51 @@ public class TypeExtensionsTest : BasicsTestBase
         Assert.True(typeof(HalfOpenedImplementation<Guid>).FitsForTypeArgument(typeof(ITestInterface<Guid, object>)));
     }
 
-    private interface ITestInterface { }
+    private interface ITestInterface;
 
-    private interface ITestInterface<T1, T2> { }
+    private interface ITestInterface<T1, T2>;
 
-    private interface ITestGenericInterfaceBase<T> : ITestInterface { }
+    private interface ITestGenericInterfaceBase<T> : ITestInterface;
 
-    private interface ITestGenericInterface<T> : ITestGenericInterfaceBase<T>, ITestInterface { }
+    private interface ITestGenericInterface<T> : ITestGenericInterfaceBase<T>, ITestInterface;
 
-    private abstract class TestGenericTypeImplementationBase<T> : ITestGenericInterface<T> { }
+    private abstract class TestGenericTypeImplementationBase<T> : ITestGenericInterface<T>;
 
-    private class DirectTestTypeImplementation : ITestGenericInterface<object> { }
+    private class DirectTestTypeImplementation : ITestGenericInterface<object>;
 
-    private class TestTypeImplementation : TestGenericTypeImplementationBase<object> { }
+    private class TestTypeImplementation : TestGenericTypeImplementationBase<object>;
 
-    private class TestGenericTypeImplementation<T> : TestGenericTypeImplementationBase<T> { }
+    private class TestGenericTypeImplementation<T> : TestGenericTypeImplementationBase<T>;
 
-    private class ClosedImplementation : ITestInterface<bool, object> { }
+    private class ClosedImplementation : ITestInterface<bool, object>;
 
-    private class OpenedImplementation<T1, T2> : ITestInterface<T1, T2> { }
+    private class OpenedImplementation<T1, T2> : ITestInterface<T1, T2>;
 
-    private class HalfOpenedImplementation<T1> : ITestInterface<T1, object> { }
+    private class HalfOpenedImplementation<T1> : ITestInterface<T1, object>;
 
-    private class SeveralImplementations : ITestInterface<bool, object>, ITestInterface<string, int> { }
+    private class SeveralImplementations : ITestInterface<bool, object>, ITestInterface<string, int>;
 
     private interface IClassConstrained<T>
-        where T : class { }
+        where T : class;
 
     private interface IStructConstrained<T>
-        where T : struct { }
+        where T : struct;
 
     private interface IDefaultCtorConstrained<T>
-        where T : new() { }
+        where T : new();
 
     private class ClassWithParameter
     {
-        public ClassWithParameter(object param) { }
+        public ClassWithParameter(object param)
+        {
+        }
     }
 
     private struct StructWithParameter
     {
-        public StructWithParameter(object param) { }
+        public StructWithParameter(object param)
+        {
+        }
     }
 
     [SuppressMessage("Analysis", "SA1401", Justification = "For test reasons")]

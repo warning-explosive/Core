@@ -8,18 +8,12 @@ using System.Threading.Tasks;
 using SynchronizationPrimitives;
 
 public class MessageQueue<TElement> : IQueue<TElement>,
-                                      IAsyncQueue<TElement>
+    IAsyncQueue<TElement>
 {
-    private readonly Exclusive _exclusive = new Exclusive();
+    private readonly Exclusive _exclusive = new();
 
-    private readonly AsyncAutoResetEvent _autoResetEvent;
-    private readonly ConcurrentQueue<TElement> _queue;
-
-    public MessageQueue()
-    {
-        _autoResetEvent = new AsyncAutoResetEvent(false);
-        _queue = new ConcurrentQueue<TElement>();
-    }
+    private readonly AsyncAutoResetEvent _autoResetEvent = new(false);
+    private readonly ConcurrentQueue<TElement> _queue = new();
 
     #region IQueue
 

@@ -9,11 +9,8 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class MethodExtensionsTest : BasicsTestBase
+public class MethodExtensionsTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
-    public MethodExtensionsTest(ITestOutputHelper output)
-        : base(output) { }
-
     [Fact]
     internal void CallStaticMethodTest()
     {

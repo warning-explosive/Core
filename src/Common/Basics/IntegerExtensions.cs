@@ -57,17 +57,12 @@ public static class IntegerExtensions
 
     public static bool BetweenInclude(this int index, int start, int end)
     {
-        return start <= index && index <= end;
+        return BetweenInclude((uint)index, (uint)start, (uint)end);
     }
 
     public static bool BetweenInclude(this int index, Range range)
     {
-        return BetweenInclude(index, range.Start.Value, range.End.Value);
-    }
-
-    public static bool BetweenInclude(this uint index, uint start, uint end)
-    {
-        return start <= index && index <= end;
+        return BetweenInclude((uint)index, range);
     }
 
     public static bool BetweenInclude(this uint index, Range range)
@@ -75,18 +70,23 @@ public static class IntegerExtensions
         CheckBoundaries(range.Start.Value, range.End.Value);
 
         return BetweenInclude(index, (uint)range.Start.Value, (uint)range.End.Value);
+
+        static void CheckBoundaries(int start, int end)
+        {
+            if (start < 0)
+            {
+                throw new ArgumentException($"{start} boundary should be greater than zero", nameof(start));
+            }
+
+            if (end < 0)
+            {
+                throw new ArgumentException($"{end} boundary should be greater than zero", nameof(end));
+            }
+        }
     }
 
-    private static void CheckBoundaries(int start, int end)
+    public static bool BetweenInclude(this uint index, uint start, uint end)
     {
-        if (start < 0)
-        {
-            throw new ArgumentException($"{start} boundary should be greater than zero", nameof(start));
-        }
-
-        if (end < 0)
-        {
-            throw new ArgumentException($"{end} boundary should be greater than zero", nameof(end));
-        }
+        return start <= index && index <= end;
     }
 }

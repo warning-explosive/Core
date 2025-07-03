@@ -7,21 +7,12 @@ using System.Linq;
 
 public static class FileSystemExtensions
 {
-    public static FileInfo RelativeFile(this DirectoryInfo sourceDirectory, string relativePath)
-    {
-        var path = Path.Combine(sourceDirectory.FullName, relativePath);
-        var info = new FileInfo(path);
-        return info.Exists
-            ? info
-            : throw new DirectoryNotFoundException(path);
-    }
-
     public static bool TryStepInto(this DirectoryInfo source, string to, out DirectoryInfo? inner)
     {
         inner = source
             .EnumerateDirectories()
             .Where(it => string.Equals(it.Name, to, StringComparison.OrdinalIgnoreCase))
-            .InformativeSingleOrDefault(Amb);
+            .SingleOrDefault(Amb);
 
         return inner != null;
     }
@@ -30,11 +21,12 @@ public static class FileSystemExtensions
     {
         return new[] { to }
             .Concat(additionalTargets)
-            .Aggregate(source,
+            .Aggregate(
+                source,
                 (acc, next) => acc
                     .EnumerateDirectories()
                     .Where(it => string.Equals(it.Name, next, StringComparison.OrdinalIgnoreCase))
-                    .InformativeSingleOrDefault(Amb) ?? throw new DirectoryNotFoundException(Path.Combine(acc.FullName, next)));
+                    .SingleOrDefault(Amb) ?? throw new DirectoryNotFoundException(Path.Combine(acc.FullName, next)));
     }
 
     public static bool TryGetFile(
@@ -46,7 +38,7 @@ public static class FileSystemExtensions
         info = directory
             .EnumerateFiles()
             .Where(file => EqualsFileName(file, fileNameWithoutExtension, extension))
-            .InformativeSingleOrDefault(Amb);
+            .SingleOrDefault(Amb);
 
         return info != null;
     }
@@ -59,7 +51,7 @@ public static class FileSystemExtensions
         return directory
                    .EnumerateFiles()
                    .Where(file => EqualsFileName(file, fileNameWithoutExtension, extension))
-                   .InformativeSingleOrDefault(Amb)
+                   .SingleOrDefault(Amb)
                ?? throw new FileNotFoundException(Path.Combine(directory.FullName, fileNameWithoutExtension));
     }
 

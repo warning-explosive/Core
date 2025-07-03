@@ -8,14 +8,9 @@ using SynchronizationPrimitives;
 using Xunit;
 using Xunit.Abstractions;
 
-public class AsyncSynchronizationPrimitivesTest : BasicsTestBase
+public class AsyncSynchronizationPrimitivesTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
     private static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(1);
-
-    public AsyncSynchronizationPrimitivesTest(ITestOutputHelper output)
-        : base(output)
-    {
-    }
 
     [Fact]
     internal async Task TaskCancellationCompletionSourceTest()
@@ -45,7 +40,7 @@ public class AsyncSynchronizationPrimitivesTest : BasicsTestBase
             using (var cts = new CancellationTokenSource())
             {
                 var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-                var task = Basics.TaskExtensions.WaitAsync(tcs.Task, cts.Token);
+                var task = Basics.AsyncExtensions.WaitAsync(tcs.Task, cts.Token);
 
                 cts.Cancel();
                 await task.ConfigureAwait(false);

@@ -6,21 +6,20 @@ using System.Linq;
 using System.Security;
 using System.Text;
 
-public class TypeNode : IEquatable<TypeNode>,
-                        ISafelyEquatable<TypeNode>
+public partial class TypeNode : ISafelyEquatable<TypeNode>
 {
     private TypeNode(Type type)
     {
-        Assembly = type.Assembly.GetName().Name;
+        Assembly = type.Assembly.GetName().Name!;
 
-        Type = type.GenericTypeDefinitionOrSelf().FullName;
+        Type = type.GenericTypeDefinitionOrSelf().FullName!;
 
         GenericArguments = type.IsGenericType
             ? type.GetGenericArguments()
                 .Where(genericArgument => !genericArgument.IsGenericParameter)
                 .Select(genericArgument => new TypeNode(genericArgument))
                 .ToList()
-            : new List<TypeNode>();
+            : [];
 
         IsArray = type.IsArray();
     }
@@ -49,39 +48,15 @@ public class TypeNode : IEquatable<TypeNode>,
 
     public static implicit operator TypeNode(Type type) => FromType(type);
 
-    #region IEquatable
-
-    public static bool operator ==(TypeNode? left, TypeNode? right)
-    {
-        return Equatable.Equals(left, right);
-    }
-
-    public static bool operator !=(TypeNode? left, TypeNode? right)
-    {
-        return !Equatable.Equals(left, right);
-    }
-
     public bool SafeEquals(TypeNode other)
     {
         return ToString().Equals(other.ToString(), StringComparison.Ordinal);
-    }
-
-    public bool Equals(TypeNode? other)
-    {
-        return Equatable.Equals(this, other);
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return Equatable.Equals(this, obj);
     }
 
     public override int GetHashCode()
     {
         return ToString().GetHashCode(StringComparison.Ordinal);
     }
-
-    #endregion
 
     public override string ToString()
     {
@@ -138,7 +113,7 @@ public class TypeNode : IEquatable<TypeNode>,
 
                 var pair = row
                     .TrimStart('\t')
-                    .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    .Split([' '], StringSplitOptions.RemoveEmptyEntries);
 
                 var assembly = pair[0];
                 var type = pair[1];

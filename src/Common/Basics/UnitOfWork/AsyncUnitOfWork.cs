@@ -7,7 +7,7 @@ using SynchronizationPrimitives;
 
 public abstract class AsyncUnitOfWork<TContext> : IAsyncUnitOfWork<TContext>
 {
-    private readonly Exclusive _exclusive = new Exclusive();
+    private readonly Exclusive _exclusive = new();
 
     public async Task ExecuteInTransaction(
         TContext context,
@@ -33,7 +33,7 @@ public abstract class AsyncUnitOfWork<TContext> : IAsyncUnitOfWork<TContext>
                 return;
             }
 
-            Exception? executionError = default;
+            Exception? executionError = null;
 
             if (behavior is not EnUnitOfWorkBehavior.SkipProducer)
             {

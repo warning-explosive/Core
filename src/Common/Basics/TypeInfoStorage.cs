@@ -7,13 +7,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 
-internal sealed class TypeInfoStorage
+internal static class TypeInfoStorage
 {
-    private static readonly ConcurrentDictionary<string, TypeInfo> Cache
-        = new ConcurrentDictionary<string, TypeInfo>();
+    private static readonly ConcurrentDictionary<string, TypeInfo> Cache = new();
 
     private static readonly Lazy<IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>>> TypesCache
-        = new Lazy<IReadOnlyDictionary<string, IReadOnlyDictionary<string, Type>>>(InitializeTypesCache, LazyThreadSafetyMode.ExecutionAndPublication);
+        = new(InitializeTypesCache, LazyThreadSafetyMode.ExecutionAndPublication);
 
     internal static bool TryGet(string assemblyName, string typeFullName, [NotNullWhen(true)] out Type? type)
     {
@@ -23,7 +22,7 @@ internal sealed class TypeInfoStorage
             return true;
         }
 
-        type = default;
+        type = null;
         return false;
     }
 
@@ -46,9 +45,9 @@ internal sealed class TypeInfoStorage
         return AssemblyExtensions
             .AllAssembliesFromCurrentDomain()
             .ToDictionary(
-                assembly => assembly.GetName().Name,
+                assembly => assembly.GetName().Name!,
                 assembly => (IReadOnlyDictionary<string, Type>)assembly
                     .GetTypes()
-                    .ToDictionary(type => type.FullName));
+                    .ToDictionary(type => type.FullName!));
     }
 }

@@ -8,15 +8,10 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class AsyncUnitOfWorkTest : BasicsTestBase
+public class AsyncUnitOfWorkTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
     private static readonly Func<object, CancellationToken, Task> EmptyProducer = (_, _) => Task.CompletedTask;
     private static readonly Func<object, CancellationToken, Task> ErrorProducer = (_, _) => throw TestExtensions.TrueException();
-
-    public AsyncUnitOfWorkTest(ITestOutputHelper output)
-        : base(output)
-    {
-    }
 
     [Fact]
     internal void CommitTest()
@@ -146,15 +141,8 @@ public class AsyncUnitOfWorkTest : BasicsTestBase
         unitOfWork.ExecuteInTransaction(new object(), producer, saveChanges, CancellationToken.None).Wait();
     }
 
-    private class TestAsyncUnitOfWork : AsyncUnitOfWork<object>
+    private class TestAsyncUnitOfWork(EnUnitOfWorkBehavior behavior) : AsyncUnitOfWork<object>
     {
-        private readonly EnUnitOfWorkBehavior _behavior;
-
-        public TestAsyncUnitOfWork(EnUnitOfWorkBehavior behavior)
-        {
-            _behavior = behavior;
-        }
-
         internal bool Started { get; private set; }
 
         internal bool Committed { get; private set; }
@@ -165,8 +153,8 @@ public class AsyncUnitOfWorkTest : BasicsTestBase
 
         protected override Task<EnUnitOfWorkBehavior> Start(object context, CancellationToken token)
         {
-            Started = _behavior != EnUnitOfWorkBehavior.DoNotRun;
-            return Task.FromResult(_behavior);
+            Started = behavior != EnUnitOfWorkBehavior.DoNotRun;
+            return Task.FromResult(behavior);
         }
 
         protected override Task Commit(object context, CancellationToken token)

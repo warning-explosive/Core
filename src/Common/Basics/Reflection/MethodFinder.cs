@@ -6,39 +6,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-public class MethodFinder
+public class MethodFinder(
+    Type declaringType,
+    string methodName,
+    BindingFlags bindingFlags)
 {
-    private static readonly ConcurrentDictionary<string, MethodInfo?> Cache
-        = new ConcurrentDictionary<string, MethodInfo?>(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, MethodInfo?> Cache = new(StringComparer.OrdinalIgnoreCase);
 
-    public MethodFinder(Type declaringType,
-        string methodName,
-        BindingFlags bindingFlags)
-    {
-        DeclaringType = declaringType;
-        MethodName = methodName;
-        BindingFlags = bindingFlags;
-    }
+    public Type DeclaringType { get; } = declaringType;
 
-    public Type DeclaringType { get; }
+    public string MethodName { get; } = methodName;
 
-    public string MethodName { get; }
+    public BindingFlags BindingFlags { get; } = bindingFlags;
 
-    public BindingFlags BindingFlags { get; }
+    public IReadOnlyCollection<Type> TypeArguments { get; set; } = [];
 
-    public IReadOnlyCollection<Type> TypeArguments { get; set; } = Array.Empty<Type>();
-
-    public IReadOnlyCollection<Type> ArgumentTypes { get; set; } = Array.Empty<Type>();
+    public IReadOnlyCollection<Type> ArgumentTypes { get; set; } = [];
 
     public override string ToString()
     {
         var properties = new Dictionary<string, string>
         {
-            [nameof(DeclaringType)] = DeclaringType.FullName,
+            [nameof(DeclaringType)] = DeclaringType.FullName!,
             [nameof(MethodName)] = MethodName,
             [nameof(BindingFlags)] = BindingFlags.ToString("G"),
-            [nameof(TypeArguments)] = TypeArguments.Select(type => type.FullName).ToString(string.Empty),
-            [nameof(ArgumentTypes)] = ArgumentTypes.Select(type => type.FullName).ToString(string.Empty)
+            [nameof(TypeArguments)] = TypeArguments.Select(type => type.FullName!).ToString(string.Empty),
+            [nameof(ArgumentTypes)] = ArgumentTypes.Select(type => type.FullName!).ToString(string.Empty)
         };
 
         return properties.ToString(string.Empty);
@@ -89,7 +82,7 @@ public class MethodFinder
                 .ToArray();
         }
 
-        return methods.InformativeSingle(Amb, methodFinder);
+        return methods.Single(Amb, methodFinder);
 
         static string Amb(MethodFinder methodFinder, IEnumerable<MethodInfo> source)
         {
@@ -107,7 +100,8 @@ public class MethodFinder
         }
 
         return expected.Select((exp, i) => new { Type = exp, i })
-            .Join(actual.Select((act, i) => new { Type = act, i }),
+            .Join(
+                actual.Select((act, i) => new { Type = act, i }),
                 exp => exp.i,
                 act => act.i,
                 (exp, act) => new { Exp = exp.Type, Act = act.Type })

@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Basics.Disposables;
 using System;
 using System.Threading.Tasks;
 
-public struct AsyncDisposableAction<TState> : IAsyncDisposable
+public readonly struct AsyncDisposableAction<TState> : IAsyncDisposable
 {
     private readonly TState _state;
     private readonly Func<TState, Task> _finallyAction;
@@ -20,7 +20,7 @@ public struct AsyncDisposableAction<TState> : IAsyncDisposable
     }
 }
 
-public struct AsyncDisposableAction : IAsyncDisposable
+public readonly struct AsyncDisposableAction : IAsyncDisposable
 {
     private readonly Func<Task> _finallyAction;
 

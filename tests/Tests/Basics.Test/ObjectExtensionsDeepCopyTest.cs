@@ -7,11 +7,8 @@ using DeepCopy;
 using Xunit;
 using Xunit.Abstractions;
 
-public class ObjectExtensionsDeepCopyTest : BasicsTestBase
+public class ObjectExtensionsDeepCopyTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
-    public ObjectExtensionsDeepCopyTest(ITestOutputHelper output)
-        : base(output) { }
-
     [Fact]
     internal void DeepCopyObjectTest()
     {
@@ -41,7 +38,8 @@ public class ObjectExtensionsDeepCopyTest : BasicsTestBase
         AssertTestReferenceTypeWithTypes(original, clone, false);
     }
 
-    private static void AssertTestReferenceTypeWithTypes(TestReferenceWithSystemTypes original,
+    private static void AssertTestReferenceTypeWithTypes(
+        TestReferenceWithSystemTypes original,
         TestReferenceWithSystemTypes clone,
         bool bySerialization)
     {
@@ -68,7 +66,8 @@ public class ObjectExtensionsDeepCopyTest : BasicsTestBase
         AssertTestReferenceTypeWithOutTypes(original, clone, bySerialization);
     }
 
-    private static void AssertTestReferenceTypeWithOutTypes(TestReferenceWithoutSystemTypes original,
+    private static void AssertTestReferenceTypeWithOutTypes(
+        TestReferenceWithoutSystemTypes original,
         TestReferenceWithoutSystemTypes clone,
         bool bySerialization)
     {

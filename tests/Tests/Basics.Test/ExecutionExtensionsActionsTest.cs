@@ -6,13 +6,8 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-public class ExecutionExtensionsActionsTest : BasicsTestBase
+public class ExecutionExtensionsActionsTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
-    public ExecutionExtensionsActionsTest(ITestOutputHelper output)
-        : base(output)
-    {
-    }
-
     [Fact]
     internal void HandleCaughtExceptionsTest()
     {

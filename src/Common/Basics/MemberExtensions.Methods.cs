@@ -1,10 +1,10 @@
 namespace SpaceEngineers.Core.Basics;
 
-using System;
 using System.Reflection;
+
 using Reflection;
 
-public static class MethodExtensions
+public static partial class MemberExtensions
 {
     public static MethodExecutionInfo CallMethod(this Type declaringType, string methodName)
     {
@@ -21,5 +21,11 @@ public static class MethodExtensions
         return method.IsGenericMethod
             ? method.GetGenericMethodDefinition()
             : method;
+    }
+
+    public static bool IsAccessible(this MethodBase method)
+    {
+        return (method.IsPublic || method.IsAssembly)
+               && !(method.IsPrivate || method.IsFamilyOrAssembly);
     }
 }

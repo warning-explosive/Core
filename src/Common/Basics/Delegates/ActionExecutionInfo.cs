@@ -3,22 +3,13 @@ namespace SpaceEngineers.Core.Basics.Delegates;
 using System;
 using System.Collections.Generic;
 
-public class ActionExecutionInfo<TState>
+public class ActionExecutionInfo<TState>(TState state, Action<TState> clientAction)
 {
     private static readonly Action<Exception> EmptyExceptionHandler = _ => { };
 
-    private readonly TState _state;
-    private readonly Action<TState> _clientAction;
-    private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers;
+    private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
 
     private Action? _finallyAction;
-
-    public ActionExecutionInfo(TState state, Action<TState> clientAction)
-    {
-        _state = state;
-        _clientAction = clientAction;
-        _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
-    }
 
     public ActionExecutionInfo<TState> Catch<TException>(Action<Exception>? exceptionHandler = null)
     {
@@ -38,7 +29,7 @@ public class ActionExecutionInfo<TState>
     {
         try
         {
-            _clientAction.Invoke(_state);
+            clientAction.Invoke(state);
         }
         catch (Exception ex) when (ExecutionExtensions.CanBeCaught(ex.RealException()))
         {

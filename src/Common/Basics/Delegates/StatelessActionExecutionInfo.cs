@@ -3,20 +3,13 @@ namespace SpaceEngineers.Core.Basics.Delegates;
 using System;
 using System.Collections.Generic;
 
-public class StatelessActionExecutionInfo
+public class StatelessActionExecutionInfo(Action clientAction)
 {
     private static readonly Action<Exception> EmptyExceptionHandler = _ => { };
 
-    private readonly Action _clientAction;
-    private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers;
+    private readonly IDictionary<Type, Action<Exception>> _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
 
     private Action? _finallyAction;
-
-    public StatelessActionExecutionInfo(Action clientAction)
-    {
-        _clientAction = clientAction;
-        _exceptionHandlers = new Dictionary<Type, Action<Exception>>();
-    }
 
     public StatelessActionExecutionInfo Catch<TException>(Action<Exception>? exceptionHandler = null)
     {
@@ -36,7 +29,7 @@ public class StatelessActionExecutionInfo
     {
         try
         {
-            _clientAction.Invoke();
+            clientAction.Invoke();
         }
         catch (Exception ex) when (ExecutionExtensions.CanBeCaught(ex.RealException()))
         {

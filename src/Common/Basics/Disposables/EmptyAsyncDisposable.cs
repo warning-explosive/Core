@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Basics.Disposables;
 using System;
 using System.Threading.Tasks;
 
-public struct EmptyAsyncDisposable : IAsyncDisposable
+public readonly struct EmptyAsyncDisposable : IAsyncDisposable
 {
     public async ValueTask DisposeAsync()
     {

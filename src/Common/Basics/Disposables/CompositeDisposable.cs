@@ -3,9 +3,9 @@ namespace SpaceEngineers.Core.Basics.Disposables;
 using System;
 using System.Collections.Generic;
 
-public struct CompositeDisposable : IDisposable
+public readonly struct CompositeDisposable : IDisposable
 {
-    private readonly Stack<IDisposable> _disposables = new Stack<IDisposable>();
+    private readonly Stack<IDisposable> _disposables = new();
 
     internal CompositeDisposable(params IDisposable[] disposables)
     {

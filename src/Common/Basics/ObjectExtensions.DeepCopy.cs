@@ -10,7 +10,9 @@ public static partial class ObjectExtensions
 {
     private static readonly Type RuntimeType = typeof(Type).GetType();
 
-    private static readonly MethodInfo ShallowCopyMethod = typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
+    private static readonly MethodInfo ShallowCopyMethod =
+        typeof(object).GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance)
+        ?? throw new InvalidOperationException("Unable to find method object.MemberwiseClone()");
 
     public static T ShallowCopy<T>(this T original)
         where T : class
@@ -26,7 +28,7 @@ public static partial class ObjectExtensions
 
     public static object ShallowCopy(this object original)
     {
-        return ShallowCopyMethod.Invoke(original, null);
+        return ShallowCopyMethod.Invoke(original, null)!;
     }
 
     private static object? DeepCopyInternal(this object? original, IDictionary<object, object> visited)
@@ -103,7 +105,8 @@ public static partial class ObjectExtensions
         }
     }
 
-    private static object CopyFields(this object original,
+    private static object CopyFields(
+        this object original,
         Type typeToReflect,
         object clone,
         IDictionary<object, object> visited)
@@ -113,16 +116,18 @@ public static partial class ObjectExtensions
                                                           | BindingFlags.NonPublic
                                                           | BindingFlags.DeclaredOnly))
         {
-            fieldInfo.SetValue(clone,
-                IsPrimitive(fieldInfo.FieldType)
-                    ? fieldInfo.GetValue(original)
-                    : fieldInfo.GetValue(original).DeepCopyInternal(visited));
+            var value = IsPrimitive(fieldInfo.FieldType)
+                ? fieldInfo.GetValue(original)
+                : fieldInfo.GetValue(original).DeepCopyInternal(visited);
+
+            fieldInfo.SetValue(clone, value);
         }
 
         return original;
     }
 
-    private static void CopyBaseTypeFields(this object original,
+    private static void CopyBaseTypeFields(
+        this object original,
         Type typeToReflect,
         object clone,
         IDictionary<object, object> visited)

@@ -16,14 +16,14 @@ public static class DeconstructExtensions
 
     public static void Deconstruct<T>(this IEnumerable<T> source, out T first, out IEnumerable<T> rest)
     {
-        first = source.FirstOrDefault();
+        first = source.First();
         rest = source.Skip(1);
     }
 
     public static void Deconstruct<T>(this IEnumerable<T> source, out T first, out T second, out IEnumerable<T> rest)
         => (first, (second, rest)) = source;
 
-    public static void Deconstruct<T>(this IEnumerable<T> source, out T first, out T second, out T third, out IEnumerable<T> rest)
+    public static void Deconstruct<T>(this ICollection<T> source, out T first, out T second, out T third, out IEnumerable<T> rest)
         => (first, second, (third, rest)) = source;
 
     public static IEnumerable<T> ConstructEnumerable<T>(this (T first, T second) source)

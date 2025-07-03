@@ -4,14 +4,32 @@ VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9A9C8A2A-503B-4C46-962A-D347E23CD4A8}"
 	ProjectSection(SolutionItems) = preProject
-		ruleset.ruleset = ruleset.ruleset
+		README.md = README.md
+		NuGet.Config = NuGet.Config
+		global.json = global.json
+		GitVersion.yml = GitVersion.yml
+		CODE_METRICS.md = CODE_METRICS.md
+		codecov.yml = codecov.yml
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		dotnet-tools.json = dotnet-tools.json
+		.editorconfig = .editorconfig
+		.dockerignore = .dockerignore
+		.gitignore = .gitignore
+		LICENSE = LICENSE
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2A75CA54-6670-48AC-9CBF-1EBB252435F3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "src\Common", "{D1C13AB4-4366-49FC-B4A8-889EEFD4A733}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Basics", "src\Common\Basics\Basics.csproj", "{54B04E29-27FD-4C60-B768-A271E9368D82}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basics.SourceGenerators", "src\Common\Basics.SourceGenerators\Basics.SourceGenerators.csproj", "{2D0C408B-D573-4A8B-BE1C-28863FBB14A8}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection", "src\Common\DependencyInjection\DependencyInjection.csproj", "{96C860FA-1B1E-4D1D-A6F2-EF08E8674920}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection.SourceGenerators", "src\Common\DependencyInjection.SourceGenerators\DependencyInjection.SourceGenerators.csproj", "{27FBA8C8-96DF-4DB5-B34E-699055512D56}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrossCuttingConcerns", "src\Common\CrossCuttingConcerns\CrossCuttingConcerns.csproj", "{DA27E3A0-6B1F-4EBE-94B3-396C3079CDB4}"
 EndProject
@@ -105,6 +123,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Analyzers.Api", "src\Roslyn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoRegistration.Api.Analyzers", "src\Roslyn\AutoRegistration.Api.Analyzers\AutoRegistration.Api.Analyzers.csproj", "{1F6E165F-5C5A-4B1E-AFF4-5824EB0A2E29}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0DDB2FA6-5D97-4EA6-B682-AC4A9BE369E2}"
+	ProjectSection(SolutionItems) = preProject
+		tests\Directory.Build.props = tests\Directory.Build.props
+	EndProjectSection
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "tests\Tests", "{F538AAD9-062F-4F86-BFC5-7A93908EF88E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Api", "tests\Tests\Test.Api\Test.Api.csproj", "{837A1770-BBBD-4B8B-ABC5-912928C4B645}"
@@ -130,10 +153,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Modules.Benchmark", "tests\Benchmarks\Modules.Benchmark\Modules.Benchmark.csproj", "{6C377719-AD3D-40F7-B8BB-D7F4040B7233}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericHost.Benchmark", "tests\Benchmarks\GenericHost.Benchmark\GenericHost.Benchmark.csproj", "{E6CD349F-A556-4F90-8382-77A4AA0EEA80}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection.SourceGenerators", "src\Common\DependencyInjection.SourceGenerators\DependencyInjection.SourceGenerators.csproj", "{27FBA8C8-96DF-4DB5-B34E-699055512D56}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyInjection.SourceGenerators.Tests", "src\Common\DependencyInjection.SourceGenerators.Tests\DependencyInjection.SourceGenerators.Tests.csproj", "{7CFC8586-FC11-464E-AF5D-F3646E6D67F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -366,10 +385,10 @@ Global
 		{27FBA8C8-96DF-4DB5-B34E-699055512D56}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27FBA8C8-96DF-4DB5-B34E-699055512D56}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27FBA8C8-96DF-4DB5-B34E-699055512D56}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7CFC8586-FC11-464E-AF5D-F3646E6D67F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7CFC8586-FC11-464E-AF5D-F3646E6D67F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7CFC8586-FC11-464E-AF5D-F3646E6D67F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7CFC8586-FC11-464E-AF5D-F3646E6D67F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D0C408B-D573-4A8B-BE1C-28863FBB14A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D0C408B-D573-4A8B-BE1C-28863FBB14A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D0C408B-D573-4A8B-BE1C-28863FBB14A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D0C408B-D573-4A8B-BE1C-28863FBB14A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -432,7 +451,13 @@ Global
 		{84493FC0-5943-4D6C-90C2-682D4099F500} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 		{8768EAFB-C89F-4D5E-8CF1-C46F8FA78699} = {71BD7EAD-1AFD-4BFC-A38D-80BD47A31470}
 		{27FBA8C8-96DF-4DB5-B34E-699055512D56} = {D1C13AB4-4366-49FC-B4A8-889EEFD4A733}
-		{7CFC8586-FC11-464E-AF5D-F3646E6D67F5} = {D1C13AB4-4366-49FC-B4A8-889EEFD4A733}
+		{D1C13AB4-4366-49FC-B4A8-889EEFD4A733} = {2A75CA54-6670-48AC-9CBF-1EBB252435F3}
+		{71BD7EAD-1AFD-4BFC-A38D-80BD47A31470} = {2A75CA54-6670-48AC-9CBF-1EBB252435F3}
+		{C01667ED-90ED-4F1E-9356-18F76E16BDFE} = {2A75CA54-6670-48AC-9CBF-1EBB252435F3}
+		{765D12D8-3CE5-4292-B159-81A6DF3869C7} = {2A75CA54-6670-48AC-9CBF-1EBB252435F3}
+		{F538AAD9-062F-4F86-BFC5-7A93908EF88E} = {0DDB2FA6-5D97-4EA6-B682-AC4A9BE369E2}
+		{CAB2EF9F-1D44-4B12-AA3D-BE2E508E0351} = {0DDB2FA6-5D97-4EA6-B682-AC4A9BE369E2}
+		{2D0C408B-D573-4A8B-BE1C-28863FBB14A8} = {D1C13AB4-4366-49FC-B4A8-889EEFD4A733}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4714F856-F59A-40D3-BC6D-D2316FA86A03}

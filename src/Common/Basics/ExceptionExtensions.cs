@@ -29,7 +29,7 @@ public static class ExceptionExtensions
             case AggregateException a: return new[] { a }.Concat(a.Flatten().InnerExceptions.SelectMany(Flatten));
             default: return exception.InnerException != null
                 ? new[] { exception }.Concat(Flatten(exception.InnerException))
-                : new[] { exception };
+                : [exception];
         }
     }
 }

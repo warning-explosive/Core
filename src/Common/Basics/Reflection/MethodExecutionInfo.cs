@@ -6,12 +6,8 @@ using System.Linq;
 using System.Reflection;
 using Exceptions;
 
-public class MethodExecutionInfo
+public class MethodExecutionInfo(Type declaringType, string methodName)
 {
-    private readonly Type _declaringType;
-
-    private readonly string _methodName;
-
     private readonly ICollection<object?> _args = new List<object?>();
 
     private readonly ICollection<Type> _argumentTypes = new List<Type>();
@@ -19,12 +15,6 @@ public class MethodExecutionInfo
     private readonly ICollection<Type> _typeArguments = new List<Type>();
 
     private object? _target;
-
-    public MethodExecutionInfo(Type declaringType, string methodName)
-    {
-        _declaringType = declaringType;
-        _methodName = methodName;
-    }
 
     public MethodExecutionInfo ForInstance(object target)
     {
@@ -97,19 +87,16 @@ public class MethodExecutionInfo
     public object? Invoke()
     {
         // 1 - prepare and check
-        var isInstanceMethod = _target != null;
-
-        if (isInstanceMethod
-            && _target.GetType() != _declaringType)
+        if (_target != null && _target.GetType() != declaringType)
         {
-            throw new TypeMismatchException(_declaringType, _target.GetType());
+            throw new TypeMismatchException(declaringType, _target.GetType());
         }
 
         // 2 - find
         var methodFinder = new MethodFinder(
-            isInstanceMethod ? _target.GetType() : _declaringType,
-            _methodName,
-            GetBindings(isInstanceMethod))
+            _target?.GetType() ?? declaringType,
+            methodName,
+            GetBindings(_target != null))
         {
             TypeArguments = _typeArguments.ToArray(),
             ArgumentTypes = _argumentTypes.ToArray()

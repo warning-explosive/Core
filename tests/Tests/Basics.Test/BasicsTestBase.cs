@@ -2,12 +2,7 @@ namespace SpaceEngineers.Core.Basics.Test;
 
 using Xunit.Abstractions;
 
-public abstract class BasicsTestBase
+public abstract class BasicsTestBase(ITestOutputHelper output)
 {
-    protected BasicsTestBase(ITestOutputHelper output)
-    {
-        Output = output;
-    }
-
-    protected ITestOutputHelper Output { get; }
+    protected ITestOutputHelper Output { get; } = output;
 }

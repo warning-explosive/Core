@@ -7,15 +7,9 @@ using Disposables;
 
 public class Exclusive
 {
-    private readonly AsyncAutoResetEvent _sync;
+    private readonly AsyncAutoResetEvent _sync = new(true);
 
-    private bool _isTaken;
-
-    public Exclusive()
-    {
-        _sync = new AsyncAutoResetEvent(true);
-        _isTaken = false;
-    }
+    private bool _isTaken = false;
 
     public async Task<IDisposable> Run(CancellationToken token)
     {

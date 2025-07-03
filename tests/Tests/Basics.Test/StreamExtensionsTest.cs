@@ -8,11 +8,8 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-public class StreamExtensionsTest : BasicsTestBase
+public class StreamExtensionsTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
-    public StreamExtensionsTest(ITestOutputHelper output)
-        : base(output) { }
-
     [Fact]
     internal void OverwriteTest()
     {

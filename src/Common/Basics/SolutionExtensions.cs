@@ -38,7 +38,7 @@ public static class SolutionExtensions
             throw new InvalidOperationException("Project file must contains project node as root");
         }
 
-        return ExtractAssemblyNames(projectDocument.Root).InformativeSingle(Amb).Value;
+        return ExtractAssemblyNames(projectDocument.Root).Single(Amb).Value;
 
         IEnumerable<XElement> ExtractAssemblyNames(XElement element)
         {
@@ -65,7 +65,7 @@ public static class SolutionExtensions
              !FileExist(directory, out _) && i < 42;
              ++i)
         {
-            directory = directory.Parent;
+            directory = directory?.Parent;
         }
 
         if (!FileExist(directory, out var file))
@@ -75,9 +75,16 @@ public static class SolutionExtensions
 
         return file ?? throw new InvalidOperationException("File must exists");
 
-        bool FileExist(DirectoryInfo directoryInfo, out FileInfo? fileInfo)
+        bool FileExist(DirectoryInfo? directoryInfo, out FileInfo? fileInfo)
         {
-            fileInfo = directoryInfo.GetFiles(pattern, SearchOption.TopDirectoryOnly)
+            if (directoryInfo == null)
+            {
+                fileInfo = null;
+                return false;
+            }
+
+            fileInfo = directoryInfo
+                .GetFiles(pattern, SearchOption.TopDirectoryOnly)
                 .FirstOrDefault();
 
             return fileInfo != null;

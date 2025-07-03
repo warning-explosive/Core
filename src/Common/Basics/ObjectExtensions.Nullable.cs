@@ -11,6 +11,11 @@ public static partial class ObjectExtensions
             return expected;
         }
 
+        if (input == null)
+        {
+            throw new ArgumentNullException(nameof(input));
+        }
+
         throw new TypeMismatchException(typeof(TExpected), input.GetType());
     }
 }

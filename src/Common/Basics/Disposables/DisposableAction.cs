@@ -2,7 +2,7 @@ namespace SpaceEngineers.Core.Basics.Disposables;
 
 using System;
 
-public struct DisposableAction<TState> : IDisposable
+public readonly struct DisposableAction<TState> : IDisposable
 {
     private readonly TState _state;
     private readonly Action<TState> _finallyAction;
@@ -19,7 +19,7 @@ public struct DisposableAction<TState> : IDisposable
     }
 }
 
-public struct DisposableAction : IDisposable
+public readonly struct DisposableAction : IDisposable
 {
     private readonly Action _finallyAction;
 

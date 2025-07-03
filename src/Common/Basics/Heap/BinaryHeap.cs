@@ -6,25 +6,14 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-public class BinaryHeap<TElement> : IHeap<TElement>
+public class BinaryHeap<TElement>(EnOrderingDirection orderingDirection) : IHeap<TElement>
     where TElement : IEquatable<TElement>, IComparable<TElement>, IComparable
 {
     private const int Root = 0;
 
-    private readonly EnOrderingDirection _orderingDirection;
-
-    private int _last;
-    private int _height;
-    private TElement[] _array;
-
-    public BinaryHeap(EnOrderingDirection orderingDirection)
-    {
-        _orderingDirection = orderingDirection;
-
-        _last = -1;
-        _height = 0;
-        _array = Array.Empty<TElement>();
-    }
+    private int _last = -1;
+    private int _height = 0;
+    private TElement[] _array = [];
 
     public BinaryHeap(IEnumerable<TElement> source, EnOrderingDirection orderingDirection)
         : this(orderingDirection)
@@ -218,7 +207,7 @@ public class BinaryHeap<TElement> : IHeap<TElement>
     {
         var result = _array[index].CompareTo(_array[theHighestPriority]);
 
-        return _orderingDirection == EnOrderingDirection.Asc
+        return orderingDirection == EnOrderingDirection.Asc
             ? result < 0
             : result > 0;
     }
@@ -364,7 +353,7 @@ public class BinaryHeap<TElement> : IHeap<TElement>
             Reset();
         }
 
-        private void OnChanged(object sender, EventArgs e)
+        private void OnChanged(object? sender, EventArgs e)
         {
             _changed = true;
         }

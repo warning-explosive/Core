@@ -3,7 +3,7 @@ namespace SpaceEngineers.Core.Basics;
 using System.Linq.Expressions;
 using Expressions;
 
-public static class ExpressionExtensions
+public static partial class ExpressionExtensions
 {
     public static Expression ReplaceParameter(
         this Expression expression,

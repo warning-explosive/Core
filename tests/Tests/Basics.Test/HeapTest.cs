@@ -8,13 +8,8 @@ using Heap;
 using Xunit;
 using Xunit.Abstractions;
 
-public class HeapTest : BasicsTestBase
+public class HeapTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
-    public HeapTest(ITestOutputHelper output)
-        : base(output)
-    {
-    }
-
     public static IEnumerable<object[]> HeapTestData()
     {
         var count = 100;

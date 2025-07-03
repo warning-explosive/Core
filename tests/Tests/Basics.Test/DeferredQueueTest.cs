@@ -10,13 +10,8 @@ using Queue;
 using Xunit;
 using Xunit.Abstractions;
 
-public class DeferredQueueTest : BasicsTestBase
+public class DeferredQueueTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
-    public DeferredQueueTest(ITestOutputHelper output)
-        : base(output)
-    {
-    }
-
     public static IEnumerable<object[]> DeferredQueueTestData()
     {
         var emptyQueue = new DeferredQueue<Entry>(new BinaryHeap<HeapEntry<Entry, DateTime>>(EnOrderingDirection.Asc), PrioritySelector);
@@ -49,7 +44,8 @@ public class DeferredQueueTest : BasicsTestBase
         Output.WriteLine($"Started at: {started:O}");
         using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
         {
-            var backgroundPublisher = Task.Run(async () =>
+            var backgroundPublisher = Task.Run(
+                async () =>
                 {
                     var corrected = startFrom.Add(step / 2) - DateTime.UtcNow;
 
@@ -173,87 +169,39 @@ public class DeferredQueueTest : BasicsTestBase
             }
         }
     }
+}
 
-    internal class Entry : IEquatable<Entry>,
-        ISafelyEquatable<Entry>,
-        ISafelyComparable<Entry>,
-        IComparable<Entry>,
-        IComparable
+public partial class Entry(int index, DateTime planned) : ISafelyEquatable<Entry>, ISafelyComparable<Entry>
+{
+    private DateTime? _actual;
+
+    public int Index { get; } = index;
+
+    public DateTime Planned { get; } = planned;
+
+    public DateTime Actual
     {
-        private DateTime? _actual;
+        get => _actual ?? throw new InvalidOperationException("Elapsed should be set");
+        set => _actual = value;
+    }
 
-        public Entry(int index, DateTime planned)
-        {
-            Index = index;
-            Planned = planned;
-        }
+    public int SafeCompareTo(Entry other)
+    {
+        return Index.CompareTo(other.Index);
+    }
 
-        public int Index { get; }
+    public bool SafeEquals(Entry other)
+    {
+        return Index == other.Index;
+    }
 
-        public DateTime Planned { get; }
+    public override int GetHashCode()
+    {
+        return Index;
+    }
 
-        public DateTime Actual
-        {
-            get => _actual ?? throw new InvalidOperationException("Elapsed should be set");
-            set => _actual = value;
-        }
-
-        #region IEquatable
-
-        public static bool operator ==(Entry? left, Entry? right)
-        {
-            return Equatable.Equals(left, right);
-        }
-
-        public static bool operator !=(Entry? left, Entry? right)
-        {
-            return !Equatable.Equals(left, right);
-        }
-
-        public override int GetHashCode()
-        {
-            return Index;
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return Equatable.Equals(this, obj);
-        }
-
-        public bool Equals(Entry? other)
-        {
-            return Equatable.Equals(this, other);
-        }
-
-        public bool SafeEquals(Entry other)
-        {
-            return Index == other.Index;
-        }
-
-        #endregion
-
-        #region IComparable
-
-        public int SafeCompareTo(Entry other)
-        {
-            return Index.CompareTo(other.Index);
-        }
-
-        public int CompareTo(Entry? other)
-        {
-            return Comparable.CompareTo(this, other);
-        }
-
-        public int CompareTo(object? obj)
-        {
-            return Comparable.CompareTo(this, obj);
-        }
-
-        #endregion
-
-        public override string ToString()
-        {
-            return $"[{Index}] - {Planned:O} - {_actual?.ToString("O") ?? "null"}";
-        }
+    public override string ToString()
+    {
+        return $"[{Index}] - {Planned:O} - {_actual?.ToString("O") ?? "null"}";
     }
 }

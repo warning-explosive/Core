@@ -6,13 +6,8 @@ using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
-public class EnumerableExtensionsTest : BasicsTestBase
+public class EnumerableExtensionsTest(ITestOutputHelper output) : BasicsTestBase(output)
 {
-    public EnumerableExtensionsTest(ITestOutputHelper output)
-        : base(output)
-    {
-    }
-
     [Fact]
     internal void SimpleColumnsCartesianProductTest()
     {

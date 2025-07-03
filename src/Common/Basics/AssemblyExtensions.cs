@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+
 using EqualityComparers;
 
 public static class AssemblyExtensions
@@ -14,25 +15,8 @@ public static class AssemblyExtensions
 
     private const string Duplicate = "xunit.runner.visualstudio.dotnetcore.testadapter";
 
-    private static readonly string[] ExcludedAssemblies = new[]
-    {
-        nameof(System),
-        nameof(Microsoft),
-        "Windows"
-    };
-
-    private static readonly string[] RootAssemblies = new[]
-    {
-        "SpaceEngineers.Core.Basics",
-        "SpaceEngineers.Core.AutoRegistration.Api",
-        "SpaceEngineers.Core.CompositionRoot",
-
-        "SpaceEngineers.Core.Analyzers.Api",
-        "SpaceEngineers.Core.Benchmark.Api"
-    };
-
     private static readonly Lazy<Assembly[]> AllAssembliesLoadedInCurrentAppDomain
-        = new Lazy<Assembly[]>(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
+        = new(WarmUpAppDomain, LazyThreadSafetyMode.ExecutionAndPublication);
 
     public static string GetAssemblyVersion(this Assembly assembly)
     {
@@ -56,7 +40,13 @@ public static class AssemblyExtensions
     public static Assembly? FindAssembly(string assemblyName)
     {
         return AllAssembliesFromCurrentDomain()
-            .SingleOrDefault(assembly => assembly.GetName().Name.Equals(assemblyName, StringComparison.Ordinal));
+            .Where(assembly => assembly.GetName().Name!.Equals(assemblyName, StringComparison.Ordinal))
+            .SingleOrDefault(Amb, assemblyName);
+
+        static string Amb(string assemblyName, IEnumerable<Assembly> assemblies)
+        {
+            return $"AppDomain has more than one loaded assembly {assemblyName}";
+        }
     }
 
     public static Assembly[] AllAssembliesFromCurrentDomain()
@@ -67,7 +57,7 @@ public static class AssemblyExtensions
     public static Assembly[] Below(this Assembly[] allAssemblies, Assembly assembly)
     {
         var all = allAssemblies
-            .Union(new[] { assembly })
+            .Union([assembly])
             .Distinct(new AssemblyByNameEqualityComparer())
             .ToDictionary(a => string.Intern(a.GetName().FullName));
 
@@ -85,12 +75,12 @@ public static class AssemblyExtensions
 
         if (!visited.Add(key))
         {
-            return Enumerable.Empty<Assembly>();
+            return [];
         }
 
         if (!all.TryGetValue(key, out var assembly))
         {
-            return Enumerable.Empty<Assembly>();
+            return [];
         }
 
         return new[] { assembly }
@@ -111,7 +101,7 @@ public static class AssemblyExtensions
 
         return AppDomain.CurrentDomain
             .GetAssemblies()
-            .GroupBy(assembly => assembly.GetName().Name)
+            .GroupBy(assembly => assembly.GetName().Name!)
             .SelectMany(RemoveDuplicates)
             .ToArray();
     }
@@ -122,19 +112,19 @@ public static class AssemblyExtensions
 
         if (!loaded.Add(name))
         {
-            return Enumerable.Empty<Assembly>();
+            return [];
         }
 
         if (assemblyName.ContentType == AssemblyContentType.WindowsRuntime)
         {
-            return Enumerable.Empty<Assembly>();
+            return [];
         }
 
         var assembly = LoadByName(assemblyName);
 
         if (assembly == null)
         {
-            return Enumerable.Empty<Assembly>();
+            return [];
         }
 
         return new[] { assembly }
@@ -148,7 +138,7 @@ public static class AssemblyExtensions
         return ExecutionExtensions
             .Try<AssemblyName, Assembly?>(AppDomain.CurrentDomain.Load, assemblyName)
             .Catch<FileNotFoundException>()
-            .Invoke(_ => default);
+            .Invoke(_ => null);
     }
 
     private static IEnumerable<Assembly> RemoveDuplicates(IGrouping<string, Assembly> grp)

@@ -35,7 +35,7 @@ public static class EnumerableExtensions
             if (!acc.TryPeek(out var peek)
                 || !EqualityComparer<TKey>.Default.Equals(key, peek.Key))
             {
-                acc.Push(new KeyValuePair<TKey, List<TValue>>(key, new List<TValue> { next }));
+                acc.Push(new KeyValuePair<TKey, List<TValue>>(key, [next]));
             }
             else
             {
@@ -106,7 +106,7 @@ public static class EnumerableExtensions
     {
         if (!sourceColumns.Any())
         {
-            return Enumerable.Empty<ICollection<T>>();
+            return [];
         }
 
         IEnumerable<ICollection<T>> seed = sourceColumns
@@ -120,7 +120,8 @@ public static class EnumerableExtensions
 
         static IEnumerable<ICollection<T>> Aggregate(IEnumerable<ICollection<T>> acc, IEnumerable<T> next)
         {
-            return acc.Join(next,
+            return acc.Join(
+                next,
                 _ => true,
                 _ => true,
                 (left, right) => new List<T>(left) { right });
@@ -201,7 +202,7 @@ public static class EnumerableExtensions
         }
     }
 
-    public static T InformativeSingle<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
+    public static T Single<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
     {
         var items = source.Take(2).ToList();
 
@@ -218,7 +219,7 @@ public static class EnumerableExtensions
         return items.Single();
     }
 
-    public static T InformativeSingle<T, TState>(this IEnumerable<T> source, Func<TState, IEnumerable<T>, string> amb, TState state)
+    public static T Single<T, TState>(this IEnumerable<T> source, Func<TState, IEnumerable<T>, string> amb, TState state)
     {
         var items = source.Take(2).ToList();
 
@@ -235,7 +236,7 @@ public static class EnumerableExtensions
         return items.Single();
     }
 
-    public static T InformativeSingleOrDefault<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
+    public static T? SingleOrDefault<T>(this IEnumerable<T> source, Func<IEnumerable<T>, string> amb)
     {
         var items = source.Take(2).ToList();
 
@@ -247,7 +248,7 @@ public static class EnumerableExtensions
         return items.SingleOrDefault();
     }
 
-    public static T InformativeSingleOrDefault<T, TState>(this IEnumerable<T> source, Func<TState, IEnumerable<T>, string> amb, TState state)
+    public static T? SingleOrDefault<T, TState>(this IEnumerable<T> source, Func<TState, IEnumerable<T>, string> amb, TState state)
     {
         var items = source.Take(2).ToList();
 

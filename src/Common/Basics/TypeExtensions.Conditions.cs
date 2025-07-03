@@ -3,50 +3,12 @@ namespace SpaceEngineers.Core.Basics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-public static class TypeExtensions
+public static partial class TypeExtensions
 {
-    public static IEnumerable<Type> AllTypes()
-    {
-        return AssemblyExtensions
-            .AllAssembliesFromCurrentDomain()
-            .Where(assembly => !assembly.IsDynamic)
-            .SelectMany(GetTypes);
-
-        static IEnumerable<Type> GetTypes(Assembly assembly)
-        {
-            return ExecutionExtensions
-                .Try<IEnumerable<Type>>(assembly.GetTypes)
-                .Catch<ReflectionTypeLoadException>()
-                .Catch<FileNotFoundException>()
-                .Invoke(_ => Enumerable.Empty<Type>());
-        }
-    }
-
-    public static Type FindType(this TypeNode typeNode)
-    {
-        return typeNode;
-    }
-
-    public static bool TryFindType(TypeNode typeNode, [NotNullWhen(true)] out Type? type)
-    {
-        try
-        {
-            type = FindType(typeNode);
-            return true;
-        }
-        catch (Exception)
-        {
-            type = null;
-            return false;
-        }
-    }
-
     public static bool IsInstanceOfType(this object? obj, Type type)
     {
         return type.IsInstanceOfType(obj);
@@ -80,7 +42,13 @@ public static class TypeExtensions
     {
         /*
          * Is type primitive or not
+         *
          * - Boolean
+         *
+         * - Enum
+         *
+         * - Guid
+         *
          * - Byte
          * - SByte
          * - Int16
@@ -91,15 +59,20 @@ public static class TypeExtensions
          * - UInt64
          * - IntPtr
          * - UIntPtr
-         * - Char
+         *
          * - Double
          * - Single
          * - Decimal
-         * - Enum
-         * - Guid
+         *
+         * - DateTimeOffset
          * - DateTime
+         * - DateOnly
          * - TimeSpan
+         * - TimeOnly
+         *
+         * - Char
          * - string
+         *
          * - System.Type
          */
 
@@ -107,45 +80,37 @@ public static class TypeExtensions
 
         static bool IsPrimitiveType(Type t)
         {
-            return t.IsPrimitive
+            return t == typeof(bool)
+
                    || t.IsEnum
+
                    || t == typeof(Guid)
-                   || t == typeof(DateTime)
-                   || t == typeof(TimeSpan)
-                   || t == typeof(decimal)
-                   || t == typeof(string)
-                   || t == typeof(Type);
-        }
-    }
 
-    public static bool IsNumeric(this Type type)
-    {
-        /*
-         * Is type numeric or not
-         * - Int16
-         * - UInt16
-         * - Int32
-         * - UInt32
-         * - Int64
-         * - UInt64
-         * - Double
-         * - Single
-         * - Decimal
-         */
-
-        return IsNumericType(type.ExtractGenericArgumentAtOrSelf(typeof(Nullable<>)));
-
-        static bool IsNumericType(Type t)
-        {
-            return t == typeof(short)
+                   || t == typeof(byte)
+                   || t == typeof(sbyte)
+                   || t == typeof(short)
                    || t == typeof(ushort)
                    || t == typeof(int)
                    || t == typeof(uint)
                    || t == typeof(long)
                    || t == typeof(ulong)
-                   || t == typeof(float)
+                   || t == typeof(nint)
+                   || t == typeof(nuint)
+
                    || t == typeof(double)
-                   || t == typeof(decimal);
+                   || t == typeof(float)
+                   || t == typeof(decimal)
+
+                   || t == typeof(DateTimeOffset)
+                   || t == typeof(DateTime)
+                   || t == typeof(DateOnly)
+                   || t == typeof(TimeSpan)
+                   || t == typeof(TimeOnly)
+
+                   || t == typeof(char)
+                   || t == typeof(string)
+
+                   || t == typeof(Type);
         }
     }
 
@@ -175,7 +140,13 @@ public static class TypeExtensions
 
         return type
             .GetPropertyValue<PropertyInfo[]>("DeclaredProperties")
-            .SingleOrDefault(MemberExtensions.IsEqualityContract) != null;
+            .Where(MemberExtensions.IsEqualityContract)
+            .SingleOrDefault(Amb, type) != null;
+
+        static string Amb(Type type, IEnumerable<PropertyInfo> properties)
+        {
+            return $"Type {type} contains more than one EqualityContracts";
+        }
     }
 
     public static bool IsConstructedOrNonGenericType(this Type type)
@@ -274,130 +245,6 @@ public static class TypeExtensions
                && type.GetGenericArguments().SequenceEqual(@interface.GetGenericArguments());
     }
 
-    public static IEnumerable<Type> ExtractGenericArgumentsAt(this Type source, Type openGeneric, int typeArgumentAt = 0)
-    {
-        if (!openGeneric.IsGenericTypeDefinition)
-        {
-            throw new ArgumentException("Should be GenericTypeDefinition", nameof(openGeneric));
-        }
-
-        if (typeArgumentAt < 0 || typeArgumentAt >= openGeneric.GetGenericArguments().Length)
-        {
-            throw new ArgumentException("Should be in bounds of generic arguments count", nameof(typeArgumentAt));
-        }
-
-        return !IsSubclassOfOpenGeneric(source, openGeneric)
-            ? Enumerable.Empty<Type>()
-            : source
-                .IncludedTypes()
-                .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
-                .Select(type => type.GetGenericArguments()[typeArgumentAt])
-                .Distinct();
-    }
-
-    public static Type ExtractGenericArgumentAt(this Type source, Type openGeneric, int typeArgumentAt = 0)
-    {
-        return source.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).Single();
-    }
-
-    public static Type ExtractGenericArgumentAtOrSelf(this Type source, Type openGeneric, int typeArgumentAt = 0)
-    {
-        return openGeneric == typeof(Nullable<>)
-            ? Nullable.GetUnderlyingType(source) ?? source
-            : source.ExtractGenericArgumentsAt(openGeneric, typeArgumentAt).SingleOrDefault() ?? source;
-    }
-
-    public static IEnumerable<Type[]> ExtractAllGenericArguments(this Type source, Type openGeneric)
-    {
-        if (!openGeneric.IsGenericTypeDefinition)
-        {
-            throw new ArgumentException("Should be GenericTypeDefinition", nameof(openGeneric));
-        }
-
-        return !IsSubclassOfOpenGeneric(source, openGeneric)
-            ? Enumerable.Empty<Type[]>()
-            : source
-                .IncludedTypes()
-                .Where(type => type.GenericTypeDefinitionOrSelf() == openGeneric)
-                .Select(type => type.GetGenericArguments().ToArray());
-    }
-
-    public static Type[] ExtractGenericArguments(this Type source, Type openGeneric)
-    {
-        return source.ExtractAllGenericArguments(openGeneric).Single();
-    }
-
-    public static Type ApplyGenericArguments(this Type openGeneric, Type source)
-    {
-        if (openGeneric.IsConstructedOrNonGenericType())
-        {
-            return openGeneric;
-        }
-
-        if (openGeneric.IsGenericType
-            && openGeneric.IsGenericTypeDefinition
-            && source.IsConstructedOrNonGenericType())
-        {
-            var genericArguments = source
-                .ExtractAllGenericArguments(openGeneric)
-                .InformativeSingle(Amb(openGeneric, source));
-
-            return openGeneric.MakeGenericType(genericArguments);
-        }
-
-        throw new InvalidOperationException($"Type {openGeneric.FullName} can't be closed from {source.FullName}");
-
-        static Func<IEnumerable<Type[]>, string> Amb(Type openGeneric, Type source)
-        {
-            return args =>
-            {
-                var details = args
-                    .Select(genericArguments => genericArguments
-                        .Select(arg => arg.Name)
-                        .ToString(", "))
-                    .ToString("; ");
-
-                return $"Type {source.FullName} has different implementations of {openGeneric.FullName}: {details}";
-            };
-        }
-    }
-
-    public static IEnumerable<Type> BaseTypes(this Type source)
-    {
-        /*
-         * Base types from source type
-         * - base types
-         * - interfaces
-         */
-
-        return TypeInfoStorage.Get(source).BaseTypes
-            .Concat(source.GetInterfaces());
-    }
-
-    public static IEnumerable<Type> IncludedTypes(this Type source)
-    {
-        /*
-         * Types included in source type
-         * - source
-         * - base types
-         * - interfaces
-         */
-
-        return new[] { source }.Concat(source.BaseTypes());
-    }
-
-    public static IReadOnlyCollection<Type> DerivedTypes(this Type source)
-    {
-        return TypeInfoStorage.Get(source).DerivedTypes;
-    }
-
-    public static Type GenericTypeDefinitionOrSelf(this Type type)
-    {
-        return type.IsGenericType
-            ? type.GetGenericTypeDefinition()
-            : type;
-    }
-
     public static bool FitsForTypeArgument(this Type typeForCheck, Type typeArgument)
     {
         if (!typeArgument.IsGenericParameter)
@@ -474,7 +321,7 @@ public static class TypeExtensions
                         return true;
                     }
 
-                    var ctor = type.GetConstructor(Array.Empty<Type>());
+                    var ctor = type.GetConstructor([]);
 
                     return ctor != null;
                 });
@@ -492,7 +339,7 @@ public static class TypeExtensions
     private static IEnumerable<Type> SelfDependencies(this ConstructorInfo cctor, Type dependency)
     {
         return cctor
-            .DeclaringType
+            .DeclaringType!
             .BaseTypes()
             .Where(type => type.GenericTypeDefinitionOrSelf() == dependency.GenericTypeDefinitionOrSelf());
     }
